@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>루나 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar">
+      <nav class="sidebar-menu">
+        <a href="index.html" class="sidebar-item">
+          <span class="icon">🏠</span> 홈
+        </a>
+        <a href="character-list.html" class="sidebar-item">
+          <span class="icon">📖</span> 전체 개체
+        </a>
+        <a href="species-list.html" class="sidebar-item">
+          <span class="icon">🐾</span> 전체 종족
+        </a>
+        <a href="#" class="sidebar-item sidebar-item--login">
+          <span class="icon">⭐</span> 내 캐릭터
+        </a>
+        <a href="#" class="sidebar-item sidebar-item--login">
+          <span class="icon">👤</span> 내 정보
+        </a>
+      </nav>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="sidebar-section-title">종족</div>
+      <nav class="sidebar-species">
+        <a href="species.html" class="sidebar-species-item active">드래곤 <span>12</span></a>
+        <a href="species.html" class="sidebar-species-item">요정 <span>8</span></a>
+        <a href="species.html" class="sidebar-species-item">늑대인간 <span>5</span></a>
+        <a href="species.html" class="sidebar-species-item">슬라임 <span>3</span></a>
+        <a href="species.html" class="sidebar-species-item">엘프 <span>9</span></a>
+        <a href="species.html" class="sidebar-species-item">골렘 <span>2</span></a>
+        <a href="species-list.html" class="sidebar-species-all">전체보기</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+
+      <!-- 브레드크럼 + 이름 헤더 -->
+      <div class="char-page-header">
+        <div class="breadcrumb">
+          <a href="species.html">드래곤</a>
+          <span>/</span>
+          <span>일반</span>
+        </div>
+        <h1 class="char-page-name">
+          루나
+          <span class="char-page-id">No. 0003</span>
+        </h1>
+        <p class="char-page-owner">
+          소유주:
+          <a href="profile.html">뽀</a>
+        </p>
+      </div>
+
+      <!-- 이미지 + 정보 패널 -->
+      <div class="char-body">
+
+        <!-- 왼쪽: 큰 이미지 -->
+        <div class="char-img-wrap">
+          <div class="char-img-area"></div>
+        </div>
+
+        <!-- 오른쪽: 정보 패널 -->
+        <aside class="char-info-panel">
+
+          <div class="char-info-row">
+            <span class="char-info-label">종족</span>
+            <a href="species.html" class="char-info-value char-info-link">드래곤</a>
+          </div>
+          <div class="char-info-row">
+            <span class="char-info-label">등록일</span>
+            <span class="char-info-value">2026.03.10</span>
+          </div>
+
+          <div class="char-info-divider"></div>
+
+          <p class="char-info-desc">
+            은빛 날개를 가진 드래곤. 달이 밝은 밤에 태어나 루나라는 이름이 붙었다.
+            조용하고 차분한 성격이지만, 한번 신뢰를 쌓으면 깊은 유대를 맺는 타입.
+          </p>
+
+          <div class="char-info-divider"></div>
+
+          <!-- 커스텀 필드 -->
+          <div class="char-info-row">
+            <span class="char-info-label">속성</span>
+            <span class="char-info-value">얼음 / 물</span>
+          </div>
+          <div class="char-info-row">
+            <span class="char-info-label">나이</span>
+            <span class="char-info-value">약 300년</span>
+          </div>
+          <div class="char-info-row">
+            <span class="char-info-label">날개 색상</span>
+            <span class="char-info-value">은빛</span>
+          </div>
+          <div class="char-info-row">
+            <span class="char-info-label">서식지</span>
+            <span class="char-info-value">북부 설산</span>
+          </div>
+
+          <div class="char-info-divider"></div>
+
+          <div style="display:flex; justify-content:flex-end;">
+            <button class="btn-ghost">개체 정보 수정</button>
+          </div>
+
+        </aside>
+
+      </div>
+
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 도감</p>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>내 정보 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <!-- 헤더 -->
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main">
+
+      <div id="profileLoading" class="page-loading">불러오는 중...</div>
+
+      <div id="profileContent" style="display:none;">
+
+        <!-- 프로필 헤더 -->
+        <section class="profile-header">
+          <div class="profile-avatar"></div>
+          <div class="profile-header-info">
+            <div class="breadcrumb">
+              <a href="index.html">홈</a>
+              <span>/</span>
+              <span id="breadcrumbName">내 정보</span>
+            </div>
+            <h1 class="profile-name" id="profileName">-<span id="profileRoleBadge"></span></h1>
+            <div class="profile-meta">
+              <div class="meta-item">
+                <span class="meta-label">가입일</span>
+                <span class="meta-value" id="profileJoinDate">-</span>
+              </div>
+            </div>
+            <p class="profile-bio" id="profileBio"></p>
+            <div class="profile-tos" id="profileTosWrap" style="display:none;">
+              <p class="profile-tos-title">개인공지 (TOS)</p>
+              <p class="profile-tos-content" id="profileTos"></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 탭 -->
+        <div class="profile-tabs">
+          <button class="profile-tab active" data-tab="activity">내 활동</button>
+          <button class="profile-tab" data-tab="settings">설정</button>
+        </div>
+
+        <!-- 내 활동 탭 -->
+        <div id="tabActivity" class="tab-content">
+          <section class="section">
+            <!-- 서브탭 -->
+            <div class="activity-subtabs">
+              <button class="activity-subtab active" onclick="switchSubtab(this,'species')">종족</button>
+              <span class="activity-subtab-divider">|</span>
+              <button class="activity-subtab" onclick="switchSubtab(this,'characters')">보유 캐릭터</button>
+            </div>
+
+            <!-- 종족 -->
+            <div id="subtabSpecies">
+              <div class="section-header">
+                <h2>종족 <span class="count-badge" id="mySpeciesCount">0</span></h2>
+                <a href="my-species.html" class="btn-more">전체보기</a>
+              </div>
+              <div id="mySpeciesPreview" class="species-grid"></div>
+              <p id="mySpeciesEmpty" class="empty-state" style="display:none;">아직 등록된 종족이 없어요.</p>
+            </div>
+
+            <!-- 보유 캐릭터 -->
+            <div id="subtabCharacters" style="display:none;">
+              <div class="section-header">
+                <h2>보유 캐릭터 <span class="count-badge" id="myCharCount">0</span></h2>
+                <a href="my-characters.html" class="btn-more">전체보기</a>
+              </div>
+              <div id="myCharPreview" class="character-grid"></div>
+              <p id="myCharEmpty" class="empty-state" style="display:none;">아직 등록된 개체가 없어요.</p>
+            </div>
+
+          </section>
+        </div>
+
+        <!-- 설정 탭 -->
+        <div id="tabSettings" class="tab-content" style="display:none;">
+
+          <!-- 프로필 편집 -->
+          <section class="section">
+            <h2 class="settings-section-title">프로필 편집</h2>
+            <div class="settings-form">
+              <div class="form-group">
+                <label class="form-label">아이디 <span class="label-muted">(변경 불가)</span></label>
+                <input type="text" class="form-input form-input--disabled" id="editId" disabled>
+              </div>
+              <div class="form-group">
+                <textarea class="form-textarea" id="editBio" rows="3" placeholder="소개글을 입력해주세요"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">개인공지 (TOS)</label>
+                <textarea class="form-textarea" id="editTos" rows="5" placeholder="개인공지 또는 거래 조건을 입력해주세요"></textarea>
+              </div>
+              <p class="auth-error" id="editProfileError"></p>
+              <p class="settings-success" id="editProfileSuccess"></p>
+              <div class="form-actions">
+                <button class="btn-secondary" id="editProfileBtn" onclick="saveProfile()">저장</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- 비밀번호 변경 -->
+          <section class="section">
+            <h2 class="settings-section-title">비밀번호 변경</h2>
+            <div class="settings-form">
+              <div class="form-group">
+                <label class="form-label">새 비밀번호</label>
+                <input type="password" class="form-input" id="newPassword" placeholder="새 비밀번호 (6자 이상)">
+              </div>
+              <div class="form-group">
+                <label class="form-label">새 비밀번호 확인</label>
+                <input type="password" class="form-input" id="newPasswordConfirm" placeholder="새 비밀번호 재입력">
+              </div>
+              <p class="auth-error" id="pwError"></p>
+              <p class="settings-success" id="pwSuccess"></p>
+              <div class="form-actions">
+                <button class="btn-secondary" id="changePwBtn" onclick="changePassword()">변경</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- 계정 설정 (탈퇴) -->
+          <section class="section">
+            <h2 class="settings-section-title settings-section-title--danger">계정 설정</h2>
+            <div class="settings-danger-zone">
+              <div>
+                <p class="settings-danger-title">회원 탈퇴</p>
+                <p class="settings-danger-desc">탈퇴하면 계정 정보에 접근할 수 없게 돼요.</p>
+              </div>
+              <button class="btn-danger" onclick="confirmDelete()">탈퇴하기</button>
+            </div>
+          </section>
+
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- 탈퇴 확인 모달 -->
+  <div class="modal-overlay" id="deleteModal" style="display:none;">
+    <div class="modal-card">
+      <h3 class="modal-title">정말 탈퇴하시겠어요?</h3>
+      <p class="modal-desc">탈퇴 후에는 계정으로 로그인할 수 없어요. 이 작업은 되돌릴 수 없어요.</p>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeDeleteModal()">취소</button>
+        <button class="btn-danger" id="confirmDeleteBtn" onclick="executeDelete()">탈퇴 확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 푸터 -->
+  <footer class="footer">
+    <p>© 2026 도감</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    let currentUser = null;
+
+    async function initProfile() {
+      const user = await getUser();
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      currentUser = user;
+      const nickname = user.user_metadata?.nickname || '유저';
+      const bio = user.user_metadata?.bio || '';
+      const tos = user.user_metadata?.tos || '';
+      const joinDate = new Date(user.created_at).toLocaleDateString('ko-KR', {
+        year: 'numeric', month: '2-digit', day: '2-digit'
+      }).replace(/\. /g, '.').replace(/\.$/, '');
+
+      const isSpeciesOwner = user.user_metadata?.role === 'species_owner';
+
+      document.getElementById('breadcrumbName').textContent = nickname;
+      document.getElementById('profileName').firstChild.textContent = nickname;
+      if (isSpeciesOwner) {
+        document.getElementById('profileRoleBadge').innerHTML = ' <span class="badge-role" style="font-size:10px; padding:3px 8px; vertical-align:middle;">종족주</span>';
+      }
+      document.getElementById('profileJoinDate').textContent = joinDate;
+      if (bio) document.getElementById('profileBio').textContent = bio;
+      if (tos) {
+        document.getElementById('profileTos').textContent = tos;
+        document.getElementById('profileTosWrap').style.display = 'block';
+      }
+
+      document.getElementById('editId').value = nickname;
+      document.getElementById('editBio').value = bio;
+      document.getElementById('editTos').value = tos;
+
+      document.getElementById('profileLoading').style.display = 'none';
+      document.getElementById('profileContent').style.display = 'block';
+
+      loadMySpecies(nickname);
+      loadMyCharacters(nickname);
+    }
+
+    async function loadMySpecies(nickname) {
+      const { data, error } = await getMySpecies(nickname);
+      const countEl = document.getElementById('mySpeciesCount');
+      const gridEl  = document.getElementById('mySpeciesPreview');
+      const emptyEl = document.getElementById('mySpeciesEmpty');
+
+      if (error || !data || data.length === 0) {
+        emptyEl.style.display = 'block';
+        return;
+      }
+
+      countEl.textContent = data.length;
+      const preview = data.slice(0, 6);
+      gridEl.innerHTML = preview.map(s => `
+        <a href="species.html?id=${s.id}" class="species-card">
+          <div class="species-img"></div>
+          <div class="species-info">
+            <p class="species-name">${s.name}</p>
+          </div>
+        </a>
+      `).join('');
+    }
+
+    async function loadMyCharacters(nickname) {
+      const { data, error } = await getMyCharacters(nickname);
+
+      if (error || !data) {
+        document.getElementById('myCharEmpty').style.display = 'block';
+        return;
+      }
+
+      const countEl = document.getElementById('myCharCount');
+      const gridEl  = document.getElementById('myCharPreview');
+      const emptyEl = document.getElementById('myCharEmpty');
+
+      countEl.textContent = data.length;
+
+      if (data.length === 0) {
+        emptyEl.style.display = 'block';
+        return;
+      }
+
+      const preview = data.slice(0, 4);
+      gridEl.innerHTML = preview.map(c => `
+        <a href="character.html" class="character-card">
+          <div class="character-img"></div>
+          <div class="character-info">
+            <p class="character-name">${c.name}</p>
+            <p class="character-species">${c.species_name || ''}</p>
+          </div>
+        </a>
+      `).join('');
+    }
+
+    // 메인 탭 전환
+    document.querySelectorAll('.profile-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.profile-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        const tabId = 'tab' + btn.dataset.tab[0].toUpperCase() + btn.dataset.tab.slice(1);
+        document.getElementById(tabId).style.display = 'block';
+      });
+    });
+
+    function switchSubtab(el, t) {
+      document.querySelectorAll('.activity-subtab').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('subtabSpecies').style.display    = t === 'species'    ? 'block' : 'none';
+      document.getElementById('subtabCharacters').style.display = t === 'characters' ? 'block' : 'none';
+    }
+
+    // 프로필 저장
+    async function saveProfile() {
+      const bio = document.getElementById('editBio').value.trim();
+      const tos = document.getElementById('editTos').value.trim();
+      const btn = document.getElementById('editProfileBtn');
+      const errorEl   = document.getElementById('editProfileError');
+      const successEl = document.getElementById('editProfileSuccess');
+
+      btn.textContent = '저장 중...';
+      btn.disabled = true;
+      errorEl.textContent = '';
+      successEl.textContent = '';
+
+      const { error } = await updateProfile({ bio, tos });
+
+      if (error) {
+        errorEl.textContent = '저장에 실패했어요. 다시 시도해주세요.';
+      } else {
+        successEl.textContent = '저장됐어요!';
+        document.getElementById('profileBio').textContent = bio;
+        if (tos) {
+          document.getElementById('profileTos').textContent = tos;
+          document.getElementById('profileTosWrap').style.display = 'block';
+        } else {
+          document.getElementById('profileTosWrap').style.display = 'none';
+        }
+        setTimeout(() => successEl.textContent = '', 3000);
+      }
+
+      btn.textContent = '저장';
+      btn.disabled = false;
+    }
+
+    // 비밀번호 변경
+    async function changePassword() {
+      const newPw      = document.getElementById('newPassword').value;
+      const confirmPw  = document.getElementById('newPasswordConfirm').value;
+      const btn        = document.getElementById('changePwBtn');
+      const errorEl    = document.getElementById('pwError');
+      const successEl  = document.getElementById('pwSuccess');
+
+      errorEl.textContent = '';
+      successEl.textContent = '';
+
+      if (newPw.length < 6) {
+        errorEl.textContent = '비밀번호는 6자 이상이어야 해요.';
+        return;
+      }
+      if (newPw !== confirmPw) {
+        errorEl.textContent = '비밀번호가 일치하지 않아요.';
+        return;
+      }
+
+      btn.textContent = '변경 중...';
+      btn.disabled = true;
+
+      const { error } = await updatePassword(newPw);
+
+      if (error) {
+        errorEl.textContent = '변경에 실패했어요. 다시 시도해주세요.';
+      } else {
+        successEl.textContent = '비밀번호가 변경됐어요!';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('newPasswordConfirm').value = '';
+        setTimeout(() => successEl.textContent = '', 3000);
+      }
+
+      btn.textContent = '변경';
+      btn.disabled = false;
+    }
+
+    // 탈퇴 모달
+    function confirmDelete() {
+      document.getElementById('deleteModal').style.display = 'flex';
+    }
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').style.display = 'none';
+    }
+    async function executeDelete() {
+      const btn = document.getElementById('confirmDeleteBtn');
+      btn.textContent = '처리 중...';
+      btn.disabled = true;
+      await deleteAccount();
+    }
+
+    initProfile();
+  </script>
+</body>
+</html>

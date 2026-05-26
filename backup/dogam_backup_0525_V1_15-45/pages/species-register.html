@@ -1,0 +1,124 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>종족 등록 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar">
+      <nav class="sidebar-menu">
+        <a href="index.html" class="sidebar-item">
+          <span class="icon">🏠</span> 홈
+        </a>
+        <a href="character-list.html" class="sidebar-item">
+          <span class="icon">📖</span> 전체 개체</a>
+        <a href="species-list.html" class="sidebar-item">
+          <span class="icon">🐾</span> 전체 종족
+        </a>
+        <a href="#" class="sidebar-item sidebar-item--login">
+          <span class="icon">⭐</span> 내 캐릭터
+        </a>
+        <a href="#" class="sidebar-item sidebar-item--login">
+          <span class="icon">👤</span> 내 정보
+        </a>
+      </nav>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="sidebar-section-title">종족</div>
+      <nav class="sidebar-species">
+        <a href="species.html" class="sidebar-species-item">드래곤 <span>12</span></a>
+        <a href="species.html" class="sidebar-species-item">요정 <span>8</span></a>
+        <a href="species.html" class="sidebar-species-item">늑대인간 <span>5</span></a>
+        <a href="species.html" class="sidebar-species-item">슬라임 <span>3</span></a>
+        <a href="species.html" class="sidebar-species-item">엘프 <span>9</span></a>
+        <a href="species.html" class="sidebar-species-item">골렘 <span>2</span></a>
+        <a href="species-list.html" class="sidebar-species-all">전체보기</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="register-wrap">
+
+        <div class="breadcrumb" style="margin-bottom: 24px;">
+          <a href="index.html">홈</a>
+          <span>/</span>
+          <a href="species-list.html">전체 종족</a>
+          <span>/</span>
+          <span>종족 등록</span>
+        </div>
+
+        <h1 class="register-title">종족 등록</h1>
+        <p class="register-subtitle">새로운 종족을 도감에 추가해요</p>
+
+        <form class="register-form">
+
+          <!-- 대표 이미지 -->
+          <div class="form-group">
+            <label class="form-label">대표 이미지</label>
+            <div class="img-upload-box">
+              <p class="img-upload-text">클릭하여 이미지 업로드</p>
+              <p class="img-upload-hint">권장 크기: 500 x 500px</p>
+            </div>
+          </div>
+
+          <!-- 종족명 -->
+          <div class="form-group">
+            <label class="form-label">종족명 <span class="required">*</span></label>
+            <input type="text" class="form-input" placeholder="종족 이름을 입력하세요">
+          </div>
+
+          <!-- 설명 -->
+          <div class="form-group">
+            <label class="form-label">종족 설명</label>
+            <textarea class="form-textarea" placeholder="이 종족에 대한 설명을 입력하세요" rows="5"></textarea>
+          </div>
+
+          <!-- 커스텀 필드 -->
+          <div class="form-group">
+            <label class="form-label">개체 항목 설정</label>
+            <p class="form-hint">이 종족의 개체를 등록할 때 입력받을 항목을 추가하세요</p>
+
+            <div class="custom-field-list" id="customFieldList">
+              <div class="custom-field-row">
+                <input type="text" class="form-input" placeholder="항목명 (예: 속성, 나이, 서식지)">
+                <button type="button" class="btn-field-remove">✕</button>
+              </div>
+            </div>
+
+            <button type="button" class="btn-field-add" id="addFieldBtn">+ 항목 추가</button>
+          </div>
+
+          <!-- 버튼 -->
+          <div class="register-actions">
+            <a href="species-list.html" class="btn-ghost">취소</a>
+            <button type="submit" class="btn-secondary">등록하기</button>
+          </div>
+
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 도감</p>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>
+

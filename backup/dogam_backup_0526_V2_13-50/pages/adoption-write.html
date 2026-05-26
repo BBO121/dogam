@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>분양 글 작성 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main">
+      <div class="register-wrap">
+
+        <div class="breadcrumb" style="margin-bottom:24px;">
+          <a href="index.html">홈</a><span>/</span>
+          <a href="adoption.html">분양란</a><span>/</span>
+          <span>작성</span>
+        </div>
+
+        <h1 class="register-title">분양 글 작성</h1>
+
+        <p class="auth-error" id="noCharsMsg" style="display:none; margin-bottom:16px;"></p>
+
+        <form class="register-form" id="adoptionForm">
+
+          <!-- 캐릭터 선택 -->
+          <div class="form-group">
+            <label class="form-label">분양할 캐릭터 <span class="required">*</span></label>
+            <select id="characterSelect" class="form-input">
+              <option value="">불러오는 중...</option>
+            </select>
+          </div>
+
+          <!-- 분양 형식 -->
+          <div class="form-group">
+            <label class="form-label">분양 형식 <span class="required">*</span></label>
+            <div class="owner-type-tabs">
+              <button type="button" class="owner-tab active" id="type-free"    onclick="setType('free')">무료</button>
+              <button type="button" class="owner-tab"        id="type-paid"    onclick="setType('paid')">유료</button>
+              <button type="button" class="owner-tab"        id="type-auction" onclick="setType('auction')">경매</button>
+            </div>
+          </div>
+
+          <!-- 유료: 가격 -->
+          <div class="form-group" id="paidFields" style="display:none;">
+            <label class="form-label">가격 <span class="required">*</span></label>
+            <input type="text" id="price" class="form-input" placeholder="예) 30,000원 / 포인트 협의">
+          </div>
+
+          <!-- 경매 필드 -->
+          <div id="auctionFields" style="display:none; display:none;">
+
+            <div class="form-group">
+              <label class="form-label">시작가 <span class="required">*</span></label>
+              <input type="text" id="startPrice" class="form-input" placeholder="예) 10,000원 / 100포인트">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">즉시 낙찰가</label>
+              <input type="text" id="instantPrice" class="form-input" placeholder="선택 — 이 가격 입찰 시 즉시 낙찰">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">입찰 단위</label>
+              <input type="text" id="bidUnit" class="form-input" placeholder="예) 최소 1,000원 단위">
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">마감 방법</label>
+              <div class="owner-type-tabs">
+                <button type="button" class="owner-tab active" id="closeMethodDate"    onclick="setCloseMethod('date')">날짜 지정</button>
+                <button type="button" class="owner-tab"        id="closeMethodLastBid" onclick="setCloseMethod('last_bid')">마지막 입찰 후</button>
+              </div>
+            </div>
+
+            <div class="form-group" id="closeDateField">
+              <label class="form-label">마감 날짜</label>
+              <input type="datetime-local" id="closeAt" class="form-input">
+            </div>
+
+            <div class="form-group" id="closeHoursField" style="display:none;">
+              <label class="form-label">마지막 입찰 후 마감</label>
+              <div style="display:flex; align-items:center; gap:10px;">
+                <input type="number" id="closeHours" class="form-input" min="1" max="168" placeholder="24" style="max-width:120px;">
+                <span style="font-size:14px; color:var(--text-sub);">시간 후 마감</span>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 추가 이미지 -->
+          <div class="form-group">
+            <label class="form-label">추가 이미지</label>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <input type="text" id="extraImg1" class="form-input" placeholder="이미지 URL (선택)">
+              <input type="text" id="extraImg2" class="form-input" placeholder="이미지 URL (선택)">
+              <input type="text" id="extraImg3" class="form-input" placeholder="이미지 URL (선택)">
+            </div>
+            <p class="form-hint">최대 3장까지 추가 가능해요</p>
+          </div>
+
+          <!-- 설명 -->
+          <div class="form-group">
+            <label class="form-label">설명</label>
+            <textarea id="description" class="form-textarea" rows="6" placeholder="분양 관련 설명 (선택)"></textarea>
+          </div>
+
+          <!-- 연락 수단 -->
+          <div class="form-group">
+            <label class="form-label">연락 수단</label>
+            <input type="text" id="contact" class="form-input" placeholder="예) 트위터(X): @xxx / 디스코드: xxx#0000">
+          </div>
+
+          <p class="auth-error" id="writeError"></p>
+
+          <div class="register-actions">
+            <a href="adoption.html" class="btn-ghost">취소</a>
+            <button type="submit" class="btn-secondary" id="submitBtn">등록하기</button>
+          </div>
+
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer"><p>© 2026 도감</p></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    let selectedType        = 'free';
+    let selectedCloseMethod = 'date';
+    let myCharacters        = [];
+
+    function setType(type) {
+      selectedType = type;
+      ['free', 'paid', 'auction'].forEach(t =>
+        document.getElementById(`type-${t}`).classList.toggle('active', t === type)
+      );
+      document.getElementById('paidFields').style.display    = type === 'paid'    ? 'block' : 'none';
+      document.getElementById('auctionFields').style.display = type === 'auction' ? 'block' : 'none';
+    }
+
+    function setCloseMethod(method) {
+      selectedCloseMethod = method;
+      document.getElementById('closeMethodDate').classList.toggle('active',    method === 'date');
+      document.getElementById('closeMethodLastBid').classList.toggle('active', method === 'last_bid');
+      document.getElementById('closeDateField').style.display    = method === 'date'     ? 'block' : 'none';
+      document.getElementById('closeHoursField').style.display   = method === 'last_bid' ? 'block' : 'none';
+    }
+
+    async function initPage() {
+      const user = await getUser();
+      const role = user?.user_metadata?.role;
+      if (!user || (role !== 'species_owner' && role !== 'admin')) {
+        window.location.href = 'adoption.html';
+        return;
+      }
+      await loadCharacters(user);
+    }
+
+    async function loadCharacters(user) {
+      const nickname = user.user_metadata?.nickname;
+
+      const { data: mySpecies } = await sb
+        .from('species')
+        .select('id, name')
+        .eq('owner_nickname', nickname);
+
+      if (!mySpecies || mySpecies.length === 0) {
+        showNoChars('등록된 종족이 없어요. 먼저 종족을 등록해주세요.');
+        return;
+      }
+
+      const speciesMap = {};
+      mySpecies.forEach(s => { speciesMap[s.id] = s.name; });
+
+      const { data: chars } = await sb
+        .from('characters')
+        .select('id, name, species_id, image_url')
+        .in('species_id', Object.keys(speciesMap))
+        .order('name');
+
+      if (!chars || chars.length === 0) {
+        showNoChars('분양 가능한 캐릭터가 없어요. 먼저 캐릭터를 등록해주세요.');
+        return;
+      }
+
+      myCharacters = chars.map(c => ({ ...c, species_name: speciesMap[c.species_id] || '' }));
+
+      const select = document.getElementById('characterSelect');
+      select.innerHTML = '<option value="">캐릭터를 선택하세요</option>' +
+        myCharacters.map(c =>
+          `<option value="${c.id}">${c.name}${c.species_name ? ` (${c.species_name})` : ''}</option>`
+        ).join('');
+    }
+
+    function showNoChars(msg) {
+      document.getElementById('noCharsMsg').textContent = msg;
+      document.getElementById('noCharsMsg').style.display = 'block';
+      document.getElementById('adoptionForm').style.display = 'none';
+    }
+
+    document.getElementById('adoptionForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const charId  = document.getElementById('characterSelect').value;
+      const errorEl = document.getElementById('writeError');
+      const btn     = document.getElementById('submitBtn');
+      errorEl.textContent = '';
+
+      if (!charId) { errorEl.textContent = '캐릭터를 선택해주세요.'; return; }
+      if (selectedType === 'paid' && !document.getElementById('price').value.trim()) {
+        errorEl.textContent = '가격을 입력해주세요.'; return;
+      }
+      if (selectedType === 'auction' && !document.getElementById('startPrice').value.trim()) {
+        errorEl.textContent = '시작가를 입력해주세요.'; return;
+      }
+
+      btn.textContent = '등록 중...';
+      btn.disabled = true;
+
+      const char = myCharacters.find(c => String(c.id) === charId);
+      const user = await getUser();
+      const extraImages = [1,2,3]
+        .map(i => document.getElementById(`extraImg${i}`).value.trim())
+        .filter(Boolean);
+
+      const { data: adoption, error } = await sb.from('adoptions').insert({
+        character_id:   char.id,
+        character_name: char.name,
+        species_name:   char.species_name,
+        image_url:      char.image_url || null,
+        adoption_type:  selectedType,
+        price:          selectedType === 'paid' ? document.getElementById('price').value.trim() : null,
+        extra_images:   extraImages.length ? extraImages : null,
+        description:    document.getElementById('description').value.trim() || null,
+        contact:        document.getElementById('contact').value.trim() || null,
+        status:         '분양중',
+        author:         user?.user_metadata?.nickname || '익명',
+        user_id:        user?.id,
+      }).select().single();
+
+      if (error) {
+        console.error('[adoption insert error]', error);
+        errorEl.textContent = `등록에 실패했어요. (${error.message})`;
+        btn.textContent = '등록하기';
+        btn.disabled = false;
+        return;
+      }
+
+      if (selectedType === 'auction') {
+        await sb.from('auction_details').insert({
+          adoption_id:   adoption.id,
+          start_price:   document.getElementById('startPrice').value.trim(),
+          instant_price: document.getElementById('instantPrice').value.trim() || null,
+          bid_unit:      document.getElementById('bidUnit').value.trim() || null,
+          close_method:  selectedCloseMethod,
+          close_at:      selectedCloseMethod === 'date'     ? (document.getElementById('closeAt').value || null) : null,
+          close_hours:   selectedCloseMethod === 'last_bid' ? (parseInt(document.getElementById('closeHours').value) || null) : null,
+        });
+      }
+
+      window.location.href = `adoption-detail.html?id=${adoption.id}`;
+    });
+
+    initPage();
+  </script>
+</body>
+</html>

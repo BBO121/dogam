@@ -1,0 +1,198 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>드래곤 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <!-- 헤더 -->
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main">
+
+      <!-- 종족 상세 -->
+      <section class="species-detail">
+
+        <!-- 상단: 이미지 + 기본 정보 -->
+        <div class="species-detail-top">
+          <div class="species-detail-img"></div>
+          <div class="species-detail-info">
+
+            <div class="breadcrumb">
+              <a href="index.html">홈</a>
+              <span>/</span>
+              <a href="#">전체 종족</a>
+              <span>/</span>
+              <span>드래곤</span>
+            </div>
+
+            <h1 class="species-detail-name">드래곤</h1>
+
+            <div class="species-detail-meta">
+              <div class="meta-item">
+                <span class="meta-label">종족주</span>
+                <a href="profile.html" class="meta-value meta-link">뽀</a>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">등록일</span>
+                <span class="meta-value">2026.01.15</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">개체 수</span>
+                <span class="meta-value">12마리</span>
+              </div>
+            </div>
+
+            <p class="species-detail-desc">
+              고대부터 존재해온 강력한 종족. 거대한 날개와 불을 내뿜는 능력을 지니고 있으며,
+              수천 년의 수명을 자랑한다. 각 개체마다 고유한 속성과 외형을 가지고 있어
+              같은 드래곤이라도 서로 전혀 다른 모습을 보인다.
+            </p>
+
+            <!-- 종족주만 보이는 관리 버튼 -->
+            <div class="species-detail-actions">
+              <a href="character-register.html" class="btn-secondary">개체 등록</a>
+              <button class="btn-ghost">종족 정보 수정</button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 이 종족의 개체 항목 안내 -->
+        <div class="species-fields">
+          <h3 class="species-fields-title">개체 항목</h3>
+          <div class="species-fields-list">
+            <span class="field-tag">이름</span>
+            <span class="field-tag">이미지</span>
+            <span class="field-tag">소유주</span>
+            <span class="field-tag">설명</span>
+            <span class="field-tag">속성</span>
+            <span class="field-tag">나이</span>
+            <span class="field-tag">날개 색상</span>
+            <span class="field-tag">서식지</span>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- 소속 개체 목록 -->
+      <section class="section">
+        <div class="section-header">
+          <h2>소속 개체 <span class="count-badge">12</span></h2>
+          <div class="sort-select">
+            <select>
+              <option>최근 등록순</option>
+              <option>이름순</option>
+            </select>
+          </div>
+        </div>
+        <div class="character-grid">
+
+          <a href="character.html" class="character-card">
+            <div class="character-img"></div>
+            <div class="character-info">
+              <p class="character-name">루나</p>
+              <p class="character-species">드래곤</p>
+              <p class="character-owner">소유주: 뽀</p>
+            </div>
+          </a>
+
+          <a href="character.html" class="character-card">
+            <div class="character-img"></div>
+            <div class="character-info">
+              <p class="character-name">세라</p>
+              <p class="character-species">드래곤</p>
+              <p class="character-owner">소유주: 구름</p>
+            </div>
+          </a>
+
+          <a href="character.html" class="character-card">
+            <div class="character-img"></div>
+            <div class="character-info">
+              <p class="character-name">이그니스</p>
+              <p class="character-species">드래곤</p>
+              <p class="character-owner">소유주: 달빛</p>
+            </div>
+          </a>
+
+          <a href="character.html" class="character-card">
+            <div class="character-img"></div>
+            <div class="character-info">
+              <p class="character-name">아쿠아</p>
+              <p class="character-species">드래곤</p>
+              <p class="character-owner">소유주: 별이</p>
+            </div>
+          </a>
+
+          <a href="character.html" class="character-card">
+            <div class="character-img"></div>
+            <div class="character-info">
+              <p class="character-name">테라</p>
+              <p class="character-species">드래곤</p>
+              <p class="character-owner">소유주: 미정</p>
+            </div>
+          </a>
+
+          <a href="character.html" class="character-card">
+            <div class="character-img"></div>
+            <div class="character-info">
+              <p class="character-name">베노</p>
+              <p class="character-species">드래곤</p>
+              <p class="character-owner">소유주: 하늘</p>
+            </div>
+          </a>
+
+          <a href="character.html" class="character-card">
+            <div class="character-img"></div>
+            <div class="character-info">
+              <p class="character-name">섀도</p>
+              <p class="character-species">드래곤</p>
+              <p class="character-owner">소유주: 뽀</p>
+            </div>
+          </a>
+
+          <a href="character.html" class="character-card">
+            <div class="character-img"></div>
+            <div class="character-info">
+              <p class="character-name">글레이스</p>
+              <p class="character-species">드래곤</p>
+              <p class="character-owner">소유주: 구름</p>
+            </div>
+          </a>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- 푸터 -->
+  <footer class="footer">
+    <p>© 2026 도감</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/main.js"></script>
+</body>
+</html>
+
+
+
+

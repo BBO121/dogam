@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>분양란 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main">
+
+      <div id="pageLoading" class="page-loading">불러오는 중...</div>
+
+      <div id="pageContent" style="display:none;">
+
+        <div class="notice-detail-nav">
+          <span id="navCount" class="notice-nav-count"></span>
+          <a href="adoption.html" class="notice-nav-list-btn">목록보기</a>
+        </div>
+
+        <div class="adoption-detail-layout">
+
+          <!-- 왼쪽: 이미지 -->
+          <div class="adoption-detail-left">
+            <div id="mainImg" class="adoption-detail-img-main"></div>
+            <div id="extraImgsRow" class="adoption-detail-imgs-extra"></div>
+          </div>
+
+          <!-- 오른쪽: 정보 -->
+          <div class="adoption-detail-right">
+
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
+              <span id="typeBadge" class="adoption-type-badge"></span>
+              <span id="statusBadge" class="adoption-status"></span>
+            </div>
+
+            <h1 id="detailCharName" class="adoption-detail-char-name"></h1>
+            <p id="detailSpecies" class="adoption-detail-species"></p>
+
+            <div class="notice-detail-meta" style="margin-top:8px; margin-bottom:20px;">
+              <span id="detailAuthor"></span>
+              <span class="notice-detail-sep">·</span>
+              <span id="detailDate"></span>
+            </div>
+
+            <!-- 분양 정보 박스 -->
+            <div id="adoptionInfoBox" class="adoption-info-box" style="display:none;"></div>
+
+            <!-- 설명 -->
+            <div id="descWrap" style="display:none; margin-top:20px;">
+              <p class="adoption-section-label">설명</p>
+              <div id="descContent" class="adoption-desc-content"></div>
+            </div>
+
+            <!-- 연락 수단 -->
+            <div id="contactWrap" class="adoption-contact-box" style="display:none;">
+              <span class="adoption-contact-label">연락 수단</span>
+              <span id="contactContent"></span>
+            </div>
+
+            <!-- 분양 완료 버튼 (작성자 전용, 무료/유료) -->
+            <div id="completeBtnWrap" style="display:none; margin-top:16px;">
+              <button class="btn-secondary" style="width:100%;" onclick="openCompleteModal()">분양하기</button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 경매 섹션 -->
+        <div id="auctionSection" style="display:none;">
+          <div class="adoption-bids-wrap">
+
+            <div class="adoption-bids-header">
+              <h2 class="adoption-section-title">입찰 현황</h2>
+              <span id="bidCount" class="adoption-bid-count"></span>
+            </div>
+
+            <!-- 낙찰 결과 -->
+            <div id="winnerBox" class="adoption-winner-box" style="display:none;"></div>
+
+            <!-- 입찰 목록 -->
+            <div id="bidList" class="adoption-bid-list"></div>
+
+            <!-- 입찰 입력 -->
+            <div id="bidInputWrap" class="adoption-bid-input-wrap" style="display:none;">
+              <input type="text" id="bidAmount" class="form-input" placeholder="입찰 금액 또는 방법을 입력하세요">
+              <button onclick="submitBid()" class="btn-secondary">입찰하기</button>
+            </div>
+            <p class="auth-error" id="bidError"></p>
+
+            <!-- 마감 버튼 (작성자 전용) -->
+            <div id="closeWrap" style="display:none; margin-top:12px;">
+              <button onclick="closeAuction()" class="btn-ghost">마감하기 (낙찰자 없음)</button>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="notice-detail-bottom">
+          <a href="adoption.html" class="btn-ghost">← 목록으로</a>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- 분양하기 모달 -->
+  <div class="modal-overlay" id="completeModal" style="display:none;">
+    <div class="modal-card">
+      <h3 class="modal-title">분양 완료 처리</h3>
+      <p class="modal-desc">분양받은 유저의 닉네임을 입력해주세요.<br>해당 유저에게 캐릭터 소유권이 이전돼요.</p>
+      <div class="form-group" style="margin-bottom:4px;">
+        <input type="text" class="form-input" id="recipientInput" placeholder="받는 유저 닉네임">
+      </div>
+      <p class="auth-error" id="completeError"></p>
+      <div class="modal-actions" style="margin-top:20px;">
+        <button class="btn-ghost" onclick="closeCompleteModal()">취소</button>
+        <button class="btn-secondary" id="confirmCompleteBtn" onclick="confirmComplete()">분양 완료</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer"><p>© 2026 도감</p></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    const params     = new URLSearchParams(window.location.search);
+    const adoptionId = params.get('id');
+    let currentUser     = null;
+    let currentAdoption = null;
+
+    const TYPE_LABEL = { free: '무료', paid: '유료', auction: '경매' };
+    const TYPE_CLASS  = { free: 'adoption-type--free', paid: 'adoption-type--paid', auction: 'adoption-type--auction' };
+
+    async function initPage() {
+      if (!adoptionId) { window.location.href = 'adoption.html'; return; }
+
+      currentUser = await getUser();
+
+      const [{ data: adoption, error }, { count }] = await Promise.all([
+        sb.from('adoptions').select('*').eq('id', adoptionId).single(),
+        sb.from('adoptions').select('*', { count: 'exact', head: true }),
+      ]);
+
+      if (error || !adoption) { window.location.href = 'adoption.html'; return; }
+
+      currentAdoption = adoption;
+      document.title = `${adoption.character_name} 분양 — 도감`;
+      if (count) document.getElementById('navCount').textContent = `분양란 총 ${count}개`;
+
+      renderMain(adoption);
+
+      if (adoption.adoption_type === 'auction') {
+        document.getElementById('auctionSection').style.display = 'block';
+
+        const [{ data: details }, { data: bids }] = await Promise.all([
+          sb.from('auction_details').select('*').eq('adoption_id', adoptionId).single(),
+          sb.from('auction_bids').select('*').eq('adoption_id', adoptionId).order('created_at', { ascending: false }),
+        ]);
+
+        renderAuctionInfo(details);
+        renderBids(adoption, bids || []);
+      }
+
+      document.getElementById('pageLoading').style.display = 'none';
+      document.getElementById('pageContent').style.display = 'block';
+    }
+
+    function renderMain(a) {
+      // 메인 이미지
+      const mainImg = document.getElementById('mainImg');
+      if (a.image_url) {
+        mainImg.style.backgroundImage    = `url('${a.image_url}')`;
+        mainImg.style.backgroundSize     = 'cover';
+        mainImg.style.backgroundPosition = 'center';
+      }
+
+      // 추가 이미지
+      if (a.extra_images && a.extra_images.length > 0) {
+        document.getElementById('extraImgsRow').innerHTML = a.extra_images.map(url =>
+          `<div class="adoption-extra-img" style="background-image:url('${url}');background-size:cover;background-position:center;"></div>`
+        ).join('');
+      }
+
+      // 뱃지
+      const tb = document.getElementById('typeBadge');
+      tb.textContent = TYPE_LABEL[a.adoption_type] || '';
+      tb.className   = `adoption-type-badge ${TYPE_CLASS[a.adoption_type] || ''}`;
+
+      const sb2 = document.getElementById('statusBadge');
+      sb2.textContent = a.status || '분양중';
+      sb2.className   = `adoption-status${a.status === '완료' ? ' adoption-status--closed' : ''}`;
+
+      document.getElementById('detailCharName').textContent = a.character_name || '—';
+      document.getElementById('detailSpecies').textContent  = a.species_name   || '—';
+      document.getElementById('detailAuthor').textContent   = a.author         || '익명';
+
+      const date = new Date(a.created_at).toLocaleDateString('ko-KR', {
+        year: 'numeric', month: '2-digit', day: '2-digit'
+      }).replace(/\. /g, '.').replace(/\.$/, '');
+      document.getElementById('detailDate').textContent = date;
+
+      // 분양 정보 박스
+      const infoBox = document.getElementById('adoptionInfoBox');
+      if (a.adoption_type === 'free') {
+        infoBox.innerHTML = '<span style="font-size:15px; font-weight:700; color:#16A34A;">무료 분양</span>';
+        infoBox.style.display = 'block';
+      } else if (a.adoption_type === 'paid' && a.price) {
+        infoBox.innerHTML = `<span style="font-size:20px; font-weight:800; color:var(--sky-deep);">${a.price}</span>`;
+        infoBox.style.display = 'block';
+      }
+
+      // 설명
+      if (a.description) {
+        document.getElementById('descContent').innerHTML = a.description.replace(/\n/g, '<br>');
+        document.getElementById('descWrap').style.display = 'block';
+      }
+
+      // 연락 수단
+      if (a.contact) {
+        document.getElementById('contactContent').textContent = a.contact;
+        document.getElementById('contactWrap').style.display  = 'flex';
+      }
+
+      // 분양하기 버튼 (무료/유료 + 작성자 + 분양중)
+      const isAuthor = currentUser && currentUser.id === a.user_id;
+      const isOpen   = a.status === '분양중';
+      if (isAuthor && isOpen && a.adoption_type !== 'auction') {
+        document.getElementById('completeBtnWrap').style.display = 'block';
+      }
+    }
+
+    function renderAuctionInfo(details) {
+      if (!details) return;
+      const closeLabel = details.close_method === 'date'
+        ? (details.close_at
+            ? `${new Date(details.close_at).toLocaleString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })} 마감`
+            : '날짜 미정')
+        : `마지막 입찰 후 ${details.close_hours}시간 마감`;
+
+      const infoBox = document.getElementById('adoptionInfoBox');
+      infoBox.innerHTML = `
+        <div class="auction-info-grid">
+          <div class="auction-info-item">
+            <span class="auction-info-label">시작가</span>
+            <span class="auction-info-value">${details.start_price}</span>
+          </div>
+          ${details.instant_price ? `
+          <div class="auction-info-item">
+            <span class="auction-info-label">즉분가</span>
+            <span class="auction-info-value">${details.instant_price}</span>
+          </div>` : ''}
+          ${details.bid_unit ? `
+          <div class="auction-info-item">
+            <span class="auction-info-label">입찰 단위</span>
+            <span class="auction-info-value">${details.bid_unit}</span>
+          </div>` : ''}
+          <div class="auction-info-item">
+            <span class="auction-info-label">마감</span>
+            <span class="auction-info-value">${closeLabel}</span>
+          </div>
+        </div>
+      `;
+      infoBox.style.display = 'block';
+    }
+
+    function renderBids(adoption, bids) {
+      const isAuthor = currentUser && currentUser.id === adoption.user_id;
+      const isOpen   = adoption.status === '분양중';
+
+      document.getElementById('bidCount').textContent = `${bids.length}건`;
+
+      // 낙찰 결과
+      if (adoption.winner_name) {
+        document.getElementById('winnerBox').innerHTML = `
+          <div class="adoption-winner-inner">
+            <span class="adoption-winner-trophy">🏆</span>
+            <div>
+              <p class="adoption-winner-label">낙찰자</p>
+              <p class="adoption-winner-name">${adoption.winner_name}</p>
+              <p class="adoption-winner-bid">${adoption.winner_bid}</p>
+            </div>
+          </div>
+        `;
+        document.getElementById('winnerBox').style.display = 'block';
+      }
+
+      // 입찰 목록
+      const listEl = document.getElementById('bidList');
+      if (bids.length === 0) {
+        listEl.innerHTML = '<p class="adoption-no-bids">아직 입찰이 없어요</p>';
+      } else {
+        listEl.innerHTML = bids.map(bid => `
+          <div class="adoption-bid-row">
+            <div class="adoption-bid-info">
+              <span class="adoption-bid-name">${bid.bidder_name}</span>
+              <span class="adoption-bid-amount">${bid.bid_amount}</span>
+              <span class="adoption-bid-time">${timeAgo(bid.created_at)}</span>
+            </div>
+            ${isAuthor && isOpen ? `
+              <button class="btn-award"
+                data-name="${escAttr(bid.bidder_name)}"
+                data-amount="${escAttr(bid.bid_amount)}"
+                onclick="awardBid(this)">낙찰하기</button>
+            ` : ''}
+          </div>
+        `).join('');
+      }
+
+      // 입찰 입력 (비작성자 + 로그인 + 분양중)
+      if (!isAuthor && currentUser && isOpen) {
+        document.getElementById('bidInputWrap').style.display = 'flex';
+      }
+
+      // 마감 버튼 (작성자 + 분양중)
+      if (isAuthor && isOpen) {
+        document.getElementById('closeWrap').style.display = 'block';
+      }
+    }
+
+    function escAttr(str) {
+      return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function timeAgo(dateStr) {
+      const m = Math.floor((Date.now() - new Date(dateStr)) / 60000);
+      if (m < 1)  return '방금 전';
+      if (m < 60) return `${m}분 전`;
+      const h = Math.floor(m / 60);
+      if (h < 24) return `${h}시간 전`;
+      return `${Math.floor(h / 24)}일 전`;
+    }
+
+    async function submitBid() {
+      const amount  = document.getElementById('bidAmount').value.trim();
+      const errorEl = document.getElementById('bidError');
+      errorEl.textContent = '';
+      if (!amount) { errorEl.textContent = '입찰 내용을 입력해주세요.'; return; }
+
+      const { error } = await sb.from('auction_bids').insert({
+        adoption_id:  adoptionId,
+        bidder_id:    currentUser.id,
+        bidder_name:  currentUser.user_metadata?.nickname || '익명',
+        bid_amount:   amount,
+      });
+
+      if (error) { errorEl.textContent = `입찰에 실패했어요. (${error.message})`; return; }
+      document.getElementById('bidAmount').value = '';
+      location.reload();
+    }
+
+    async function awardBid(btn) {
+      const name   = btn.dataset.name;
+      const amount = btn.dataset.amount;
+      if (!confirm(`${name}님을 낙찰자로 선정할까요?\n경매가 마감됩니다.`)) return;
+
+      const { error } = await sb.from('adoptions').update({
+        status:      '완료',
+        winner_name: name,
+        winner_bid:  amount,
+      }).eq('id', adoptionId);
+
+      if (error) { alert('오류가 발생했어요.'); return; }
+
+      const a = currentAdoption;
+      await Promise.all([
+        sb.from('characters')
+          .update({ owner_nickname: name })
+          .eq('name', a.character_name),
+        logTransfer({
+          character_name: a.character_name,
+          species_name:   a.species_name,
+          from_nickname:  a.author,
+          to_nickname:    name,
+          method:         '경매',
+        }),
+      ]);
+
+      location.reload();
+    }
+
+    async function closeAuction() {
+      if (!confirm('낙찰자 없이 경매를 마감할까요?')) return;
+      await sb.from('adoptions').update({ status: '완료' }).eq('id', adoptionId);
+      location.reload();
+    }
+
+    // ── 무료/유료 분양 완료 ──────────────────────────
+    function openCompleteModal() {
+      document.getElementById('recipientInput').value  = '';
+      document.getElementById('completeError').textContent = '';
+      document.getElementById('completeModal').style.display = 'flex';
+      document.getElementById('recipientInput').focus();
+    }
+
+    function closeCompleteModal() {
+      document.getElementById('completeModal').style.display = 'none';
+    }
+
+    async function confirmComplete() {
+      const recipient = document.getElementById('recipientInput').value.trim();
+      const errorEl   = document.getElementById('completeError');
+      const btn       = document.getElementById('confirmCompleteBtn');
+
+      if (!recipient) { errorEl.textContent = '닉네임을 입력해주세요.'; return; }
+
+      btn.textContent = '처리 중...';
+      btn.disabled    = true;
+      errorEl.textContent = '';
+
+      const a      = currentAdoption;
+      const method = a.adoption_type === 'free' ? '무료분양' : '유료분양';
+
+      const { error } = await sb.from('adoptions')
+        .update({ status: '완료' })
+        .eq('id', adoptionId);
+
+      if (error) {
+        errorEl.textContent = '오류가 발생했어요. 다시 시도해주세요.';
+        btn.textContent = '분양 완료';
+        btn.disabled    = false;
+        return;
+      }
+
+      await Promise.all([
+        sb.from('characters')
+          .update({ owner_nickname: recipient })
+          .eq('name', a.character_name),
+        logTransfer({
+          character_name: a.character_name,
+          species_name:   a.species_name,
+          from_nickname:  a.author,
+          to_nickname:    recipient,
+          method,
+        }),
+      ]);
+
+      closeCompleteModal();
+      location.reload();
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

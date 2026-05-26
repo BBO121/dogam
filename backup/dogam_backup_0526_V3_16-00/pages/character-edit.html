@@ -1,0 +1,540 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>개체 정보 수정 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main">
+      <div class="register-wrap">
+
+        <div class="breadcrumb" style="margin-bottom: 24px;">
+          <a href="index.html">홈</a>
+          <span>/</span>
+          <a href="species-list.html">전체 종족</a>
+          <span>/</span>
+          <a href="#" id="breadcrumbSpecies"></a>
+          <span>/</span>
+          <a href="#" id="breadcrumbChar"></a>
+          <span>/</span>
+          <span>정보 수정</span>
+        </div>
+
+        <h1 class="register-title">개체 정보 수정</h1>
+        <p class="register-subtitle" id="editSubtitle">개체 정보를 수정해요</p>
+
+        <form class="register-form" id="editForm">
+
+          <!-- 메인 이미지 -->
+          <div class="form-group">
+            <label class="form-label">메인 이미지 <span class="form-hint" style="display:inline; margin:0 0 0 6px;">썸네일로 사용돼요</span></label>
+            <input type="file" id="imageFile" accept="image/*" style="display:none;">
+            <div class="img-upload-box img-upload-box--portrait" id="uploadBox" onclick="document.getElementById('imageFile').click()">
+              <img id="imagePreview" style="display:none; width:100%; height:100%; object-fit:cover; border-radius: var(--radius);">
+              <div id="uploadPlaceholder">
+                <p class="img-upload-text">클릭하여 이미지 업로드</p>
+                <p class="img-upload-hint">권장 비율 3:4</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- 추가 이미지 -->
+          <div class="form-group">
+            <label class="form-label">추가 이미지 <span class="form-hint" style="display:inline; margin:0 0 0 6px;">선택사항</span></label>
+            <div id="extraImageList" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px;"></div>
+            <input type="file" id="extraImageInput" accept="image/*" style="display:none;" multiple onchange="addExtraImages(this)">
+            <button type="button" class="btn-field-add" onclick="document.getElementById('extraImageInput').click()">+ 이미지 추가</button>
+          </div>
+
+          <!-- 이름 -->
+          <div class="form-group">
+            <label class="form-label">이름 <span class="required">*</span></label>
+            <input type="text" id="charName" class="form-input" placeholder="개체 이름을 입력하세요">
+          </div>
+
+          <!-- 디자이너 -->
+          <div class="form-group">
+            <label class="form-label">디자이너 <span class="required">*</span></label>
+
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
+              <button type="button" id="btnDesignerSite" onclick="setDesignerType('site')"
+                style="flex:1; padding:8px; border-radius:8px; border:2px solid var(--sky); background:var(--sky); color:#fff; font-size:13px; cursor:pointer;">
+                사이트 유저
+              </button>
+              <button type="button" id="btnDesignerExternal" onclick="setDesignerType('external')"
+                style="flex:1; padding:8px; border-radius:8px; border:2px solid var(--border); background:#fff; color:var(--text-sub); font-size:13px; cursor:pointer;">
+                사이트 밖 유저
+              </button>
+            </div>
+
+            <div id="designerSiteSection">
+              <input type="text" id="designerSearch" class="form-input" placeholder="닉네임으로 검색..." oninput="filterDesigners(this.value)" style="margin-bottom:8px;">
+              <div id="designerUserList" style="border:1px solid var(--border); border-radius:10px; max-height:200px; overflow-y:auto; background:#fff;">
+                <p style="padding:12px; color:var(--text-mute); font-size:13px;">불러오는 중...</p>
+              </div>
+              <p id="designerSelectedDisplay" style="margin-top:8px; font-size:13px; color:var(--sky-deep); display:none;"></p>
+              <button type="button" onclick="clearDesigner()" style="margin-top:6px; padding:4px 12px; border:1px solid var(--border); border-radius:6px; background:#fff; font-size:12px; cursor:pointer; color:var(--text-mute);">선택 해제</button>
+            </div>
+
+            <div id="designerExternalSection" style="display:none;">
+              <input type="text" id="designerExternalName" class="form-input" placeholder="이름 입력" style="margin-bottom:8px;">
+              <input type="text" id="designerExternalContact" class="form-input" placeholder="연락처 (트위터, 디스코드 등) — 선택사항">
+            </div>
+          </div>
+
+          <!-- 소유주 -->
+          <div class="form-group">
+            <label class="form-label">소유주</label>
+
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
+              <button type="button" id="btnSiteUser" onclick="setOwnerType('site')"
+                style="flex:1; padding:8px; border-radius:8px; border:2px solid var(--sky); background:var(--sky); color:#fff; font-size:13px; cursor:pointer;">
+                사이트 유저
+              </button>
+              <button type="button" id="btnExternal" onclick="setOwnerType('external')"
+                style="flex:1; padding:8px; border-radius:8px; border:2px solid var(--border); background:#fff; color:var(--text-sub); font-size:13px; cursor:pointer;">
+                사이트 밖 유저
+              </button>
+            </div>
+
+            <div id="ownerSiteSection">
+              <input type="text" id="ownerSearch" class="form-input" placeholder="닉네임으로 검색..." oninput="filterUsers(this.value)" style="margin-bottom:8px;">
+              <div id="ownerUserList" style="border:1px solid var(--border); border-radius:10px; max-height:200px; overflow-y:auto; background:#fff;">
+                <p style="padding:12px; color:var(--text-mute); font-size:13px;">불러오는 중...</p>
+              </div>
+              <p id="ownerSelectedDisplay" style="margin-top:8px; font-size:13px; color:var(--sky-deep); display:none;"></p>
+            </div>
+
+            <div id="ownerExternalSection" style="display:none;">
+              <input type="text" id="ownerExternalName" class="form-input" placeholder="이름 입력" style="margin-bottom:8px;">
+              <input type="text" id="ownerExternalContact" class="form-input" placeholder="연락처 (트위터, 디스코드 등) — 선택사항">
+            </div>
+          </div>
+
+          <!-- 설명 -->
+          <div class="form-group">
+            <label class="form-label">설명</label>
+            <textarea id="charDesc" class="form-textarea" placeholder="이 개체에 대한 설명을 입력하세요" rows="4"></textarea>
+          </div>
+
+          <!-- 종족 커스텀 필드 -->
+          <div id="customFieldsSection" style="display:none;">
+            <div class="char-info-divider" style="margin:8px 0 20px;"></div>
+            <p class="form-label" style="margin-bottom:14px;">개체 항목</p>
+            <div id="customFieldInputs"></div>
+          </div>
+
+          <!-- 에러 -->
+          <p class="auth-error" id="editError"></p>
+
+          <!-- 버튼 -->
+          <div class="register-actions">
+            <a href="#" id="cancelBtn" class="btn-ghost">취소</a>
+            <button type="submit" class="btn-secondary" id="submitBtn">저장하기</button>
+          </div>
+
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 도감</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/main.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    const charId = new URLSearchParams(window.location.search).get('id');
+
+    let currentUser          = null;
+    let ownerType            = 'site';
+    let selectedNick         = null;
+    let designerType         = 'site';
+    let selectedDesignerNick = null;
+    let allUsers             = [];
+    let currentImageUrl    = null;
+    let existingExtraImages = []; // DB에 저장된 추가 이미지 URL
+    let removedExtraImages  = []; // 삭제할 기존 이미지 URL
+    let newExtraFiles       = []; // 새로 추가한 파일
+
+    if (!charId) { window.location.href = 'character-list.html'; }
+
+    document.getElementById('cancelBtn').href = `character.html?id=${charId}`;
+
+    async function initPage() {
+      const user = await getUser();
+      if (!user) { window.location.href = 'login.html'; return; }
+
+      const { data: c, error } = await sb.from('characters').select('*').eq('id', charId).single();
+      if (error || !c) { window.location.href = 'character-list.html'; return; }
+
+      const isOwner = user.user_metadata?.role === 'admin' || user.user_metadata?.nickname === c.owner_nickname;
+      if (!isOwner) { window.location.href = `character.html?id=${charId}`; return; }
+
+      currentUser = user;
+
+      // 브레드크럼
+      document.getElementById('breadcrumbChar').textContent = c.name;
+      document.getElementById('breadcrumbChar').href = `character.html?id=${charId}`;
+      if (c.species_name) {
+        const { data: sp } = await sb.from('species').select('id').eq('name', c.species_name).single();
+        const spHref = sp ? `species.html?id=${sp.id}` : 'species-list.html';
+        document.getElementById('breadcrumbSpecies').textContent = c.species_name;
+        document.getElementById('breadcrumbSpecies').href = spHref;
+      }
+
+      // 기존 데이터 채우기
+      document.getElementById('charName').value = c.name;
+      document.getElementById('charDesc').value  = c.description || '';
+
+      if (c.image_url) {
+        currentImageUrl = c.image_url;
+        document.getElementById('imagePreview').src = c.image_url;
+        document.getElementById('imagePreview').style.display = 'block';
+        document.getElementById('uploadPlaceholder').style.display = 'none';
+      }
+
+      // 기존 추가 이미지
+      existingExtraImages = c.additional_images || [];
+      existingExtraImages.forEach((url, idx) => {
+        const box = document.createElement('div');
+        box.style.cssText = 'position:relative; width:90px; height:90px; border-radius:8px; overflow:hidden; border:1px solid var(--border);';
+        box.dataset.existingIdx = idx;
+        box.innerHTML = `
+          <img src="${url}" style="width:100%; height:100%; object-fit:cover;">
+          <button type="button" onclick="removeExistingImage(this, '${url}')" style="position:absolute; top:3px; right:3px; background:rgba(0,0,0,0.5); color:#fff; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; font-size:12px; line-height:20px; text-align:center; padding:0;">✕</button>
+        `;
+        document.getElementById('extraImageList').appendChild(box);
+      });
+
+      await Promise.all([loadUsers(c.owner_nickname, c.owner_contact, c.designer_nickname, c.designer_contact), loadCustomFields(c.species_name, c.custom_field_values)]);
+    }
+
+    async function loadCustomFields(speciesName, existingValues) {
+      if (!speciesName) return;
+      const { data: sp } = await sb.from('species').select('custom_fields').eq('name', speciesName).single();
+      if (!sp?.custom_fields?.length) return;
+
+      document.getElementById('customFieldsSection').style.display = '';
+      document.getElementById('customFieldInputs').innerHTML = sp.custom_fields.map(field => `
+        <div class="form-group" style="margin-bottom:12px;">
+          <label class="form-label" style="font-size:13px; font-weight:500;">${field}</label>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <input type="text" class="form-input custom-field-input" data-field="${field}"
+              placeholder="${field} 입력"
+              value="${existingValues?.[field] ? existingValues[field] : ''}"
+              style="flex:1;">
+            <button type="button" onclick="this.previousElementSibling.value=''"
+              style="flex-shrink:0; padding:0 12px; height:42px; border:1px solid var(--border); border-radius:8px; background:#fff; color:var(--text-mute); cursor:pointer; font-size:13px;">
+              삭제
+            </button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function loadUsers(currentOwner, currentContact, currentDesigner, currentDesignerContact) {
+      const myNick = currentUser.user_metadata?.nickname;
+
+      const [c, s] = await Promise.all([
+        sb.from('characters').select('owner_nickname').not('owner_nickname', 'is', null),
+        sb.from('species').select('owner_nickname').not('owner_nickname', 'is', null),
+      ]);
+
+      const nickSet = new Set();
+      if (myNick) nickSet.add(myNick);
+      (c.data || []).forEach(r => nickSet.add(r.owner_nickname));
+      (s.data || []).forEach(r => nickSet.add(r.owner_nickname));
+
+      allUsers = [...nickSet].sort((a, b) => a.localeCompare(b, 'ko'));
+      renderUserList(allUsers);
+      renderDesignerList(allUsers);
+
+      // 기존 소유주 판별
+      if (allUsers.includes(currentOwner)) {
+        setOwnerType('site');
+        selectUser(currentOwner);
+      } else {
+        setOwnerType('external');
+        document.getElementById('ownerExternalName').value    = currentOwner || '';
+        document.getElementById('ownerExternalContact').value = currentContact || '';
+      }
+
+      // 기존 디자이너 판별
+      if (!currentDesigner) {
+        // 없으면 기본값 site, 아무것도 선택 안함
+      } else if (allUsers.includes(currentDesigner)) {
+        setDesignerType('site');
+        selectDesigner(currentDesigner);
+      } else {
+        setDesignerType('external');
+        document.getElementById('designerExternalName').value    = currentDesigner || '';
+        document.getElementById('designerExternalContact').value = currentDesignerContact || '';
+      }
+    }
+
+    function renderUserList(list) {
+      const el = document.getElementById('ownerUserList');
+      if (!list.length) {
+        el.innerHTML = '<p style="padding:12px; color:var(--text-mute); font-size:13px;">유저가 없어요</p>';
+        return;
+      }
+      el.innerHTML = list.map(nick => `
+        <div onclick="selectUser('${nick}')" id="userItem_${nick}"
+          style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border);"
+          onmouseover="this.style.background='var(--sky-pale)'" onmouseout="this.style.background= selectedNick==='${nick}' ? 'var(--sky-light)' : ''">
+          ${nick}
+        </div>
+      `).join('');
+    }
+
+    function selectUser(nick) {
+      selectedNick = nick;
+      document.querySelectorAll('#ownerUserList > div').forEach(el => {
+        el.style.background = el.id === `userItem_${nick}` ? 'var(--sky-light)' : '';
+        el.style.fontWeight  = el.id === `userItem_${nick}` ? '600' : '';
+      });
+      const disp = document.getElementById('ownerSelectedDisplay');
+      disp.textContent = `선택됨: ${nick}`;
+      disp.style.display = 'block';
+    }
+
+    function filterUsers(q) {
+      const filtered = q ? allUsers.filter(n => n.includes(q)) : allUsers;
+      renderUserList(filtered);
+      if (selectedNick) selectUser(selectedNick);
+    }
+
+    function renderDesignerList(list) {
+      const el = document.getElementById('designerUserList');
+      if (!list.length) {
+        el.innerHTML = '<p style="padding:12px; color:var(--text-mute); font-size:13px;">유저가 없어요</p>';
+        return;
+      }
+      el.innerHTML = list.map(nick => `
+        <div onclick="selectDesigner('${nick}')" id="designerItem_${nick}"
+          style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border);"
+          onmouseover="this.style.background='var(--sky-pale)'" onmouseout="this.style.background= selectedDesignerNick==='${nick}' ? 'var(--sky-light)' : ''">
+          ${nick}
+        </div>
+      `).join('');
+    }
+
+    function selectDesigner(nick) {
+      selectedDesignerNick = nick;
+      document.querySelectorAll('#designerUserList > div').forEach(el => {
+        el.style.background = el.id === `designerItem_${nick}` ? 'var(--sky-light)' : '';
+        el.style.fontWeight  = el.id === `designerItem_${nick}` ? '600' : '';
+      });
+      const disp = document.getElementById('designerSelectedDisplay');
+      disp.textContent = `선택됨: ${nick}`;
+      disp.style.display = 'block';
+    }
+
+    function clearDesigner() {
+      selectedDesignerNick = null;
+      document.querySelectorAll('#designerUserList > div').forEach(el => {
+        el.style.background = '';
+        el.style.fontWeight  = '';
+      });
+      const disp = document.getElementById('designerSelectedDisplay');
+      disp.style.display = 'none';
+    }
+
+    function filterDesigners(q) {
+      const filtered = q ? allUsers.filter(n => n.includes(q)) : allUsers;
+      renderDesignerList(filtered);
+      if (selectedDesignerNick) selectDesigner(selectedDesignerNick);
+    }
+
+    function setDesignerType(type) {
+      designerType = type;
+      const isSite = type === 'site';
+      document.getElementById('designerSiteSection').style.display    = isSite ? '' : 'none';
+      document.getElementById('designerExternalSection').style.display = isSite ? 'none' : '';
+      document.getElementById('btnDesignerSite').style.background  = isSite ? 'var(--sky)' : '#fff';
+      document.getElementById('btnDesignerSite').style.color       = isSite ? '#fff' : 'var(--text-sub)';
+      document.getElementById('btnDesignerSite').style.borderColor = isSite ? 'var(--sky)' : 'var(--border)';
+      document.getElementById('btnDesignerExternal').style.background  = isSite ? '#fff' : 'var(--sky)';
+      document.getElementById('btnDesignerExternal').style.color       = isSite ? 'var(--text-sub)' : '#fff';
+      document.getElementById('btnDesignerExternal').style.borderColor = isSite ? 'var(--border)' : 'var(--sky)';
+    }
+
+    function setOwnerType(type) {
+      ownerType = type;
+      const isSite = type === 'site';
+      document.getElementById('ownerSiteSection').style.display    = isSite ? '' : 'none';
+      document.getElementById('ownerExternalSection').style.display = isSite ? 'none' : '';
+      document.getElementById('btnSiteUser').style.background  = isSite ? 'var(--sky)' : '#fff';
+      document.getElementById('btnSiteUser').style.color       = isSite ? '#fff' : 'var(--text-sub)';
+      document.getElementById('btnSiteUser').style.borderColor = isSite ? 'var(--sky)' : 'var(--border)';
+      document.getElementById('btnExternal').style.background  = isSite ? '#fff' : 'var(--sky)';
+      document.getElementById('btnExternal').style.color       = isSite ? 'var(--text-sub)' : '#fff';
+      document.getElementById('btnExternal').style.borderColor = isSite ? 'var(--border)' : 'var(--sky)';
+    }
+
+    // 메인 이미지 미리보기
+    document.getElementById('imageFile').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        document.getElementById('imagePreview').src = ev.target.result;
+        document.getElementById('imagePreview').style.display = 'block';
+        document.getElementById('uploadPlaceholder').style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // 기존 추가 이미지 제거
+    function removeExistingImage(btn, url) {
+      removedExtraImages.push(url);
+      btn.closest('div').remove();
+    }
+
+    // 새 추가 이미지 선택
+    function addExtraImages(input) {
+      const files = [...input.files];
+      files.forEach(file => {
+        newExtraFiles.push(file);
+        const reader = new FileReader();
+        const idx = newExtraFiles.length - 1;
+        reader.onload = (ev) => {
+          const box = document.createElement('div');
+          box.style.cssText = 'position:relative; width:90px; height:90px; border-radius:8px; overflow:hidden; border:1px solid var(--border);';
+          box.innerHTML = `
+            <img src="${ev.target.result}" style="width:100%; height:100%; object-fit:cover;">
+            <button type="button" onclick="removeNewImage(this, ${idx})" style="position:absolute; top:3px; right:3px; background:rgba(0,0,0,0.5); color:#fff; border:none; border-radius:50%; width:20px; height:20px; cursor:pointer; font-size:12px; line-height:20px; text-align:center; padding:0;">✕</button>
+          `;
+          document.getElementById('extraImageList').appendChild(box);
+        };
+        reader.readAsDataURL(file);
+      });
+      input.value = '';
+    }
+
+    function removeNewImage(btn, idx) {
+      newExtraFiles[idx] = null;
+      btn.closest('div').remove();
+    }
+
+    // 저장
+    document.getElementById('editForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name    = document.getElementById('charName').value.trim();
+      const desc    = document.getElementById('charDesc').value.trim();
+      const file    = document.getElementById('imageFile').files[0];
+      const errorEl = document.getElementById('editError');
+      const btn     = document.getElementById('submitBtn');
+
+      errorEl.textContent = '';
+      if (!name) { errorEl.textContent = '이름을 입력해주세요.'; return; }
+
+      let owner = null;
+      let externalContact = null;
+      if (ownerType === 'site') {
+        if (!selectedNick) { errorEl.textContent = '소유주를 선택해주세요.'; return; }
+        owner = selectedNick;
+      } else {
+        const externalName = document.getElementById('ownerExternalName').value.trim();
+        if (!externalName) { errorEl.textContent = '소유주 이름을 입력해주세요.'; return; }
+        owner = externalName;
+        externalContact = document.getElementById('ownerExternalContact').value.trim();
+      }
+
+      // 디자이너 수집 (필수)
+      let designer = null;
+      let designer_contact = null;
+      if (designerType === 'site') {
+        if (!selectedDesignerNick) { errorEl.textContent = '디자이너를 선택해주세요.'; return; }
+        designer = selectedDesignerNick;
+      } else {
+        designer = document.getElementById('designerExternalName').value.trim();
+        if (!designer) { errorEl.textContent = '디자이너 이름을 입력해주세요.'; return; }
+        designer_contact = document.getElementById('designerExternalContact').value.trim() || null;
+      }
+
+      btn.textContent = '저장 중...';
+      btn.disabled = true;
+
+      // 메인 이미지
+      let image_url = currentImageUrl;
+      if (file) {
+        const blob     = await compressImage(file);
+        const fileName = `${Date.now()}_${name}.jpg`;
+        const { error: uploadError } = await sb.storage.from('images').upload(fileName, blob, { contentType: 'image/jpeg' });
+        if (uploadError) {
+          errorEl.textContent = '메인 이미지 업로드에 실패했어요.';
+          btn.textContent = '저장하기'; btn.disabled = false; return;
+        }
+        const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);
+        image_url = urlData.publicUrl;
+      }
+
+      // 추가 이미지: 기존 중 삭제 안 된 것 + 새로 업로드한 것
+      const keptImages = existingExtraImages.filter(url => !removedExtraImages.includes(url));
+      const uploadedNew = [];
+      for (const f of newExtraFiles.filter(f => f !== null)) {
+        const blob     = await compressImage(f);
+        const fileName = `${Date.now()}_extra_${Math.random().toString(36).slice(2)}.jpg`;
+        const { error: uploadError } = await sb.storage.from('images').upload(fileName, blob, { contentType: 'image/jpeg' });
+        if (uploadError) {
+          errorEl.textContent = '추가 이미지 업로드에 실패했어요.';
+          btn.textContent = '저장하기'; btn.disabled = false; return;
+        }
+        const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);
+        uploadedNew.push(urlData.publicUrl);
+      }
+      const additional_images = [...keptImages, ...uploadedNew];
+
+      // 커스텀 필드 값 수집
+      const customFieldValues = {};
+      document.querySelectorAll('.custom-field-input').forEach(input => {
+        const val = input.value.trim();
+        if (val) customFieldValues[input.dataset.field] = val;
+      });
+
+      const { error } = await sb.from('characters').update({
+        name,
+        designer_nickname:   designer,
+        designer_contact:    designer_contact,
+        owner_nickname:      owner,
+        owner_contact:       externalContact || null,
+        description:         desc || null,
+        image_url,
+        additional_images:   additional_images.length ? additional_images : null,
+        custom_field_values: Object.keys(customFieldValues).length ? customFieldValues : null,
+      }).eq('id', charId);
+
+      if (error) {
+        errorEl.textContent = `저장에 실패했어요: ${error.message}`;
+        btn.textContent = '저장하기'; btn.disabled = false; return;
+      }
+
+      window.location.href = `character.html?id=${charId}`;
+    });
+
+    initPage();
+  </script>
+</body>
+</html>

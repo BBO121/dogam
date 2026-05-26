@@ -1,0 +1,266 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>종족 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <!-- 헤더 -->
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main">
+
+      <!-- 종족 상세 -->
+      <section class="species-detail" id="speciesDetail">
+        <p class="page-loading">불러오는 중...</p>
+      </section>
+
+      <!-- 소속 개체 목록 -->
+      <section class="section" id="charactersSection" style="display:none;">
+        <div class="section-header">
+          <h2>소속 개체 <span class="count-badge" id="charCount">0</span></h2>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <select id="charSort" class="list-sort" style="margin:0;">
+              <option value="recent">최근 등록순</option>
+              <option value="name">이름순</option>
+            </select>
+            <button id="manageBtn" style="display:none; padding:6px 14px; border:1px solid var(--border); border-radius:8px; background:#fff; font-size:13px; cursor:pointer; color:var(--text-sub);" onclick="toggleManage()">관리</button>
+          </div>
+        </div>
+        <!-- 관리 모드 액션 바 -->
+        <div id="manageBar" style="display:none; margin-bottom:12px; padding:10px 14px; background:var(--sky-pale); border-radius:10px; border:1px solid var(--sky-light); align-items:center; gap:12px; flex-wrap:wrap;">
+          <span id="selectedCount" style="font-size:13px; color:var(--text-sub);">0개 선택됨</span>
+          <button onclick="selectAll()" style="padding:4px 12px; border:1px solid var(--border); border-radius:6px; background:#fff; font-size:12px; cursor:pointer;">전체 선택</button>
+          <button onclick="deselectAll()" style="padding:4px 12px; border:1px solid var(--border); border-radius:6px; background:#fff; font-size:12px; cursor:pointer;">전체 해제</button>
+          <button id="deleteSelectedBtn" onclick="deleteSelected()" disabled style="padding:4px 12px; border:none; border-radius:6px; background:#ef4444; color:#fff; font-size:12px; cursor:pointer; opacity:0.4;">선택 삭제</button>
+          <button onclick="toggleManage()" style="padding:4px 12px; border:1px solid var(--border); border-radius:6px; background:#fff; font-size:12px; cursor:pointer; margin-left:auto;">취소</button>
+        </div>
+        <div class="character-grid" id="characterGrid"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- 푸터 -->
+  <footer class="footer">
+    <p>© 2026 도감</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    const speciesId = new URLSearchParams(window.location.search).get('id');
+    let allChars    = [];
+    let isOwner     = false;
+    let manageMode  = false;
+
+    if (!speciesId) {
+      document.getElementById('speciesDetail').innerHTML = '<p class="page-loading">잘못된 접근이에요.</p>';
+    } else {
+      loadPage();
+    }
+
+    async function loadPage() {
+      const user = await getUser();
+      const userNickname = user?.user_metadata?.nickname || null;
+      const isAdminUser  = user?.user_metadata?.role === 'admin';
+
+      // 종족 정보
+      const { data: s, error } = await sb
+        .from('species')
+        .select('*')
+        .eq('id', speciesId)
+        .single();
+
+      if (error || !s) {
+        document.getElementById('speciesDetail').innerHTML = '<p class="page-loading">종족을 찾을 수 없어요.</p>';
+        return;
+      }
+
+      document.title = `${s.name} — 도감`;
+
+      isOwner = isAdminUser || userNickname === s.owner_nickname;
+
+      const registeredDate = new Date(s.created_at).toLocaleDateString('ko-KR', {
+        year: 'numeric', month: '2-digit', day: '2-digit'
+      }).replace(/\. /g, '.').replace(/\.$/, '');
+
+      const fields = s.custom_fields?.length
+        ? s.custom_fields.map(f => `<span class="field-tag">${f}</span>`).join('')
+        : '';
+
+      document.getElementById('speciesDetail').innerHTML = `
+        <div class="species-detail-top">
+          <div class="species-detail-img" ${s.image_url ? `style="background-image:url('${s.image_url}'); background-size:cover; background-position:center;"` : ''}></div>
+          <div class="species-detail-info">
+            <div class="breadcrumb">
+              <a href="index.html">홈</a>
+              <span>/</span>
+              <a href="species-list.html">전체 종족</a>
+              <span>/</span>
+              <span>${s.name}</span>
+            </div>
+            <h1 class="species-detail-name">${s.name}</h1>
+            <div class="species-detail-meta">
+              <div class="meta-item">
+                <span class="meta-label">종족주</span>
+                <span class="meta-value">${s.owner_nickname || '—'}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">등록일</span>
+                <span class="meta-value">${registeredDate}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">개체 수</span>
+                <span class="meta-value" id="charCountMeta">—</span>
+              </div>
+            </div>
+            ${s.description ? `<p class="species-detail-desc">${s.description}</p>` : ''}
+            ${isOwner ? `
+            <div class="species-detail-actions">
+              <a href="character-register.html?species_id=${speciesId}&species=${encodeURIComponent(s.name)}" class="btn-secondary">개체 등록</a>
+              <a href="bulk-import.html?species_id=${speciesId}&species=${encodeURIComponent(s.name)}" class="btn-ghost">일괄 등록</a>
+              <a href="species-edit.html?id=${speciesId}" class="btn-ghost">종족 정보 수정</a>
+            </div>` : ''}
+          </div>
+        </div>
+        ${fields ? `
+        <div class="species-fields">
+          <h3 class="species-fields-title">개체 항목</h3>
+          <div class="species-fields-list">${fields}</div>
+        </div>` : ''}
+      `;
+
+      // 소속 개체
+      const { data: chars } = await sb
+        .from('characters')
+        .select('id, name, species_name, owner_nickname, image_url, created_at')
+        .eq('species_name', s.name)
+        .order('created_at', { ascending: false });
+
+      allChars = chars || [];
+      renderChars();
+
+      const countEl = document.getElementById('charCountMeta');
+      if (countEl) countEl.textContent = `${allChars.length}마리`;
+
+      document.getElementById('charactersSection').style.display = '';
+      if (isOwner) document.getElementById('manageBtn').style.display = '';
+    }
+
+    function renderChars() {
+      const sort  = document.getElementById('charSort').value;
+      let list = [...allChars];
+
+      if (sort === 'name') {
+        list.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+      }
+
+      document.getElementById('charCount').textContent = list.length;
+
+      const grid = document.getElementById('characterGrid');
+      if (!list.length) {
+        grid.innerHTML = '<p class="page-loading">등록된 개체가 없어요.</p>';
+        return;
+      }
+
+      grid.innerHTML = list.map(c => `
+        <div style="position:relative;" id="card_${c.id}">
+          ${manageMode ? `
+          <label style="position:absolute; top:8px; left:8px; z-index:2; cursor:pointer;">
+            <input type="checkbox" class="char-checkbox" data-id="${c.id}" onchange="onCheckChange()"
+              style="width:18px; height:18px; cursor:pointer; accent-color:var(--sky);">
+          </label>` : ''}
+          <a href="${manageMode ? 'javascript:void(0)' : `character.html?id=${c.id}`}" class="character-card"
+            style="${manageMode ? 'cursor:default;' : ''}"
+            onclick="${manageMode ? `toggleCheck('${c.id}'); return false;` : ''}">
+            <div class="character-img" ${c.image_url ? `style="background-image:url('${c.image_url}'); background-size:cover; background-position:center;"` : ''}></div>
+            <div class="character-info">
+              <p class="character-name">${c.name}</p>
+              <p class="character-species">${c.species_name || ''}</p>
+              <p class="character-owner">소유주: ${c.owner_nickname || '—'}</p>
+            </div>
+          </a>
+        </div>
+      `).join('');
+    }
+
+    function toggleManage() {
+      manageMode = !manageMode;
+      const manageBar = document.getElementById('manageBar');
+      const manageBtn = document.getElementById('manageBtn');
+      manageBar.style.display = manageMode ? 'flex' : 'none';
+      manageBtn.textContent   = manageMode ? '완료' : '관리';
+      manageBtn.style.color   = manageMode ? 'var(--sky-deep)' : 'var(--text-sub)';
+      renderChars();
+    }
+
+    function toggleCheck(id) {
+      const cb = document.querySelector(`.char-checkbox[data-id="${id}"]`);
+      if (cb) { cb.checked = !cb.checked; onCheckChange(); }
+    }
+
+    function onCheckChange() {
+      const checked = document.querySelectorAll('.char-checkbox:checked').length;
+      document.getElementById('selectedCount').textContent = `${checked}개 선택됨`;
+      const btn = document.getElementById('deleteSelectedBtn');
+      btn.disabled = checked === 0;
+      btn.style.opacity = checked === 0 ? '0.4' : '1';
+    }
+
+    function selectAll() {
+      document.querySelectorAll('.char-checkbox').forEach(cb => cb.checked = true);
+      onCheckChange();
+    }
+
+    function deselectAll() {
+      document.querySelectorAll('.char-checkbox').forEach(cb => cb.checked = false);
+      onCheckChange();
+    }
+
+    async function deleteSelected() {
+      const checked = [...document.querySelectorAll('.char-checkbox:checked')];
+      if (!checked.length) return;
+      if (!confirm(`선택한 ${checked.length}개의 개체를 정말 삭제할까요?`)) return;
+
+      const ids = checked.map(cb => cb.dataset.id);
+      const { error } = await sb.from('characters').delete().in('id', ids);
+      if (error) { alert('삭제에 실패했어요.'); return; }
+
+      allChars = allChars.filter(c => !ids.includes(String(c.id)));
+      manageMode = false;
+      document.getElementById('manageBar').style.display = 'none';
+      document.getElementById('manageBtn').textContent = '관리';
+      document.getElementById('manageBtn').style.color = 'var(--text-sub)';
+      renderChars();
+
+      const countEl = document.getElementById('charCountMeta');
+      if (countEl) countEl.textContent = `${allChars.length}마리`;
+    }
+
+    document.getElementById('charSort').addEventListener('change', renderChars);
+  </script>
+</body>
+</html>
+
+
+
+

@@ -1,0 +1,164 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>전체 개체 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+      <section class="section">
+
+        <div class="list-page-header">
+          <div>
+            <h1 class="list-page-title">전체 개체</h1>
+            <p class="list-page-count">총 39개의 개체</p>
+          </div>
+        </div>
+
+        <!-- 검색 + 필터 + 정렬 -->
+        <div class="list-controls">
+          <input type="text" class="list-search" placeholder="개체 이름으로 검색">
+          <select class="list-sort">
+            <option>전체 종족</option>
+            <option>드래곤</option>
+            <option>엘프</option>
+            <option>요정</option>
+            <option>늑대인간</option>
+            <option>슬라임</option>
+            <option>골렘</option>
+          </select>
+          <select class="list-sort">
+            <option>최근 등록순</option>
+            <option>이름순</option>
+          </select>
+        </div>
+
+        <div class="character-grid" id="characterGrid">
+
+          <a href="character.html" class="character-card" data-name="루나">
+            <div class="character-img"></div>
+            <div class="character-info">
+              <p class="character-name">루나</p>
+              <p class="character-species">드래곤</p>
+              <p class="character-owner">소유주: 뽀</p>
+            </div>
+          </a>
+
+          <a href="character.html" class="character-card" data-name="아르">
+            <div class="character-img"></div>
+            <div class="character-info">
+              <p class="character-name">아르</p>
+              <p class="character-species">엘프</p>
+              <p class="character-owner">소유주: 별이</p>
+            </div>
+          </a>
+
+          <a href="character.html" class="character-card" data-name="모글">
+            <div class="character-img"></div>
+            <div class="character-info">
+              <p class="character-name">모글</p>
+              <p class="character-species">슬라임</p>
+              <p class="character-owner">소유주: 하늘</p>
+            </div>
+          </a>
+
+          <a href="character.html" class="character-card" data-name="제르">
+            <div class="character-img"></div>
+            <div class="character-info">
+              <p class="character-name">제르</p>
+              <p class="character-species">늑대인간</p>
+              <p class="character-owner">소유주: 달빛</p>
+            </div>
+          </a>
+
+          <a href="character.html" class="character-card" data-name="티아">
+            <div class="character-img"></div>
+            <div class="character-info">
+              <p class="character-name">티아</p>
+              <p class="character-species">요정</p>
+              <p class="character-owner">소유주: 미정</p>
+            </div>
+          </a>
+
+          <a href="character.html" class="character-card" data-name="바루">
+            <div class="character-img"></div>
+            <div class="character-info">
+              <p class="character-name">바루</p>
+              <p class="character-species">골렘</p>
+              <p class="character-owner">소유주: 뽀</p>
+            </div>
+          </a>
+
+          <a href="character.html" class="character-card" data-name="세라">
+            <div class="character-img"></div>
+            <div class="character-info">
+              <p class="character-name">세라</p>
+              <p class="character-species">드래곤</p>
+              <p class="character-owner">소유주: 구름</p>
+            </div>
+          </a>
+
+          <a href="character.html" class="character-card" data-name="핀">
+            <div class="character-img"></div>
+            <div class="character-info">
+              <p class="character-name">핀</p>
+              <p class="character-species">엘프</p>
+              <p class="character-owner">소유주: 별이</p>
+            </div>
+          </a>
+
+          <a href="character.html" class="character-card" data-name="루리">
+            <div class="character-img"></div>
+            <div class="character-info">
+              <p class="character-name">루리</p>
+              <p class="character-species">요정</p>
+              <p class="character-owner">소유주: 별이</p>
+            </div>
+          </a>
+
+          <a href="character.html" class="character-card" data-name="루">
+            <div class="character-img"></div>
+            <div class="character-info">
+              <p class="character-name">루</p>
+              <p class="character-species">슬라임</p>
+              <p class="character-owner">소유주: 하늘</p>
+            </div>
+          </a>
+
+        </div>
+
+        <p id="noResult" style="display:none; padding: 40px 0; color: var(--text-mute); font-size:14px;">
+          검색 결과가 없어요.
+        </p>
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 도감</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/main.js"></script>
+</body>
+</html>
+
+

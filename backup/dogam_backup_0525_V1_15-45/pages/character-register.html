@@ -1,0 +1,145 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>개체 등록 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar">
+      <nav class="sidebar-menu">
+        <a href="index.html" class="sidebar-item">
+          <span class="icon">🏠</span> 홈
+        </a>
+        <a href="character-list.html" class="sidebar-item">
+          <span class="icon">📖</span> 전체 개체</a>
+        <a href="species-list.html" class="sidebar-item">
+          <span class="icon">🐾</span> 전체 종족
+        </a>
+        <a href="#" class="sidebar-item sidebar-item--login">
+          <span class="icon">⭐</span> 내 캐릭터
+        </a>
+        <a href="#" class="sidebar-item sidebar-item--login">
+          <span class="icon">👤</span> 내 정보
+        </a>
+      </nav>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="sidebar-section-title">종족</div>
+      <nav class="sidebar-species">
+        <a href="species.html" class="sidebar-species-item">드래곤 <span>12</span></a>
+        <a href="species.html" class="sidebar-species-item">요정 <span>8</span></a>
+        <a href="species.html" class="sidebar-species-item">늑대인간 <span>5</span></a>
+        <a href="species.html" class="sidebar-species-item">슬라임 <span>3</span></a>
+        <a href="species.html" class="sidebar-species-item">엘프 <span>9</span></a>
+        <a href="species.html" class="sidebar-species-item">골렘 <span>2</span></a>
+        <a href="species-list.html" class="sidebar-species-all">전체보기</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <div class="register-wrap">
+
+        <div class="breadcrumb" style="margin-bottom: 24px;">
+          <a href="index.html">홈</a>
+          <span>/</span>
+          <a href="species.html">드래곤</a>
+          <span>/</span>
+          <span>개체 등록</span>
+        </div>
+
+        <h1 class="register-title">개체 등록</h1>
+        <p class="register-subtitle">드래곤 종족에 새로운 개체를 추가해요</p>
+
+        <form class="register-form">
+
+          <!-- 이미지 -->
+          <div class="form-group">
+            <label class="form-label">이미지</label>
+            <div class="img-upload-box img-upload-box--portrait">
+              <p class="img-upload-text">클릭하여 이미지 업로드</p>
+              <p class="img-upload-hint">권장 비율: 3:4</p>
+            </div>
+          </div>
+
+          <!-- 이름 -->
+          <div class="form-group">
+            <label class="form-label">이름 <span class="required">*</span></label>
+            <input type="text" class="form-input" placeholder="개체 이름을 입력하세요">
+          </div>
+
+          <!-- 소유주 -->
+          <div class="form-group">
+            <label class="form-label">소유주</label>
+            <div class="owner-type-tabs">
+              <button type="button" class="owner-tab active">유저 검색</button>
+              <button type="button" class="owner-tab">직접 입력</button>
+            </div>
+            <input type="text" class="form-input" placeholder="닉네임으로 유저를 검색하세요">
+            <p class="form-hint">미입력 시 소유주 없음으로 등록돼요</p>
+          </div>
+
+          <!-- 설명 -->
+          <div class="form-group">
+            <label class="form-label">설명</label>
+            <textarea class="form-textarea" placeholder="이 개체에 대한 설명을 입력하세요" rows="4"></textarea>
+          </div>
+
+          <!-- 커스텀 필드 (종족주가 설정한 항목) -->
+          <div class="form-group">
+            <label class="form-label">상세 정보</label>
+            <p class="form-hint">드래곤 종족의 항목이에요</p>
+
+            <div class="custom-fields-register">
+              <div class="form-group">
+                <label class="form-label-sub">속성</label>
+                <input type="text" class="form-input" placeholder="예: 불꽃, 얼음, 바람">
+              </div>
+              <div class="form-group">
+                <label class="form-label-sub">나이</label>
+                <input type="text" class="form-input" placeholder="예: 300년">
+              </div>
+              <div class="form-group">
+                <label class="form-label-sub">날개 색상</label>
+                <input type="text" class="form-input" placeholder="예: 붉은색">
+              </div>
+              <div class="form-group">
+                <label class="form-label-sub">서식지</label>
+                <input type="text" class="form-input" placeholder="예: 북부 설산">
+              </div>
+            </div>
+          </div>
+
+          <!-- 버튼 -->
+          <div class="register-actions">
+            <a href="species.html" class="btn-ghost">취소</a>
+            <button type="submit" class="btn-secondary">등록하기</button>
+          </div>
+
+        </form>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 도감</p>
+  </footer>
+
+  <script src="../js/main.js"></script>
+</body>
+</html>
+

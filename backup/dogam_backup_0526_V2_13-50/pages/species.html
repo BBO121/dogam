@@ -1,0 +1,190 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>종족 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <!-- 헤더 -->
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main">
+
+      <!-- 종족 상세 -->
+      <section class="species-detail" id="speciesDetail">
+        <p class="page-loading">불러오는 중...</p>
+      </section>
+
+      <!-- 소속 개체 목록 -->
+      <section class="section" id="charactersSection" style="display:none;">
+        <div class="section-header">
+          <h2>소속 개체 <span class="count-badge" id="charCount">0</span></h2>
+          <div class="sort-select">
+            <select id="charSort">
+              <option value="recent">최근 등록순</option>
+              <option value="name">이름순</option>
+            </select>
+          </div>
+        </div>
+        <div class="character-grid" id="characterGrid"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- 푸터 -->
+  <footer class="footer">
+    <p>© 2026 도감</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    const speciesId = new URLSearchParams(window.location.search).get('id');
+    let allChars = [];
+
+    if (!speciesId) {
+      document.getElementById('speciesDetail').innerHTML = '<p class="page-loading">잘못된 접근이에요.</p>';
+    } else {
+      loadPage();
+    }
+
+    async function loadPage() {
+      const user = await getUser();
+      const userNickname = user?.user_metadata?.nickname || null;
+      const isAdminUser  = user?.user_metadata?.role === 'admin';
+
+      // 종족 정보
+      const { data: s, error } = await sb
+        .from('species')
+        .select('*')
+        .eq('id', speciesId)
+        .single();
+
+      if (error || !s) {
+        document.getElementById('speciesDetail').innerHTML = '<p class="page-loading">종족을 찾을 수 없어요.</p>';
+        return;
+      }
+
+      document.title = `${s.name} — 도감`;
+
+      const isOwner = isAdminUser || userNickname === s.owner_nickname;
+
+      const registeredDate = new Date(s.created_at).toLocaleDateString('ko-KR', {
+        year: 'numeric', month: '2-digit', day: '2-digit'
+      }).replace(/\. /g, '.').replace(/\.$/, '');
+
+      const fields = s.custom_fields?.length
+        ? s.custom_fields.map(f => `<span class="field-tag">${f}</span>`).join('')
+        : '';
+
+      document.getElementById('speciesDetail').innerHTML = `
+        <div class="species-detail-top">
+          <div class="species-detail-img" ${s.image_url ? `style="background-image:url('${s.image_url}'); background-size:cover; background-position:center;"` : ''}></div>
+          <div class="species-detail-info">
+            <div class="breadcrumb">
+              <a href="index.html">홈</a>
+              <span>/</span>
+              <a href="species-list.html">전체 종족</a>
+              <span>/</span>
+              <span>${s.name}</span>
+            </div>
+            <h1 class="species-detail-name">${s.name}</h1>
+            <div class="species-detail-meta">
+              <div class="meta-item">
+                <span class="meta-label">종족주</span>
+                <span class="meta-value">${s.owner_nickname || '—'}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">등록일</span>
+                <span class="meta-value">${registeredDate}</span>
+              </div>
+              <div class="meta-item">
+                <span class="meta-label">개체 수</span>
+                <span class="meta-value" id="charCountMeta">—</span>
+              </div>
+            </div>
+            ${s.description ? `<p class="species-detail-desc">${s.description}</p>` : ''}
+            ${isOwner ? `
+            <div class="species-detail-actions">
+              <a href="character-register.html?species_id=${speciesId}&species=${encodeURIComponent(s.name)}" class="btn-secondary">개체 등록</a>
+              <a href="species-edit.html?id=${speciesId}" class="btn-ghost">종족 정보 수정</a>
+            </div>` : ''}
+          </div>
+        </div>
+        ${fields ? `
+        <div class="species-fields">
+          <h3 class="species-fields-title">개체 항목</h3>
+          <div class="species-fields-list">${fields}</div>
+        </div>` : ''}
+      `;
+
+      // 소속 개체
+      const { data: chars } = await sb
+        .from('characters')
+        .select('id, name, species_name, owner_nickname, image_url, created_at')
+        .eq('species_name', s.name)
+        .order('created_at', { ascending: false });
+
+      allChars = chars || [];
+      renderChars();
+
+      const countEl = document.getElementById('charCountMeta');
+      if (countEl) countEl.textContent = `${allChars.length}마리`;
+
+      document.getElementById('charactersSection').style.display = '';
+    }
+
+    function renderChars() {
+      const sort  = document.getElementById('charSort').value;
+      let list = [...allChars];
+
+      if (sort === 'name') {
+        list.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+      }
+
+      document.getElementById('charCount').textContent = list.length;
+
+      const grid = document.getElementById('characterGrid');
+      if (!list.length) {
+        grid.innerHTML = '<p class="page-loading">등록된 개체가 없어요.</p>';
+        return;
+      }
+
+      grid.innerHTML = list.map(c => `
+        <a href="character.html?id=${c.id}" class="character-card">
+          <div class="character-img" ${c.image_url ? `style="background-image:url('${c.image_url}'); background-size:cover; background-position:center;"` : ''}></div>
+          <div class="character-info">
+            <p class="character-name">${c.name}</p>
+            <p class="character-species">${c.species_name || ''}</p>
+            <p class="character-owner">소유주: ${c.owner_nickname || '—'}</p>
+          </div>
+        </a>
+      `).join('');
+    }
+
+    document.getElementById('charSort').addEventListener('change', renderChars);
+  </script>
+</body>
+</html>
+
+
+
+

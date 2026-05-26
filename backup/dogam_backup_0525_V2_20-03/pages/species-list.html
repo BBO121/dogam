@@ -1,0 +1,140 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>전체 종족 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar">
+      <nav class="sidebar-menu">
+        <a href="index.html" class="sidebar-item">
+          <span class="icon">🏠</span> 홈
+        </a>
+        <a href="character-list.html" class="sidebar-item">
+          <span class="icon">📖</span> 전체 개체</a>
+        <a href="species-list.html" class="sidebar-item active">
+          <span class="icon">🐾</span> 전체 종족
+        </a>
+        <a href="#" class="sidebar-item sidebar-item--login">
+          <span class="icon">⭐</span> 내 캐릭터
+        </a>
+        <a href="#" class="sidebar-item sidebar-item--login">
+          <span class="icon">👤</span> 내 정보
+        </a>
+      </nav>
+
+      <div class="sidebar-divider"></div>
+
+      <div class="sidebar-section-title">종족</div>
+      <nav class="sidebar-species">
+        <a href="species.html" class="sidebar-species-item">드래곤 <span>12</span></a>
+        <a href="species.html" class="sidebar-species-item">요정 <span>8</span></a>
+        <a href="species.html" class="sidebar-species-item">늑대인간 <span>5</span></a>
+        <a href="species.html" class="sidebar-species-item">슬라임 <span>3</span></a>
+        <a href="species.html" class="sidebar-species-item">엘프 <span>9</span></a>
+        <a href="species.html" class="sidebar-species-item">골렘 <span>2</span></a>
+        <a href="species-list.html" class="sidebar-species-all">전체보기</a>
+      </nav>
+    </aside>
+
+    <main class="main">
+      <section class="section">
+
+        <div class="list-page-header">
+          <div>
+            <h1 class="list-page-title">전체 종족</h1>
+            <p class="list-page-count">총 6개의 종족</p>
+          </div>
+          <a href="species-register.html" class="btn-secondary">+ 종족 등록</a>
+        </div>
+
+        <!-- 검색 + 정렬 -->
+        <div class="list-controls">
+          <input type="text" class="list-search" placeholder="종족 이름으로 검색">
+          <select class="list-sort">
+            <option>최근 등록순</option>
+            <option>이름순</option>
+            <option>개체 수 많은 순</option>
+          </select>
+        </div>
+
+        <div class="species-grid species-grid--large">
+
+          <a href="species.html" class="species-card">
+            <div class="species-img"></div>
+            <div class="species-info">
+              <p class="species-name">드래곤</p>
+              <p class="species-count">개체 12마리</p>
+            </div>
+          </a>
+
+          <a href="species.html" class="species-card">
+            <div class="species-img"></div>
+            <div class="species-info">
+              <p class="species-name">엘프</p>
+              <p class="species-count">개체 9마리</p>
+            </div>
+          </a>
+
+          <a href="species.html" class="species-card">
+            <div class="species-img"></div>
+            <div class="species-info">
+              <p class="species-name">요정</p>
+              <p class="species-count">개체 8마리</p>
+            </div>
+          </a>
+
+          <a href="species.html" class="species-card">
+            <div class="species-img"></div>
+            <div class="species-info">
+              <p class="species-name">늑대인간</p>
+              <p class="species-count">개체 5마리</p>
+            </div>
+          </a>
+
+          <a href="species.html" class="species-card">
+            <div class="species-img"></div>
+            <div class="species-info">
+              <p class="species-name">슬라임</p>
+              <p class="species-count">개체 3마리</p>
+            </div>
+          </a>
+
+          <a href="species.html" class="species-card">
+            <div class="species-img"></div>
+            <div class="species-info">
+              <p class="species-name">골렘</p>
+              <p class="species-count">개체 2마리</p>
+            </div>
+          </a>
+
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 도감</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/main.js"></script>
+</body>
+</html>
+
+

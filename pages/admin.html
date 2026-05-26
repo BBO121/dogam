@@ -1,0 +1,303 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>어드민 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+
+      <div id="pageLoading" class="page-loading">불러오는 중...</div>
+
+      <div id="pageContent" style="display:none;">
+
+        <div style="padding: 24px 0 0;">
+          <h1 class="list-page-title">어드민</h1>
+        </div>
+
+        <!-- 탭 -->
+        <div class="profile-tabs">
+          <button class="profile-tab active" data-tab="Notices">공지 관리</button>
+          <button class="profile-tab" data-tab="Users">유저 관리</button>
+        </div>
+
+        <!-- 공지 관리 탭 -->
+        <div id="tabNotices" class="tab-content">
+
+          <section class="section">
+            <!-- 작성 버튼 -->
+            <div class="section-header">
+              <h2 class="settings-section-title" style="margin-bottom:0;">공지 목록</h2>
+              <button class="btn-secondary" onclick="toggleWriteForm()">+ 새 공지 작성</button>
+            </div>
+
+            <!-- 인라인 작성 폼 -->
+            <div id="writeForm" class="admin-write-form" style="display:none;">
+              <div class="form-group">
+                <label class="notice-pin-label">
+                  <input type="checkbox" id="isPinned" class="notice-pin-check">
+                  <span>상단 고정</span>
+                </label>
+              </div>
+              <div class="form-group">
+                <label class="form-label">제목 <span class="required">*</span></label>
+                <input type="text" id="noticeTitle" class="form-input" placeholder="공지 제목">
+              </div>
+              <div class="form-group">
+                <label class="form-label">내용 <span class="required">*</span></label>
+                <textarea id="noticeContent" class="form-textarea" rows="6" placeholder="공지 내용"></textarea>
+              </div>
+              <p class="auth-error" id="writeError"></p>
+              <div class="form-actions" style="gap:8px; display:flex; justify-content:flex-end;">
+                <button class="btn-ghost" onclick="toggleWriteForm()">취소</button>
+                <button class="btn-secondary" id="writeSubmitBtn" onclick="submitNotice()">등록</button>
+              </div>
+            </div>
+
+            <!-- 공지 목록 테이블 -->
+            <div id="noticeTableWrap" style="margin-top: 16px;">
+              <table class="admin-table">
+                <thead>
+                  <tr>
+                    <th style="width:48px;">고정</th>
+                    <th>제목</th>
+                    <th style="width:120px;">작성일</th>
+                    <th style="width:72px;"></th>
+                  </tr>
+                </thead>
+                <tbody id="noticeTableBody"></tbody>
+              </table>
+              <p id="noticeEmpty" class="empty-state" style="display:none;">등록된 공지가 없어요.</p>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- 유저 관리 탭 -->
+        <div id="tabUsers" class="tab-content" style="display:none;">
+          <section class="section">
+            <h2 class="settings-section-title">유저 목록</h2>
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>닉네임</th>
+                  <th>이메일</th>
+                  <th style="width:100px;">역할</th>
+                  <th style="width:120px;">가입일</th>
+                  <th style="width:110px;"></th>
+                </tr>
+              </thead>
+              <tbody id="userTableBody"></tbody>
+            </table>
+            <p id="userEmpty" class="empty-state" style="display:none;">유저가 없어요.</p>
+          </section>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 도감</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    let adminUser = null;
+
+    async function initPage() {
+      const user = await getUser();
+      if (!user || user.user_metadata?.role !== 'admin') {
+        window.location.href = 'index.html';
+        return;
+      }
+      adminUser = user;
+
+      document.getElementById('pageLoading').style.display = 'none';
+      document.getElementById('pageContent').style.display = 'block';
+
+      loadNotices();
+      loadUsers();
+    }
+
+    // ── 탭 전환 ──────────────────────────────
+    document.querySelectorAll('.profile-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.profile-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        document.getElementById('tab' + btn.dataset.tab).style.display = 'block';
+      });
+    });
+
+    // ── 공지 관리 ────────────────────────────
+    async function loadNotices() {
+      const { data, error } = await sb
+        .from('notices')
+        .select('*')
+        .order('is_pinned', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      const tbody = document.getElementById('noticeTableBody');
+      const empty = document.getElementById('noticeEmpty');
+
+      if (error || !data || data.length === 0) {
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+      tbody.innerHTML = data.map(n => {
+        const date = new Date(n.created_at).toLocaleDateString('ko-KR', {
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        }).replace(/\. /g, '.').replace(/\.$/, '');
+
+        return `
+          <tr>
+            <td style="text-align:center;">
+              ${n.is_pinned ? '<span class="notice-pin">고정</span>' : '—'}
+            </td>
+            <td class="admin-table-title">${n.title}</td>
+            <td style="color:var(--text-mute); font-size:13px;">${date}</td>
+            <td>
+              <button class="admin-btn-delete" onclick="deleteNotice(${n.id})">삭제</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function toggleWriteForm() {
+      const form = document.getElementById('writeForm');
+      const isOpen = form.style.display === 'none';
+      form.style.display = isOpen ? 'block' : 'none';
+      if (!isOpen) {
+        document.getElementById('noticeTitle').value = '';
+        document.getElementById('noticeContent').value = '';
+        document.getElementById('isPinned').checked = false;
+        document.getElementById('writeError').textContent = '';
+      }
+    }
+
+    async function submitNotice() {
+      const title    = document.getElementById('noticeTitle').value.trim();
+      const content  = document.getElementById('noticeContent').value.trim();
+      const isPinned = document.getElementById('isPinned').checked;
+      const errorEl  = document.getElementById('writeError');
+      const btn      = document.getElementById('writeSubmitBtn');
+
+      errorEl.textContent = '';
+      if (!title)   { errorEl.textContent = '제목을 입력해주세요.'; return; }
+      if (!content) { errorEl.textContent = '내용을 입력해주세요.'; return; }
+
+      btn.textContent = '등록 중...';
+      btn.disabled = true;
+
+      const { error } = await sb.from('notices').insert({
+        title, content,
+        is_pinned: isPinned,
+        author: adminUser?.user_metadata?.nickname || '관리자',
+      });
+
+      if (error) {
+        console.error('[notice insert error]', error);
+        errorEl.textContent = `등록에 실패했어요. (${error.message})`;
+      } else {
+        toggleWriteForm();
+        loadNotices();
+      }
+
+      btn.textContent = '등록';
+      btn.disabled = false;
+    }
+
+    async function deleteNotice(id) {
+      if (!confirm('정말 삭제할까요?')) return;
+      await sb.from('notices').delete().eq('id', id);
+      loadNotices();
+    }
+
+    // ── 유저 관리 ────────────────────────────
+    async function loadUsers() {
+      const { data, error } = await sb.rpc('get_all_users');
+      const tbody = document.getElementById('userTableBody');
+      const empty = document.getElementById('userEmpty');
+
+      if (error || !data || data.length === 0) {
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+      tbody.innerHTML = data.map(u => {
+        const date = new Date(u.created_at).toLocaleDateString('ko-KR', {
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        }).replace(/\. /g, '.').replace(/\.$/, '');
+
+        const roleLabel = u.role === 'admin' ? '관리자'
+                        : u.role === 'species_owner' ? '종족주'
+                        : '일반유저';
+
+        const roleBadgeClass = u.role === 'admin' ? 'badge-admin'
+                             : u.role === 'species_owner' ? 'badge-species-owner'
+                             : 'badge-user';
+
+        const actionBtn = u.role === 'admin' ? '—'
+          : u.role === 'species_owner'
+            ? `<button class="admin-btn-revoke" onclick="setRole('${u.id}', '')">권한 회수</button>`
+            : `<button class="admin-btn-grant" onclick="setRole('${u.id}', 'species_owner')">종족주 임명</button>`;
+
+        return `
+          <tr id="user-row-${u.id}">
+            <td class="admin-table-title">${u.nickname || '—'}</td>
+            <td style="color:var(--text-mute); font-size:13px;">${u.email}</td>
+            <td><span class="${roleBadgeClass}">${roleLabel}</span></td>
+            <td style="color:var(--text-mute); font-size:13px;">${date}</td>
+            <td>${actionBtn}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    async function setRole(userId, role) {
+      const label = role === 'species_owner' ? '종족주 임명' : '권한 회수';
+      if (!confirm(`${label}할까요?`)) return;
+
+      const { error } = await sb.rpc('set_user_role', {
+        target_id: userId,
+        new_role: role,
+      });
+
+      if (error) {
+        alert('변경에 실패했어요.');
+        return;
+      }
+      loadUsers();
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

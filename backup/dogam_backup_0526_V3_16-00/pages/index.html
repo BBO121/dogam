@@ -1,0 +1,137 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <!-- 헤더 -->
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main">
+
+      <!-- 검색 -->
+      <div class="search-wrap">
+        <div class="search-box">
+          <input
+            type="text"
+            id="searchInput"
+            class="search-input"
+            placeholder="개체 이름으로 검색..."
+            autocomplete="off"
+          >
+          <svg class="search-icon" viewBox="0 0 20 20" fill="none">
+            <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          <ul class="search-dropdown" id="searchDropdown"></ul>
+        </div>
+      </div>
+
+      <!-- 종족 섹션 -->
+      <section class="section">
+        <div class="section-header">
+          <h2>종족</h2>
+          <a href="species-list.html" class="btn-more">전체보기</a>
+        </div>
+        <div class="species-grid" id="speciesGrid">
+          <p class="page-loading" id="speciesLoading" style="padding:20px 0;">불러오는 중...</p>
+        </div>
+      </section>
+
+      <!-- 최근 등록 개체 섹션 -->
+      <section class="section">
+        <div class="section-header">
+          <h2>최근 등록된 개체</h2>
+          <a href="character-list.html" class="btn-more">전체보기</a>
+        </div>
+        <div class="character-grid" id="characterGrid">
+          <p class="page-loading" id="characterLoading" style="padding:20px 0;">불러오는 중...</p>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- 푸터 -->
+  <footer class="footer">
+    <p>© 2026 도감</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    async function loadIndex() {
+      const [
+        { data: speciesList },
+        { data: characterList },
+      ] = await Promise.all([
+        sb.from('species').select('id, name, image_url').order('created_at', { ascending: false }).limit(6),
+        sb.from('characters').select('id, name, species_name, owner_nickname, image_url').order('created_at', { ascending: false }).limit(8),
+      ]);
+
+      // 종족 렌더
+      const speciesGrid    = document.getElementById('speciesGrid');
+      const speciesLoading = document.getElementById('speciesLoading');
+      speciesLoading.remove();
+
+      if (!speciesList || speciesList.length === 0) {
+        speciesGrid.innerHTML = '<p style="color:var(--text-mute);font-size:14px;padding:20px 0;">등록된 종족이 없어요.</p>';
+      } else {
+        speciesGrid.innerHTML = speciesList.map(s => `
+          <a href="species.html?id=${s.id}" class="species-card">
+            <div class="species-img"${s.image_url ? ` style="background-image:url('${s.image_url}');background-size:cover;background-position:center;"` : ''}></div>
+            <div class="species-info">
+              <p class="species-name">${s.name}</p>
+            </div>
+          </a>
+        `).join('');
+      }
+
+      // 개체 렌더
+      const characterGrid    = document.getElementById('characterGrid');
+      const characterLoading = document.getElementById('characterLoading');
+      characterLoading.remove();
+
+      if (!characterList || characterList.length === 0) {
+        characterGrid.innerHTML = '<p style="color:var(--text-mute);font-size:14px;padding:20px 0;">등록된 개체가 없어요.</p>';
+      } else {
+        characterGrid.innerHTML = characterList.map(c => `
+          <a href="character.html?id=${c.id}" class="character-card">
+            <div class="character-img"${c.image_url ? ` style="background-image:url('${c.image_url}');background-size:cover;background-position:center;"` : ''}></div>
+            <div class="character-info">
+              <p class="character-name">${c.name}</p>
+              <p class="character-species">${c.species_name || ''}</p>
+              <p class="character-owner">소유주: ${c.owner_nickname || '—'}</p>
+            </div>
+          </a>
+        `).join('');
+      }
+    }
+
+    loadIndex();
+  </script>
+</body>
+</html>
+
+
+
+

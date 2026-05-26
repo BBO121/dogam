@@ -1,0 +1,150 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>개체 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+
+      <div id="charContent">
+        <p class="page-loading">불러오는 중...</p>
+      </div>
+
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 도감</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    const charId = new URLSearchParams(window.location.search).get('id');
+
+    if (!charId) {
+      document.getElementById('charContent').innerHTML = '<p class="page-loading">잘못된 접근이에요.</p>';
+    } else {
+      loadCharacter();
+    }
+
+    async function loadCharacter() {
+      const user = await getUser();
+      const userNickname = user?.user_metadata?.nickname || null;
+      const isAdminUser  = user?.user_metadata?.role === 'admin';
+
+      const { data: c, error } = await sb
+        .from('characters')
+        .select('*')
+        .eq('id', charId)
+        .single();
+
+      if (error || !c) {
+        document.getElementById('charContent').innerHTML = '<p class="page-loading">개체를 찾을 수 없어요.</p>';
+        return;
+      }
+
+      document.title = `${c.name} — 도감`;
+
+      const isOwner = isAdminUser || userNickname === c.owner_nickname;
+
+      // 종족 페이지 링크용 species id 조회
+      let speciesHref = 'species-list.html';
+      if (c.species_name) {
+        const { data: sp } = await sb.from('species').select('id').eq('name', c.species_name).single();
+        if (sp) speciesHref = `species.html?id=${sp.id}`;
+      }
+
+      const registeredDate = new Date(c.created_at).toLocaleDateString('ko-KR', {
+        year: 'numeric', month: '2-digit', day: '2-digit'
+      }).replace(/\. /g, '.').replace(/\.$/, '');
+
+      const additionalImgs = (c.additional_images || []).map(url => `
+        <div style="width:100%; border-radius:var(--radius); overflow:hidden; margin-top:10px;">
+          <img src="${url}" style="width:100%; display:block; object-fit:cover;">
+        </div>
+      `).join('');
+
+      document.getElementById('charContent').innerHTML = `
+        <div class="char-page-header">
+          <div class="breadcrumb">
+            ${c.species_name ? `<a href="${speciesHref}">${c.species_name}</a><span>/</span>` : ''}
+            <span>${c.name}</span>
+          </div>
+          <h1 class="char-page-name">${c.name}</h1>
+        </div>
+
+        <div class="char-body">
+          <div class="char-img-wrap">
+            <div class="char-img-area">
+              ${c.image_url ? `<img src="${c.image_url}" alt="${c.name}" style="width:100%; height:auto; display:block;">` : ''}
+            </div>
+            ${additionalImgs}
+          </div>
+
+          <aside class="char-info-panel">
+            ${c.species_name ? `
+            <div class="char-info-row">
+              <span class="char-info-label">종족</span>
+              <a href="${speciesHref}" class="char-info-value char-info-link">${c.species_name}</a>
+            </div>` : ''}
+            ${c.designer_nickname ? `
+            <div class="char-info-row">
+              <span class="char-info-label">디자이너</span>
+              <span class="char-info-value">${c.designer_nickname}${c.designer_contact ? ` <span style="color:var(--text-mute); font-size:12px;">(${c.designer_contact})</span>` : ''}</span>
+            </div>` : ''}
+            <div class="char-info-row">
+              <span class="char-info-label">소유주</span>
+              <span class="char-info-value">${c.owner_nickname || '—'}${c.owner_contact ? ` <span style="color:var(--text-mute); font-size:12px;">(${c.owner_contact})</span>` : ''}</span>
+            </div>
+            <div class="char-info-row">
+              <span class="char-info-label">등록일</span>
+              <span class="char-info-value">${registeredDate}</span>
+            </div>
+
+            ${c.description ? `
+            <div class="char-info-divider"></div>
+            <p class="char-info-desc">${c.description}</p>` : ''}
+
+            ${c.custom_field_values && Object.keys(c.custom_field_values).length ? `
+            <div class="char-info-divider"></div>
+            ${Object.entries(c.custom_field_values).map(([k, v]) => `
+              <div class="char-info-row">
+                <span class="char-info-label">${k}</span>
+                <span class="char-info-value">${v}</span>
+              </div>
+            `).join('')}` : ''}
+
+            ${isOwner ? `
+            <div class="char-info-divider"></div>
+            <div style="display:flex; justify-content:flex-end;">
+              <a href="character-edit.html?id=${charId}" class="btn-ghost">개체 정보 수정</a>
+            </div>` : ''}
+          </aside>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
+
