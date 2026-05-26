@@ -161,7 +161,7 @@
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
-  <script src="../js/utils.js"></script>
+  <script src="../js/utils.js?v=2"></script>
   <script>
     const charId = new URLSearchParams(window.location.search).get('id');
 
@@ -480,11 +480,18 @@
       // 메인 이미지
       let image_url = currentImageUrl;
       if (file) {
-        const blob     = await compressImage(file);
-        const fileName = `${Date.now()}_${name}.jpg`;
-        const { error: uploadError } = await sb.storage.from('images').upload(fileName, blob, { contentType: 'image/jpeg' });
+        const blob = await compressImage(file);
+        if (!blob) {
+          errorEl.textContent = '이미지 처리에 실패했어요. 다른 이미지를 사용해보세요.';
+          btn.textContent = '저장하기'; btn.disabled = false; return;
+        }
+        const ext      = file.name.split('.').pop().toLowerCase();
+        const safeExt  = ['jpg','jpeg','png','gif','webp'].includes(ext) ? ext : 'jpg';
+        const fileName = `${Date.now()}.${safeExt}`;
+        const { error: uploadError } = await sb.storage.from('images').upload(fileName, blob, { contentType: `image/${safeExt === 'jpg' ? 'jpeg' : safeExt}` });
         if (uploadError) {
-          errorEl.textContent = '메인 이미지 업로드에 실패했어요.';
+          console.error('[이미지 업로드 오류]', uploadError);
+          errorEl.textContent = `메인 이미지 업로드에 실패했어요. (${uploadError.message})`;
           btn.textContent = '저장하기'; btn.disabled = false; return;
         }
         const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);

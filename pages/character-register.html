@@ -163,7 +163,7 @@
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
-  <script src="../js/utils.js"></script>
+  <script src="../js/utils.js?v=2"></script>
   <script>
     let currentUser          = null;
     let ownerType            = 'site';
@@ -411,11 +411,29 @@
       // 메인 이미지 업로드
       let image_url = null;
       if (file) {
-        const blob     = await compressImage(file);
-        const fileName = `${Date.now()}_${name}.jpg`;
-        const { error: uploadError } = await sb.storage.from('images').upload(fileName, blob, { contentType: 'image/jpeg' });
+        console.log('[업로드 1] 파일 선택됨:', file.name, file.size + 'bytes');
+
+        const { data: { session } } = await sb.auth.getSession();
+        console.log('[업로드 2] 세션:', session ? '있음 (' + session.user.email + ')' : '없음!');
+
+        const blob = await compressImage(file);
+        console.log('[업로드 3] 압축 결과:', blob);
+
+        if (!blob) {
+          errorEl.textContent = '이미지 처리에 실패했어요. 다른 이미지를 사용해보세요.';
+          btn.textContent = '등록하기'; btn.disabled = false; return;
+        }
+        const ext      = file.name.split('.').pop().toLowerCase();
+        const safeExt  = ['jpg','jpeg','png','gif','webp'].includes(ext) ? ext : 'jpg';
+        const fileName = `${Date.now()}.${safeExt}`;
+        console.log('[업로드 4] 업로드 시작:', fileName);
+
+        const { error: uploadError } = await sb.storage.from('images').upload(fileName, blob, { contentType: `image/${safeExt === 'jpg' ? 'jpeg' : safeExt}` });
+        console.log('[업로드 5] 결과:', uploadError ? '실패: ' + uploadError.message : '성공');
+
         if (uploadError) {
-          errorEl.textContent = '메인 이미지 업로드에 실패했어요.';
+          console.error('[업로드 상세 오류]', uploadError);
+          errorEl.textContent = `메인 이미지 업로드에 실패했어요. (${uploadError.message})`;
           btn.textContent = '등록하기'; btn.disabled = false; return;
         }
         const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);
