@@ -65,6 +65,7 @@
   <script src="../js/main.js"></script>
   <script>
     let allChars = [];
+    const ownerParam = new URLSearchParams(window.location.search).get('owner');
 
     async function loadCharacters() {
       const { data, error } = await sb
@@ -78,6 +79,10 @@
       }
 
       allChars = data;
+
+      if (ownerParam) {
+        document.querySelector('.list-page-title').textContent = `${ownerParam}의 개체`;
+      }
 
       // 종족 필터 옵션 생성
       const species = [...new Set(data.map(c => c.species_name).filter(Boolean))].sort((a,b) => a.localeCompare(b,'ko'));
@@ -98,8 +103,9 @@
       const sort   = document.getElementById('sortSelect').value;
 
       let list = allChars.filter(c =>
-        (!q  || c.name.includes(q)) &&
-        (!sp || c.species_name === sp)
+        (!q          || c.name.includes(q)) &&
+        (!sp         || c.species_name === sp) &&
+        (!ownerParam || c.owner_nickname === ownerParam)
       );
 
       if (sort === 'name') list = [...list].sort((a,b) => a.name.localeCompare(b.name,'ko'));

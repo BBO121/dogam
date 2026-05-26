@@ -26,9 +26,6 @@ async function initSidebar() {
     <div class="sidebar-divider"></div>
 
     <nav class="sidebar-menu">
-      <a href="#" class="sidebar-item sidebar-login" style="justify-content:space-between;" onclick="openNotifFromSidebar(); return false;">
-        알림<span class="sidebar-notif-badge" id="sidebarNotifBadge" style="display:none">0</span>
-      </a>
       <a href="my-species.html"    class="sidebar-item sidebar-login ${path === 'my-species.html'    ? 'active' : ''}">내 종족</a>
       <a href="my-characters.html" class="sidebar-item sidebar-login ${path === 'my-characters.html' ? 'active' : ''}">내 캐릭터</a>
       <!-- 메시지: 추후 활성화 예정
@@ -43,6 +40,9 @@ async function initSidebar() {
           <a href="transfer-history.html" class="sidebar-subitem ${path === 'transfer-history.html' ? 'active' : ''}">캐릭터 이전 내역</a>
         </div>
       </div>
+      <a href="notifications.html" class="sidebar-item sidebar-login ${path === 'notifications.html' ? 'active' : ''}" style="justify-content:space-between;">
+        알림<span class="sidebar-notif-badge" id="sidebarNotifBadge" style="display:none">0</span>
+      </a>
     </nav>
 
     <div class="sidebar-divider"></div>

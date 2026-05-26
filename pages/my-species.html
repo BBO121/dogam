@@ -60,7 +60,7 @@
       if (!user) { window.location.href = 'login.html'; return; }
 
       const role     = user.user_metadata?.role;
-      const nickname = user.user_metadata?.nickname;
+      const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname;
 
       if (role === 'species_owner' || role === 'admin') {
         document.getElementById('registerBtn').style.display = 'inline-flex';
@@ -83,7 +83,7 @@
       document.getElementById('speciesCount').textContent = `총 ${data.length}개의 종족`;
 
       document.getElementById('speciesGrid').innerHTML = data.map(s => `
-        <a href="species-list.html?id=${s.id}" class="species-card">
+        <a href="species.html?id=${s.id}" class="species-card">
           <div class="species-img"${s.image_url ? ` style="background-image:url('${s.image_url}');background-size:cover;background-position:center;"` : ''}></div>
           <div class="species-info">
             <p class="species-name">${s.name}</p>

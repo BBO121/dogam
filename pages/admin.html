@@ -102,7 +102,7 @@
                   <th>이메일</th>
                   <th style="width:100px;">역할</th>
                   <th style="width:120px;">가입일</th>
-                  <th style="width:110px;"></th>
+                  <th style="width:160px;"></th>
                 </tr>
               </thead>
               <tbody id="userTableBody"></tbody>
@@ -315,10 +315,15 @@
                              : u.role === 'species_owner' ? 'badge-species-owner'
                              : 'badge-user';
 
+        const safeNick = (u.nickname || '').replace(/'/g, "\\'");
         const actionBtn = u.role === 'admin' ? '—'
-          : u.role === 'species_owner'
-            ? `<button class="admin-btn-revoke" onclick="setRole('${u.id}', '')">권한 회수</button>`
-            : `<button class="admin-btn-grant" onclick="setRole('${u.id}', 'species_owner')">종족주 임명</button>`;
+          : `<div style="display:flex; gap:6px; justify-content:flex-end;">
+              ${u.role === 'species_owner'
+                ? `<button class="admin-btn-revoke" onclick="setRole('${u.id}', '')">권한 회수</button>`
+                : `<button class="admin-btn-grant" onclick="setRole('${u.id}', 'species_owner')">종족주 임명</button>`
+              }
+              <button class="admin-btn-delete" onclick="deleteUser('${u.id}', '${safeNick}')">삭제</button>
+            </div>`;
 
         return `
           <tr id="user-row-${u.id}">
@@ -348,6 +353,24 @@
       loadUsers();
     }
 
+    async function deleteUser(userId, nickname) {
+      if (!confirm(`"${nickname}" 유저를 삭제할까요?\n개체·종족·이전 내역의 닉네임은 (알수없음)으로 바뀌어요.`)) return;
+
+      if (nickname) {
+        await Promise.all([
+          sb.from('characters').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname),
+          sb.from('characters').update({ designer_nickname: '(알수없음)' }).eq('designer_nickname', nickname),
+          sb.from('species').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname),
+          sb.from('character_transfers').update({ from_nickname: '(알수없음)' }).eq('from_nickname', nickname),
+          sb.from('character_transfers').update({ to_nickname: '(알수없음)' }).eq('to_nickname', nickname),
+        ]);
+      }
+
+      const { error } = await sb.rpc('delete_user', { target_id: userId });
+      if (error) { alert('계정 삭제에 실패했어요.'); return; }
+      document.getElementById(`user-row-${userId}`)?.remove();
+    }
+
     // ── 종족 관리 ────────────────────────────
     async function loadAdminSpecies() {
       const { data, error } = await sb
@@ -374,16 +397,16 @@
             <td class="admin-table-title"><a href="species.html?id=${s.id}" style="color:inherit;">${s.name}</a></td>
             <td style="color:var(--text-mute); font-size:13px;">${s.owner_nickname || '—'}</td>
             <td style="color:var(--text-mute); font-size:13px;">${date}</td>
-            <td><button class="admin-btn-delete" onclick="deleteSpecies(${s.id}, '${s.name}')">삭제</button></td>
+            <td><button class="admin-btn-delete" onclick="deleteSpecies('${s.id}', '${s.name.replace(/'/g, "\\'")}')">삭제</button></td>
           </tr>
         `;
       }).join('');
     }
 
     async function deleteSpecies(id, name) {
-      if (!confirm(`"${name}" 종족을 삭제할까요?\n소속 개체는 삭제되지 않아요.`)) return;
-      const { error } = await sb.from('species').delete().eq('id', id);
-      if (error) { alert('삭제에 실패했어요.'); return; }
+      if (!confirm(`"${name}" 종족을 삭제할까요?\n소속 개체도 함께 삭제돼요.`)) return;
+      const { error } = await sb.rpc('admin_delete_species', { species_id: id, p_species_name: name });
+      if (error) { alert('삭제에 실패했어요: ' + error.message); return; }
       document.getElementById(`species-row-${id}`)?.remove();
     }
 
@@ -420,7 +443,7 @@
             <td style="color:var(--text-mute); font-size:13px;">${c.species_name || '—'}</td>
             <td style="color:var(--text-mute); font-size:13px;">${c.owner_nickname || '—'}</td>
             <td style="color:var(--text-mute); font-size:13px;">${date}</td>
-            <td><button class="admin-btn-delete" onclick="deleteChar(${c.id}, '${c.name.replace(/'/g, "\\'")}')">삭제</button></td>
+            <td><button class="admin-btn-delete" onclick="deleteChar('${c.id}', '${c.name.replace(/'/g, "\\'")}')">삭제</button></td>
           </tr>
         `;
       }).join('');

@@ -31,14 +31,21 @@
 
         <!-- 프로필 헤더 -->
         <section class="profile-header">
-          <div class="profile-avatar"></div>
+          <div class="profile-avatar" id="profileAvatar" onclick="document.getElementById('avatarInput').click()" title="프로필 이미지 변경">
+            <div class="profile-avatar-overlay">📷</div>
+          </div>
+          <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="uploadAvatar(this)">
           <div class="profile-header-info">
             <div class="breadcrumb">
               <a href="index.html">홈</a>
               <span>/</span>
               <span id="breadcrumbName">내 정보</span>
             </div>
-            <h1 class="profile-name" id="profileName">-<span id="profileRoleBadge"></span></h1>
+            <div class="profile-name-row">
+              <h1 class="profile-name" id="profileName">-</h1>
+              <span id="profileRoleBadge"></span>
+              <button class="profile-gear-btn" id="gearBtn" onclick="toggleSettings()" title="설정">⚙</button>
+            </div>
             <div class="profile-meta">
               <div class="meta-item">
                 <span class="meta-label">가입일</span>
@@ -46,17 +53,13 @@
               </div>
             </div>
             <p class="profile-bio" id="profileBio"></p>
-            <div class="profile-tos" id="profileTosWrap" style="display:none;">
-              <p class="profile-tos-title">개인공지 (TOS)</p>
-              <p class="profile-tos-content" id="profileTos"></p>
-            </div>
           </div>
         </section>
 
         <!-- 탭 -->
         <div class="profile-tabs">
-          <button class="profile-tab active" data-tab="activity">내 활동</button>
-          <button class="profile-tab" data-tab="settings">설정</button>
+          <button class="profile-tab active" data-tab="activity">활동</button>
+          <button class="profile-tab" data-tab="tos">개인공지</button>
         </div>
 
         <!-- 내 활동 탭 -->
@@ -66,7 +69,7 @@
             <div class="activity-subtabs">
               <button class="activity-subtab active" onclick="switchSubtab(this,'species')">종족</button>
               <span class="activity-subtab-divider">|</span>
-              <button class="activity-subtab" onclick="switchSubtab(this,'characters')">보유 캐릭터</button>
+              <button class="activity-subtab" onclick="switchSubtab(this,'characters')">캐릭터</button>
             </div>
 
             <!-- 종족 -->
@@ -92,6 +95,14 @@
           </section>
         </div>
 
+        <!-- 개인공지 탭 -->
+        <div id="tabTos" class="tab-content" style="display:none;">
+          <section class="section">
+            <p id="profileTos" style="font-size:14px; line-height:1.8; color:var(--text-sub); white-space:pre-wrap;"></p>
+            <p id="profileTosEmpty" class="empty-state" style="display:none;">등록된 개인공지가 없어요.</p>
+          </section>
+        </div>
+
         <!-- 설정 탭 -->
         <div id="tabSettings" class="tab-content" style="display:none;">
 
@@ -102,6 +113,11 @@
               <div class="form-group">
                 <label class="form-label">아이디 <span class="label-muted">(변경 불가)</span></label>
                 <input type="text" class="form-input form-input--disabled" id="editId" disabled>
+              </div>
+              <div class="form-group">
+                <label class="form-label">닉네임</label>
+                <input type="text" class="form-input" id="editDisplayName" placeholder="사이트에서 표시될 이름">
+                <p class="form-hint" style="margin-top:5px; font-size:12px; color:var(--text-mute);">변경 시 소유 개체·종족의 닉네임도 함께 바뀌어요.</p>
               </div>
               <div class="form-group">
                 <textarea class="form-textarea" id="editBio" rows="3" placeholder="소개글을 입력해주세요"></textarea>
@@ -179,8 +195,39 @@
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
+  <script src="../js/utils.js"></script>
   <script>
     let currentUser = null;
+
+    async function uploadAvatar(input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      const avatarEl = document.getElementById('profileAvatar');
+      avatarEl.style.opacity = '0.5';
+
+      const blob = await compressImage(file, 400, 0.88);
+      if (!blob) { alert('이미지 처리에 실패했어요.'); avatarEl.style.opacity = ''; return; }
+
+      const fileName = `avatar_${currentUser.id}.jpg`;
+      const { error: uploadError } = await sb.storage.from('images').upload(fileName, blob, {
+        contentType: 'image/jpeg',
+        upsert: true,
+      });
+
+      if (uploadError) { alert('업로드에 실패했어요: ' + uploadError.message); avatarEl.style.opacity = ''; return; }
+
+      const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);
+      const avatarUrl = urlData.publicUrl + '?t=' + Date.now();
+
+      await updateProfile({ avatar_url: urlData.publicUrl });
+
+      avatarEl.style.backgroundImage = `url('${avatarUrl}')`;
+      avatarEl.style.backgroundSize = 'cover';
+      avatarEl.style.backgroundPosition = 'center';
+      avatarEl.style.opacity = '';
+      input.value = '';
+    }
 
     async function initProfile() {
       const user = await getUser();
@@ -190,7 +237,8 @@
       }
 
       currentUser = user;
-      const nickname = user.user_metadata?.nickname || '유저';
+      const nickname    = user.user_metadata?.nickname || '유저';
+      const displayName = user.user_metadata?.display_name || nickname;
       const bio = user.user_metadata?.bio || '';
       const tos = user.user_metadata?.tos || '';
       const joinDate = new Date(user.created_at).toLocaleDateString('ko-KR', {
@@ -199,27 +247,37 @@
 
       const isSpeciesOwner = user.user_metadata?.role === 'species_owner';
 
-      document.getElementById('breadcrumbName').textContent = nickname;
-      document.getElementById('profileName').firstChild.textContent = nickname;
+      document.getElementById('breadcrumbName').textContent = displayName;
+      document.getElementById('profileName').textContent = displayName;
       if (isSpeciesOwner) {
-        document.getElementById('profileRoleBadge').innerHTML = ' <span class="badge-role" style="font-size:10px; padding:3px 8px; vertical-align:middle;">종족주</span>';
+        document.getElementById('profileRoleBadge').innerHTML = '<span class="badge-role" style="font-size:10px; padding:3px 8px;">종족주</span>';
       }
       document.getElementById('profileJoinDate').textContent = joinDate;
       if (bio) document.getElementById('profileBio').textContent = bio;
       if (tos) {
         document.getElementById('profileTos').textContent = tos;
-        document.getElementById('profileTosWrap').style.display = 'block';
+      } else {
+        document.getElementById('profileTosEmpty').style.display = 'block';
       }
 
       document.getElementById('editId').value = nickname;
+      document.getElementById('editDisplayName').value = displayName;
       document.getElementById('editBio').value = bio;
       document.getElementById('editTos').value = tos;
+
+      const avatarUrl = user.user_metadata?.avatar_url;
+      if (avatarUrl) {
+        const el = document.getElementById('profileAvatar');
+        el.style.backgroundImage = `url('${avatarUrl}')`;
+        el.style.backgroundSize = 'cover';
+        el.style.backgroundPosition = 'center';
+      }
 
       document.getElementById('profileLoading').style.display = 'none';
       document.getElementById('profileContent').style.display = 'block';
 
-      loadMySpecies(nickname);
-      loadMyCharacters(nickname);
+      loadMySpecies(displayName);
+      loadMyCharacters(displayName);
     }
 
     async function loadMySpecies(nickname) {
@@ -281,10 +339,29 @@
         document.querySelectorAll('.profile-tab').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        document.getElementById('gearBtn').classList.remove('active');
         const tabId = 'tab' + btn.dataset.tab[0].toUpperCase() + btn.dataset.tab.slice(1);
         document.getElementById(tabId).style.display = 'block';
       });
     });
+
+    function toggleSettings() {
+      const settingsEl = document.getElementById('tabSettings');
+      const gearBtn    = document.getElementById('gearBtn');
+      const isOpen     = settingsEl.style.display !== 'none';
+
+      if (isOpen) {
+        settingsEl.style.display = 'none';
+        gearBtn.classList.remove('active');
+        document.getElementById('tabActivity').style.display = 'block';
+        document.querySelector('.profile-tab[data-tab="activity"]').classList.add('active');
+      } else {
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        document.querySelectorAll('.profile-tab').forEach(b => b.classList.remove('active'));
+        settingsEl.style.display = 'block';
+        gearBtn.classList.add('active');
+      }
+    }
 
     function switchSubtab(el, t) {
       document.querySelectorAll('.activity-subtab').forEach(b => b.classList.remove('active'));
@@ -295,30 +372,47 @@
 
     // 프로필 저장
     async function saveProfile() {
+      const newDisplayName = document.getElementById('editDisplayName').value.trim();
       const bio = document.getElementById('editBio').value.trim();
       const tos = document.getElementById('editTos').value.trim();
       const btn = document.getElementById('editProfileBtn');
       const errorEl   = document.getElementById('editProfileError');
       const successEl = document.getElementById('editProfileSuccess');
 
-      btn.textContent = '저장 중...';
-      btn.disabled = true;
       errorEl.textContent = '';
       successEl.textContent = '';
 
-      const { error } = await updateProfile({ bio, tos });
+      if (!newDisplayName) {
+        errorEl.textContent = '닉네임을 입력해주세요.';
+        return;
+      }
+
+      btn.textContent = '저장 중...';
+      btn.disabled = true;
+
+      const oldDisplayName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
+
+      const { error } = await updateProfile({ display_name: newDisplayName, bio, tos });
 
       if (error) {
         errorEl.textContent = '저장에 실패했어요. 다시 시도해주세요.';
       } else {
+        if (newDisplayName !== oldDisplayName) {
+          await Promise.all([
+            sb.from('characters').update({ owner_nickname: newDisplayName }).eq('owner_nickname', oldDisplayName),
+            sb.from('characters').update({ designer_nickname: newDisplayName }).eq('designer_nickname', oldDisplayName),
+            sb.from('species').update({ owner_nickname: newDisplayName }).eq('owner_nickname', oldDisplayName),
+            sb.from('character_transfers').update({ from_nickname: newDisplayName }).eq('from_nickname', oldDisplayName),
+            sb.from('character_transfers').update({ to_nickname: newDisplayName }).eq('to_nickname', oldDisplayName),
+          ]);
+          currentUser.user_metadata.display_name = newDisplayName;
+          document.getElementById('profileName').textContent = newDisplayName;
+          document.getElementById('breadcrumbName').textContent = newDisplayName;
+        }
         successEl.textContent = '저장됐어요!';
         document.getElementById('profileBio').textContent = bio;
-        if (tos) {
-          document.getElementById('profileTos').textContent = tos;
-          document.getElementById('profileTosWrap').style.display = 'block';
-        } else {
-          document.getElementById('profileTosWrap').style.display = 'none';
-        }
+        document.getElementById('profileTos').textContent = tos;
+        document.getElementById('profileTosEmpty').style.display = tos ? 'none' : 'block';
         setTimeout(() => successEl.textContent = '', 3000);
       }
 

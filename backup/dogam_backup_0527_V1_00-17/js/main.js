@@ -17,7 +17,6 @@ if (grid) {
     });
     if (noResult) noResult.style.display = visible === 0 ? 'block' : 'none';
 
-    // 페이지 타이틀 업데이트
     const titleEl = document.querySelector('.list-page-title');
     const countEl = document.querySelector('.list-page-count');
     if (titleEl) titleEl.textContent = `"${q}" 검색 결과`;
@@ -25,15 +24,47 @@ if (grid) {
   }
 }
 
-// DB에서 불러온 개체 캐시
 let characters = [];
+let speciesList = [];
+let siteUsers   = [];
+let userIdMap   = {};
 
 async function loadSearchData() {
-  const { data } = await sb
-    .from('characters')
-    .select('id, name, species_name');
-  if (data) {
-    characters = data.map(c => ({
+  const [
+    { data: chars,   error: charErr },
+    { data: userList },
+    { data: spList },
+  ] = await Promise.all([
+    sb.from('characters').select('id, name, species_name'),
+    sb.rpc('get_all_users'),
+    sb.from('species').select('id, name'),
+  ]);
+  if (charErr) { console.error('[검색] 데이터 로드 실패:', charErr); return; }
+
+  if (userList) {
+    siteUsers = userList
+      .filter(u => u.role !== 'admin')
+      .map(u => ({
+        name:    u.nickname  || '',
+        loginId: u.login_id || u.nickname || '',
+        role:    u.role     || '',
+      }));
+    userList.forEach(u => {
+      const loginId     = (u.login_id  || u.nickname || '').toLowerCase();
+      const displayName = (u.nickname  || '').toLowerCase();
+      if (loginId) userIdMap[loginId] = displayName;
+    });
+  }
+
+  if (spList) {
+    speciesList = spList.map(s => ({
+      name: s.name,
+      url:  `species.html?id=${s.id}`,
+    }));
+  }
+
+  if (chars) {
+    characters = chars.map(c => ({
       name:    c.name,
       species: c.species_name || '',
       url:     `character.html?id=${c.id}`,
@@ -41,26 +72,38 @@ async function loadSearchData() {
   }
 }
 
-// 검색
 const searchInput    = document.getElementById('searchInput');
 const searchDropdown = document.getElementById('searchDropdown');
 
-if (searchInput) {
+if (searchInput && searchDropdown) {
   loadSearchData();
 
   searchInput.addEventListener('input', () => {
     const q = searchInput.value.trim();
+    if (!q) { closeDropdown(); return; }
 
-    if (!q) {
-      closeDropdown();
-      return;
-    }
+    const qLow = q.toLowerCase();
 
-    const matched = characters.filter(c =>
-      c.name.includes(q)
+    const matchedSpeciesOwners = siteUsers.filter(u =>
+      u.role === 'species_owner' && (
+        u.name.toLowerCase().includes(qLow) ||
+        u.loginId.toLowerCase().includes(qLow)
+      )
+    );
+    const matchedUsers = siteUsers.filter(u =>
+      u.role !== 'species_owner' && (
+        u.name.toLowerCase().includes(qLow) ||
+        u.loginId.toLowerCase().includes(qLow)
+      )
+    );
+    const matchedSpecies = speciesList.filter(s =>
+      s.name.toLowerCase().includes(qLow)
+    );
+    const matchedChars = characters.filter(c =>
+      c.name.toLowerCase().includes(qLow)
     );
 
-    renderDropdown(q, matched);
+    renderDropdown(q, matchedSpeciesOwners, matchedUsers, matchedSpecies, matchedChars);
   });
 
   searchInput.addEventListener('keydown', (e) => {
@@ -76,29 +119,60 @@ if (searchInput) {
   });
 }
 
-function renderDropdown(q, matched) {
-  if (!matched.length) {
-    closeDropdown();
-    return;
-  }
+function renderDropdown(q, matchedSpeciesOwners, matchedUsers, matchedSpecies, matchedChars) {
+  const total = matchedSpeciesOwners.length + matchedUsers.length + matchedSpecies.length + matchedChars.length;
+  if (!total) { closeDropdown(); return; }
 
-  // 최대 5개 미리보기
-  const preview = matched.slice(0, 5);
+  const p = {
+    speciesOwners: matchedSpeciesOwners.slice(0, 2),
+    users:         matchedUsers.slice(0, 2),
+    species:       matchedSpecies.slice(0, 2),
+    chars:         matchedChars.slice(0, 3),
+  };
 
-  searchDropdown.innerHTML = preview.map(c => `
+  const ownerHtml = p.speciesOwners.map(u => `
     <li>
-      <a href="${c.url}">
-        <span class="dd-name">${highlight(c.name, q)}</span>
-        <span class="dd-species">${c.species}</span>
+      <a href="character-list.html?owner=${encodeURIComponent(u.name)}">
+        <span class="dd-badge dd-badge--species-owner">종족주</span>
+        <span class="dd-label">${highlight(u.name, q)}</span>
       </a>
     </li>
   `).join('');
 
-  // 엔터 안내 (결과가 2개 이상이거나 미리보기가 전부가 아닐 때)
-  if (matched.length > 1) {
+  const userHtml = p.users.map(u => `
+    <li>
+      <a href="character-list.html?owner=${encodeURIComponent(u.name)}">
+        <span class="dd-badge dd-badge--user">일반유저</span>
+        <span class="dd-label">${highlight(u.name, q)}</span>
+      </a>
+    </li>
+  `).join('');
+
+  const speciesHtml = p.species.map(s => `
+    <li>
+      <a href="${s.url}">
+        <span class="dd-badge dd-badge--species">종족</span>
+        <span class="dd-label">${highlight(s.name, q)}</span>
+      </a>
+    </li>
+  `).join('');
+
+  const charHtml = p.chars.map(c => `
+    <li>
+      <a href="${c.url}">
+        <span class="dd-badge dd-badge--char">캐릭터</span>
+        <span class="dd-label">${c.species ? `${c.species}: ` : ''}${highlight(c.name, q)}</span>
+      </a>
+    </li>
+  `).join('');
+
+  searchDropdown.innerHTML = ownerHtml + userHtml + speciesHtml + charHtml;
+
+  const shown = p.speciesOwners.length + p.users.length + p.species.length + p.chars.length;
+  if (total > shown) {
     searchDropdown.innerHTML += `
       <li class="dd-enter" onclick="goToSearch('${q}')">
-        '${q}' 포함 결과 ${matched.length}개 전체 보기 →
+        '${q}' 검색 결과 ${total}개 전체 보기 →
       </li>
     `;
   }
@@ -106,10 +180,10 @@ function renderDropdown(q, matched) {
   searchDropdown.classList.add('active');
 }
 
-// 검색어 강조
 function highlight(name, q) {
+  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   return name.replace(
-    new RegExp(`(${q})`, 'g'),
+    new RegExp(`(${escaped})`, 'gi'),
     '<mark style="background:var(--sky-light);color:var(--sky-deep);border-radius:2px;">$1</mark>'
   );
 }
@@ -120,6 +194,5 @@ function closeDropdown() {
 }
 
 function goToSearch(q) {
-  // 나중에 검색 결과 페이지로 이동. 지금은 전체 개체 페이지로
   window.location.href = `character-list.html?q=${encodeURIComponent(q)}`;
 }

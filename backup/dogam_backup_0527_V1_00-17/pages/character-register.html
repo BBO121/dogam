@@ -213,24 +213,18 @@
     }
 
     async function loadUsers() {
-      const myNick = currentUser.user_metadata?.nickname;
+      const myName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
 
-      const [c, s] = await Promise.all([
-        sb.from('characters').select('owner_nickname').not('owner_nickname', 'is', null),
-        sb.from('species').select('owner_nickname').not('owner_nickname', 'is', null),
-      ]);
+      const { data } = await sb.rpc('get_all_users');
+      allUsers = (data || [])
+        .map(u => u.nickname)
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b, 'ko'));
 
-      const nickSet = new Set();
-      if (myNick) nickSet.add(myNick);
-      (c.data || []).forEach(r => nickSet.add(r.owner_nickname));
-      (s.data || []).forEach(r => nickSet.add(r.owner_nickname));
-
-      allUsers = [...nickSet].sort((a, b) => a.localeCompare(b, 'ko'));
       renderUserList(allUsers);
       renderDesignerList(allUsers);
 
-      // 기본값: 본인 선택
-      if (myNick) selectUser(myNick);
+      if (myName) selectUser(myName);
     }
 
     function renderUserList(list) {

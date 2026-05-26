@@ -50,7 +50,7 @@
 
     async function loadCharacter() {
       const user = await getUser();
-      const userNickname = user?.user_metadata?.nickname || null;
+      const userNickname = user?.user_metadata?.display_name || user?.user_metadata?.nickname || null;
       const isAdminUser  = user?.user_metadata?.role === 'admin';
 
       const { data: c, error } = await sb

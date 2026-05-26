@@ -113,7 +113,7 @@ async function updateHeader() {
   const loginBtn = document.querySelector('.btn-login');
 
   if (user) {
-    const nickname = user.user_metadata?.nickname || '유저';
+    const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname || '유저';
 
     const isSpeciesOwner = user.user_metadata?.role === 'species_owner';
 

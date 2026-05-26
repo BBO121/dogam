@@ -61,15 +61,16 @@
         </div>
       </section>
 
-      <!-- 최근 등록 개체 섹션 -->
+      <!-- 분양 섹션 -->
       <section class="section">
         <div class="section-header">
-          <h2>최근 등록된 개체</h2>
-          <a href="character-list.html" class="btn-more">전체보기</a>
+          <h2>분양</h2>
+          <a href="adoption.html" class="btn-more">전체보기</a>
         </div>
-        <div class="character-grid" id="characterGrid">
-          <p class="page-loading" id="characterLoading" style="padding:20px 0;">불러오는 중...</p>
+        <div class="adoption-grid" id="adoptionGrid">
+          <p class="page-loading" id="adoptionLoading" style="padding:20px 0;">불러오는 중...</p>
         </div>
+        <p id="adoptionEmpty" style="display:none; color:var(--text-mute); font-size:14px; padding:20px 0;">등록된 분양 글이 없어요.</p>
       </section>
 
     </main>
@@ -86,14 +87,17 @@
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
   <script>
+    const TYPE_LABEL = { free: '무료', paid: '유료', auction: '경매', etc: '기타' };
+    const TYPE_CLASS  = { free: 'adoption-type--free', paid: 'adoption-type--paid', auction: 'adoption-type--auction', etc: 'adoption-type--paid' };
+
     async function loadIndex() {
       const [
         { data: speciesList },
-        { data: characterList },
+        { data: adoptionList },
         { data: noticeList },
       ] = await Promise.all([
         sb.from('species').select('id, name, image_url').order('created_at', { ascending: false }).limit(6),
-        sb.from('characters').select('id, name, species_name, owner_nickname, image_url').order('created_at', { ascending: false }).limit(8),
+        sb.from('adoptions').select('id, character_name, species_name, adoption_type, status, image_url').order('created_at', { ascending: false }).limit(8),
         sb.from('notices').select('id, title').order('is_pinned', { ascending: false }).order('created_at', { ascending: false }).limit(1),
       ]);
 
@@ -124,24 +128,31 @@
         `).join('');
       }
 
-      // 개체 렌더
-      const characterGrid    = document.getElementById('characterGrid');
-      const characterLoading = document.getElementById('characterLoading');
-      characterLoading.remove();
+      // 분양 렌더
+      document.getElementById('adoptionLoading').remove();
 
-      if (!characterList || characterList.length === 0) {
-        characterGrid.innerHTML = '<p style="color:var(--text-mute);font-size:14px;padding:20px 0;">등록된 개체가 없어요.</p>';
+      if (!adoptionList || adoptionList.length === 0) {
+        document.getElementById('adoptionEmpty').style.display = 'block';
       } else {
-        characterGrid.innerHTML = characterList.map(c => `
-          <a href="character.html?id=${c.id}" class="character-card">
-            <div class="character-img"${c.image_url ? ` style="background-image:url('${c.image_url}');background-size:cover;background-position:center;"` : ''}></div>
-            <div class="character-info">
-              <p class="character-name">${c.name}</p>
-              <p class="character-species">${c.species_name || ''}</p>
-              <p class="character-owner">소유주: ${c.owner_nickname || '—'}</p>
-            </div>
-          </a>
-        `).join('');
+        document.getElementById('adoptionGrid').innerHTML = adoptionList.map(a => {
+          const imgStyle  = a.image_url ? `background-image:url('${a.image_url}');background-size:cover;background-position:center;` : '';
+          const typeLabel = TYPE_LABEL[a.adoption_type] || '';
+          const typeClass = TYPE_CLASS[a.adoption_type] || '';
+          const closed    = a.status === '완료';
+          return `
+            <a class="adoption-card${closed ? ' adoption-card--closed' : ''}" href="adoption-detail.html?id=${a.id}">
+              <div class="adoption-card-img" style="${imgStyle}"></div>
+              <div class="adoption-card-info">
+                <div class="adoption-card-badges">
+                  <span class="adoption-type-badge ${typeClass}">${typeLabel}</span>
+                  <span class="adoption-status ${closed ? 'adoption-status--closed' : ''}">${a.status || '분양중'}</span>
+                </div>
+                <p class="adoption-card-charname">${a.character_name || '—'}</p>
+                <p class="adoption-card-species">${a.species_name || '—'}</p>
+              </div>
+            </a>
+          `;
+        }).join('');
       }
     }
 

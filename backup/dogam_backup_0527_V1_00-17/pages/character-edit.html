@@ -187,7 +187,7 @@
       const { data: c, error } = await sb.from('characters').select('*').eq('id', charId).single();
       if (error || !c) { window.location.href = 'character-list.html'; return; }
 
-      const isOwner = user.user_metadata?.role === 'admin' || user.user_metadata?.nickname === c.owner_nickname;
+      const isOwner = user.user_metadata?.role === 'admin' || (user.user_metadata?.display_name || user.user_metadata?.nickname) === c.owner_nickname;
       if (!isOwner) { window.location.href = `character.html?id=${charId}`; return; }
 
       currentUser = user;

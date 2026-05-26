@@ -82,7 +82,7 @@
             </div>
 
             <div id="designerSiteSection">
-              <input type="text" id="designerSearch" class="form-input" placeholder="닉네임으로 검색..." oninput="filterDesigners(this.value)" style="margin-bottom:8px;">
+              <input type="text" id="designerSearch" class="form-input" placeholder="닉네임 또는 아이디로 검색..." oninput="filterDesigners(this.value)" style="margin-bottom:8px;">
               <div id="designerUserList" style="border:1px solid var(--border); border-radius:10px; max-height:200px; overflow-y:auto; background:#fff;">
                 <p style="padding:12px; color:var(--text-mute); font-size:13px;">불러오는 중...</p>
               </div>
@@ -113,7 +113,7 @@
 
             <!-- 사이트 유저 섹션 -->
             <div id="ownerSiteSection">
-              <input type="text" id="ownerSearch" class="form-input" placeholder="닉네임으로 검색..." oninput="filterUsers(this.value)" style="margin-bottom:8px;">
+              <input type="text" id="ownerSearch" class="form-input" placeholder="닉네임 또는 아이디로 검색..." oninput="filterUsers(this.value)" style="margin-bottom:8px;">
               <div id="ownerUserList" style="border:1px solid var(--border); border-radius:10px; max-height:200px; overflow-y:auto; background:#fff;">
                 <p style="padding:12px; color:var(--text-mute); font-size:13px;">불러오는 중...</p>
               </div>
@@ -213,37 +213,31 @@
     }
 
     async function loadUsers() {
-      const myNick = currentUser.user_metadata?.nickname;
+      const myName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
 
-      const [c, s] = await Promise.all([
-        sb.from('characters').select('owner_nickname').not('owner_nickname', 'is', null),
-        sb.from('species').select('owner_nickname').not('owner_nickname', 'is', null),
-      ]);
+      const { data } = await sb.rpc('get_all_users');
+      allUsers = (data || [])
+        .map(u => ({ nickname: u.nickname || '', loginId: u.login_id || u.nickname || '' }))
+        .filter(u => u.nickname)
+        .sort((a, b) => a.nickname.localeCompare(b.nickname, 'ko'));
 
-      const nickSet = new Set();
-      if (myNick) nickSet.add(myNick);
-      (c.data || []).forEach(r => nickSet.add(r.owner_nickname));
-      (s.data || []).forEach(r => nickSet.add(r.owner_nickname));
+      renderUserList([]);
+      renderDesignerList([]);
 
-      allUsers = [...nickSet].sort((a, b) => a.localeCompare(b, 'ko'));
-      renderUserList(allUsers);
-      renderDesignerList(allUsers);
-
-      // 기본값: 본인 선택
-      if (myNick) selectUser(myNick);
+      if (myName) selectUser(myName);
     }
 
     function renderUserList(list) {
       const el = document.getElementById('ownerUserList');
       if (!list.length) {
-        el.innerHTML = '<p style="padding:12px; color:var(--text-mute); font-size:13px;">유저가 없어요</p>';
+        el.innerHTML = '<p style="padding:12px; color:var(--text-mute); font-size:13px;">닉네임 또는 아이디를 입력하세요</p>';
         return;
       }
-      el.innerHTML = list.map(nick => `
-        <div onclick="selectUser('${nick}')" id="userItem_${nick}"
+      el.innerHTML = list.map(u => `
+        <div onclick="selectUser('${u.nickname}')" id="userItem_${u.nickname}"
           style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border); transition:background 0.1s;"
-          onmouseover="this.style.background='var(--sky-pale)'" onmouseout="this.style.background= selectedNick==='${nick}' ? 'var(--sky-light)' : ''">
-          ${nick}
+          onmouseover="this.style.background='var(--sky-pale)'" onmouseout="this.style.background= selectedNick==='${u.nickname}' ? 'var(--sky-light)' : ''">
+          ${u.nickname}${u.loginId !== u.nickname ? `<span style="color:var(--text-mute); font-size:11px; margin-left:6px;">(${u.loginId})</span>` : ''}
         </div>
       `).join('');
     }
@@ -260,7 +254,13 @@
     }
 
     function filterUsers(q) {
-      const filtered = q ? allUsers.filter(n => n.includes(q)) : allUsers;
+      const qLow = q.toLowerCase();
+      const filtered = q
+        ? allUsers.filter(u =>
+            u.nickname.toLowerCase().includes(qLow) ||
+            u.loginId.toLowerCase().includes(qLow)
+          )
+        : [];
       renderUserList(filtered);
       if (selectedNick) selectUser(selectedNick);
     }
@@ -268,14 +268,14 @@
     function renderDesignerList(list) {
       const el = document.getElementById('designerUserList');
       if (!list.length) {
-        el.innerHTML = '<p style="padding:12px; color:var(--text-mute); font-size:13px;">유저가 없어요</p>';
+        el.innerHTML = '<p style="padding:12px; color:var(--text-mute); font-size:13px;">닉네임 또는 아이디를 입력하세요</p>';
         return;
       }
-      el.innerHTML = list.map(nick => `
-        <div onclick="selectDesigner('${nick}')" id="designerItem_${nick}"
+      el.innerHTML = list.map(u => `
+        <div onclick="selectDesigner('${u.nickname}')" id="designerItem_${u.nickname}"
           style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border); transition:background 0.1s;"
-          onmouseover="this.style.background='var(--sky-pale)'" onmouseout="this.style.background= selectedDesignerNick==='${nick}' ? 'var(--sky-light)' : ''">
-          ${nick}
+          onmouseover="this.style.background='var(--sky-pale)'" onmouseout="this.style.background= selectedDesignerNick==='${u.nickname}' ? 'var(--sky-light)' : ''">
+          ${u.nickname}${u.loginId !== u.nickname ? `<span style="color:var(--text-mute); font-size:11px; margin-left:6px;">(${u.loginId})</span>` : ''}
         </div>
       `).join('');
     }
@@ -292,7 +292,13 @@
     }
 
     function filterDesigners(q) {
-      const filtered = q ? allUsers.filter(n => n.includes(q)) : allUsers;
+      const qLow = q.toLowerCase();
+      const filtered = q
+        ? allUsers.filter(u =>
+            u.nickname.toLowerCase().includes(qLow) ||
+            u.loginId.toLowerCase().includes(qLow)
+          )
+        : [];
       renderDesignerList(filtered);
       if (selectedDesignerNick) selectDesigner(selectedDesignerNick);
     }
