@@ -620,12 +620,20 @@
           // 이미지 업로드
           let image_url = null;
           if (file) {
-            const blob     = await compressImage(file);
-            const fileName = `${Date.now()}_${name}.jpg`;
-            const { error: uploadError } = await sb.storage.from('images').upload(fileName, blob, { contentType: 'image/jpeg' });
-            if (!uploadError) {
-              const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);
-              image_url = urlData.publicUrl;
+            const blob = await compressImage(file);
+            if (blob) {
+              const ext      = file.name.split('.').pop().toLowerCase();
+              const safeExt  = ['jpg','jpeg','png','gif','webp'].includes(ext) ? ext : 'jpg';
+              const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${safeExt}`;
+              const { error: uploadError } = await sb.storage.from('images').upload(fileName, blob, { contentType: `image/${safeExt === 'jpg' ? 'jpeg' : safeExt}` });
+              if (!uploadError) {
+                const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);
+                image_url = urlData.publicUrl;
+              } else {
+                console.warn(`[일괄등록] 이미지 업로드 실패 (${name}):`, uploadError.message);
+              }
+            } else {
+              console.warn(`[일괄등록] 이미지 압축 실패 (${name})`);
             }
           }
 

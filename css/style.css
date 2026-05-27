@@ -1246,14 +1246,13 @@ a {
   width: 100%;
   height: auto;
   min-height: 480px;
-  background: linear-gradient(160deg, var(--sky-light), #DBEAFE);
+  background: #F8FAFC;
   overflow: hidden;
 }
 
 /* 오른쪽 정보 패널 */
 .char-info-panel {
   flex: 1;
-  border-left: 1px solid var(--border);
   padding: 24px 20px;
   display: flex;
   flex-direction: column;
