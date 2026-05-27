@@ -434,6 +434,9 @@
       const file = input.files[0];
       if (!file) return;
 
+      if (!itemStates[id]) itemStates[id] = {};
+      itemStates[id].file = file;
+
       // 파일명 → 이름 자동 입력
       const nameInput = document.getElementById(`name_${id}`);
       if (!nameInput.value) {
@@ -609,7 +612,7 @@
           ? document.getElementById(`itemOExtName_${id}`)?.value.trim()
           : state.selectedOwner) || defaultOwner;
         const desc     = document.getElementById(`desc_${id}`).value.trim() || defaultDesc;
-        const file  = document.getElementById(`file_${id}`).files[0];
+        const file  = itemStates[id]?.file || document.getElementById(`file_${id}`).files[0];
 
         progressText.textContent = `${done + 1} / ${items.length} 처리 중... (${name})`;
 
@@ -666,17 +669,15 @@
     }
 
     function fillSlotWithFile(id, file) {
+      if (!itemStates[id]) itemStates[id] = {};
+      itemStates[id].file = file;
+
       document.getElementById(`name_${id}`).value = file.name.replace(/\.[^/.]+$/, '');
       const reader = new FileReader();
       reader.onload = (ev) => {
         document.getElementById(`thumb_${id}`).innerHTML = `<img src="${ev.target.result}">`;
       };
       reader.readAsDataURL(file);
-      try {
-        const dt = new DataTransfer();
-        dt.items.add(file);
-        document.getElementById(`file_${id}`).files = dt.files;
-      } catch(e) {}
     }
 
     function handleDropFiles(files) {

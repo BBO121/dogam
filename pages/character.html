@@ -41,6 +41,14 @@
   <script src="../js/main.js"></script>
   <script>
     const charId = new URLSearchParams(window.location.search).get('id');
+    let afterDeleteHref = 'species-list.html';
+
+    async function deleteCharacter() {
+      if (!confirm('정말 이 개체를 삭제할까요? 되돌릴 수 없어요.')) return;
+      const { error } = await sb.from('characters').delete().eq('id', charId);
+      if (error) { alert('삭제에 실패했어요.'); return; }
+      window.location.href = afterDeleteHref;
+    }
 
     if (!charId) {
       document.getElementById('charContent').innerHTML = '<p class="page-loading">잘못된 접근이에요.</p>';
@@ -75,6 +83,7 @@
         const { data: sp } = await sb.from('species').select('id').eq('name', c.species_name).single();
         if (sp) speciesHref = `species.html?id=${sp.id}`;
       }
+      afterDeleteHref = speciesHref;
 
       const registeredDate = new Date(c.created_at).toLocaleDateString('ko-KR', {
         year: 'numeric', month: '2-digit', day: '2-digit'
@@ -138,7 +147,8 @@
 
             ${isOwner ? `
             <div class="char-info-divider"></div>
-            <div style="display:flex; justify-content:flex-end;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <button onclick="deleteCharacter()" style="padding:8px 16px; border:1px solid #fca5a5; border-radius:8px; background:#fff; color:#ef4444; font-size:13px; cursor:pointer;">개체 삭제</button>
               <a href="character-edit.html?id=${charId}" class="btn-ghost">개체 정보 수정</a>
             </div>` : ''}
           </aside>
