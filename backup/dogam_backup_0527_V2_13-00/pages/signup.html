@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>회원가입 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+    </div>
+  </header>
+
+  <div class="auth-wrap">
+    <div class="auth-card">
+
+      <h1 class="auth-title">회원가입</h1>
+      <p class="auth-subtitle">도감의 새로운 멤버가 되어보세요</p>
+
+      <form class="auth-form" id="signupForm">
+
+        <div class="form-group">
+          <label class="form-label">아이디 <span class="required">*</span></label>
+          <input type="text" id="nickname" class="form-input" placeholder="사용할 아이디를 입력하세요" required>
+          <p class="form-hint">다른 유저에게 보여지는 이름이에요 (영문, 숫자, 한글)</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">비밀번호 <span class="required">*</span></label>
+          <input type="password" id="password" class="form-input" placeholder="6자 이상 입력하세요" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">비밀번호 확인 <span class="required">*</span></label>
+          <input type="password" id="passwordConfirm" class="form-input" placeholder="비밀번호를 다시 입력하세요" required>
+        </div>
+
+        <p class="auth-error" id="signupError"></p>
+
+        <button type="submit" class="btn-submit" id="signupBtn">회원가입</button>
+
+      </form>
+
+      <p class="auth-switch">
+        이미 계정이 있으신가요?
+        <a href="login.html">로그인</a>
+      </p>
+
+    </div>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 도감</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script>
+    document.getElementById('signupForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const nickname = document.getElementById('nickname').value.trim();
+      const password = document.getElementById('password').value;
+      const confirm  = document.getElementById('passwordConfirm').value;
+      const errorEl  = document.getElementById('signupError');
+      const btn      = document.getElementById('signupBtn');
+
+      errorEl.textContent = '';
+
+      if (!nickname) return errorEl.textContent = '아이디를 입력해주세요';
+      if (password.length < 6) return errorEl.textContent = '비밀번호는 6자 이상이어야 해요';
+      if (password !== confirm) return errorEl.textContent = '비밀번호가 일치하지 않아요';
+
+      btn.textContent = '가입 중...';
+      btn.disabled = true;
+
+      const { error } = await signUp(nickname, password);
+
+      if (error) {
+        if (error.message.includes('already registered')) {
+          errorEl.textContent = '이미 사용 중인 아이디예요';
+        } else {
+          errorEl.textContent = '오류가 발생했어요. 다시 시도해주세요';
+        }
+        btn.textContent = '회원가입';
+        btn.disabled = false;
+      } else {
+        window.location.href = 'index.html';
+      }
+    });
+  </script>
+</body>
+</html>

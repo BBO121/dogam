@@ -1,0 +1,166 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <!-- 헤더 -->
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main">
+
+      <!-- 검색 -->
+      <div class="search-wrap">
+        <div class="search-box">
+          <input
+            type="text"
+            id="searchInput"
+            class="search-input"
+            placeholder="개체 이름으로 검색..."
+            autocomplete="off"
+          >
+          <svg class="search-icon" viewBox="0 0 20 20" fill="none">
+            <circle cx="9" cy="9" r="6" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M13.5 13.5L17 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          <ul class="search-dropdown" id="searchDropdown"></ul>
+        </div>
+      </div>
+
+      <!-- 공지사항 바 -->
+      <div class="notice-bar" id="noticeBar" style="display:none;">
+        <span class="notice-bar-label">공지</span>
+        <a class="notice-bar-title" id="noticeBarTitle" href="notice.html"></a>
+        <a class="notice-bar-more" href="notice.html">전체보기 ›</a>
+      </div>
+
+      <!-- 종족 섹션 -->
+      <section class="section">
+        <div class="section-header">
+          <h2>종족</h2>
+          <a href="species-list.html" class="btn-more">전체보기</a>
+        </div>
+        <div class="species-grid" id="speciesGrid">
+          <p class="page-loading" id="speciesLoading" style="padding:20px 0;">불러오는 중...</p>
+        </div>
+      </section>
+
+      <!-- 분양 섹션 -->
+      <section class="section">
+        <div class="section-header">
+          <h2>분양</h2>
+          <a href="adoption.html" class="btn-more">전체보기</a>
+        </div>
+        <div class="adoption-grid" id="adoptionGrid">
+          <p class="page-loading" id="adoptionLoading" style="padding:20px 0;">불러오는 중...</p>
+        </div>
+        <p id="adoptionEmpty" style="display:none; color:var(--text-mute); font-size:14px; padding:20px 0;">등록된 분양 글이 없어요.</p>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- 푸터 -->
+  <footer class="footer">
+    <p>© 2026 도감</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    const TYPE_LABEL = { free: '무료', paid: '유료', auction: '경매', etc: '기타' };
+    const TYPE_CLASS  = { free: 'adoption-type--free', paid: 'adoption-type--paid', auction: 'adoption-type--auction', etc: 'adoption-type--paid' };
+
+    async function loadIndex() {
+      const [
+        { data: speciesList },
+        { data: adoptionList },
+        { data: noticeList },
+      ] = await Promise.all([
+        sb.from('species').select('id, name, image_url').order('created_at', { ascending: false }).limit(6),
+        sb.from('adoptions').select('id, character_name, species_name, adoption_type, status, image_url').order('created_at', { ascending: false }).limit(8),
+        sb.from('notices').select('id, title').order('is_pinned', { ascending: false }).order('created_at', { ascending: false }).limit(1),
+      ]);
+
+      // 공지 바 렌더
+      if (noticeList && noticeList.length > 0) {
+        const bar = document.getElementById('noticeBar');
+        const titleEl = document.getElementById('noticeBarTitle');
+        titleEl.textContent = noticeList[0].title;
+        titleEl.href = `notice-detail.html?id=${noticeList[0].id}`;
+        bar.style.display = 'flex';
+      }
+
+      // 종족 렌더
+      const speciesGrid    = document.getElementById('speciesGrid');
+      const speciesLoading = document.getElementById('speciesLoading');
+      speciesLoading.remove();
+
+      if (!speciesList || speciesList.length === 0) {
+        speciesGrid.innerHTML = '<p style="color:var(--text-mute);font-size:14px;padding:20px 0;">등록된 종족이 없어요.</p>';
+      } else {
+        speciesGrid.innerHTML = speciesList.map(s => `
+          <a href="species.html?id=${s.id}" class="species-card">
+            <div class="species-img"${s.image_url ? ` style="background-image:url('${s.image_url}');background-size:cover;background-position:center;"` : ''}></div>
+            <div class="species-info">
+              <p class="species-name">${s.name}</p>
+            </div>
+          </a>
+        `).join('');
+      }
+
+      // 분양 렌더
+      document.getElementById('adoptionLoading').remove();
+
+      if (!adoptionList || adoptionList.length === 0) {
+        document.getElementById('adoptionEmpty').style.display = 'block';
+      } else {
+        document.getElementById('adoptionGrid').innerHTML = adoptionList.map(a => {
+          const imgStyle  = a.image_url ? `background-image:url('${a.image_url}');background-size:cover;background-position:center;` : '';
+          const typeLabel = TYPE_LABEL[a.adoption_type] || '';
+          const typeClass = TYPE_CLASS[a.adoption_type] || '';
+          const closed    = a.status === '완료';
+          return `
+            <a class="adoption-card${closed ? ' adoption-card--closed' : ''}" href="adoption-detail.html?id=${a.id}">
+              <div class="adoption-card-img" style="${imgStyle}"></div>
+              <div class="adoption-card-info">
+                <div class="adoption-card-badges">
+                  <span class="adoption-type-badge ${typeClass}">${typeLabel}</span>
+                  <span class="adoption-status ${closed ? 'adoption-status--closed' : ''}">${a.status || '분양중'}</span>
+                </div>
+                <p class="adoption-card-charname">${a.character_name || '—'}</p>
+                <p class="adoption-card-species">${a.species_name || '—'}</p>
+              </div>
+            </a>
+          `;
+        }).join('');
+      }
+    }
+
+    loadIndex();
+  </script>
+</body>
+</html>
+
+
+
+

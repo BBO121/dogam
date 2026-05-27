@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>종족 등록 — 도감</title>
+  <title>종족 정보 수정 — 도감</title>
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
@@ -29,11 +29,13 @@
           <span>/</span>
           <a href="species-list.html">전체 종족</a>
           <span>/</span>
-          <span>종족 등록</span>
+          <span id="breadcrumbName">종족</span>
+          <span>/</span>
+          <span>정보 수정</span>
         </div>
 
-        <h1 class="register-title">종족 등록</h1>
-        <p class="register-subtitle">새로운 종족을 도감에 추가해요</p>
+        <h1 class="register-title">종족 정보 수정</h1>
+        <p class="register-subtitle">종족 정보를 수정해요</p>
 
         <div class="register-form">
 
@@ -62,13 +64,21 @@
             <textarea id="speciesDesc" class="form-textarea" placeholder="이 종족에 대한 설명을 입력하세요" rows="5"></textarea>
           </div>
 
+          <!-- 커스텀 필드 -->
+          <div class="form-group">
+            <label class="form-label">개체 항목 설정</label>
+            <p class="form-hint">이 종족의 개체를 등록할 때 입력받을 항목을 추가하세요</p>
+            <div class="custom-field-list" id="customFieldList"></div>
+            <button type="button" class="btn-field-add" id="addFieldBtn" onclick="addField()">+ 항목 추가</button>
+          </div>
+
           <!-- 에러 -->
           <p class="auth-error" id="formError"></p>
 
           <!-- 버튼 -->
           <div class="register-actions">
-            <a href="species-list.html" class="btn-ghost">취소</a>
-            <button type="button" class="btn-secondary" id="submitBtn" onclick="submitSpecies()">등록하기</button>
+            <a href="#" id="cancelBtn" class="btn-ghost">취소</a>
+            <button type="button" class="btn-secondary" id="submitBtn" onclick="submitEdit()">저장하기</button>
           </div>
 
         </div>
@@ -87,16 +97,39 @@
   <script src="../js/main.js"></script>
   <script src="../js/utils.js?v=2"></script>
   <script>
-    let currentUser = null;
+    const speciesId = new URLSearchParams(window.location.search).get('id');
+    let currentImageUrl = null;
+
+    document.getElementById('cancelBtn').href = `species.html?id=${speciesId}`;
 
     async function init() {
-      currentUser = await getUser();
-      if (!currentUser) { window.location.href = 'login.html'; return; }
-      const role = currentUser.user_metadata?.role;
-      if (role !== 'admin' && role !== 'species_owner') { window.location.href = 'index.html'; return; }
+      if (!speciesId) { window.location.href = 'species-list.html'; return; }
+
+      const user = await getUser();
+      if (!user) { window.location.href = 'login.html'; return; }
+
+      const { data: s, error } = await sb.from('species').select('*').eq('id', speciesId).single();
+      if (error || !s) { window.location.href = 'species-list.html'; return; }
+
+      const isOwner = user.user_metadata?.role === 'admin' || (user.user_metadata?.display_name || user.user_metadata?.nickname) === s.owner_nickname;
+      if (!isOwner) { window.location.href = `species.html?id=${speciesId}`; return; }
+
+      document.getElementById('breadcrumbName').textContent = s.name;
+      document.getElementById('speciesName').value = s.name;
+      document.getElementById('speciesDesc').value = s.description || '';
+
+      if (s.image_url) {
+        currentImageUrl = s.image_url;
+        document.getElementById('imgPreview').src = s.image_url;
+        document.getElementById('imgPreview').style.display = 'block';
+        document.getElementById('imgPlaceholder').style.display = 'none';
+      }
+
+      if (s.custom_fields?.length) {
+        s.custom_fields.forEach(f => addField(f));
+      }
     }
 
-    // 이미지 미리보기
     function previewImage(input) {
       const file = input.files[0];
       if (!file) return;
@@ -109,20 +142,18 @@
       reader.readAsDataURL(file);
     }
 
-    // 항목 추가
-    function addField() {
+    function addField(value = '') {
       const list = document.getElementById('customFieldList');
       const row = document.createElement('div');
       row.className = 'custom-field-row';
       row.innerHTML = `
-        <input type="text" class="form-input field-input" placeholder="항목명 (예: 속성, 나이, 서식지)">
+        <input type="text" class="form-input field-input" placeholder="항목명 (예: 속성, 나이, 서식지)" value="${value}">
         <button type="button" class="btn-field-remove" onclick="this.parentElement.remove()">✕</button>
       `;
       list.appendChild(row);
     }
 
-    // 등록 제출
-    async function submitSpecies() {
+    async function submitEdit() {
       const name    = document.getElementById('speciesName').value.trim();
       const desc    = document.getElementById('speciesDesc').value.trim();
       const errorEl = document.getElementById('formError');
@@ -131,53 +162,44 @@
       errorEl.textContent = '';
       if (!name) { errorEl.textContent = '종족명을 입력해주세요.'; return; }
 
-      btn.textContent = '등록 중...';
+      btn.textContent = '저장 중...';
       btn.disabled = true;
 
-      // 커스텀 필드 수집
       const fields = [...document.querySelectorAll('.field-input')]
         .map(i => i.value.trim())
         .filter(v => v);
 
-      // 이미지 업로드
-      let imageUrl = null;
+      let imageUrl = currentImageUrl;
       const imgFile = document.getElementById('imgInput').files[0];
       if (imgFile) {
         const blob     = await compressImage(imgFile);
         const fileName = `species_${Date.now()}.jpg`;
-        const { data: uploadData, error: uploadError } = await sb.storage
-          .from('images')
-          .upload(fileName, blob, { upsert: true, contentType: 'image/jpeg' });
-
+        const { error: uploadError } = await sb.storage.from('images').upload(fileName, blob, { upsert: true, contentType: 'image/jpeg' });
         if (uploadError) {
           errorEl.textContent = `이미지 업로드 실패: ${uploadError.message}`;
-          btn.textContent = '등록하기';
+          btn.textContent = '저장하기';
           btn.disabled = false;
           return;
         }
-
         const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);
         imageUrl = urlData.publicUrl;
       }
 
-      // Supabase insert
-      const nickname = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname || '';
-      const { data, error } = await sb.from('species').insert({
+      const { error } = await sb.from('species').update({
         name,
-        description:     desc || null,
-        image_url:       imageUrl,
-        owner_nickname:  nickname,
-        custom_fields:   fields.length ? fields : null,
-      }).select('id').single();
+        description:   desc || null,
+        image_url:     imageUrl,
+        custom_fields: fields.length ? fields : null,
+      }).eq('id', speciesId);
 
       if (error) {
-        errorEl.textContent = `등록에 실패했어요: ${error.message}`;
-        btn.textContent = '등록하기';
+        errorEl.textContent = `저장에 실패했어요: ${error.message}`;
+        btn.textContent = '저장하기';
         btn.disabled = false;
         return;
       }
 
-      window.location.href = `species.html?id=${data.id}`;
+      window.location.href = `species.html?id=${speciesId}`;
     }
 
     init();
