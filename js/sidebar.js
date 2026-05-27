@@ -73,6 +73,62 @@ async function initSidebar() {
 
   loadSpeciesSidebar();
   updateSidebarLogin();
+  initHamburger();
+}
+
+function initHamburger() {
+  // 햄버거 버튼 주입
+  const headerInner = document.querySelector('.header-inner');
+  if (headerInner && !document.getElementById('hamburgerBtn')) {
+    const btn = document.createElement('button');
+    btn.id = 'hamburgerBtn';
+    btn.className = 'hamburger-btn';
+    btn.setAttribute('aria-label', '메뉴 열기');
+    btn.innerHTML = '<span></span><span></span><span></span>';
+    btn.addEventListener('click', toggleSidebar);
+    headerInner.prepend(btn);
+  }
+
+  // 오버레이 주입
+  if (!document.getElementById('sidebarOverlay')) {
+    const overlay = document.createElement('div');
+    overlay.id = 'sidebarOverlay';
+    overlay.className = 'sidebar-overlay';
+    overlay.addEventListener('click', closeSidebar);
+    document.body.appendChild(overlay);
+  }
+
+  // 사이드바 링크 클릭 시 닫기 (모바일)
+  const sidebar = document.getElementById('sidebar');
+  if (sidebar) {
+    sidebar.querySelectorAll('a, button').forEach(el => {
+      el.addEventListener('click', () => {
+        if (window.innerWidth <= 767) closeSidebar();
+      });
+    });
+  }
+}
+
+function toggleSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const btn     = document.getElementById('hamburgerBtn');
+  const overlay = document.getElementById('sidebarOverlay');
+  if (!sidebar) return;
+
+  const isOpen = sidebar.classList.toggle('sidebar--open');
+  if (btn)     btn.classList.toggle('is-open', isOpen);
+  if (overlay) overlay.classList.toggle('show', isOpen);
+  document.body.style.overflow = isOpen ? 'hidden' : '';
+}
+
+function closeSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  const btn     = document.getElementById('hamburgerBtn');
+  const overlay = document.getElementById('sidebarOverlay');
+  if (sidebar) sidebar.classList.remove('sidebar--open');
+  if (btn)     btn.classList.remove('is-open');
+  if (overlay) overlay.classList.remove('show');
+  document.body.style.overflow = '';
 }
 
 async function loadSpeciesSidebar() {
@@ -88,15 +144,20 @@ async function loadSpeciesSidebar() {
     body.innerHTML = allLink + dummy.map(name =>
       `<a href="species-list.html" class="sidebar-subitem" style="opacity:0.45;">${name}</a>`
     ).join('');
-    return;
+  } else {
+    const q    = new URLSearchParams(window.location.search);
+    const curr = q.get('id');
+    body.innerHTML = allLink + data.map(s =>
+      `<a href="species.html?id=${s.id}" class="sidebar-subitem ${curr === String(s.id) ? 'active' : ''}">${s.name}</a>`
+    ).join('');
   }
 
-  const q    = new URLSearchParams(window.location.search);
-  const curr = q.get('id');
-
-  body.innerHTML = allLink + data.map(s =>
-    `<a href="species.html?id=${s.id}" class="sidebar-subitem ${curr === String(s.id) ? 'active' : ''}">${s.name}</a>`
-  ).join('');
+  // 종족 목록 로드 후 새로 생긴 링크에도 닫기 이벤트 등록
+  body.querySelectorAll('a').forEach(el => {
+    el.addEventListener('click', () => {
+      if (window.innerWidth <= 767) closeSidebar();
+    });
+  });
 }
 
 async function updateSidebarLogin() {
