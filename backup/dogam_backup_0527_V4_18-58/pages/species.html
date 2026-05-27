@@ -58,8 +58,6 @@
           <button id="deleteSelectedBtn" onclick="deleteSelected()" disabled style="padding:4px 12px; border:none; border-radius:6px; background:#ef4444; color:#fff; font-size:12px; cursor:pointer; opacity:0.4;">선택 삭제</button>
           <button onclick="toggleManage()" style="padding:4px 12px; border:1px solid var(--border); border-radius:6px; background:#fff; font-size:12px; cursor:pointer; margin-left:auto;">취소</button>
         </div>
-        <!-- 분류 필터 -->
-        <div id="categoryFilterBar" style="display:none; flex-wrap:wrap; gap:6px; margin-bottom:14px;"></div>
         <div class="character-grid" id="characterGrid"></div>
       </section>
 
@@ -78,10 +76,9 @@
   <script src="../js/main.js"></script>
   <script>
     const speciesId = new URLSearchParams(window.location.search).get('id');
-    let allChars       = [];
-    let isOwner        = false;
-    let manageMode     = false;
-    let activeCategory = null;
+    let allChars    = [];
+    let isOwner     = false;
+    let manageMode  = false;
 
     if (!speciesId) {
       document.getElementById('speciesDetail').innerHTML = '<p class="page-loading">잘못된 접근이에요.</p>';
@@ -167,7 +164,6 @@
               <a href="character-register.html?species_id=${speciesId}&species=${encodeURIComponent(s.name)}" class="btn-secondary">개체 등록</a>
               <a href="bulk-import.html?species_id=${speciesId}&species=${encodeURIComponent(s.name)}" class="btn-ghost">일괄 등록</a>
               <a href="species-edit.html?id=${speciesId}" class="btn-ghost">종족 정보 수정</a>
-              <button onclick="deleteSpecies()" class="btn-danger">종족 삭제</button>
             </div>` : ''}
           </div>
         </div>
@@ -208,12 +204,11 @@
       // 소속 개체
       const { data: chars } = await sb
         .from('characters')
-        .select('id, name, species_name, owner_nickname, image_url, created_at, is_sensitive, sensitive_note, char_categories')
+        .select('id, name, species_name, owner_nickname, image_url, created_at, is_sensitive, sensitive_note')
         .eq('species_name', s.name)
         .order('created_at', { ascending: false });
 
       allChars = chars || [];
-      renderCategoryFilter();
       renderChars();
 
       const countEl = document.getElementById('charCountMeta');
@@ -223,62 +218,9 @@
       if (isOwner) document.getElementById('manageBtn').style.display = '';
     }
 
-    function renderCategoryFilter() {
-      const seen = new Set();
-      const cats = [];
-      allChars.forEach(c => (c.char_categories || []).forEach(cat => {
-        if (!cat.label || seen.has(cat.label)) return;
-        seen.add(cat.label);
-        cats.push(cat);
-      }));
-
-      const bar = document.getElementById('categoryFilterBar');
-      if (!cats.length) { bar.style.display = 'none'; return; }
-
-      bar.style.display = 'flex';
-      bar.innerHTML = '';
-
-      const allBtn = document.createElement('button');
-      allBtn.id = 'filterBtn_all';
-      allBtn.textContent = '전체';
-      allBtn.style.cssText = `padding:5px 14px; border-radius:20px; border:2px solid var(--border); background:var(--text); color:#fff; font-size:13px; font-weight:600; cursor:pointer;`;
-      allBtn.onclick = () => { activeCategory = null; updateFilterButtons(); renderChars(); };
-      bar.appendChild(allBtn);
-
-      cats.forEach(cat => {
-        const r = parseInt(cat.color.slice(1,3),16), g = parseInt(cat.color.slice(3,5),16), b = parseInt(cat.color.slice(5,7),16);
-        const tc = (0.299*r+0.587*g+0.114*b)/255 > 0.5 ? '#000' : '#fff';
-        const btn = document.createElement('button');
-        btn.dataset.catLabel = cat.label;
-        btn.textContent = cat.label;
-        btn.style.cssText = `padding:5px 14px; border-radius:20px; border:2px solid ${cat.color}; background:#fff; color:var(--text); font-size:13px; font-weight:600; cursor:pointer;`;
-        btn.dataset.color = cat.color;
-        btn.dataset.tc = tc;
-        btn.onclick = () => { activeCategory = cat.label; updateFilterButtons(); renderChars(); };
-        bar.appendChild(btn);
-      });
-    }
-
-    function updateFilterButtons() {
-      const allBtn = document.getElementById('filterBtn_all');
-      if (allBtn) {
-        allBtn.style.background = activeCategory === null ? 'var(--text)' : '#fff';
-        allBtn.style.color      = activeCategory === null ? '#fff' : 'var(--text)';
-      }
-      document.querySelectorAll('#categoryFilterBar [data-cat-label]').forEach(btn => {
-        const isActive = btn.dataset.catLabel === activeCategory;
-        btn.style.background = isActive ? btn.dataset.color : '#fff';
-        btn.style.color      = isActive ? btn.dataset.tc : 'var(--text)';
-      });
-    }
-
     function renderChars() {
       const sort  = document.getElementById('charSort').value;
       let list = [...allChars];
-
-      if (activeCategory !== null) {
-        list = list.filter(c => (c.char_categories || []).some(cat => cat.label === activeCategory));
-      }
 
       if (sort === 'name') {
         list.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
@@ -384,21 +326,6 @@
     function switchGuideTab(idx) {
       document.querySelectorAll('.guide-tab-btn').forEach((btn, i) => btn.classList.toggle('active', i === idx));
       document.querySelectorAll('.guide-tab-panel').forEach((panel, i) => panel.classList.toggle('active', i === idx));
-    }
-
-    async function deleteSpecies() {
-      const charCount = allChars.length;
-      const msg = charCount > 0
-        ? `이 종족을 삭제하면 소속 개체 ${charCount}마리는 삭제되지 않아요.\n종족을 정말 삭제할까요?`
-        : '이 종족을 정말 삭제할까요?';
-      if (!confirm(msg)) return;
-
-      const { data: deleted, error } = await sb.from('species').delete().eq('id', speciesId).select();
-      if (error) { alert('삭제에 실패했어요.\n\n' + error.message); return; }
-      if (!deleted || deleted.length === 0) { alert('삭제 권한이 없어요.\nSupabase DELETE 정책을 추가해주세요.'); return; }
-
-      alert('종족이 삭제됐어요.');
-      window.location.href = 'species-list.html';
     }
   </script>
 </body>
