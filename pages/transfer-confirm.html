@@ -268,7 +268,10 @@
           method,
         });
 
-        // 3. 보낸 사람에게 수락 알림
+        // 3. 이전 대기 상태 해제
+        await sb.from('characters').update({ pending_transfer: null }).eq('id', charId);
+
+        // 4. 보낸 사람에게 수락 알림
         await sb.from('notifications').insert({
           user_nickname: fromNick,
           type:          'transfer_accepted',
@@ -298,6 +301,9 @@
       const myNick = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
 
       try {
+        // 이전 대기 상태 해제
+        await sb.from('characters').update({ pending_transfer: null }).eq('id', charId);
+
         // 보낸 사람에게 거절 알림
         await sb.from('notifications').insert({
           user_nickname: fromNick,

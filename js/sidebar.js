@@ -25,6 +25,8 @@ async function initSidebar() {
 
     <a href="character-list.html" class="sidebar-accordion-btn ${path === 'character-list.html' || path === 'character.html' ? 'active' : ''}" style="text-decoration:none; display:flex; align-items:center;">개체</a>
 
+    <a href="users.html" class="sidebar-accordion-btn ${path === 'users.html' || path === 'profile.html' && new URLSearchParams(window.location.search).get('user') ? 'active' : ''}" style="text-decoration:none; display:flex; align-items:center;">유저</a>
+
     <div class="sidebar-divider"></div>
 
     <nav class="sidebar-menu">

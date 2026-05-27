@@ -51,6 +51,13 @@
       overlayEl.remove();
     }
 
+    async function cancelPendingTransfer() {
+      if (!confirm('이전 요청을 취소할까요?')) return;
+      const { error } = await sb.from('characters').update({ pending_transfer: null }).eq('id', charId);
+      if (error) { alert('취소에 실패했어요.'); return; }
+      window.location.reload();
+    }
+
     async function deleteCharacter() {
       if (!confirm('정말 이 개체를 삭제할까요? 되돌릴 수 없어요.')) return;
       const { error } = await sb.from('characters').delete().eq('id', charId);
@@ -135,6 +142,10 @@
           </div>
 
           <aside class="char-info-panel">
+            ${c.pending_transfer ? `
+            <div style="padding:10px 14px; background:#fffbeb; border:1px solid #fde68a; border-radius:10px; margin-bottom:12px; font-size:13px; color:#92400e; font-weight:500;">
+              이전 확인 중 · <strong>${c.pending_transfer.to}</strong>님에게
+            </div>` : ''}
             ${categoryBadgeHtml}
             ${c.species_name ? `
             <div class="char-info-row">
@@ -181,7 +192,10 @@
             <div style="display:flex; justify-content:space-between; align-items:center;">
               <button onclick="deleteCharacter()" style="padding:8px 16px; border:1px solid #fca5a5; border-radius:8px; background:#fff; color:#ef4444; font-size:13px; cursor:pointer;">개체 삭제</button>
               <div style="display:flex; gap:8px;">
-                <a href="character-transfer.html?id=${charId}" class="btn-ghost">개체 이전</a>
+                ${c.pending_transfer
+                  ? `<button onclick="cancelPendingTransfer()" style="padding:6px 14px; border:1px solid #fde68a; border-radius:8px; background:#fffbeb; color:#92400e; font-size:13px; cursor:pointer;">이전 취소</button>`
+                  : `<a href="character-transfer.html?id=${charId}" class="btn-ghost">개체 이전</a>`
+                }
                 <a href="character-edit.html?id=${charId}" class="btn-ghost">개체 정보 수정</a>
               </div>
             </div>` : ''}

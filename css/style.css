@@ -1620,13 +1620,12 @@ a {
 }
 
 .badge-admin {
-  display: inline-flex;
-  align-items: center;
+  display: inline-block;
   padding: 3px 8px;
   background: #FEF3C7;
   color: #D97706;
-  border-radius: 6px;
-  font-size: 11px;
+  border-radius: 4px;
+  font-size: 10px;
   font-weight: 700;
   margin-left: 6px;
 }
@@ -2828,16 +2827,14 @@ a {
 
 /* 헤더 종족주 뱃지 */
 .badge-role {
-  display: inline-flex;
-  align-items: center;
-  padding: 4px 10px;
+  display: inline-block;
+  padding: 3px 8px;
   background: #E0F2FE;
-  border-radius: 8px;
-  font-family: 'Galmuri14', sans-serif;
-  font-size: 11px;
+  border-radius: 4px;
+  font-size: 10px;
   font-weight: 700;
   color: #0369A1;
-  margin-right: 8px;
+  margin-right: 4px;
   cursor: default;
   user-select: none;
   white-space: nowrap;
@@ -2857,13 +2854,12 @@ a {
 }
 
 .badge-user {
-  display: inline-flex;
-  align-items: center;
+  display: inline-block;
   padding: 3px 8px;
   background: #F1F5F9;
   color: var(--text-sub);
-  border-radius: 6px;
-  font-size: 11px;
+  border-radius: 4px;
+  font-size: 10px;
   font-weight: 700;
 }
 

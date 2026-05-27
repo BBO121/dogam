@@ -260,6 +260,11 @@
         });
         if (notifError) throw notifError;
 
+        // 이전 대기 상태 저장
+        await sb.from('characters').update({
+          pending_transfer: { to: selectedRecipient, from: myNick, method, link: confirmLink }
+        }).eq('id', charId);
+
         window.location.href = `character.html?id=${charId}`;
       } catch (e) {
         console.error(e);
