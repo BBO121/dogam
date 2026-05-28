@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>분양 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .comments-section { margin-top:32px; }
+    .comments-section h2 { font-size:16px; font-weight:700; margin-bottom:8px; }
+    .comment-item {
+      border:1px solid var(--border); border-radius:var(--radius);
+      background:#fff; padding:14px 16px; margin-bottom:10px;
+    }
+    .comment-header { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+    .comment-author { font-size:13px; font-weight:600; }
+    .comment-time   { font-size:12px; color:var(--text-mute); flex:1; }
+    .comment-delete { border:none; background:none; font-size:12px; color:var(--text-mute); cursor:pointer; padding:0; }
+    .comment-delete:hover { color:#ef4444; }
+    .comment-confirm-btn {
+      border:none; background:var(--sky); color:#fff;
+      font-size:12px; font-weight:600; cursor:pointer;
+      padding:4px 12px; border-radius:6px; white-space:nowrap;
+    }
+    .comment-confirm-btn:hover { background:var(--sky-deep); }
+    .comment-content { font-size:14px; line-height:1.6; white-space:pre-wrap; word-break:break-word; }
+    .comment-reply-btn { border:none; background:none; font-size:12px; color:var(--sky-deep); cursor:pointer; padding:4px 0 0; }
+    .replies { margin-top:10px; padding-left:16px; border-left:2px solid var(--border); display:flex; flex-direction:column; gap:8px; }
+    .reply-item { padding:10px 12px; background:var(--sky-pale); border-radius:8px; }
+    .reply-input-wrap { margin-top:10px; display:flex; flex-direction:column; gap:6px; }
+    .reply-textarea {
+      width:100%; border:1px solid var(--border); border-radius:8px;
+      padding:8px 12px; font-size:13px; resize:none; outline:none; font-family:inherit;
+    }
+    .reply-textarea:focus { border-color:var(--sky); }
+    .comment-input-area {
+      margin-top:16px; border:1px solid var(--border); border-radius:var(--radius);
+      background:#fff; padding:14px 16px; display:flex; flex-direction:column; gap:8px;
+    }
+    .comment-textarea {
+      width:100%; border:1px solid var(--border); border-radius:8px;
+      padding:10px 12px; font-size:14px; resize:none; outline:none; font-family:inherit;
+    }
+    .comment-textarea:focus { border-color:var(--sky); }
+    .adoption-notice {
+      background:#F0F9FF; border:1px solid #BAE6FD; border-radius:var(--radius);
+      padding:12px 16px; margin-bottom:16px; font-size:13px; color:#0369A1; line-height:1.6;
+    }
+    .apply-btn {
+      width:100%; padding:12px; background:var(--sky); color:#fff;
+      border:none; border-radius:var(--radius); font-size:15px; font-weight:700;
+      cursor:pointer; margin-top:16px;
+    }
+    .apply-btn:hover { background:var(--sky-deep); }
+    .apply-btn:disabled { background:var(--border); color:var(--text-mute); cursor:not-allowed; }
+    .raffle-info-box {
+      background:#F0FDF4; border:1px solid #86EFAC; border-radius:var(--radius);
+      padding:12px 16px; margin-top:12px; font-size:13px; color:#166534;
+    }
+    .first-come-countdown {
+      background:#FFFBEB; border:1px solid #FCD34D; border-radius:var(--radius);
+      padding:12px 16px; margin-top:12px; font-size:13px; color:#92400E; font-weight:600;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main">
+
+      <div id="pageLoading" class="page-loading">불러오는 중...</div>
+
+      <div id="pageContent" style="display:none;">
+
+        <div class="notice-detail-nav">
+          <span id="navCount" class="notice-nav-count"></span>
+          <a href="adoption.html" class="notice-nav-list-btn">목록보기</a>
+        </div>
+
+        <div class="adoption-detail-layout">
+
+          <!-- 왼쪽: 이미지 -->
+          <div class="adoption-detail-left">
+            <div id="mainImg" class="adoption-detail-img-main"></div>
+            <div id="extraImgsRow" class="adoption-detail-imgs-extra"></div>
+          </div>
+
+          <!-- 오른쪽: 정보 -->
+          <div class="adoption-detail-right">
+
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
+              <span id="typeBadge" class="adoption-type-badge"></span>
+              <span id="statusBadge" class="adoption-status"></span>
+            </div>
+
+            <div id="closedBanner" style="display:none; background:#f3f4f6; border:1.5px solid #d1d5db; border-radius:var(--radius); padding:12px 16px; margin-bottom:12px; text-align:center;">
+              <p style="font-size:14px; font-weight:700; color:#374151; margin:0;">🔒 이 분양은 마감됐어요</p>
+            </div>
+
+            <h1 id="detailCharName" class="adoption-detail-char-name"></h1>
+            <p id="detailSpecies" class="adoption-detail-species"></p>
+
+            <div class="notice-detail-meta" style="margin-top:8px; margin-bottom:20px;">
+              <span id="detailAuthor"></span>
+              <span class="notice-detail-sep">·</span>
+              <span id="detailDate"></span>
+            </div>
+
+            <!-- 분양 정보 박스 -->
+            <div id="adoptionInfoBox" class="adoption-info-box" style="display:none;"></div>
+
+            <!-- 무료 추첨 신청 영역 -->
+            <div id="freeActionArea"></div>
+
+            <!-- 설명 -->
+            <div id="descWrap" style="display:none; margin-top:20px;">
+              <p class="adoption-section-label">설명</p>
+              <div id="descContent" class="adoption-desc-content"></div>
+            </div>
+
+            <!-- 연락 수단 -->
+            <div id="contactWrap" class="adoption-contact-box" style="display:none;">
+              <span class="adoption-contact-label">연락 수단</span>
+              <span id="contactContent"></span>
+            </div>
+
+            <!-- 분양자 전용: 당첨자 확인 대기 안내 -->
+            <div id="ownerPendingNotice" style="display:none; margin-top:16px;">
+              <div style="background:#F0F9FF; border:1.5px solid #BAE6FD; border-radius:var(--radius); padding:14px 16px;">
+                <p style="font-size:13px; font-weight:700; color:#0369A1; margin:0 0 4px;">소유권 이전 대기중</p>
+                <p style="font-size:13px; color:#0369A1; margin:0; line-height:1.5;">당첨자가 확인하기 버튼을 누르면 캐릭터 소유권이 자동으로 이전돼요.</p>
+              </div>
+            </div>
+
+            <!-- 확인하기 버튼 (낙찰자 전용) -->
+            <div id="confirmBtnWrap" style="display:none; margin-top:16px;">
+              <div style="background:#FFFBEB; border:1.5px solid #FCD34D; border-radius:var(--radius); padding:14px 16px; margin-bottom:12px;">
+                <p style="font-size:13px; font-weight:700; color:#92400E; margin:0 0 4px;">낙찰 확인 요청</p>
+                <p style="font-size:13px; color:#78350F; margin:0; line-height:1.5;">분양을 받으실 건가요? 확인하시면 캐릭터 소유권이 이전돼요.</p>
+              </div>
+              <button class="btn-secondary" style="width:100%;" onclick="confirmAdoption()">확인하기</button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 경매 섹션 -->
+        <div id="auctionSection" style="display:none; margin-top:32px;">
+          <div class="adoption-bids-wrap">
+
+            <div class="adoption-bids-header">
+              <h2 class="adoption-section-title">입찰하기</h2>
+              <span id="bidCount" class="adoption-bid-count"></span>
+              <!-- 작성자 전용 분양확정 버튼 -->
+              <div id="auctionConfirmWrap" style="display:none; margin-left:auto;">
+                <button onclick="openCompleteModal(null)" class="btn-secondary" style="font-size:13px; padding:6px 14px;">분양확정</button>
+              </div>
+            </div>
+
+            <!-- 입찰 안내문 -->
+            <p id="bidNotice" style="display:none; font-size:13px; color:var(--text-sub); margin-bottom:12px; line-height:1.5;">
+              한 번 입찰하면 수정이 불가합니다. 두 번 이상 입찰은 가능합니다.
+            </p>
+
+            <!-- 낙찰 결과 -->
+            <div id="winnerBox" class="adoption-winner-box" style="display:none;"></div>
+
+            <!-- 입찰 목록 -->
+            <div id="bidList" class="adoption-bid-list"></div>
+
+            <!-- 입찰 입력 -->
+            <div id="bidInputWrap" class="adoption-bid-input-wrap" style="display:none;">
+              <div style="display:flex; align-items:center; gap:8px; flex:1;">
+                <input type="text" id="bidAmount" class="form-input" placeholder="0" inputmode="numeric"
+                  oninput="const r=this.value.replace(/[^0-9]/g,''); this.value=r?Number(r).toLocaleString('ko-KR'):'';"
+                  style="flex:1;">
+                <span style="font-size:14px; color:var(--text-mute); white-space:nowrap;">원</span>
+              </div>
+              <button onclick="submitBid()" class="btn-secondary">입찰하기</button>
+            </div>
+            <p class="auth-error" id="bidError"></p>
+
+            <!-- 마감 버튼 (작성자 전용) -->
+            <div id="closeWrap" style="display:none; margin-top:12px;">
+              <button onclick="closeAuction()" class="btn-ghost">마감하기 (낙찰자 없음)</button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 댓글 섹션 (경매 제외) -->
+        <div class="comments-section" id="commentsSection">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+            <h2 id="commentSectionTitle" style="margin:0;">댓글</h2>
+          </div>
+          <!-- 유료/기타 안내문 -->
+          <div id="commentNotice" class="adoption-notice" style="display:none;"></div>
+          <div id="commentList"><p class="page-loading">불러오는 중...</p></div>
+          <div id="commentInputArea" class="comment-input-area" style="display:none;">
+            <textarea id="commentTextarea" class="comment-textarea" rows="3" placeholder="댓글을 남겨주세요..."></textarea>
+            <div style="display:flex; justify-content:flex-end;">
+              <button onclick="submitComment()" class="btn-secondary" style="padding:8px 20px; font-size:13px;">등록</button>
+            </div>
+          </div>
+          <p class="auth-error" id="commentError"></p>
+        </div>
+
+        <div class="notice-detail-bottom" style="justify-content:space-between;">
+          <a href="adoption.html" class="btn-ghost">← 목록으로</a>
+          <button id="deletePostBtn" class="btn-danger" style="display:none;" onclick="deletePost()">글 삭제</button>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- 분양확정 모달 -->
+  <div class="modal-overlay" id="completeModal" style="display:none;">
+    <div class="modal-card">
+      <h3 class="modal-title">분양 확정</h3>
+      <p class="modal-desc" id="completeModalDesc">분양받은 유저의 닉네임을 확인해주세요.<br>해당 유저에게 캐릭터 소유권이 이전돼요.</p>
+      <div class="form-group" style="margin-bottom:4px;">
+        <input type="text" class="form-input" id="recipientInput" placeholder="받는 유저 닉네임">
+      </div>
+      <p class="auth-error" id="completeError"></p>
+      <div class="modal-actions" style="margin-top:20px;">
+        <button class="btn-ghost" onclick="closeCompleteModal()">취소</button>
+        <button class="btn-secondary" id="confirmCompleteBtn" onclick="confirmComplete()">분양 완료</button>
+      </div>
+    </div>
+  </div>
+
+  <footer class="footer"><p>© 2026 도감</p></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    const params     = new URLSearchParams(window.location.search);
+    const adoptionId = params.get('id');
+    let currentUser     = null;
+    let currentAdoption = null;
+    let myNick          = null;
+    let auctionDetails  = null;
+
+    const TYPE_LABEL = { free: '무료', paid: '유료', auction: '경매', etc: '기타' };
+    const TYPE_CLASS  = { free: 'adoption-type--free', paid: 'adoption-type--paid', auction: 'adoption-type--auction', etc: 'adoption-type--paid' };
+
+    async function initPage() {
+      if (!adoptionId) { window.location.href = 'adoption.html'; return; }
+
+      currentUser = await getUser();
+      myNick = currentUser?.user_metadata?.display_name || currentUser?.user_metadata?.nickname || null;
+
+      const [{ data: adoption, error }, { count }] = await Promise.all([
+        sb.from('adoptions').select('*').eq('id', adoptionId).single(),
+        sb.from('adoptions').select('*', { count: 'exact', head: true }),
+      ]);
+
+      if (error || !adoption) { window.location.href = 'adoption.html'; return; }
+
+      currentAdoption = adoption;
+      document.title = `${adoption.character_name} 분양 — 도감`;
+      if (count) document.getElementById('navCount').textContent = `분양 총 ${count}개`;
+
+      renderMain(adoption);
+
+      if (adoption.adoption_type === 'auction') {
+        document.getElementById('auctionSection').style.display = 'block';
+        document.getElementById('commentsSection').style.display = 'none';
+
+        const [{ data: details }, { data: bids }] = await Promise.all([
+          sb.from('auction_details').select('*').eq('adoption_id', adoptionId).single(),
+          sb.from('auction_bids').select('*').eq('adoption_id', adoptionId).order('created_at', { ascending: false }),
+        ]);
+
+        auctionDetails = details;
+        renderAuctionInfo(details);
+        renderBids(adoption, bids || []);
+      } else if (adoption.adoption_type === 'free') {
+        if (adoption.free_type === 'random') {
+          // 댓글 섹션을 신청자 목록 섹션으로 재활용
+          document.getElementById('commentSectionTitle').textContent = '신청자 목록';
+          document.getElementById('commentInputArea').style.display = 'none';
+          document.getElementById('commentList').innerHTML = '<p class="page-loading">불러오는 중...</p>';
+        } else {
+          document.getElementById('commentsSection').style.display = 'none';
+        }
+      } else {
+        loadComments();
+      }
+
+      document.getElementById('pageLoading').style.display = 'none';
+      document.getElementById('pageContent').style.display = 'block';
+    }
+
+    async function renderMain(a) {
+      // 메인 이미지
+      const mainImg = document.getElementById('mainImg');
+      if (a.image_url) {
+        mainImg.style.backgroundImage    = `url('${a.image_url}')`;
+        mainImg.style.backgroundSize     = 'cover';
+        mainImg.style.backgroundPosition = 'center';
+      }
+
+      // 추가 이미지
+      if (a.extra_images && a.extra_images.length > 0) {
+        document.getElementById('extraImgsRow').innerHTML = a.extra_images.map(url =>
+          `<div class="adoption-extra-img" style="background-image:url('${url}');background-size:cover;background-position:center;"></div>`
+        ).join('');
+      }
+
+      // 뱃지
+      const tb = document.getElementById('typeBadge');
+      tb.textContent = TYPE_LABEL[a.adoption_type] || '';
+      tb.className   = `adoption-type-badge ${TYPE_CLASS[a.adoption_type] || ''}`;
+
+      const sb2 = document.getElementById('statusBadge');
+      sb2.textContent = a.status || '분양중';
+      sb2.className   = `adoption-status${
+        a.status === '완료'       ? ' adoption-status--closed'  :
+        a.status === '확인 대기중' ? ' adoption-status--pending' : ''}`;
+
+      document.getElementById('detailCharName').textContent = a.character_name || '—';
+      document.getElementById('detailSpecies').textContent  = a.species_name   || '—';
+      document.getElementById('detailAuthor').textContent   = a.author         || '익명';
+
+      const date = new Date(a.created_at).toLocaleDateString('ko-KR', {
+        year: 'numeric', month: '2-digit', day: '2-digit'
+      }).replace(/\. /g, '.').replace(/\.$/, '');
+      document.getElementById('detailDate').textContent = date;
+
+      // 분양 정보 박스
+      const infoBox = document.getElementById('adoptionInfoBox');
+      if (a.adoption_type === 'free') {
+        let freeLabel = '무료 분양';
+        if (a.free_type === 'random')     freeLabel = '무료 분양 · 랜덤 추첨';
+        if (a.free_type === 'first_come') freeLabel = '무료 분양 · 선착순';
+        infoBox.innerHTML = `<span style="font-size:15px; font-weight:700; color:#16A34A;">${freeLabel}</span>`;
+        infoBox.style.display = 'block';
+
+        // 추첨/선착순 날짜 표시
+        if (a.raffle_at) {
+          const raffleDate = new Date(a.raffle_at);
+          const formatted  = raffleDate.toLocaleString('ko-KR', {
+            month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'
+          });
+          const labelText = a.free_type === 'random' ? '추첨 시각' : '시작 시각';
+          infoBox.innerHTML += `<p style="font-size:13px; color:var(--text-sub); margin:6px 0 0;">🕐 ${labelText}: ${formatted}</p>`;
+        }
+
+        // 랜덤 추첨 당첨자 표시 (모두에게)
+        if (a.free_type === 'random' && a.winner_name) {
+          infoBox.innerHTML += `<p style="font-size:14px; font-weight:700; color:#166534; margin:10px 0 0; padding-top:10px; border-top:1px solid #bbf7d0;">🎲 당첨자: ${a.winner_name}</p>`;
+        }
+
+      } else if ((a.adoption_type === 'paid' || a.adoption_type === 'etc') && a.price) {
+        infoBox.innerHTML = `<span style="font-size:20px; font-weight:800; color:var(--sky-deep);">${a.price}${a.adoption_type === 'paid' ? '원' : ''}</span>`;
+        infoBox.style.display = 'block';
+      }
+
+      // 설명
+      if (a.description) {
+        document.getElementById('descContent').innerHTML = a.description.replace(/\n/g, '<br>');
+        document.getElementById('descWrap').style.display = 'block';
+      }
+
+      // 연락 수단
+      if (a.contact) {
+        document.getElementById('contactContent').textContent = a.contact;
+        document.getElementById('contactWrap').style.display  = 'flex';
+      }
+
+      const isAuthor = currentUser && (currentUser.id === a.user_id || myNick === a.author);
+      const isOpen   = a.status === '분양중';
+
+      if (!isOpen) {
+        const banner = document.getElementById('closedBanner');
+        // 당첨자 본인이고 완료된 경우 → 특별 메시지
+        if (currentUser && myNick === a.winner_name && a.status === '완료') {
+          banner.innerHTML = '<p style="font-size:14px; font-weight:700; color:#166534; margin:0;">🎉 소유권 이전이 완료됐어요!</p>';
+          banner.style.background = '#f0fdf4';
+          banner.style.borderColor = '#86efac';
+        }
+        banner.style.display = 'block';
+      }
+
+      // 무료 추첨/선착순 액션 영역
+      if (a.adoption_type === 'free') {
+        await renderFreeAction(a, isAuthor, isOpen);
+      }
+
+      // 확인하기 버튼 (낙찰자 + 확인 대기중)
+      if (currentUser && myNick === a.winner_name && a.status === '확인 대기중') {
+        document.getElementById('confirmBtnWrap').style.display = 'block';
+      }
+
+      // 분양자 전용: 당첨자 확인 대기 안내 + 자동 새로고침 폴링
+      if (isAuthor && a.winner_name && a.status === '확인 대기중') {
+        document.getElementById('ownerPendingNotice').style.display = 'block';
+        const pollConfirm = setInterval(async () => {
+          const { data } = await sb.from('adoptions').select('status').eq('id', adoptionId).single();
+          if (data?.status === '완료') { clearInterval(pollConfirm); location.reload(); }
+        }, 5000);
+      }
+
+      // 삭제 버튼 (작성자 전용)
+      if (isAuthor) {
+        document.getElementById('deletePostBtn').style.display = 'inline-flex';
+      }
+
+      // 댓글 섹션 안내문
+      if (a.adoption_type === 'paid' || a.adoption_type === 'etc') {
+        const notice = document.getElementById('commentNotice');
+        notice.innerHTML = '💬 댓글 또는 다른 연락수단으로 소통 후 분양받는 분이 정해지면, 해당 댓글의 <strong>분양확정</strong> 버튼을 눌러 주세요. 분양확정 버튼을 눌러야 분양이 닫힙니다.';
+        notice.style.display = 'block';
+      }
+    }
+
+    async function renderFreeAction(a, isAuthor, isOpen) {
+      const area = document.getElementById('freeActionArea');
+      if (!a.free_type || a.free_type === 'normal') return;
+
+      const now      = new Date();
+      const raffleAt = a.raffle_at ? new Date(a.raffle_at) : null;
+      const isPast   = raffleAt ? now >= raffleAt : false;
+
+      // 랜덤 추첨
+      if (a.free_type === 'random') {
+        // 신청자 목록 전체 가져오기
+        const { data: applicants } = await sb.from('adoption_applications')
+          .select('applicant_nickname, applicant_id').eq('adoption_id', adoptionId).order('created_at');
+        const applicantList = applicants || [];
+
+        // 댓글 섹션 자리에 신청자 리스트 표시
+        const commentListEl = document.getElementById('commentList');
+        if (commentListEl) {
+          if (applicantList.length > 0) {
+            commentListEl.innerHTML = `
+              <div style="background:#fff; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;">
+                ${applicantList.map((ap, i) => `
+                  <div style="display:flex; align-items:center; gap:12px; padding:11px 16px; border-bottom:${i === applicantList.length - 1 ? 'none' : '1px solid var(--border)'};">
+                    <span style="font-size:13px; color:var(--text-mute); min-width:20px; text-align:right;">${i + 1}</span>
+                    <span style="font-size:14px; font-weight:600;">${ap.applicant_nickname}</span>
+                  </div>
+                `).join('')}
+              </div>
+            `;
+          } else {
+            commentListEl.innerHTML = '<p style="font-size:14px; color:var(--text-mute); padding:12px 0;">아직 신청자가 없어요</p>';
+          }
+        }
+
+        if (!isOpen) return;
+
+        if (!isPast) {
+          // 신청 가능 기간
+          const myApp = currentUser ? applicantList.find(ap => ap.applicant_id === currentUser.id) : null;
+          if (currentUser && !isAuthor) {
+            if (myApp) {
+              area.innerHTML = `<div class="raffle-info-box">✅ 추첨 신청이 완료됐어요!</div>`;
+            } else {
+              area.innerHTML = `
+                <div class="raffle-info-box">🎲 추첨에 신청하려면 버튼을 눌러주세요.</div>
+                <button class="apply-btn" onclick="applyRaffle()">추첨 신청하기</button>
+              `;
+            }
+          }
+        } else {
+          // 추첨 시간 경과 — 분양자에게 추첨 버튼
+          if (isAuthor) {
+            area.innerHTML = `
+              <div class="raffle-info-box">추첨 시간이 됐어요! 신청자 <strong>${applicantList.length}명</strong> 중 추첨해주세요.</div>
+              <button class="apply-btn" onclick="runRaffle()">추첨하기</button>
+            `;
+          } else {
+            area.innerHTML = `<div class="raffle-info-box">⏳ 추첨이 곧 진행될 예정이에요.</div>`;
+          }
+        }
+      }
+
+      // 선착순
+      if (a.free_type === 'first_come') {
+        // 당첨자가 있거나 분양중이 아닌 경우 — 결과 표시
+        if (a.winner_name || !isOpen) {
+          const winner = a.winner_name;
+          let html = '';
+          if (winner) {
+            if (currentUser && myNick === winner) {
+              // 당첨자 본인 — confirmBtnWrap은 renderMain에서 표시
+              if (a.status === '확인 대기중') {
+                html = `<div class="raffle-info-box">🎉 선착순 신청에 성공했어요! 아래 확인하기 버튼을 눌러 소유권을 받으세요.</div>`;
+              }
+            } else {
+              // 분양자 or 기타 — 당첨자 이름만 표시, ownerPendingNotice는 renderMain에서 표시
+              html = `<div class="raffle-info-box">🏃 선착순 당첨자: <strong>${winner}</strong></div>`;
+            }
+          }
+          area.innerHTML = html;
+          return;
+        }
+
+        if (!isPast) {
+          // 시작 전 — 카운트다운 표시
+          const formatted = raffleAt ? raffleAt.toLocaleString('ko-KR', {
+            month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit'
+          }) : '';
+          area.innerHTML = `<div class="first-come-countdown">🕐 선착순 시작: ${formatted}</div>`;
+          if (isAuthor) {
+            area.innerHTML += `<div class="adoption-notice" style="margin-top:8px;">선착순이 시작되면 신청자가 생길 수 있어요. 당첨자가 생기면 분양 확정 버튼이 나타나요.</div>`;
+          }
+        } else {
+          // 시작 후
+          if (isAuthor) {
+            area.innerHTML = `<div class="adoption-notice">🏃 선착순이 시작됐어요. 당첨자가 생기면 자동으로 화면이 업데이트돼요.</div>`;
+            // 당첨자 생기면 자동 새로고침
+            const pollWinner = setInterval(async () => {
+              const { data } = await sb.from('adoptions').select('winner_name').eq('id', adoptionId).single();
+              if (data?.winner_name) { clearInterval(pollWinner); location.reload(); }
+            }, 5000);
+          } else if (currentUser) {
+            area.innerHTML = `<button class="apply-btn" onclick="applyFirstCome()">분양받기</button>`;
+          } else {
+            area.innerHTML = `<div class="first-come-countdown">🕐 선착순 진행중이에요. 로그인 후 신청하세요.</div>`;
+          }
+        }
+      }
+    }
+
+    async function applyRaffle() {
+      const btn = document.querySelector('#freeActionArea .apply-btn');
+      if (btn) { btn.disabled = true; btn.textContent = '신청 중...'; }
+
+      const { error } = await sb.from('adoption_applications').insert({
+        adoption_id:        adoptionId,
+        applicant_nickname: myNick,
+        applicant_id:       currentUser.id,
+      });
+
+      if (error) {
+        if (btn) { btn.disabled = false; btn.textContent = '추첨 신청하기'; }
+        if (error.code === '23505') {
+          alert('이미 신청하셨어요.');
+        } else {
+          alert('신청에 실패했어요. 다시 시도해주세요.');
+        }
+        return;
+      }
+
+      document.getElementById('freeActionArea').innerHTML =
+        `<div class="raffle-info-box">✅ 추첨 신청이 완료됐어요!</div>`;
+    }
+
+    async function runRaffle() {
+      if (!confirm('추첨을 진행할까요? 신청자 중 한 명이 랜덤으로 선택돼요.')) return;
+
+      const { data: apps, error } = await sb.from('adoption_applications')
+        .select('applicant_nickname').eq('adoption_id', adoptionId);
+
+      if (error || !apps || apps.length === 0) {
+        alert('신청자가 없어요. 추첨을 진행할 수 없어요. 분양을 마감합니다.');
+        await sb.from('adoptions').update({ status: '완료' }).eq('id', adoptionId);
+        location.reload();
+        return;
+      }
+
+      const winner = apps[Math.floor(Math.random() * apps.length)].applicant_nickname;
+
+      const { error: updateErr } = await sb.from('adoptions').update({
+        winner_name: winner,
+        status:      '확인 대기중',
+      }).eq('id', adoptionId);
+
+      if (updateErr) { alert('오류가 발생했어요.'); return; }
+
+      await sb.from('notifications').insert([
+        {
+          user_nickname: winner,
+          type:          'raffle_win',
+          message:       `🎲 "${currentAdoption.character_name}" 랜덤 추첨에 당첨됐어요! 분양자가 확정을 처리할 예정이에요.`,
+          link:          `adoption-detail.html?id=${adoptionId}`,
+        },
+        {
+          user_nickname: currentAdoption.author,
+          type:          'raffle_done',
+          message:       `🎲 "${currentAdoption.character_name}" 추첨 결과: ${winner}님 당첨!`,
+          link:          `adoption-detail.html?id=${adoptionId}`,
+        },
+      ]);
+
+      alert('추첨 완료!');
+      location.reload();
+    }
+
+    async function applyFirstCome() {
+      const btn = document.querySelector('#freeActionArea .apply-btn');
+      if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
+
+      const { error: insertErr } = await sb.from('adoption_applications').insert({
+        adoption_id:        adoptionId,
+        applicant_nickname: myNick,
+        applicant_id:       currentUser.id,
+      });
+
+      if (insertErr) {
+        if (btn) { btn.disabled = false; btn.textContent = '분양받기'; }
+        if (insertErr.code === '23505') {
+          alert('이미 신청하셨어요.');
+        } else {
+          // 다른 사람이 먼저 눌렀을 수 있음
+          const { data: check } = await sb.from('adoptions')
+            .select('winner_name').eq('id', adoptionId).single();
+          if (check?.winner_name) {
+            alert('아쉽게도 이미 마감됐어요.');
+          } else {
+            alert('오류가 발생했어요. 다시 시도해주세요.');
+          }
+        }
+        return;
+      }
+
+      // 선착순 성공 — winner_name 설정
+      const { data: updated, error: updateErr } = await sb.from('adoptions').update({
+        winner_name: myNick,
+        status:      '확인 대기중',
+      }).eq('id', adoptionId).select('id');
+
+      if (updateErr || !updated || updated.length === 0) {
+        alert('신청 처리에 실패했어요. 잠시 후 다시 시도해주세요.');
+        if (btn) { btn.disabled = false; btn.textContent = '분양받기'; }
+        return;
+      }
+
+      await sb.from('notifications').insert([
+        {
+          user_nickname: currentAdoption.author,
+          type:          'first_come_win',
+          message:       `🏃 "${currentAdoption.character_name}" 선착순 분양 신청자가 생겼어요! 분양을 확정해주세요.`,
+          link:          `adoption-detail.html?id=${adoptionId}`,
+        },
+        {
+          user_nickname: myNick,
+          type:          'first_come_success',
+          message:       `🎉 "${currentAdoption.character_name}" 선착순 분양에 성공했어요! 분양 페이지에서 확인하기 버튼을 눌러 소유권을 받으세요.`,
+          link:          `adoption-detail.html?id=${adoptionId}`,
+        },
+      ]);
+
+      alert('신청 완료.');
+      location.reload();
+    }
+
+    function renderAuctionInfo(details) {
+      if (!details) return;
+      const closeLabel = details.close_method === 'date'
+        ? (details.close_at
+            ? `${new Date(details.close_at).toLocaleString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })} 마감`
+            : '날짜 미정')
+        : `마지막 입찰 후 ${details.close_hours}시간 마감`;
+
+      const infoBox = document.getElementById('adoptionInfoBox');
+      infoBox.innerHTML = `
+        <div class="auction-info-grid">
+          <div class="auction-info-item">
+            <span class="auction-info-label">시작가</span>
+            <span class="auction-info-value">${Number(details.start_price).toLocaleString('ko-KR')}원</span>
+          </div>
+          ${details.instant_price ? `
+          <div class="auction-info-item">
+            <span class="auction-info-label">즉분가</span>
+            <span class="auction-info-value">${Number(details.instant_price).toLocaleString('ko-KR')}원</span>
+          </div>` : ''}
+          ${details.bid_unit ? `
+          <div class="auction-info-item">
+            <span class="auction-info-label">입찰 단위</span>
+            <span class="auction-info-value">${Number(details.bid_unit).toLocaleString('ko-KR')}원</span>
+          </div>` : ''}
+          <div class="auction-info-item">
+            <span class="auction-info-label">마감</span>
+            <span class="auction-info-value">${closeLabel}</span>
+          </div>
+        </div>
+      `;
+      infoBox.style.display = 'block';
+    }
+
+    function renderBids(adoption, bids) {
+      const isAuthor = currentUser && (currentUser.id === adoption.user_id || myNick === adoption.author);
+      const isOpen   = adoption.status === '분양중';
+
+      document.getElementById('bidCount').textContent = `${bids.length}건`;
+
+      // 작성자에게 분양확정 버튼 표시
+      if (isAuthor && isOpen) {
+        document.getElementById('auctionConfirmWrap').style.display = 'block';
+      }
+
+      // 입찰 안내문 표시
+      if (isOpen) {
+        document.getElementById('bidNotice').style.display = 'block';
+      }
+
+      // 낙찰 결과
+      if (adoption.winner_name && adoption.status === '확인 대기중') {
+        document.getElementById('winnerBox').innerHTML = `
+          <div class="adoption-winner-inner">
+            <span class="adoption-winner-trophy">⏳</span>
+            <div>
+              <p class="adoption-winner-label">낙찰 확인 대기 중</p>
+              <p class="adoption-winner-name">${adoption.winner_name}</p>
+              <p class="adoption-winner-bid">${adoption.winner_bid || ''}</p>
+            </div>
+          </div>
+        `;
+        document.getElementById('winnerBox').style.display = 'block';
+      } else if (adoption.winner_name && adoption.status === '완료') {
+        document.getElementById('winnerBox').innerHTML = `
+          <div class="adoption-winner-inner">
+            <span class="adoption-winner-trophy">🏆</span>
+            <div>
+              <p class="adoption-winner-label">낙찰자</p>
+              <p class="adoption-winner-name">${adoption.winner_name}</p>
+              <p class="adoption-winner-bid">${adoption.winner_bid || ''}</p>
+            </div>
+          </div>
+        `;
+        document.getElementById('winnerBox').style.display = 'block';
+      }
+
+      // 입찰 목록
+      const listEl = document.getElementById('bidList');
+      if (bids.length === 0) {
+        listEl.innerHTML = '<p class="adoption-no-bids">아직 입찰이 없어요</p>';
+      } else {
+        const instantPrice = auctionDetails?.instant_price ? Number(auctionDetails.instant_price) : null;
+        listEl.innerHTML = bids.map(bid => {
+          const isInstantWin = instantPrice
+            && Number(bid.bid_amount) === instantPrice
+            && bid.bidder_name === adoption.winner_name;
+          return `
+          ${isInstantWin ? `<div class="bid-instant-notice">분양자의 확인을 기다려주세요</div>` : ''}
+          <div class="adoption-bid-row">
+            <div class="adoption-bid-info">
+              <span class="adoption-bid-name">${bid.bidder_name}</span>
+              <span class="adoption-bid-amount">${Number(bid.bid_amount).toLocaleString('ko-KR')}원</span>
+              ${isInstantWin ? `<span class="bid-instant-badge">✨즉분가 낙찰✨</span><span class="bid-instant-desc"> 분양자의 확인을 기다려주세요</span>` : ''}
+              <span class="adoption-bid-time">${timeAgo(bid.created_at)}</span>
+            </div>
+            ${isAuthor && isOpen ? `
+              <button class="btn-award"
+                data-name="${escAttr(bid.bidder_name)}"
+                data-amount="${escAttr(bid.bid_amount)}"
+                onclick="awardBid(this)">분양확정</button>
+            ` : ''}
+          </div>`;
+        }).join('');
+      }
+
+      // 입찰 입력 (비작성자 + 로그인 + 분양중)
+      if (!isAuthor && currentUser && isOpen) {
+        document.getElementById('bidInputWrap').style.display = 'flex';
+      }
+
+      // 마감 버튼 (작성자 + 분양중)
+      if (isAuthor && isOpen) {
+        document.getElementById('closeWrap').style.display = 'block';
+      }
+    }
+
+    function escAttr(str) {
+      return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    function timeAgo(dateStr) {
+      const m = Math.floor((Date.now() - new Date(dateStr)) / 60000);
+      if (m < 1)  return '방금 전';
+      if (m < 60) return `${m}분 전`;
+      const h = Math.floor(m / 60);
+      if (h < 24) return `${h}시간 전`;
+      return `${Math.floor(h / 24)}일 전`;
+    }
+
+    async function submitBid() {
+      const raw     = document.getElementById('bidAmount').value.replace(/,/g, '').trim();
+      const errorEl = document.getElementById('bidError');
+      errorEl.textContent = '';
+      if (!raw) { errorEl.textContent = '입찰 금액을 입력해주세요.'; return; }
+
+      const bidNum   = Number(raw);
+      const startNum = auctionDetails?.start_price   ? Number(auctionDetails.start_price)   : 0;
+      const instNum  = auctionDetails?.instant_price ? Number(auctionDetails.instant_price) : null;
+      const unitNum  = auctionDetails?.bid_unit      ? Number(auctionDetails.bid_unit)      : null;
+
+      // 시작가 미만 체크
+      if (bidNum < startNum) {
+        errorEl.textContent = `시작가(${startNum.toLocaleString('ko-KR')}원) 이상으로 입찰해주세요.`;
+        return;
+      }
+
+      // 입찰 단위 체크
+      if (unitNum && (bidNum - startNum) % unitNum !== 0) {
+        errorEl.textContent = `입찰 단위는 ${unitNum.toLocaleString('ko-KR')}원이에요. (시작가 기준으로 ${unitNum.toLocaleString('ko-KR')}원 단위로 입찰)`;
+        return;
+      }
+
+      // 즉분가 초과 체크
+      if (instNum !== null && bidNum > instNum) {
+        errorEl.textContent = `즉분가(${instNum.toLocaleString('ko-KR')}원) 이하로 입찰해주세요.`;
+        return;
+      }
+
+      const { error } = await sb.from('auction_bids').insert({
+        adoption_id:  adoptionId,
+        bidder_id:    currentUser.id,
+        bidder_name:  myNick || '익명',
+        bid_amount:   raw,
+      });
+
+      if (error) { errorEl.textContent = `입찰에 실패했어요. (${error.message})`; return; }
+      document.getElementById('bidAmount').value = '';
+
+      // 즉분가 입찰 → 즉시 낙찰 처리
+      if (instNum !== null && bidNum === instNum) {
+        const { data: instantUpdated, error: instantErr } = await sb.from('adoptions').update({
+          status:      '확인 대기중',
+          winner_name: myNick || '익명',
+          winner_bid:  `${bidNum.toLocaleString('ko-KR')}원 (즉분가)`,
+        }).eq('id', adoptionId).select('id');
+
+        if (instantErr || !instantUpdated || instantUpdated.length === 0) {
+          errorEl.textContent = '즉분가 낙찰 처리에 실패했어요. 잠시 후 다시 시도해주세요.';
+          return;
+        }
+
+        await sb.from('notifications').insert([
+          {
+            user_nickname: currentAdoption.author,
+            type:          'auction_instant',
+            message:       `🏆 "${currentAdoption.character_name}" 경매에 즉분가(${bidNum.toLocaleString('ko-KR')}원) 입찰이 들어왔어요! ${myNick}님이 즉시 낙찰됐어요.`,
+            link:          `adoption-detail.html?id=${adoptionId}`,
+          },
+          {
+            user_nickname: myNick,
+            type:          'auction_win',
+            message:       `🏆 "${currentAdoption.character_name}" 경매에서 즉분가로 낙찰됐어요! 확인하기 버튼을 눌러주세요.`,
+            link:          `adoption-detail.html?id=${adoptionId}`,
+          },
+        ]);
+
+        location.reload();
+        return;
+      }
+
+      // 분양자에게 입찰 알림
+      await sb.from('notifications').insert({
+        user_nickname: currentAdoption.author,
+        type:          'auction_bid',
+        message:       `💰 "${currentAdoption.character_name}" 경매에 새 입찰이 들어왔어요. (${myNick}, ${Number(raw).toLocaleString('ko-KR')}원)`,
+        link:          `adoption-detail.html?id=${adoptionId}`,
+      });
+
+      location.reload();
+    }
+
+    async function awardBid(btn) {
+      const name   = btn.dataset.name;
+      const amount = btn.dataset.amount;
+      if (!confirm(`${name}님을 낙찰자로 확정할까요?`)) return;
+
+      const { error } = await sb.from('adoptions').update({
+        status:      '확인 대기중',
+        winner_name: name,
+        winner_bid:  amount,
+      }).eq('id', adoptionId);
+
+      if (error) { alert('오류가 발생했어요.'); return; }
+
+      await sb.from('notifications').insert({
+        user_nickname: name,
+        type:          'auction_win',
+        message:       `🏆 "${currentAdoption.character_name}" 경매에서 낙찰됐어요! 분양자가 확정을 처리할 예정이에요.`,
+        link:          `adoption-detail.html?id=${adoptionId}`,
+      });
+
+      location.reload();
+    }
+
+    async function confirmAdoption() {
+      const btn = document.querySelector('#confirmBtnWrap button');
+      if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
+
+      const a = currentAdoption;
+
+      const { data: updated, error } = await sb.from('adoptions')
+        .update({ status: '완료' })
+        .eq('id', adoptionId)
+        .select('id, status');
+
+      if (error) {
+        alert(`오류가 발생했어요: ${error.message}`);
+        if (btn) { btn.disabled = false; btn.textContent = '확인하기'; }
+        return;
+      }
+
+      if (!updated || updated.length === 0) {
+        alert('처리에 실패했어요. 페이지를 새로고침한 후 다시 시도해주세요.');
+        if (btn) { btn.disabled = false; btn.textContent = '확인하기'; }
+        return;
+      }
+
+      try {
+        await Promise.all([
+          sb.from('characters')
+            .update({ owner_nickname: myNick })
+            .eq('name', a.character_name),
+          logTransfer({
+            character_name: a.character_name,
+            species_name:   a.species_name,
+            from_nickname:  a.author,
+            to_nickname:    myNick,
+            method:         a.adoption_type === 'auction' ? '경매' : '무료분양',
+          }),
+          sb.from('notifications').insert({
+            user_nickname: a.author,
+            type:          'adoption_complete',
+            message:       `✅ "${a.character_name}" 분양이 완료됐어요! (${myNick}님 확인)`,
+            link:          `adoption-detail.html?id=${adoptionId}`,
+          }),
+        ]);
+      } catch (e) {
+        console.error('[confirmAdoption error]', e);
+      }
+
+      location.reload();
+    }
+
+    async function closeAuction() {
+      if (!confirm('낙찰자 없이 경매를 마감할까요?')) return;
+      await sb.from('adoptions').update({ status: '완료' }).eq('id', adoptionId);
+      location.reload();
+    }
+
+    // ── 분양확정 모달 ──────────────────────────────────
+    let _pendingRecipient = null;
+
+    function openCompleteModal(prefilledNick) {
+      _pendingRecipient = prefilledNick || null;
+      const input = document.getElementById('recipientInput');
+      const desc  = document.getElementById('completeModalDesc');
+      input.value    = prefilledNick || '';
+      input.readOnly = !!prefilledNick;
+      input.style.background = prefilledNick ? '#f5f5f5' : '';
+      input.style.cursor     = prefilledNick ? 'default' : '';
+      desc.innerHTML = prefilledNick
+        ? `<strong>${prefilledNick}</strong>님에게 캐릭터 소유권이 이전돼요. 확인해주세요.`
+        : '분양받은 유저의 닉네임을 입력해주세요.<br>해당 유저에게 캐릭터 소유권이 이전돼요.';
+      document.getElementById('completeError').textContent = '';
+      document.getElementById('completeModal').style.display = 'flex';
+      if (!prefilledNick) input.focus();
+    }
+
+    function closeCompleteModal() {
+      document.getElementById('completeModal').style.display = 'none';
+      _pendingRecipient = null;
+    }
+
+    async function confirmComplete() {
+      const recipient = document.getElementById('recipientInput').value.trim();
+      const errorEl   = document.getElementById('completeError');
+      const btn       = document.getElementById('confirmCompleteBtn');
+
+      if (!recipient) { errorEl.textContent = '닉네임을 입력해주세요.'; return; }
+
+      btn.textContent = '처리 중...';
+      btn.disabled    = true;
+      errorEl.textContent = '';
+
+      const a      = currentAdoption;
+      const method = a.adoption_type === 'free' ? '무료분양'
+                   : a.adoption_type === 'paid' ? '유료분양'
+                   : a.adoption_type === 'etc'  ? '기타분양'
+                   : '경매';
+
+      const { error } = await sb.from('adoptions')
+        .update({ status: '완료' })
+        .eq('id', adoptionId);
+
+      if (error) {
+        errorEl.textContent = '오류가 발생했어요. 다시 시도해주세요.';
+        btn.textContent = '분양 완료';
+        btn.disabled    = false;
+        return;
+      }
+
+      await Promise.all([
+        sb.from('characters')
+          .update({ owner_nickname: recipient })
+          .eq('name', a.character_name),
+        logTransfer({
+          character_name: a.character_name,
+          species_name:   a.species_name,
+          from_nickname:  a.author,
+          to_nickname:    recipient,
+          method,
+        }),
+        sb.from('notifications').insert({
+          user_nickname: recipient,
+          type:          'adoption_confirmed',
+          message:       `🎉 "${a.character_name}" 분양이 확정됐어요!`,
+          link:          `adoption-detail.html?id=${adoptionId}`,
+        }),
+      ]);
+
+      closeCompleteModal();
+      location.reload();
+    }
+
+    // ── 댓글 / 대댓글 ──────────────────────────────────
+    async function loadComments() {
+      const { data } = await sb
+        .from('adoption_comments')
+        .select('*')
+        .eq('adoption_id', adoptionId)
+        .order('created_at', { ascending: true });
+
+      renderComments(data || []);
+
+      if (currentUser) {
+        document.getElementById('commentInputArea').style.display = 'block';
+      }
+    }
+
+    function renderComments(comments) {
+      const isAuthor = currentUser && (
+        currentUser.id === currentAdoption?.user_id || myNick === currentAdoption?.author
+      );
+      const isOpen   = currentAdoption?.status === '분양중';
+      const canConfirm = isAuthor && isOpen &&
+        (currentAdoption?.adoption_type === 'paid' || currentAdoption?.adoption_type === 'etc');
+
+      const topLevel = comments.filter(c => !c.parent_id);
+      const replies  = comments.filter(c =>  c.parent_id);
+      const listEl   = document.getElementById('commentList');
+
+      if (topLevel.length === 0) {
+        listEl.innerHTML = '<p style="font-size:14px; color:var(--text-mute); padding:12px 0;">아직 댓글이 없어요</p>';
+        return;
+      }
+
+      listEl.innerHTML = topLevel.map(c => {
+        const isMine       = myNick === c.author_nickname;
+        const childReplies = replies.filter(r => r.parent_id === c.id);
+
+        return `
+          <div class="comment-item" id="ci_${c.id}">
+            <div class="comment-header">
+              <span class="comment-author">${c.author_nickname}</span>
+              <span class="comment-time">${timeAgo(c.created_at)}</span>
+              ${isMine ? `<button class="comment-delete" onclick="deleteComment('${c.id}', false)">삭제</button>` : ''}
+              ${canConfirm ? `<button class="comment-confirm-btn" onclick="openCompleteModal('${escAttr(c.author_nickname)}')">분양확정</button>` : ''}
+            </div>
+            <p class="comment-content">${escapeHtml(c.content)}</p>
+            ${currentUser ? `<button class="comment-reply-btn" onclick="toggleReply('${c.id}')">답글</button>` : ''}
+
+            ${childReplies.length ? `
+              <div class="replies">
+                ${childReplies.map(r => {
+                  const isMyReply = myNick === r.author_nickname;
+                  return `
+                    <div class="reply-item" id="ci_${r.id}">
+                      <div class="comment-header">
+                        <span class="comment-author">${r.author_nickname}</span>
+                        <span class="comment-time">${timeAgo(r.created_at)}</span>
+                        ${isMyReply ? `<button class="comment-delete" onclick="deleteComment('${r.id}', true)">삭제</button>` : ''}
+                      </div>
+                      <p class="comment-content">${escapeHtml(r.content)}</p>
+                      ${currentUser ? `<button class="comment-reply-btn" onclick="replyToReply('${c.id}')">답글</button>` : ''}
+                    </div>
+                  `;
+                }).join('')}
+              </div>` : ''}
+
+            <div class="reply-input-wrap" id="replyWrap_${c.id}" style="display:none;">
+              <textarea class="reply-textarea" id="replyText_${c.id}" rows="2" placeholder="답글을 입력하세요..."></textarea>
+              <div style="display:flex; gap:8px; justify-content:flex-end;">
+                <button onclick="toggleReply('${c.id}')" class="btn-ghost" style="padding:6px 14px; font-size:12px;">취소</button>
+                <button onclick="submitReply('${c.id}')" class="btn-secondary" style="padding:6px 14px; font-size:12px;">등록</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function escapeHtml(str) {
+      return String(str)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+        .replace(/\n/g,'<br>');
+    }
+
+    function toggleReply(parentId) {
+      const wrap = document.getElementById(`replyWrap_${parentId}`);
+      const isOpen = wrap.style.display === 'block';
+      wrap.style.display = isOpen ? 'none' : 'block';
+      if (!isOpen) document.getElementById(`replyText_${parentId}`).focus();
+    }
+
+    function replyToReply(parentId) {
+      const wrap = document.getElementById(`replyWrap_${parentId}`);
+      wrap.style.display = 'block';
+      const ta = document.getElementById(`replyText_${parentId}`);
+      ta.focus();
+    }
+
+    async function submitComment() {
+      const ta      = document.getElementById('commentTextarea');
+      const content = ta.value.trim();
+      const errorEl = document.getElementById('commentError');
+      errorEl.textContent = '';
+      if (!content) { errorEl.textContent = '내용을 입력해주세요.'; return; }
+
+      const { error } = await sb.from('adoption_comments').insert({
+        adoption_id:      adoptionId,
+        author_nickname:  myNick || '익명',
+        content,
+      });
+      if (error) { errorEl.textContent = '등록에 실패했어요.'; return; }
+      ta.value = '';
+
+      // 분양자에게 댓글 알림 (본인 글 제외)
+      if (currentAdoption && myNick !== currentAdoption.author) {
+        await sb.from('notifications').insert({
+          user_nickname: currentAdoption.author,
+          type:          'adoption_comment',
+          message:       `💬 "${currentAdoption.character_name}" 분양 글에 댓글이 달렸어요.`,
+          link:          `adoption-detail.html?id=${adoptionId}`,
+        });
+      }
+
+      loadComments();
+    }
+
+    async function submitReply(parentId) {
+      const ta      = document.getElementById(`replyText_${parentId}`);
+      const content = ta.value.trim();
+      if (!content) return;
+
+      const { error } = await sb.from('adoption_comments').insert({
+        adoption_id:      adoptionId,
+        parent_id:        parentId,
+        author_nickname:  myNick || '익명',
+        content,
+      });
+      if (error) { alert('등록에 실패했어요.'); return; }
+
+      // 분양자에게 댓글 알림
+      if (currentAdoption && myNick !== currentAdoption.author) {
+        await sb.from('notifications').insert({
+          user_nickname: currentAdoption.author,
+          type:          'adoption_comment',
+          message:       `💬 "${currentAdoption.character_name}" 분양 글에 댓글이 달렸어요.`,
+          link:          `adoption-detail.html?id=${adoptionId}`,
+        });
+      }
+
+      loadComments();
+    }
+
+    async function deleteComment(id, isReply) {
+      if (!confirm('댓글을 삭제할까요?')) return;
+      const { error } = await sb.from('adoption_comments').delete().eq('id', id);
+      if (error) { alert(`삭제에 실패했어요. (${error.message})`); return; }
+      loadComments();
+    }
+
+    async function deletePost() {
+      if (!confirm('분양 글을 삭제할까요? 되돌릴 수 없어요.')) return;
+
+      const btn = document.getElementById('deletePostBtn');
+      btn.textContent = '삭제 중...';
+      btn.disabled = true;
+
+      await Promise.all([
+        sb.from('adoption_comments').delete().eq('adoption_id', adoptionId),
+        sb.from('auction_bids').delete().eq('adoption_id', adoptionId),
+        sb.from('auction_details').delete().eq('adoption_id', adoptionId),
+        sb.from('adoption_applications').delete().eq('adoption_id', adoptionId),
+      ]);
+      const { error } = await sb.from('adoptions').delete().eq('id', adoptionId);
+
+      if (error) {
+        console.error('[delete error]', error);
+        alert(`삭제 실패: ${error.message}`);
+        btn.textContent = '글 삭제';
+        btn.disabled = false;
+        return;
+      }
+
+      window.location.href = 'adoption.html';
+    }
+
+    initPage();
+  </script>
+</body>
+</html>
