@@ -1,0 +1,214 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>캐릭터 이전 내역 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+
+      <div id="pageLoading" class="page-loading">불러오는 중...</div>
+
+      <div id="pageContent" style="display:none;">
+
+        <div class="list-page-header">
+          <div>
+            <div class="breadcrumb" style="margin-bottom:8px;">
+              <a href="index.html">홈</a>
+              <span>/</span>
+              <span>내 정보</span>
+              <span>/</span>
+              <span>캐릭터 이전 내역</span>
+            </div>
+            <h1 class="list-page-title">캐릭터 이전 내역</h1>
+            <p class="list-page-count" id="transferCount"></p>
+          </div>
+        </div>
+
+        <!-- 방향 필터 -->
+        <div class="transfer-filter-wrap">
+          <button class="transfer-filter-btn active" onclick="filterTransfer(this,'all')">전체</button>
+          <button class="transfer-filter-btn" onclick="filterTransfer(this,'received')">받음</button>
+          <button class="transfer-filter-btn" onclick="filterTransfer(this,'sent')">보냄</button>
+        </div>
+
+        <div id="transferTableWrap"></div>
+        <p id="transferEmpty" class="empty-state" style="display:none; padding:40px 0;">이전 내역이 없어요.</p>
+
+      </div>
+
+    </main>
+  </div>
+
+  <footer class="footer"><p>© 2026 도감</p></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    let myNickname  = '';
+    let myNicknames = []; // display_name + login_id 모두 포함
+    let allData     = [];
+    let currentFilter = 'all';
+    let charIdMap   = {};
+    let spIdMap     = {};
+
+    async function initPage() {
+      const user = await getUser();
+      if (!user) { window.location.href = 'login.html'; return; }
+
+      myNickname  = user.user_metadata?.display_name || user.user_metadata?.nickname || '';
+      const loginId = user.user_metadata?.nickname || '';
+      myNicknames = [...new Set([myNickname, loginId].filter(Boolean))];
+
+      const { data, error } = await getTransferHistory(myNicknames);
+
+      document.getElementById('pageLoading').style.display = 'none';
+      document.getElementById('pageContent').style.display = 'block';
+
+      if (error || !data || data.length === 0) {
+        document.getElementById('transferEmpty').style.display = 'block';
+        document.getElementById('transferCount').textContent = '총 0건';
+        return;
+      }
+
+      allData = data;
+
+      // 캐릭터/종족 이름 → ID 조회
+      const charNames = [...new Set(data.map(t => t.character_name).filter(Boolean))];
+      const spNames   = [...new Set(data.map(t => t.species_name).filter(Boolean))];
+      const [{ data: charRows }, { data: spRows }] = await Promise.all([
+        charNames.length ? sb.from('characters').select('id, name').in('name', charNames) : Promise.resolve({ data: [] }),
+        spNames.length   ? sb.from('species').select('id, name').in('name', spNames)      : Promise.resolve({ data: [] }),
+      ]);
+      (charRows || []).forEach(c => { charIdMap[c.name] = c.id; });
+      (spRows   || []).forEach(s => { spIdMap[s.name]   = s.id; });
+
+      document.getElementById('transferCount').textContent = `총 ${data.length}건`;
+      renderTable(data);
+    }
+
+    function filterTransfer(btn, filter) {
+      document.querySelectorAll('.transfer-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentFilter = filter;
+
+      let filtered = allData;
+      if (filter === 'received') filtered = allData.filter(t => myNicknames.includes(t.to_nickname));
+      if (filter === 'sent')     filtered = allData.filter(t => myNicknames.includes(t.from_nickname));
+
+      const emptyEl = document.getElementById('transferEmpty');
+      if (filtered.length === 0) {
+        document.getElementById('transferTableWrap').innerHTML = '';
+        emptyEl.style.display = 'block';
+      } else {
+        emptyEl.style.display = 'none';
+        renderTable(filtered);
+      }
+    }
+
+    const linkStyle = 'color:inherit;text-decoration:none;cursor:pointer;';
+
+    function nickLink(nick) {
+      if (!nick) return '—';
+      return `<a href="profile.html?user=${encodeURIComponent(nick)}" style="${linkStyle}">${nick}</a>`;
+    }
+    function charLink(name) {
+      if (!name) return '—';
+      const id = charIdMap[name];
+      return id
+        ? `<a href="character.html?id=${id}" style="${linkStyle}">${name}</a>`
+        : name;
+    }
+    function spLink(name) {
+      if (!name) return '—';
+      const id = spIdMap[name];
+      return id
+        ? `<a href="species.html?id=${id}" style="${linkStyle}">${name}</a>`
+        : name;
+    }
+
+    function renderTable(data) {
+      document.getElementById('transferTableWrap').innerHTML = `
+        <div class="transfer-table">
+          <div class="transfer-table-head">
+            <span>구분</span>
+            <span>캐릭터</span>
+            <span>종족</span>
+            <span>보낸사람</span>
+            <span>받은사람</span>
+            <span>방법</span>
+            <span>날짜</span>
+          </div>
+          ${data.map((t, i) => {
+            const isSent      = myNicknames.includes(t.from_nickname);
+            const dateStr     = new Date(t.created_at).toLocaleDateString('ko-KR', {
+              year: 'numeric', month: '2-digit', day: '2-digit'
+            }).replace(/\. /g, '.').replace(/\.$/, '');
+            const method      = t.method || '';
+            const slashIdx    = method.indexOf(' / ');
+            const methodShort  = slashIdx >= 0 ? method.slice(0, slashIdx) : method;
+            const methodDetail = slashIdx >= 0 ? method.slice(slashIdx + 3) : '';
+            const hasDetail   = !!methodDetail;
+            return `
+              <div>
+                <div class="transfer-table-row">
+                  <span>
+                    <span class="transfer-dir-badge ${isSent ? 'transfer-dir--sent' : 'transfer-dir--received'}">
+                      ${isSent ? '보냄' : '받음'}
+                    </span>
+                  </span>
+                  <span class="transfer-char">${charLink(t.character_name)}</span>
+                  <span class="transfer-species">${spLink(t.species_name)}</span>
+                  <span class="${isSent ? 'transfer-me' : ''}">${nickLink(t.from_nickname)}</span>
+                  <span class="${!isSent ? 'transfer-me' : ''}">${nickLink(t.to_nickname)}</span>
+                  <span class="transfer-method-badge"
+                    style="${hasDetail ? 'cursor:pointer;display:flex;align-items:center;gap:6px;' : ''}"
+                    ${hasDetail ? `onclick="toggleDetail('detail_${i}', this)"` : ''}>
+                    ${methodShort || '—'}
+                    ${hasDetail ? `<span id="arrow_${i}" style="font-size:10px;color:var(--text-mute);">▼</span>` : ''}
+                  </span>
+                  <span class="transfer-date">${dateStr}</span>
+                </div>
+                ${hasDetail ? `
+                <div id="detail_${i}" style="display:none; padding:10px 16px 12px; background:var(--sky-pale); border-bottom:1px solid var(--border); font-size:13px; color:var(--text-sub); white-space:pre-wrap; word-break:break-all;">
+                  <span style="font-size:11px; color:var(--text-mute); display:block; margin-bottom:4px;">메모</span>
+                  ${methodDetail}
+                </div>` : ''}
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function toggleDetail(id, methodCell) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const isOpen = el.style.display !== 'none';
+      el.style.display = isOpen ? 'none' : '';
+      const arrow = methodCell.querySelector('span[id^="arrow_"]');
+      if (arrow) arrow.textContent = isOpen ? '▼' : '▲';
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

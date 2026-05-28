@@ -58,10 +58,7 @@
 
           <!-- 무료 서브 옵션 -->
           <div class="form-group" id="freeSubOptions">
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-              <label class="form-label" style="margin:0;">진행 방식</label>
-              <p id="freeNormalNotice" class="form-hint" style="display:block; margin:0;">댓글 또는 연락수단을 통해 원하시는 방식으로 자유롭게 진행해주세요.</p>
-            </div>
+            <label class="form-label">진행 방식</label>
             <div class="owner-type-tabs">
               <button type="button" class="owner-tab active" id="free-normal"     onclick="setFreeType('normal')">일반</button>
               <button type="button" class="owner-tab"        id="free-random"     onclick="setFreeType('random')">랜덤 추첨</button>
@@ -149,7 +146,8 @@
           <!-- 기타: 조건 -->
           <div class="form-group" id="etcFields" style="display:none;">
             <label class="form-label">조건</label>
-            <input type="text" id="etcPrice" class="form-input" placeholder="예) 리퀘, arpg 재화 등 — 없으면 비워두세요">
+            <textarea id="etcPrice" class="form-textarea" rows="2"
+              placeholder="예) 리퀘, arpg 재화 등 — 없으면 비워두세요"></textarea>
           </div>
 
           <!-- 추가 이미지 -->
@@ -250,20 +248,16 @@
       const raffleLabel = document.getElementById('raffleAtLabel');
       const raffleHint  = document.getElementById('raffleAtHint');
 
-      const normalNotice = document.getElementById('freeNormalNotice');
       if (freeType === 'random') {
-        raffleField.style.display  = 'block';
-        normalNotice.style.display = 'none';
-        raffleLabel.innerHTML      = '추첨 날짜/시간 <span class="required">*</span>';
-        raffleHint.textContent     = '이 날짜/시간이 지나면 신청이 마감되고 분양자에게 추첨 버튼이 활성화돼요.';
+        raffleField.style.display = 'block';
+        raffleLabel.innerHTML     = '추첨 날짜/시간 <span class="required">*</span>';
+        raffleHint.textContent    = '이 날짜/시간이 지나면 신청이 마감되고 분양자에게 추첨 버튼이 활성화돼요.';
       } else if (freeType === 'first_come') {
-        raffleField.style.display  = 'block';
-        normalNotice.style.display = 'none';
-        raffleLabel.innerHTML      = '선착순 시작 날짜/시간 <span class="required">*</span>';
-        raffleHint.textContent     = '이 날짜/시간이 지나면 [분양받기] 버튼이 활성화돼요.';
+        raffleField.style.display = 'block';
+        raffleLabel.innerHTML     = '선착순 시작 날짜/시간 <span class="required">*</span>';
+        raffleHint.textContent    = '이 날짜/시간이 지나면 [분양받기] 버튼이 활성화돼요.';
       } else {
-        raffleField.style.display  = 'none';
-        normalNotice.style.display = 'block';
+        raffleField.style.display = 'none';
       }
     }
 
@@ -277,7 +271,8 @@
 
     async function initPage() {
       const user = await getUser();
-      if (!user) {
+      const role = user?.user_metadata?.role;
+      if (!user || (role !== 'species_owner' && role !== 'admin')) {
         window.location.href = 'adoption.html';
         return;
       }
@@ -287,23 +282,18 @@
     async function loadCharacters(user) {
       const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname;
 
-      const [{ data: chars }, { data: activeAdoptions }] = await Promise.all([
-        sb.from('characters').select('id, name, species_name, image_url').eq('owner_nickname', nickname).order('name'),
-        sb.from('adoptions').select('character_id').in('status', ['분양중', '확인 대기중']),
-      ]);
+      const { data: chars } = await sb
+        .from('characters')
+        .select('id, name, species_name, image_url')
+        .eq('owner_nickname', nickname)
+        .order('name');
 
       if (!chars || chars.length === 0) {
         showNoChars('분양 가능한 캐릭터가 없어요. 먼저 캐릭터를 등록해주세요.');
         return;
       }
 
-      const activeIds = new Set((activeAdoptions || []).map(a => a.character_id));
-      myCharacters = chars.filter(c => !activeIds.has(c.id));
-
-      if (myCharacters.length === 0) {
-        showNoChars('모든 캐릭터가 이미 분양 중이에요.');
-        return;
-      }
+      myCharacters = chars;
 
       const select = document.getElementById('characterSelect');
       select.innerHTML = '<option value="">캐릭터를 선택하세요</option>' +
@@ -366,8 +356,7 @@
 
       // 무료 서브타입
       const freeType = (selectedType === 'free' && selectedFreeType !== 'normal') ? selectedFreeType : null;
-      const raffleAtRaw = freeType ? (document.getElementById('raffleAt').value || null) : null;
-      const raffleAt = raffleAtRaw ? new Date(raffleAtRaw).toISOString() : null;
+      const raffleAt = freeType ? (document.getElementById('raffleAt').value || null) : null;
 
       const { data: adoption, error } = await sb.from('adoptions').insert({
         character_id:   char.id,

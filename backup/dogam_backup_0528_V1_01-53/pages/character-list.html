@@ -1,0 +1,156 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>전체 개체 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+      <section class="section">
+
+        <div class="list-page-header">
+          <div>
+            <h1 class="list-page-title">전체 개체</h1>
+            <p class="list-page-count" id="charCount">불러오는 중...</p>
+          </div>
+        </div>
+
+        <!-- 검색 + 필터 + 정렬 -->
+        <div class="list-controls">
+          <input type="text" class="list-search" id="searchInput" placeholder="개체 이름으로 검색">
+          <select class="list-sort" id="speciesFilter">
+            <option value="">전체 종족</option>
+          </select>
+          <select class="list-sort" id="sortSelect">
+            <option value="recent">최근 등록순</option>
+            <option value="name">이름순</option>
+          </select>
+        </div>
+
+        <div class="character-grid" id="characterGrid">
+          <p class="page-loading">불러오는 중...</p>
+        </div>
+
+        <p id="noResult" style="display:none; padding:40px 0; color:var(--text-mute); font-size:14px;">
+          검색 결과가 없어요.
+        </p>
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 도감</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    let allChars = [];
+    const ownerParam = new URLSearchParams(window.location.search).get('owner');
+
+    async function loadCharacters() {
+      const { data, error } = await sb
+        .from('characters')
+        .select('id, name, species_name, owner_nickname, image_url, created_at, is_sensitive, sensitive_note')
+        .order('created_at', { ascending: false });
+
+      if (error || !data) {
+        document.getElementById('characterGrid').innerHTML = '<p class="page-loading">불러오기 실패</p>';
+        return;
+      }
+
+      allChars = data;
+
+      if (ownerParam) {
+        document.querySelector('.list-page-title').textContent = `${ownerParam}의 개체`;
+      }
+
+      const urlQ = new URLSearchParams(window.location.search).get('q');
+      if (urlQ) document.getElementById('searchInput').value = urlQ;
+
+      // 종족 필터 옵션 생성
+      const species = [...new Set(data.map(c => c.species_name).filter(Boolean))].sort((a,b) => a.localeCompare(b,'ko'));
+      const filterEl = document.getElementById('speciesFilter');
+      species.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s;
+        opt.textContent = s;
+        filterEl.appendChild(opt);
+      });
+
+      render();
+    }
+
+    function render() {
+      const q      = document.getElementById('searchInput').value.trim();
+      const sp     = document.getElementById('speciesFilter').value;
+      const sort   = document.getElementById('sortSelect').value;
+
+      const qLow = q.toLowerCase();
+      let list = allChars.filter(c =>
+        (!q          || c.name.toLowerCase().includes(qLow)) &&
+        (!sp         || c.species_name === sp) &&
+        (!ownerParam || c.owner_nickname === ownerParam)
+      );
+
+      if (sort === 'name') list = [...list].sort((a,b) => a.name.localeCompare(b.name,'ko'));
+
+      document.getElementById('charCount').textContent = `총 ${list.length}개의 개체`;
+      document.getElementById('noResult').style.display = list.length ? 'none' : 'block';
+
+      const grid = document.getElementById('characterGrid');
+      if (!list.length) { grid.innerHTML = ''; return; }
+
+      grid.innerHTML = list.map(c => `
+        <a href="character.html?id=${c.id}" class="character-card">
+          ${c.is_sensitive && c.image_url ? `
+          <div style="position:relative; overflow:hidden; border-radius:var(--radius);">
+            <div class="character-img blurred" style="background-image:url('${c.image_url}'); background-size:cover; background-position:center;"></div>
+            <div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span><span class="sensitive-overlay-label">WARNING${c.sensitive_note ? ' : ' + c.sensitive_note : ''}</span><span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div>
+          </div>` : `
+          <div class="character-img" ${c.image_url ? `style="background-image:url('${c.image_url}'); background-size:cover; background-position:center;"` : ''}></div>`}
+          <div class="character-info">
+            <p class="character-name">${c.name}</p>
+            <p class="character-species">${c.species_name || ''}</p>
+            <p class="character-owner">소유주: ${c.owner_nickname || '—'}</p>
+          </div>
+        </a>
+      `).join('');
+    }
+
+    function revealSensitive(overlayEl, e) {
+      e.stopPropagation(); e.preventDefault();
+      const wrap = overlayEl.parentElement;
+      wrap.querySelectorAll('.blurred').forEach(el => el.classList.remove('blurred'));
+      overlayEl.remove();
+    }
+
+    document.getElementById('searchInput').addEventListener('input', render);
+    document.getElementById('speciesFilter').addEventListener('change', render);
+    document.getElementById('sortSelect').addEventListener('change', render);
+
+    loadCharacters();
+  </script>
+</body>
+</html>
+
+

@@ -53,7 +53,7 @@
     async function initPage() {
       const user = await getUser();
       const role = user?.user_metadata?.role;
-      if (user) {
+      if (role === 'species_owner' || role === 'admin') {
         document.getElementById('writeBtn').style.display = 'inline-flex';
       }
 
