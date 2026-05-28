@@ -170,15 +170,15 @@
             return `
               <div>
                 <div class="transfer-table-row">
-                  <span class="transfer-dir">
+                  <span>
                     <span class="transfer-dir-badge ${isSent ? 'transfer-dir--sent' : 'transfer-dir--received'}">
                       ${isSent ? '보냄' : '받음'}
                     </span>
                   </span>
                   <span class="transfer-char">${charLink(t.character_name)}</span>
                   <span class="transfer-species">${spLink(t.species_name)}</span>
-                  <span class="transfer-from ${isSent ? 'transfer-me' : ''}">${nickLink(t.from_nickname)}</span>
-                  <span class="transfer-to ${!isSent ? 'transfer-me' : ''}">${nickLink(t.to_nickname)}</span>
+                  <span class="${isSent ? 'transfer-me' : ''}">${nickLink(t.from_nickname)}</span>
+                  <span class="${!isSent ? 'transfer-me' : ''}">${nickLink(t.to_nickname)}</span>
                   <span class="transfer-method-badge"
                     style="${hasDetail ? 'cursor:pointer;display:flex;align-items:center;gap:6px;' : ''}"
                     ${hasDetail ? `onclick="toggleDetail('detail_${i}', this)"` : ''}>

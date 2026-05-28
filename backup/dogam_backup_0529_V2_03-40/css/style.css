@@ -590,7 +590,7 @@ a {
 ═══════════════════════════════════════ */
 .meta-item {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   font-size: 14px;
 }
@@ -600,14 +600,10 @@ a {
   color: var(--text-mute);
   font-size: 12px;
   flex-shrink: 0;
-  padding-top: 1px;
 }
 
 .meta-value {
   color: var(--text);
-  min-width: 0;
-  word-break: break-all;
-  overflow-wrap: break-word;
 }
 
 .meta-link {
@@ -2282,22 +2278,6 @@ a {
   color: var(--text-mute);
 }
 
-.bid-instant-badge {
-  font-size: 12px;
-  color: #7c3aed;
-  font-weight: 700;
-}
-
-.bid-instant-desc {
-  font-size: 12px;
-  color: #7c3aed;
-  font-weight: 700;
-}
-
-.bid-instant-notice {
-  display: none;
-}
-
 .adoption-no-bids {
   padding: 24px;
   text-align: center;
@@ -3353,37 +3333,6 @@ a {
 }
 
 /* ═══════════════════════════════════════
-   사이드바 유저 블록 (모바일 전용)
-═══════════════════════════════════════ */
-.sidebar-user-block {
-  display: none;
-  padding: 14px 12px 16px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 8px;
-}
-
-.sidebar-user-row {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-bottom: 10px;
-}
-
-.sidebar-user-block .btn-login {
-  display: block;
-  text-align: center;
-  width: 100%;
-}
-
-.sidebar-user-block .btn-logout {
-  display: block;
-  width: 100%;
-  margin-left: 0;
-  text-align: center;
-}
-
-/* ═══════════════════════════════════════
    햄버거 버튼
 ═══════════════════════════════════════ */
 .hamburger-btn {
@@ -3452,13 +3401,9 @@ a {
 @media (max-width: 767px) {
 
   /* 헤더 */
-  .header-inner { padding: 0 14px; justify-content: flex-start; gap: 4px; }
+  .header-inner { padding: 0 14px; }
   .hamburger-btn { display: flex; }
-  .header-inner .logo { flex: none; text-align: left; }
-  .header-nav { display: none; }
-
-  /* 사이드바 유저 블록 표시 */
-  .sidebar-user-block { display: block; }
+  .header-inner .logo { flex: 1; text-align: center; }
 
   /* 레이아웃 */
   .layout { padding: 0 14px; gap: 0; }
@@ -3530,19 +3475,10 @@ a {
   /* 개체 상세 */
   .character-detail-top { flex-direction: column; gap: 20px; }
   .character-detail-img { width: 100%; max-width: 220px; }
-  .char-body { flex-direction: column; min-height: unset; }
-  .char-img-wrap { flex: none; width: 100%; }
-  .char-info-panel { padding: 20px 4px; }
 
   /* 종족 상세 */
   .species-detail-top { flex-direction: column; gap: 20px; }
   .species-detail-img { width: 100%; max-width: 180px; }
-  .species-detail-actions {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-  .species-detail-actions > * { text-align: center; justify-content: center; }
 
   /* 알림 패널 — 전체 너비 */
   .notif-panel {
@@ -3553,40 +3489,13 @@ a {
     width: auto;
   }
 
-  /* 이전 내역 테이블 — 모바일 카드형 */
+  /* 이전 내역 테이블 — 모바일용 카드 */
   .transfer-table-head { display: none; }
   .transfer-table-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    column-gap: 6px;
-    row-gap: 0;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 8px;
     padding: 12px 14px;
   }
-
-  /* 1행: 뱃지 + 날짜 */
-  .transfer-table-row .transfer-dir  { order: 1; flex-shrink: 0; }
-  .transfer-table-row .transfer-date { order: 1; margin-left: auto; font-size: 11px; }
-
-  /* 2행: 캐릭터 */
-  .transfer-table-row .transfer-char {
-    order: 2; width: 100%;
-    font-size: 15px; margin-top: 6px;
-  }
-
-  /* 3행: 종족 */
-  .transfer-table-row .transfer-species {
-    order: 3; width: 100%;
-    font-size: 12px; margin-top: 1px;
-  }
-
-  /* 4행: 보낸사람 → 받은사람 */
-  .transfer-table-row .transfer-from,
-  .transfer-table-row .transfer-to   { order: 4; font-size: 13px; margin-top: 6px; }
-  .transfer-table-row .transfer-from::after { content: ' →'; color: var(--text-mute); }
-
-  /* 5행: 방법 */
-  .transfer-table-row .transfer-method-badge { order: 5; margin-top: 6px; }
 
   /* 폼 버튼 */
   .register-actions { flex-direction: column-reverse; }
@@ -3599,15 +3508,4 @@ a {
 
   /* 공지사항 */
   .notice-date   { display: none; }
-
-  /* 입찰 목록 — 즉분가 안내문 분리 */
-  .bid-instant-notice {
-    display: block;
-    font-size: 12px;
-    color: #7c3aed;
-    font-weight: 700;
-    padding: 8px 16px 2px;
-    background: #faf5ff;
-  }
-  .bid-instant-desc { display: none; }
 }

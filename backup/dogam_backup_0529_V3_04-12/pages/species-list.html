@@ -1,0 +1,138 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>전체 종족 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+      <section class="section">
+
+        <div class="list-page-header">
+          <div>
+            <h1 class="list-page-title">전체 종족</h1>
+            <p class="list-page-count" id="speciesCount">불러오는 중...</p>
+          </div>
+          <a href="species-register.html" class="btn-secondary" id="btnRegisterSpecies" style="display:none;">+ 종족 등록</a>
+        </div>
+
+        <!-- 검색 + 정렬 -->
+        <div class="list-controls">
+          <input type="text" class="list-search" id="searchInput" placeholder="종족 이름으로 검색">
+          <select class="list-sort" id="sortSelect">
+            <option value="recent">최근 등록순</option>
+            <option value="name">이름순</option>
+          </select>
+        </div>
+
+        <div class="species-grid species-grid--large" id="speciesGrid">
+          <p class="page-loading">불러오는 중...</p>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 도감</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    let allSpecies = [];
+
+    async function loadSpecies() {
+      const { data, error } = await sb
+        .from('species')
+        .select('id, name, image_url, created_at, is_sensitive, sensitive_note')
+        .order('created_at', { ascending: false });
+
+      if (error || !data) {
+        document.getElementById('speciesGrid').innerHTML = '<p class="page-loading">불러오기 실패</p>';
+        return;
+      }
+
+      allSpecies = data;
+      render();
+    }
+
+    function render() {
+      const q    = document.getElementById('searchInput').value.trim();
+      const sort = document.getElementById('sortSelect').value;
+
+      const qLow = q.toLowerCase();
+      let list = allSpecies.filter(s => !q || s.name.toLowerCase().includes(qLow));
+
+      if (sort === 'name') {
+        list = [...list].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+      }
+
+      const countEl = document.getElementById('speciesCount');
+      countEl.textContent = `총 ${list.length}개의 종족`;
+
+      const grid = document.getElementById('speciesGrid');
+      if (!list.length) {
+        grid.innerHTML = '<p class="page-loading">검색 결과가 없어요</p>';
+        return;
+      }
+
+      grid.innerHTML = list.map(s => `
+        <a href="species.html?id=${s.id}" class="species-card">
+          ${s.is_sensitive && s.image_url ? `
+          <div style="position:relative; overflow:hidden; border-radius:var(--radius);">
+            <div class="species-img blurred" style="background-image:url('${s.image_url}'); background-size:cover; background-position:center;"></div>
+            <div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span><span class="sensitive-overlay-label">WARNING${s.sensitive_note ? ' : ' + s.sensitive_note : ''}</span><span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div>
+          </div>` : `
+          <div class="species-img" ${s.image_url ? `style="background-image:url('${s.image_url}'); background-size:cover; background-position:center;"` : ''}></div>`}
+          <div class="species-info">
+            <p class="species-name">${s.name}</p>
+          </div>
+        </a>
+      `).join('');
+    }
+
+    function revealSensitive(overlayEl, e) {
+      e.stopPropagation();
+      e.preventDefault();
+      const wrap = overlayEl.parentElement;
+      wrap.querySelectorAll('.blurred').forEach(el => el.classList.remove('blurred'));
+      overlayEl.remove();
+    }
+
+    document.getElementById('searchInput').addEventListener('input', render);
+    document.getElementById('sortSelect').addEventListener('change', render);
+
+    async function initPage() {
+      const user = await getUser();
+      const role = user?.user_metadata?.role;
+      if (role === 'admin' || role === 'species_owner') {
+        document.getElementById('btnRegisterSpecies').style.display = '';
+      }
+    }
+
+    initPage();
+    loadSpecies();
+  </script>
+</body>
+</html>
+
+

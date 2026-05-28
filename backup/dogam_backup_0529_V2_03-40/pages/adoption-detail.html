@@ -751,12 +751,11 @@
             && Number(bid.bid_amount) === instantPrice
             && bid.bidder_name === adoption.winner_name;
           return `
-          ${isInstantWin ? `<div class="bid-instant-notice">분양자의 확인을 기다려주세요</div>` : ''}
           <div class="adoption-bid-row">
             <div class="adoption-bid-info">
               <span class="adoption-bid-name">${bid.bidder_name}</span>
               <span class="adoption-bid-amount">${Number(bid.bid_amount).toLocaleString('ko-KR')}원</span>
-              ${isInstantWin ? `<span class="bid-instant-badge">✨즉분가 낙찰✨</span><span class="bid-instant-desc"> 분양자의 확인을 기다려주세요</span>` : ''}
+              ${isInstantWin ? `<span style="font-size:12px; color:#7c3aed; font-weight:700;">✨즉분가 낙찰✨ 분양자의 확인을 기다려주세요</span>` : ''}
               <span class="adoption-bid-time">${timeAgo(bid.created_at)}</span>
             </div>
             ${isAuthor && isOpen ? `

@@ -1,0 +1,134 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>가이드 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+
+      <div style="padding-top: 24px; margin-bottom: 20px;">
+        <h1 class="list-page-title">가이드</h1>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:6px;">
+          <p class="list-page-count" id="guideCount" style="margin-top:0;"></p>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <button onclick="toggleView()" id="toggleBtn" class="notice-toggle-btn" style="display:none;">목록보기 ›</button>
+            <a href="guide-write.html" class="btn-secondary" id="writeBtn" style="display:none;">작성하기</a>
+          </div>
+        </div>
+      </div>
+
+      <div id="guideList"></div>
+
+      <div id="emptyState" class="empty-state-wrap" style="display:none;">
+        <div class="empty-state-icon">📖</div>
+        <p class="empty-state-title">가이드가 없어요</p>
+      </div>
+
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 도감</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    let _guideData = null;
+    let isListMode = false;
+
+    async function initPage() {
+      const user = await getUser();
+      if (user?.user_metadata?.role === 'admin') {
+        document.getElementById('writeBtn').style.display = 'inline-flex';
+      }
+
+      const { data, error } = await sb
+        .from('guides')
+        .select('*')
+        .order('is_pinned', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      if (error || !data || data.length === 0) {
+        document.getElementById('emptyState').style.display = 'flex';
+        return;
+      }
+
+      document.getElementById('guideCount').textContent = `총 ${data.length}개`;
+      document.getElementById('toggleBtn').style.display = 'inline';
+      _guideData = data;
+      renderGuides(data);
+    }
+
+    function renderGuides(list) {
+      const container = document.getElementById('guideList');
+
+      if (isListMode) {
+        container.className = 'notice-list';
+        container.innerHTML = list.map(n => {
+          const date = new Date(n.created_at).toLocaleDateString('ko-KR', {
+            year: 'numeric', month: '2-digit', day: '2-digit'
+          }).replace(/\. /g, '.').replace(/\.$/, '');
+          return `
+            <a class="notice-item" href="guide-detail.html?id=${n.id}">
+              <div class="notice-header-left">
+                ${n.is_pinned ? '<span class="notice-pin">고정</span>' : ''}
+                <span class="notice-title">${n.title}</span>
+              </div>
+              <div class="notice-header-right">
+                <span class="notice-date">${date}</span>
+                <span class="notice-arrow-right">›</span>
+              </div>
+            </a>
+          `;
+        }).join('');
+      } else {
+        container.className = 'notice-full-list';
+        container.innerHTML = list.map((n, i) => {
+          const date = new Date(n.created_at).toLocaleDateString('ko-KR', {
+            year: 'numeric', month: '2-digit', day: '2-digit'
+          }).replace(/\. /g, '.').replace(/\.$/, '');
+          const content = n.content.replace(/\n/g, '<br>');
+          return `
+            ${i > 0 ? '<div class="notice-full-divider"></div>' : ''}
+            <div class="notice-full-item">
+              ${n.is_pinned ? '<span class="notice-pin" style="display:inline-block; margin-bottom:10px;">고정</span>' : ''}
+              <h2 class="notice-full-title">${n.title}</h2>
+              <p class="notice-full-meta">${n.author || '관리자'} · ${date}</p>
+              <div class="notice-full-content">${content}</div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    function toggleView() {
+      isListMode = !isListMode;
+      document.getElementById('toggleBtn').textContent = isListMode ? '내용보기 ›' : '목록보기 ›';
+      if (_guideData) renderGuides(_guideData);
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

@@ -5,8 +5,6 @@ async function initSidebar() {
   const path = window.location.pathname.split('/').pop();
 
   sidebar.innerHTML = `
-    <div class="sidebar-user-block" id="sidebarUserBlock"></div>
-
     <nav class="sidebar-menu">
       <a href="index.html"        class="sidebar-item ${path === 'index.html' ? 'active' : ''}">홈</a>
       <a href="notice.html"       class="sidebar-item ${path === 'notice.html' || path === 'notice-detail.html' ? 'active' : ''}">공지사항</a>
@@ -101,14 +99,12 @@ function initHamburger() {
     document.body.appendChild(overlay);
   }
 
-  // 사이드바 링크 클릭 시 닫기 (모바일, 아코디언 버튼 제외)
+  // 사이드바 링크 클릭 시 닫기 (모바일)
   const sidebar = document.getElementById('sidebar');
   if (sidebar) {
     sidebar.querySelectorAll('a, button').forEach(el => {
       el.addEventListener('click', () => {
-        if (window.innerWidth <= 767 && !el.classList.contains('sidebar-accordion-btn')) {
-          closeSidebar();
-        }
+        if (window.innerWidth <= 767) closeSidebar();
       });
     });
   }
@@ -160,46 +156,16 @@ async function loadSpeciesSidebar() {
   // 종족 목록 로드 후 새로 생긴 링크에도 닫기 이벤트 등록
   body.querySelectorAll('a').forEach(el => {
     el.addEventListener('click', () => {
-      if (window.innerWidth <= 767 && !el.classList.contains('sidebar-accordion-btn')) {
-        closeSidebar();
-      }
+      if (window.innerWidth <= 767) closeSidebar();
     });
   });
 }
 
 async function updateSidebarLogin() {
   const user = await getUser();
-  const block = document.getElementById('sidebarUserBlock');
 
   if (user) {
     document.querySelectorAll('.sidebar-login').forEach(el => el.classList.remove('sidebar-login'));
-
-    if (block) {
-      const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname || '유저';
-      const admin = user.user_metadata?.role === 'admin';
-      const TESTERS = ['Moulow', 'moulow', 'Sawol'];
-      const isTester = TESTERS.includes(nickname);
-      const roleIsSpeciesOwner = user.user_metadata?.role === 'species_owner';
-      const { data: ownedSpecies } = await sb.from('species').select('id').eq('owner_nickname', nickname).limit(1);
-      const isSpeciesOwner = roleIsSpeciesOwner || (ownedSpecies && ownedSpecies.length > 0);
-
-      const badges = [];
-      if (admin)          badges.push(`<a href="admin.html" class="badge-admin">관리자</a>`);
-      if (isTester)       badges.push(`<span style="font-size:10px;padding:3px 8px;background:#dcfce7;color:#166534;border-radius:4px;font-weight:700;">테스터</span>`);
-      if (isSpeciesOwner) badges.push(`<span class="badge-role">종족주</span>`);
-
-      block.innerHTML = `
-        <div class="sidebar-user-row">
-          <a href="profile.html" class="btn-username">${nickname}</a>
-          ${badges.join('')}
-        </div>
-        <button class="btn-logout" onclick="signOut()">로그아웃</button>
-      `;
-    }
-  } else {
-    if (block) {
-      block.innerHTML = `<a href="login.html" class="btn-login">로그인</a>`;
-    }
   }
 }
 
