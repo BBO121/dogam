@@ -107,7 +107,7 @@
       }).replace(/\. /g, '.').replace(/\.$/, '');
       document.getElementById('detailDate').textContent = date;
 
-      document.getElementById('detailContent').innerHTML = data.content.replace(/\n/g, '<br>');
+      document.getElementById('detailContent').innerHTML = data.content;
 
       document.getElementById('pageLoading').style.display = 'none';
       document.getElementById('pageContent').style.display = 'block';
