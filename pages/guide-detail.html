@@ -69,6 +69,7 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
@@ -112,7 +113,7 @@
       }).replace(/\. /g, '.').replace(/\.$/, '');
       document.getElementById('detailDate').textContent = date;
 
-      document.getElementById('detailContent').innerHTML = data.content;
+      document.getElementById('detailContent').innerHTML = DOMPurify.sanitize(data.content);
 
       document.getElementById('pageLoading').style.display = 'none';
       document.getElementById('pageContent').style.display = 'block';

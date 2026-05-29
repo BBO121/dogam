@@ -3001,6 +3001,19 @@ a {
   background: #fff;
 }
 
+/* Quill 리치텍스트 표시용 공통 스타일 */
+.ql-display .ql-align-center  { text-align: center; }
+.ql-display .ql-align-right   { text-align: right; }
+.ql-display .ql-align-justify { text-align: justify; }
+.ql-display ol, .ql-display ul { padding-left: 1.5em; }
+.ql-display li { margin-bottom: 2px; }
+.ql-display strong { font-weight: 700; }
+.ql-display em     { font-style: italic; }
+.ql-display u      { text-decoration: underline; }
+.ql-display s      { text-decoration: line-through; }
+.ql-display a      { color: var(--sky-dark); text-decoration: underline; }
+.ql-display p      { margin: 0 0 4px; }
+
 /* 개체 섹션 표시 */
 .char-sections { margin-top: 28px; }
 

@@ -3,14 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>가이드 작성 — 도감</title>
+  <title>가이드 작성 — 종족연구소</title>
   <link rel="stylesheet" href="../css/style.css">
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+  <style>
+    .quill-wrap .ql-toolbar {
+      border-radius: 9px 9px 0 0;
+      border: 1.5px solid var(--border);
+      border-bottom: none;
+      font-family: inherit;
+    }
+    .quill-wrap .ql-toolbar:focus-within,
+    .quill-wrap:focus-within .ql-toolbar { border-color: var(--sky); }
+    .quill-wrap .ql-container {
+      border-radius: 0 0 9px 9px;
+      border: 1.5px solid var(--border);
+      min-height: 240px;
+      font-size: 14px;
+      font-family: inherit;
+      line-height: 1.7;
+    }
+    .quill-wrap:focus-within .ql-container { border-color: var(--sky); }
+    .quill-wrap .ql-editor { min-height: 240px; }
+    .quill-wrap .ql-editor.ql-blank::before { color: #CBD5E1; font-style: normal; }
+    .ql-snow .ql-picker.ql-size .ql-picker-label::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item::before { content: '보통'; }
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="12px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="12px"]::before { content: '작게'; }
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="14px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="14px"]::before { content: '조금 작게'; }
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="18px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="18px"]::before { content: '조금 크게'; }
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="20px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="20px"]::before { content: '크게'; }
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="24px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="24px"]::before { content: '더 크게'; }
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="28px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="28px"]::before { content: '제목 크기'; }
+  </style>
 </head>
 <body>
 
   <header class="header">
     <div class="header-inner">
-      <a href="index.html" class="logo">도감</a>
+      <a href="index.html" class="logo">종족연구소</a>
       <nav class="header-nav">
         <a href="login.html" class="btn-login">로그인</a>
       </nav>
@@ -51,7 +87,9 @@
 
           <div class="form-group">
             <label class="form-label">내용 <span class="required">*</span></label>
-            <textarea id="guideContent" class="form-textarea" rows="12" placeholder="가이드 내용을 입력하세요"></textarea>
+            <div class="quill-wrap">
+              <div id="guideContentEditor"></div>
+            </div>
           </div>
 
           <p class="auth-error" id="writeError"></p>
@@ -67,15 +105,36 @@
   </div>
 
   <footer class="footer">
-    <p>© 2026 도감</p>
+    <p>© 2026 종족연구소</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.quilljs.com/1.3.7/quill.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
   <script>
+    const SizeStyle = Quill.import('attributors/style/size');
+    SizeStyle.whitelist = ['12px', '14px', '16px', '18px', '20px', '24px', '28px'];
+    Quill.register(SizeStyle, true);
+    Quill.register(Quill.import('attributors/style/align'), true);
+
+    const quill = new Quill('#guideContentEditor', {
+      theme: 'snow',
+      placeholder: '가이드 내용을 입력하세요',
+      modules: {
+        toolbar: [
+          [{ size: ['12px', '14px', false, '18px', '20px', '24px', '28px'] }],
+          ['bold', 'italic', 'underline'],
+          [{ color: [] }],
+          [{ align: [] }],
+          [{ list: 'ordered' }, { list: 'bullet' }],
+          ['link', 'clean'],
+        ],
+      },
+    });
+
     async function initPage() {
       const user = await getUser();
       if (!user || user.user_metadata?.role !== 'admin') {
@@ -88,7 +147,8 @@
       e.preventDefault();
 
       const title    = document.getElementById('guideTitle').value.trim();
-      const content  = document.getElementById('guideContent').value.trim();
+      const content  = quill.root.innerHTML.trim();
+      const isEmpty  = quill.getText().trim().length === 0;
       const isPinned = document.getElementById('isPinned').checked;
       const errorEl  = document.getElementById('writeError');
       const btn      = document.getElementById('submitBtn');
@@ -96,7 +156,7 @@
       errorEl.textContent = '';
 
       if (!title)   { errorEl.textContent = '제목을 입력해주세요.'; return; }
-      if (!content) { errorEl.textContent = '내용을 입력해주세요.'; return; }
+      if (isEmpty)  { errorEl.textContent = '내용을 입력해주세요.'; return; }
 
       btn.textContent = '등록 중...';
       btn.disabled = true;
@@ -124,3 +184,4 @@
   </script>
 </body>
 </html>
+

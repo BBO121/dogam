@@ -212,7 +212,7 @@ function renderDropdown(q, matchedSpeciesOwners, matchedUsers, matchedSpecies, m
     <li>
       <a href="${c.url}">
         <span class="dd-badge dd-badge--char">캐릭터</span>
-        <span class="dd-label">${c.species ? `${c.species}: ` : ''}${highlight(c.name, q)}</span>
+        <span class="dd-label">${c.species ? `${escapeHtml(c.species)}: ` : ''}${highlight(c.name, q)}</span>
       </a>
     </li>
   `).join('');
@@ -221,19 +221,29 @@ function renderDropdown(q, matchedSpeciesOwners, matchedUsers, matchedSpecies, m
 
   const shown = p.speciesOwners.length + p.users.length + p.species.length + p.chars.length;
   if (total > shown) {
-    searchDropdown.innerHTML += `
-      <li class="dd-enter" onclick="goToSearch('${q}')">
-        '${q}' 검색 결과 ${total}개 전체 보기 →
-      </li>
-    `;
+    const li = document.createElement('li');
+    li.className = 'dd-enter';
+    li.textContent = `'${q}' 검색 결과 ${total}개 전체 보기 →`;
+    li.addEventListener('click', () => goToSearch(q));
+    searchDropdown.appendChild(li);
   }
 
   searchDropdown.classList.add('active');
 }
 
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 function highlight(name, q) {
-  const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return name.replace(
+  const safeName = escapeHtml(name);
+  const escaped  = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return safeName.replace(
     new RegExp(`(${escaped})`, 'gi'),
     '<mark style="background:var(--sky-light);color:var(--sky-deep);border-radius:2px;">$1</mark>'
   );

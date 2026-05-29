@@ -162,10 +162,14 @@
       }).replace(/\. /g, '.').replace(/\.$/, '');
       document.getElementById('detailDate').textContent = date;
 
-      document.getElementById('detailContent').innerHTML = data.content.replace(/\n/g, '<br>');
+      const detailContentEl = document.getElementById('detailContent');
+      detailContentEl.style.whiteSpace = 'pre-wrap';
+      detailContentEl.textContent = data.content;
 
       if (data.answer) {
-        document.getElementById('answerContent').innerHTML = data.answer.replace(/\n/g, '<br>');
+        const answerContentEl = document.getElementById('answerContent');
+        answerContentEl.style.whiteSpace = 'pre-wrap';
+        answerContentEl.textContent = data.answer;
         if (data.answered_at) {
           const aDate = new Date(data.answered_at).toLocaleDateString('ko-KR', {
             year: 'numeric', month: '2-digit', day: '2-digit'

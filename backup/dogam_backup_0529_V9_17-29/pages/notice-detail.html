@@ -3,14 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>공지사항 — 도감</title>
+  <title>공지사항 — 종족연구소</title>
   <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .notice-detail-content .ql-align-center  { text-align: center; }
+    .notice-detail-content .ql-align-right   { text-align: right; }
+    .notice-detail-content .ql-align-justify { text-align: justify; }
+  </style>
 </head>
 <body>
 
   <header class="header">
     <div class="header-inner">
-      <a href="index.html" class="logo">도감</a>
+      <a href="index.html" class="logo">종족연구소</a>
       <nav class="header-nav">
         <a href="login.html" class="btn-login">로그인</a>
       </nav>
@@ -63,10 +68,11 @@
   </div>
 
   <footer class="footer">
-    <p>© 2026 도감</p>
+    <p>© 2026 종족연구소</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
@@ -91,7 +97,7 @@
         return;
       }
 
-      document.title = `${data.title} — 도감`;
+      document.title = `${data.title} — 종족연구소`;
 
       if (count) {
         document.getElementById('navCount').textContent = `공지사항 총 ${count}개`;
@@ -110,7 +116,7 @@
       }).replace(/\. /g, '.').replace(/\.$/, '');
       document.getElementById('detailDate').textContent = date;
 
-      document.getElementById('detailContent').innerHTML = data.content.replace(/\n/g, '<br>');
+      document.getElementById('detailContent').innerHTML = DOMPurify.sanitize(data.content);
 
       document.getElementById('pageLoading').style.display = 'none';
       document.getElementById('pageContent').style.display = 'block';
@@ -120,3 +126,4 @@
   </script>
 </body>
 </html>
+

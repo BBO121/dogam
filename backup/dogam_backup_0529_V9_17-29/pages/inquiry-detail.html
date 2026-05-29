@@ -1,16 +1,16 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>문의 상세 — 도감</title>
+  <title>문의 상세 — 종족연구소</title>
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
 
   <header class="header">
     <div class="header-inner">
-      <a href="index.html" class="logo">도감</a>
+      <a href="index.html" class="logo">종족연구소</a>
       <nav class="header-nav">
         <a href="login.html" class="btn-login">로그인</a>
       </nav>
@@ -95,7 +95,7 @@
   </div>
 
   <footer class="footer">
-    <p>© 2026 도감</p>
+    <p>© 2026 종족연구소</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -147,7 +147,7 @@
         return;
       }
 
-      document.title = `${data.title} — 도감`;
+      document.title = `${data.title} — 종족연구소`;
 
       const statusEl = document.getElementById('detailStatus');
       statusEl.textContent = data.status || '접수됨';
@@ -162,10 +162,14 @@
       }).replace(/\. /g, '.').replace(/\.$/, '');
       document.getElementById('detailDate').textContent = date;
 
-      document.getElementById('detailContent').innerHTML = data.content.replace(/\n/g, '<br>');
+      const detailContentEl = document.getElementById('detailContent');
+      detailContentEl.style.whiteSpace = 'pre-wrap';
+      detailContentEl.textContent = data.content;
 
       if (data.answer) {
-        document.getElementById('answerContent').innerHTML = data.answer.replace(/\n/g, '<br>');
+        const answerContentEl = document.getElementById('answerContent');
+        answerContentEl.style.whiteSpace = 'pre-wrap';
+        answerContentEl.textContent = data.answer;
         if (data.answered_at) {
           const aDate = new Date(data.answered_at).toLocaleDateString('ko-KR', {
             year: 'numeric', month: '2-digit', day: '2-digit'
@@ -234,3 +238,4 @@
   </script>
 </body>
 </html>
+

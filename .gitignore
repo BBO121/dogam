@@ -1,0 +1,24 @@
+# 환경변수 및 민감한 키 파일
+.env
+.env.local
+.env.production
+.env.development
+*.key
+*.pem
+*.p12
+*.pfx
+secrets.json
+
+# 운영체제
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 에디터
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# 백업 폴더 (GitHub에 올리지 않음)
+backup/

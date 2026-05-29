@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>채팅 — 도감</title>
+  <title>채팅 — 종족연구소</title>
   <link rel="stylesheet" href="../css/style.css">
   <style>
     body { overflow:hidden; }
@@ -73,7 +73,7 @@
 
   <header class="header">
     <div class="header-inner">
-      <a href="index.html" class="logo">도감</a>
+      <a href="index.html" class="logo">종족연구소</a>
       <nav class="header-nav"><a href="login.html" class="btn-login">로그인</a></nav>
     </div>
   </header>
@@ -126,7 +126,7 @@
       const otherNick = conv.user1_nickname === myNick ? conv.user2_nickname : conv.user1_nickname;
       document.getElementById('otherNickDisplay').textContent = otherNick;
       document.getElementById('chatTitle').textContent = otherNick;
-      document.title = `${otherNick} — 도감`;
+      document.title = `${otherNick} — 종족연구소`;
 
       document.getElementById('msgInput').addEventListener('input', () => {
         document.getElementById('sendBtn').disabled = !document.getElementById('msgInput').value.trim();
@@ -239,3 +239,4 @@
   </script>
 </body>
 </html>
+

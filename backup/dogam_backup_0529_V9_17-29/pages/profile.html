@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>내 정보 — 도감</title>
+  <title>내 정보 — 종족연구소</title>
   <link rel="stylesheet" href="../css/style.css">
   <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
   <style>
@@ -28,7 +28,7 @@
   <!-- 헤더 -->
   <header class="header">
     <div class="header-inner">
-      <a href="index.html" class="logo">도감</a>
+      <a href="index.html" class="logo">종족연구소</a>
       <nav class="header-nav">
         <a href="login.html" class="btn-login">로그인</a>
       </nav>
@@ -113,7 +113,7 @@
         <!-- 개인공지 탭 -->
         <div id="tabTos" class="tab-content" style="display:none;">
           <section class="section">
-            <p id="profileTos" style="font-size:14px; line-height:1.8; color:var(--text-sub); white-space:pre-wrap;"></p>
+            <div id="profileTos" class="ql-display" style="font-size:14px; line-height:1.8; color:var(--text-sub);"></div>
             <p id="profileTosEmpty" class="empty-state" style="display:none;">등록된 개인공지가 없어요.</p>
           </section>
         </div>
@@ -213,7 +213,7 @@
 
   <!-- 푸터 -->
   <footer class="footer">
-    <p>© 2026 도감</p>
+    <p>© 2026 종족연구소</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -349,7 +349,7 @@
 
       document.getElementById('breadcrumbName').textContent = displayName;
       document.getElementById('profileName').textContent    = displayName;
-      document.title = `${displayName} — 도감`;
+      document.title = `${displayName} — 종족연구소`;
       const TESTERS = ['Moulow', 'moulow', 'Sawol'];
       const badges = [];
       if (found?.role === 'admin') badges.push('<span class="badge-admin">관리자</span>');
@@ -587,8 +587,8 @@
         if (currentUser.user_metadata?.avatar_url) _profileUpsert.avatar_url = currentUser.user_metadata.avatar_url;
         await sb.from('user_profiles').upsert(_profileUpsert, { onConflict: 'nickname' });
         successEl.textContent = '저장됐어요!';
-        document.getElementById('profileBio').textContent = bio;
-        document.getElementById('profileTos').textContent = tos;
+        document.getElementById('profileBio').innerHTML = DOMPurify.sanitize(bio);
+        document.getElementById('profileTos').innerHTML = DOMPurify.sanitize(tos);
         document.getElementById('profileTosEmpty').style.display = tos ? 'none' : 'block';
         setTimeout(() => successEl.textContent = '', 3000);
       }
@@ -665,3 +665,4 @@
   </script>
 </body>
 </html>
+
