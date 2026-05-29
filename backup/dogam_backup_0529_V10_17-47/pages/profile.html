@@ -1,0 +1,668 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>내 정보 — 종족연구소</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+  <style>
+    .quill-wrap .ql-toolbar { border-radius:9px 9px 0 0; border:1.5px solid var(--border); border-bottom:none; font-family:inherit; }
+    .quill-wrap .ql-container { border-radius:0 0 9px 9px; border:1.5px solid var(--border); min-height:90px; font-size:14px; font-family:inherit; line-height:1.7; }
+    .quill-wrap:focus-within .ql-toolbar,
+    .quill-wrap:focus-within .ql-container { border-color:var(--sky); }
+    .quill-wrap .ql-editor { min-height:90px; }
+    .quill-wrap .ql-editor.ql-blank::before { color:#CBD5E1; font-style:normal; }
+    .ql-snow .ql-picker.ql-size .ql-picker-label::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item::before { content:'보통'; }
+    .ql-snow .ql-picker.ql-size [data-value="12px"]::before { content:'작게'; }
+    .ql-snow .ql-picker.ql-size [data-value="14px"]::before { content:'조금 작게'; }
+    .ql-snow .ql-picker.ql-size [data-value="18px"]::before { content:'조금 크게'; }
+    .ql-snow .ql-picker.ql-size [data-value="20px"]::before { content:'크게'; }
+    .ql-snow .ql-picker.ql-size [data-value="24px"]::before { content:'더 크게'; }
+    .ql-snow .ql-picker.ql-size [data-value="28px"]::before { content:'제목 크기'; }
+  </style>
+</head>
+<body>
+
+  <!-- 헤더 -->
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">종족연구소</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <!-- 메인 콘텐츠 -->
+    <main class="main">
+
+      <div id="profileLoading" class="page-loading">불러오는 중...</div>
+
+      <div id="profileContent" style="display:none;">
+
+        <!-- 프로필 헤더 -->
+        <section class="profile-header">
+          <div class="profile-avatar" id="profileAvatar"></div>
+          <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="uploadAvatar(this)">
+          <div class="profile-header-info">
+            <div class="breadcrumb">
+              <a href="index.html">홈</a>
+              <span>/</span>
+              <span id="breadcrumbName">내 정보</span>
+            </div>
+            <div class="profile-name-row">
+              <h1 class="profile-name" id="profileName">-</h1>
+              <span id="profileRoleBadge"></span>
+              <button class="profile-gear-btn" id="gearBtn" onclick="toggleSettings()" title="설정">⚙</button>
+            </div>
+            <div class="profile-meta">
+              <div class="meta-item">
+                <span class="meta-label">가입일</span>
+                <span class="meta-value" id="profileJoinDate">-</span>
+              </div>
+            </div>
+            <p class="profile-bio" id="profileBio"></p>
+          </div>
+        </section>
+
+        <!-- 탭 -->
+        <div class="profile-tabs">
+          <button class="profile-tab active" data-tab="activity">활동</button>
+          <button class="profile-tab" data-tab="tos">개인공지</button>
+        </div>
+
+        <!-- 내 활동 탭 -->
+        <div id="tabActivity" class="tab-content">
+          <section class="section">
+            <!-- 서브탭 -->
+            <div class="activity-subtabs">
+              <button class="activity-subtab active" onclick="switchSubtab(this,'species')">종족</button>
+              <span class="activity-subtab-divider">|</span>
+              <button class="activity-subtab" onclick="switchSubtab(this,'characters')">캐릭터</button>
+            </div>
+
+            <!-- 종족 -->
+            <div id="subtabSpecies">
+              <div class="section-header">
+                <h2>종족 <span class="count-badge" id="mySpeciesCount">0</span></h2>
+                <a href="my-species.html" class="btn-more">전체보기</a>
+              </div>
+              <div id="mySpeciesPreview" class="species-grid"></div>
+              <p id="mySpeciesEmpty" class="empty-state" style="display:none;">아직 등록된 종족이 없어요.</p>
+            </div>
+
+            <!-- 보유 캐릭터 -->
+            <div id="subtabCharacters" style="display:none;">
+              <div class="section-header">
+                <h2>보유 캐릭터 <span class="count-badge" id="myCharCount">0</span></h2>
+                <a href="my-characters.html" class="btn-more">전체보기</a>
+              </div>
+              <div id="myCharPreview" class="character-grid"></div>
+              <p id="myCharEmpty" class="empty-state" style="display:none;">아직 등록된 개체가 없어요.</p>
+            </div>
+
+          </section>
+        </div>
+
+        <!-- 개인공지 탭 -->
+        <div id="tabTos" class="tab-content" style="display:none;">
+          <section class="section">
+            <div id="profileTos" class="ql-display" style="font-size:14px; line-height:1.8; color:var(--text-sub);"></div>
+            <p id="profileTosEmpty" class="empty-state" style="display:none;">등록된 개인공지가 없어요.</p>
+          </section>
+        </div>
+
+        <!-- 설정 탭 -->
+        <div id="tabSettings" class="tab-content" style="display:none;">
+
+          <!-- 프로필 이미지 -->
+          <section class="section">
+            <h2 class="settings-section-title">프로필 이미지</h2>
+            <div class="settings-form">
+              <div style="display:flex; align-items:center; gap:16px;">
+                <div id="settingsAvatarPreview" style="width:64px; height:64px; border-radius:50%; background:#e8e8e8; background-size:cover; background-position:center; flex-shrink:0;"></div>
+                <button class="btn-secondary" type="button" onclick="document.getElementById('avatarInput').click()">이미지 변경</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- 프로필 편집 -->
+          <section class="section">
+            <h2 class="settings-section-title">프로필 편집</h2>
+            <div class="settings-form">
+              <div class="form-group">
+                <label class="form-label">아이디 <span class="label-muted">(변경 불가)</span></label>
+                <input type="text" class="form-input form-input--disabled" id="editId" disabled>
+              </div>
+              <div class="form-group">
+                <label class="form-label">닉네임</label>
+                <input type="text" class="form-input" id="editDisplayName" placeholder="사이트에서 표시될 이름">
+                <p class="form-hint" style="margin-top:5px; font-size:12px; color:var(--text-mute);">변경 시 소유 개체·종족의 닉네임도 함께 바뀌어요.</p>
+              </div>
+              <div class="form-group">
+                <div class="quill-wrap"><div id="quill_editBio"></div></div>
+              </div>
+              <div class="form-group">
+                <label class="form-label">개인공지 (TOS)</label>
+                <div class="quill-wrap"><div id="quill_editTos"></div></div>
+              </div>
+              <p class="auth-error" id="editProfileError"></p>
+              <p class="settings-success" id="editProfileSuccess"></p>
+              <div class="form-actions">
+                <button class="btn-secondary" id="editProfileBtn" onclick="saveProfile()">저장</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- 비밀번호 변경 -->
+          <section class="section">
+            <h2 class="settings-section-title">비밀번호 변경</h2>
+            <div class="settings-form">
+              <div class="form-group">
+                <label class="form-label">새 비밀번호</label>
+                <input type="password" class="form-input" id="newPassword" placeholder="새 비밀번호 (6자 이상)">
+              </div>
+              <div class="form-group">
+                <label class="form-label">새 비밀번호 확인</label>
+                <input type="password" class="form-input" id="newPasswordConfirm" placeholder="새 비밀번호 재입력">
+              </div>
+              <p class="auth-error" id="pwError"></p>
+              <p class="settings-success" id="pwSuccess"></p>
+              <div class="form-actions">
+                <button class="btn-secondary" id="changePwBtn" onclick="changePassword()">변경</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- 계정 설정 (탈퇴) -->
+          <section class="section">
+            <h2 class="settings-section-title settings-section-title--danger">계정 설정</h2>
+            <div class="settings-danger-zone">
+              <div>
+                <p class="settings-danger-title">회원 탈퇴</p>
+                <p class="settings-danger-desc">탈퇴하면 계정 정보에 접근할 수 없게 돼요.</p>
+              </div>
+              <button class="btn-danger" onclick="confirmDelete()">탈퇴하기</button>
+            </div>
+          </section>
+
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <!-- 탈퇴 확인 모달 -->
+  <div class="modal-overlay" id="deleteModal" style="display:none;">
+    <div class="modal-card">
+      <h3 class="modal-title">정말 탈퇴하시겠어요?</h3>
+      <p class="modal-desc">탈퇴 후에는 계정으로 로그인할 수 없어요. 이 작업은 되돌릴 수 없어요.</p>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeDeleteModal()">취소</button>
+        <button class="btn-danger" id="confirmDeleteBtn" onclick="executeDelete()">탈퇴 확인</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 푸터 -->
+  <footer class="footer">
+    <p>© 2026 종족연구소</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/main.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    const viewNick = new URLSearchParams(window.location.search).get('user');
+    let currentUser = null;
+
+    // ── Quill 초기화 ──────────────────────────
+    const SizeStyle = Quill.import('attributors/style/size');
+    SizeStyle.whitelist = ['12px','14px','16px','18px','20px','24px','28px'];
+    Quill.register(SizeStyle, true);
+    const QUILL_TOOLBAR = [
+      [{ size: ['12px','14px', false,'18px','20px','24px','28px'] }],
+      ['bold','italic','underline'],
+      [{ color: [] }],
+      [{ align: [] }],
+      [{ list: 'ordered' },{ list: 'bullet' }],
+      ['link','clean'],
+    ];
+    const bioQuill = new Quill(document.getElementById('quill_editBio'), {
+      theme:'snow', placeholder:'소개글을 입력해주세요', modules:{ toolbar: QUILL_TOOLBAR },
+    });
+    const tosQuill = new Quill(document.getElementById('quill_editTos'), {
+      theme:'snow', placeholder:'개인공지 또는 거래 조건을 입력해주세요', modules:{ toolbar: QUILL_TOOLBAR },
+    });
+    // ─────────────────────────────────────────
+
+    function revealSensitive(overlayEl, e) {
+      e.stopPropagation(); e.preventDefault();
+      const wrap = overlayEl.parentElement;
+      wrap.querySelectorAll('.blurred').forEach(el => el.classList.remove('blurred'));
+      overlayEl.remove();
+    }
+
+    async function uploadAvatar(input) {
+      const file = input.files[0];
+      if (!file) return;
+
+      const avatarEl = document.getElementById('profileAvatar');
+      avatarEl.style.opacity = '0.5';
+
+      const blob = await compressImage(file, 400, 0.88);
+      if (!blob) { alert('이미지 처리에 실패했어요.'); avatarEl.style.opacity = ''; return; }
+
+      const fileName = `avatar_${currentUser.id}.jpg`;
+      const { error: uploadError } = await sb.storage.from('images').upload(fileName, blob, {
+        contentType: 'image/jpeg',
+        upsert: true,
+      });
+
+      if (uploadError) { alert('업로드에 실패했어요: ' + uploadError.message); avatarEl.style.opacity = ''; return; }
+
+      const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);
+      const avatarUrl = urlData.publicUrl + '?v=' + Date.now(); // 버전 포함 URL로 통일
+
+      await updateProfile({ avatar_url: avatarUrl }); // 버전 포함 URL 저장
+      currentUser.user_metadata.avatar_url = avatarUrl;
+      const displayName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
+      await sb.from('user_profiles').upsert(
+        { nickname: displayName, avatar_url: avatarUrl },
+        { onConflict: 'nickname' }
+      );
+
+      avatarEl.style.backgroundImage = `url('${avatarUrl}')`;
+      avatarEl.style.backgroundSize = 'cover';
+      avatarEl.style.backgroundPosition = 'center';
+      avatarEl.style.opacity = '';
+      const previewEl = document.getElementById('settingsAvatarPreview');
+      if (previewEl) {
+        previewEl.style.backgroundImage    = `url('${avatarUrl}')`;
+        previewEl.style.backgroundSize     = 'cover';
+        previewEl.style.backgroundPosition = 'center';
+      }
+      input.value = '';
+    }
+
+    async function initProfile() {
+      const user = await getUser();
+      if (!user) { window.location.href = 'login.html'; return; }
+      currentUser = user;
+
+      if (viewNick) {
+        await initOtherProfile(viewNick);
+      } else {
+        await initMyProfile(user);
+      }
+    }
+
+    async function initOtherProfile(nick) {
+      // 타인 프로필 — 설정/수정 UI 숨기기
+      document.getElementById('gearBtn').style.display  = 'none';
+      document.getElementById('avatarInput').style.display = 'none';
+      document.getElementById('profileAvatar').style.cursor = 'default';
+      document.getElementById('profileAvatar').onclick = null;
+      document.querySelector('.profile-tab[data-tab="tos"]').textContent = '개인공지';
+
+      // get_all_users + user_profiles 병렬 조회
+      const [{ data: userList }, { data: profile }] = await Promise.all([
+        sb.rpc('get_all_users'),
+        sb.from('user_profiles').select('*').eq('nickname', nick).single(),
+      ]);
+      const found = (userList || []).find(u =>
+        (u.nickname || '') === nick || (u.login_id || '') === nick
+      );
+
+      const displayName = found?.nickname || nick;
+      const { data: otherOwnedSp } = await sb.from('species').select('id').eq('owner_nickname', displayName).limit(1);
+      const isSpeciesOwner = found?.role === 'species_owner' || (otherOwnedSp && otherOwnedSp.length > 0);
+      const bio            = profile?.bio        || '';
+      const tos            = profile?.tos        || '';
+      let   avatarUrl      = profile?.avatar_url || '';
+      // user_profiles에 avatar_url 없으면 스토리지에서 직접 폴백
+      if (!avatarUrl && found?.id) {
+        const { data: stData } = sb.storage.from('images').getPublicUrl(`avatar_${found.id}.jpg`);
+        if (stData?.publicUrl) avatarUrl = stData.publicUrl;
+      }
+      const joinDate       = profile?.joined_at
+        ? new Date(profile.joined_at).toLocaleDateString('ko-KR', {
+            year: 'numeric', month: '2-digit', day: '2-digit'
+          }).replace(/\. /g, '.').replace(/\.$/, '')
+        : (found?.created_at
+            ? new Date(found.created_at).toLocaleDateString('ko-KR', {
+                year: 'numeric', month: '2-digit', day: '2-digit'
+              }).replace(/\. /g, '.').replace(/\.$/, '')
+            : '—');
+
+      document.getElementById('breadcrumbName').textContent = displayName;
+      document.getElementById('profileName').textContent    = displayName;
+      document.title = `${displayName} — 종족연구소`;
+      const TESTERS = ['Moulow', 'moulow', 'Sawol'];
+      const badges = [];
+      if (found?.role === 'admin') badges.push('<span class="badge-admin">관리자</span>');
+      if (TESTERS.includes(displayName)) badges.push('<span style="font-size:10px; padding:3px 8px; background:#dcfce7; color:#166534; border-radius:4px; font-weight:700; display:inline-block;">테스터</span>');
+      if (isSpeciesOwner) badges.push('<span class="badge-role">종족주</span>');
+      if (badges.length) document.getElementById('profileRoleBadge').innerHTML = badges.join(' ');
+      document.getElementById('profileJoinDate').textContent = joinDate;
+      if (bio) document.getElementById('profileBio').innerHTML = DOMPurify.sanitize(bio);
+      if (tos) {
+        document.getElementById('profileTos').innerHTML = DOMPurify.sanitize(tos);
+      } else {
+        document.getElementById('profileTosEmpty').style.display = 'block';
+      }
+      if (avatarUrl) {
+        const el = document.getElementById('profileAvatar');
+        el.style.backgroundImage    = `url('${avatarUrl}')`;
+        el.style.backgroundSize     = 'cover';
+        el.style.backgroundPosition = 'center';
+      }
+
+      // 전체보기 링크 → 해당 유저 필터
+      const speciesMoreEl = document.querySelector('#subtabSpecies .btn-more');
+      const charMoreEl    = document.querySelector('#subtabCharacters .btn-more');
+      if (speciesMoreEl) speciesMoreEl.href = `my-species.html?owner=${encodeURIComponent(displayName)}`;
+      if (charMoreEl)    charMoreEl.href    = `character-list.html?owner=${encodeURIComponent(displayName)}`;
+
+      document.getElementById('profileLoading').style.display = 'none';
+      document.getElementById('profileContent').style.display = 'block';
+
+      loadMySpecies(displayName);
+      loadMyCharacters(displayName);
+    }
+
+    async function initMyProfile(user) {
+      const nickname    = user.user_metadata?.nickname || '유저';
+      const displayName = user.user_metadata?.display_name || nickname;
+      const bio         = user.user_metadata?.bio || '';
+      const tos         = user.user_metadata?.tos || '';
+      const joinDate    = new Date(user.created_at).toLocaleDateString('ko-KR', {
+        year: 'numeric', month: '2-digit', day: '2-digit'
+      }).replace(/\. /g, '.').replace(/\.$/, '');
+
+      const { data: myOwnedSp } = await sb.from('species').select('id').eq('owner_nickname', displayName).limit(1);
+      const isSpeciesOwner = user.user_metadata?.role === 'species_owner' || (myOwnedSp && myOwnedSp.length > 0);
+
+      document.getElementById('breadcrumbName').textContent = displayName;
+      document.getElementById('profileName').textContent    = displayName;
+      const isAdmin = user.user_metadata?.role === 'admin';
+      const TESTERS = ['Moulow', 'moulow', 'Sawol'];
+      const myBadges = [];
+      if (isAdmin) myBadges.push('<span class="badge-admin">관리자</span>');
+      if (TESTERS.includes(displayName)) myBadges.push('<span style="font-size:10px; padding:3px 8px; background:#dcfce7; color:#166534; border-radius:4px; font-weight:700; display:inline-block;">테스터</span>');
+      if (isSpeciesOwner) myBadges.push('<span class="badge-role">종족주</span>');
+      if (myBadges.length) document.getElementById('profileRoleBadge').innerHTML = myBadges.join(' ');
+      document.getElementById('profileJoinDate').textContent = joinDate;
+      if (bio) document.getElementById('profileBio').innerHTML = DOMPurify.sanitize(bio);
+      if (tos) {
+        document.getElementById('profileTos').innerHTML = DOMPurify.sanitize(tos);
+      } else {
+        document.getElementById('profileTosEmpty').style.display = 'block';
+      }
+
+      document.getElementById('editId').value          = nickname;
+      document.getElementById('editDisplayName').value = displayName;
+      if (bio) bioQuill.root.innerHTML = bio;
+      if (tos) tosQuill.root.innerHTML = tos;
+
+      const avatarUrl = user.user_metadata?.avatar_url;
+      if (avatarUrl) {
+        const el = document.getElementById('profileAvatar');
+        el.style.backgroundImage    = `url('${avatarUrl}')`;
+        el.style.backgroundSize     = 'cover';
+        el.style.backgroundPosition = 'center';
+        const previewEl = document.getElementById('settingsAvatarPreview');
+        previewEl.style.backgroundImage    = `url('${avatarUrl}')`;
+        previewEl.style.backgroundSize     = 'cover';
+        previewEl.style.backgroundPosition = 'center';
+      }
+
+      document.getElementById('profileLoading').style.display = 'none';
+      document.getElementById('profileContent').style.display = 'block';
+
+      // joined_at + avatar_url 백그라운드 동기화 (타인이 내 프로필 볼 때 표시용)
+      const _syncData = { nickname: displayName, joined_at: user.created_at };
+      const _avatarUrl = user.user_metadata?.avatar_url;
+      if (_avatarUrl) _syncData.avatar_url = _avatarUrl;
+      sb.from('user_profiles').upsert(_syncData, { onConflict: 'nickname' });
+
+      loadMySpecies(displayName);
+      loadMyCharacters(displayName);
+    }
+
+    async function loadMySpecies(nickname) {
+      const { data, error } = await getMySpecies(nickname);
+      const countEl = document.getElementById('mySpeciesCount');
+      const gridEl  = document.getElementById('mySpeciesPreview');
+      const emptyEl = document.getElementById('mySpeciesEmpty');
+
+      if (error || !data || data.length === 0) {
+        emptyEl.style.display = 'block';
+        return;
+      }
+
+      countEl.textContent = data.length;
+      const preview = data.slice(0, 6);
+      gridEl.innerHTML = preview.map(s => `
+        <a href="species.html?id=${s.id}" class="species-card">
+          ${s.is_sensitive && s.image_url ? `
+          <div style="position:relative; overflow:hidden; border-radius:var(--radius);">
+            <div class="species-img blurred" style="background-image:url('${s.image_url}');background-size:cover;background-position:center;"></div>
+            <div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span><span class="sensitive-overlay-label">WARNING${s.sensitive_note ? ' : ' + s.sensitive_note : ''}</span><span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div>
+          </div>` : `
+          <div class="species-img"${s.image_url ? ` style="background-image:url('${s.image_url}');background-size:cover;background-position:center;"` : ''}></div>`}
+          <div class="species-info">
+            <p class="species-name">${s.name}</p>
+          </div>
+        </a>
+      `).join('');
+    }
+
+    async function loadMyCharacters(nickname) {
+      const { data, error } = await getMyCharacters(nickname);
+
+      if (error || !data) {
+        document.getElementById('myCharEmpty').style.display = 'block';
+        return;
+      }
+
+      const countEl = document.getElementById('myCharCount');
+      const gridEl  = document.getElementById('myCharPreview');
+      const emptyEl = document.getElementById('myCharEmpty');
+
+      countEl.textContent = data.length;
+
+      if (data.length === 0) {
+        emptyEl.style.display = 'block';
+        return;
+      }
+
+      gridEl.innerHTML = data.map(c => `
+        <a href="character.html?id=${c.id}" class="character-card">
+          ${c.is_sensitive && c.image_url ? `
+          <div style="position:relative; overflow:hidden; border-radius:var(--radius);">
+            <div class="character-img blurred" style="background-image:url('${c.image_url}');background-size:cover;background-position:center;"></div>
+            <div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span><span class="sensitive-overlay-label">WARNING${c.sensitive_note ? ' : ' + c.sensitive_note : ''}</span><span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div>
+          </div>` : `
+          <div class="character-img"${c.image_url ? ` style="background-image:url('${c.image_url}');background-size:cover;background-position:center;"` : ''}></div>`}
+          <div class="character-info">
+            <p class="character-name">${c.name}</p>
+            <p class="character-species">${c.species_name || ''}</p>
+          </div>
+        </a>
+      `).join('');
+    }
+
+    // 메인 탭 전환
+    document.querySelectorAll('.profile-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.profile-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        document.getElementById('gearBtn').classList.remove('active');
+        const tabId = 'tab' + btn.dataset.tab[0].toUpperCase() + btn.dataset.tab.slice(1);
+        document.getElementById(tabId).style.display = 'block';
+      });
+    });
+
+    function toggleSettings() {
+      const settingsEl = document.getElementById('tabSettings');
+      const gearBtn    = document.getElementById('gearBtn');
+      const isOpen     = settingsEl.style.display !== 'none';
+
+      if (isOpen) {
+        settingsEl.style.display = 'none';
+        gearBtn.classList.remove('active');
+        document.getElementById('tabActivity').style.display = 'block';
+        document.querySelector('.profile-tab[data-tab="activity"]').classList.add('active');
+      } else {
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        document.querySelectorAll('.profile-tab').forEach(b => b.classList.remove('active'));
+        settingsEl.style.display = 'block';
+        gearBtn.classList.add('active');
+      }
+    }
+
+    function switchSubtab(el, t) {
+      document.querySelectorAll('.activity-subtab').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+      document.getElementById('subtabSpecies').style.display    = t === 'species'    ? 'block' : 'none';
+      document.getElementById('subtabCharacters').style.display = t === 'characters' ? 'block' : 'none';
+    }
+
+    // 프로필 저장
+    async function saveProfile() {
+      const newDisplayName = document.getElementById('editDisplayName').value.trim();
+      const bio = bioQuill.getLength() > 1 ? bioQuill.root.innerHTML : '';
+      const tos = tosQuill.getLength() > 1 ? tosQuill.root.innerHTML : '';
+      const btn = document.getElementById('editProfileBtn');
+      const errorEl   = document.getElementById('editProfileError');
+      const successEl = document.getElementById('editProfileSuccess');
+
+      errorEl.textContent = '';
+      successEl.textContent = '';
+
+      if (!newDisplayName) {
+        errorEl.textContent = '닉네임을 입력해주세요.';
+        return;
+      }
+
+      btn.textContent = '저장 중...';
+      btn.disabled = true;
+
+      const oldDisplayName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
+
+      const { error } = await updateProfile({ display_name: newDisplayName, bio, tos, avatar_url: currentUser.user_metadata?.avatar_url });
+
+      if (error) {
+        errorEl.textContent = '저장에 실패했어요. 다시 시도해주세요.';
+      } else {
+        if (newDisplayName !== oldDisplayName) {
+          await Promise.all([
+            sb.from('characters').update({ owner_nickname: newDisplayName }).eq('owner_nickname', oldDisplayName),
+            sb.from('characters').update({ designer_nickname: newDisplayName }).eq('designer_nickname', oldDisplayName),
+            sb.from('species').update({ owner_nickname: newDisplayName }).eq('owner_nickname', oldDisplayName),
+            sb.from('character_transfers').update({ from_nickname: newDisplayName }).eq('from_nickname', oldDisplayName),
+            sb.from('character_transfers').update({ to_nickname: newDisplayName }).eq('to_nickname', oldDisplayName),
+            sb.from('notifications').update({ user_nickname: newDisplayName }).eq('user_nickname', oldDisplayName),
+            sb.from('user_profiles').delete().eq('nickname', oldDisplayName),
+          ]);
+          currentUser.user_metadata.display_name = newDisplayName;
+          document.getElementById('profileName').textContent = newDisplayName;
+          document.getElementById('breadcrumbName').textContent = newDisplayName;
+        }
+        const _profileUpsert = { nickname: newDisplayName, bio, tos, joined_at: currentUser.created_at };
+        if (currentUser.user_metadata?.avatar_url) _profileUpsert.avatar_url = currentUser.user_metadata.avatar_url;
+        await sb.from('user_profiles').upsert(_profileUpsert, { onConflict: 'nickname' });
+        successEl.textContent = '저장됐어요!';
+        document.getElementById('profileBio').innerHTML = DOMPurify.sanitize(bio);
+        document.getElementById('profileTos').innerHTML = DOMPurify.sanitize(tos);
+        document.getElementById('profileTosEmpty').style.display = tos ? 'none' : 'block';
+        setTimeout(() => successEl.textContent = '', 3000);
+      }
+
+      btn.textContent = '저장';
+      btn.disabled = false;
+    }
+
+    // 비밀번호 변경
+    async function changePassword() {
+      const newPw      = document.getElementById('newPassword').value;
+      const confirmPw  = document.getElementById('newPasswordConfirm').value;
+      const btn        = document.getElementById('changePwBtn');
+      const errorEl    = document.getElementById('pwError');
+      const successEl  = document.getElementById('pwSuccess');
+
+      errorEl.textContent = '';
+      successEl.textContent = '';
+
+      if (newPw.length < 6) {
+        errorEl.textContent = '비밀번호는 6자 이상이어야 해요.';
+        return;
+      }
+      if (newPw !== confirmPw) {
+        errorEl.textContent = '비밀번호가 일치하지 않아요.';
+        return;
+      }
+
+      btn.textContent = '변경 중...';
+      btn.disabled = true;
+
+      const { error } = await updatePassword(newPw);
+
+      if (error) {
+        errorEl.textContent = '변경에 실패했어요. 다시 시도해주세요.';
+      } else {
+        successEl.textContent = '비밀번호가 변경됐어요!';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('newPasswordConfirm').value = '';
+        setTimeout(() => successEl.textContent = '', 3000);
+      }
+
+      btn.textContent = '변경';
+      btn.disabled = false;
+    }
+
+    // 탈퇴 모달
+    function confirmDelete() {
+      document.getElementById('deleteModal').style.display = 'flex';
+    }
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').style.display = 'none';
+    }
+    async function executeDelete() {
+      const btn = document.getElementById('confirmDeleteBtn');
+      btn.textContent = '처리 중...';
+      btn.disabled = true;
+
+      const nickname = currentUser?.user_metadata?.nickname;
+      if (nickname) {
+        await Promise.all([
+          sb.from('characters').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname),
+          sb.from('characters').update({ designer_nickname: '(알수없음)' }).eq('designer_nickname', nickname),
+          sb.from('species').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname),
+          sb.from('character_transfers').update({ from_nickname: '(알수없음)' }).eq('from_nickname', nickname),
+          sb.from('character_transfers').update({ to_nickname: '(알수없음)' }).eq('to_nickname', nickname),
+        ]);
+      }
+
+      await deleteAccount();
+    }
+
+    initProfile();
+  </script>
+</body>
+</html>
+

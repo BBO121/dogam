@@ -1,0 +1,237 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>문의 상세 — 종족연구소</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">종족연구소</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+
+      <div id="pageLoading" class="page-loading">불러오는 중...</div>
+
+      <div id="pageContent" style="display:none;">
+
+        <div class="notice-detail-nav">
+          <span></span>
+          <a href="inquiry.html" class="notice-nav-list-btn">목록보기</a>
+        </div>
+
+        <article class="notice-detail-article">
+
+          <div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+              <span id="detailStatus" style="font-size:11px;font-weight:700;padding:2px 10px;border-radius:20px;"></span>
+            </div>
+            <h1 id="detailTitle" class="notice-detail-title"></h1>
+            <div class="notice-detail-meta">
+              <span id="detailNickname"></span>
+              <span class="notice-detail-sep">·</span>
+              <span id="detailDate"></span>
+            </div>
+          </div>
+
+          <div class="notice-detail-divider"></div>
+
+          <div id="detailContent" class="notice-detail-content"></div>
+
+        </article>
+
+        <!-- 관리자 답변 표시 영역 -->
+        <div id="answerSection" style="margin-top:32px; display:none;">
+          <div style="background:var(--sky-pale); border:1px solid var(--sky-light); border-radius:var(--radius); padding:20px 24px;">
+            <p style="font-size:13px; font-weight:700; color:var(--sky-deep); margin-bottom:12px;">💬 관리자 답변</p>
+            <div id="answerContent" class="notice-detail-content" style="color:var(--text);"></div>
+            <p id="answerDate" style="font-size:12px; color:var(--text-mute); margin-top:10px;"></p>
+          </div>
+        </div>
+
+        <!-- 관리자 전용 답변 작성 폼 -->
+        <div id="adminAnswerForm" style="margin-top:32px; display:none;">
+          <div style="background:var(--sky-pale); border:1px solid var(--sky-light); border-radius:var(--radius); padding:20px 24px;">
+            <p style="font-size:13px; font-weight:700; color:var(--sky-deep); margin-bottom:12px;">답변 작성</p>
+            <div class="form-group" style="margin-bottom:12px;">
+              <label class="form-label" style="margin-bottom:6px; display:block;">상태 변경</label>
+              <select id="statusSelect" class="form-input" style="width:160px;">
+                <option value="접수됨">접수됨</option>
+                <option value="처리중">처리중</option>
+                <option value="완료">완료</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-bottom:12px;">
+              <label class="form-label" style="margin-bottom:6px; display:block;">답변 내용</label>
+              <textarea id="answerInput" class="form-textarea" rows="5" placeholder="답변 내용을 입력하세요"></textarea>
+            </div>
+            <p class="auth-error" id="answerError"></p>
+            <div style="display:flex; gap:8px; justify-content:flex-end;">
+              <button class="btn-secondary" onclick="submitAnswer()">답변 등록</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="notice-detail-bottom">
+          <a href="inquiry.html" class="btn-ghost">← 목록으로</a>
+          <button id="deleteBtn" class="btn-ghost" onclick="deleteInquiry()" style="display:none; color:#ef4444;">삭제</button>
+        </div>
+
+      </div>
+
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 종족연구소</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    const STATUS_STYLE = {
+      '접수됨': 'background:#f1f5f9;color:#64748b',
+      '처리중': 'background:#e0f2fe;color:#0284c7',
+      '완료':   'background:#dcfce7;color:#166534',
+    };
+
+    let currentId = null;
+    let reportNickname = null;
+
+    async function initPage() {
+      const params = new URLSearchParams(window.location.search);
+      currentId = params.get('id');
+
+      if (!currentId) {
+        window.location.href = 'inquiry.html';
+        return;
+      }
+
+      const user = await getUser();
+      if (!user) {
+        window.location.href = 'login.html';
+        return;
+      }
+
+      const isAdminUser = user.user_metadata?.role === 'admin';
+      const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname;
+
+      const { data, error } = await sb
+        .from('inquiries')
+        .select('*')
+        .eq('id', currentId)
+        .single();
+
+      if (error || !data) {
+        window.location.href = 'inquiry.html';
+        return;
+      }
+
+      if (!isAdminUser && data.nickname !== nickname) {
+        window.location.href = 'inquiry.html';
+        return;
+      }
+
+      document.title = `${data.title} — 종족연구소`;
+
+      const statusEl = document.getElementById('detailStatus');
+      statusEl.textContent = data.status || '접수됨';
+      statusEl.style.cssText = STATUS_STYLE[data.status] || STATUS_STYLE['접수됨'];
+
+      reportNickname = data.nickname;
+      document.getElementById('detailTitle').textContent = data.title;
+      document.getElementById('detailNickname').textContent = data.nickname;
+
+      const date = new Date(data.created_at).toLocaleDateString('ko-KR', {
+        year: 'numeric', month: '2-digit', day: '2-digit'
+      }).replace(/\. /g, '.').replace(/\.$/, '');
+      document.getElementById('detailDate').textContent = date;
+
+      document.getElementById('detailContent').innerHTML = data.content.replace(/\n/g, '<br>');
+
+      if (data.answer) {
+        document.getElementById('answerContent').innerHTML = data.answer.replace(/\n/g, '<br>');
+        if (data.answered_at) {
+          const aDate = new Date(data.answered_at).toLocaleDateString('ko-KR', {
+            year: 'numeric', month: '2-digit', day: '2-digit'
+          }).replace(/\. /g, '.').replace(/\.$/, '');
+          document.getElementById('answerDate').textContent = `답변일: ${aDate}`;
+        }
+        document.getElementById('answerSection').style.display = 'block';
+      }
+
+      if (isAdminUser) {
+        document.getElementById('adminAnswerForm').style.display = 'block';
+        document.getElementById('statusSelect').value = data.status || '접수됨';
+        if (data.answer) document.getElementById('answerInput').value = data.answer;
+        document.getElementById('deleteBtn').style.display = 'inline-flex';
+      } else if (data.nickname === nickname && !data.answer) {
+        document.getElementById('deleteBtn').style.display = 'inline-flex';
+      }
+
+      document.getElementById('pageLoading').style.display = 'none';
+      document.getElementById('pageContent').style.display = 'block';
+    }
+
+    async function submitAnswer() {
+      const answer  = document.getElementById('answerInput').value.trim();
+      const status  = document.getElementById('statusSelect').value;
+      const errorEl = document.getElementById('answerError');
+
+      errorEl.textContent = '';
+      if (!answer) { errorEl.textContent = '답변 내용을 입력해주세요.'; return; }
+
+      const user = await getUser();
+      const answered_by = user.user_metadata?.display_name || user.user_metadata?.nickname;
+
+      const { error } = await sb
+        .from('inquiries')
+        .update({ answer, status, answered_by, answered_at: new Date().toISOString() })
+        .eq('id', currentId);
+
+      if (error) {
+        errorEl.textContent = `저장에 실패했어요. (${error.message})`;
+        return;
+      }
+
+      await sb.from('notifications').insert({
+        user_nickname: reportNickname,
+        type:          'inquiry_answer',
+        message:       `문의에 답변이 등록됐어요. (상태: ${status})`,
+        link:          `inquiry-detail.html?id=${currentId}`,
+        is_read:       false,
+      });
+
+      window.location.reload();
+    }
+
+    async function deleteInquiry() {
+      if (!confirm('정말 삭제할까요?')) return;
+
+      const { error } = await sb.from('inquiries').delete().eq('id', currentId);
+
+      if (error) { alert('삭제에 실패했어요.'); return; }
+
+      window.location.href = 'inquiry.html';
+    }
+
+    initPage();
+  </script>
+</body>
+</html>
+
