@@ -55,11 +55,11 @@
     /* ── DB 로드 약관 (Quill 출력) 스타일 ── */
     #termsDbContent {
       font-size: 14px;
-      line-height: 1.9;
+      line-height: 1.85;
       color: var(--text-sub);
     }
     #termsDbContent p {
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
     #termsDbContent p:empty {
       margin-bottom: 6px;
@@ -76,8 +76,8 @@
 
     #termsDbContent ul,
     #termsDbContent ol {
-      padding-left: 22px;
-      margin: 6px 0 12px;
+      padding-left: 20px;
+      margin: 8px 0;
     }
     #termsDbContent li { margin-bottom: 6px; }
 
@@ -86,17 +86,19 @@
     #termsDbContent .ql-align-right   { text-align: right; }
     #termsDbContent .ql-align-justify { text-align: justify; }
 
-    /* 구분선 역할을 하는 큰 텍스트 (Quill size 조절 사용 시) */
+    /* 섹션 타이틀 (Quill에서 큰 폰트로 지정된 텍스트) → .terms-section-title과 동일 스타일 */
     #termsDbContent [style*="font-size: 18px"],
     #termsDbContent [style*="font-size: 20px"],
     #termsDbContent [style*="font-size: 24px"],
     #termsDbContent [style*="font-size: 28px"] {
       display: block;
+      font-size: 15px !important;
       color: var(--text);
       font-weight: 700;
-      margin: 28px 0 10px;
+      margin: 36px 0 12px;
       padding-bottom: 8px;
       border-bottom: 1.5px solid var(--border);
+      line-height: 1.5;
     }
   </style>
 </head>
