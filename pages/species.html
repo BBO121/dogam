@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>종족 — 도감</title>
+  <title>종족 — 종족연구소</title>
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
   <!-- 헤더 -->
   <header class="header">
     <div class="header-inner">
-      <a href="index.html" class="logo">도감</a>
+      <a href="index.html" class="logo">종족연구소</a>
       <nav class="header-nav">
         <a href="login.html" class="btn-login">로그인</a>
       </nav>
@@ -66,11 +66,29 @@
     </main>
   </div>
 
+  <!-- 소유권 이전 모달 -->
+  <div id="transferModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:500; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:#fff; border-radius:16px; padding:24px; width:min(100%, 380px); max-height:80vh; display:flex; flex-direction:column; gap:14px; box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+      <h3 style="margin:0; font-size:16px; font-weight:700;">소유권 이전</h3>
+      <p id="transferInfo" style="margin:0; font-size:13px; color:var(--text-sub);"></p>
+      <input type="text" class="form-input" id="transferSearch" placeholder="닉네임으로 검색..." oninput="filterTransferUsers(this.value)" autocomplete="off">
+      <div id="transferUserList" style="border:1px solid var(--border); border-radius:10px; max-height:180px; overflow-y:auto; background:#fff;">
+        <p style="padding:12px; color:var(--text-mute); font-size:13px;">닉네임을 입력하세요</p>
+      </div>
+      <p id="transferSelectedDisplay" style="margin:0; font-size:13px; color:var(--sky-deep); display:none;"></p>
+      <div style="display:flex; gap:8px; justify-content:flex-end;">
+        <button class="btn-ghost" onclick="closeTransferModal()">취소</button>
+        <button class="btn-secondary" id="transferConfirmBtn" onclick="confirmTransfer()">이전하기</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 푸터 -->
   <footer class="footer">
-    <p>© 2026 도감</p>
+    <p>© 2026 종족연구소</p>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/sidebar.js"></script>
@@ -82,6 +100,13 @@
     let isOwner        = false;
     let manageMode     = false;
     let activeCategory = null;
+    let siteUserNicks  = new Set();
+
+    // 소유권 이전 모달 상태
+    let transferCharId      = null;
+    let transferCharName    = null;
+    let transferFromOwner   = null;
+    let transferToNick      = null;
 
     if (!speciesId) {
       document.getElementById('speciesDetail').innerHTML = '<p class="page-loading">잘못된 접근이에요.</p>';
@@ -106,9 +131,15 @@
         return;
       }
 
-      document.title = `${s.name} — 도감`;
+      document.title = `${s.name} — 종족연구소`;
 
-      isOwner = isAdminUser || userNickname === s.owner_nickname;
+      isOwner = userNickname === s.owner_nickname;
+
+      // 종족주일 때 사이트 유저 목록 로드 (오프사이트 판별용)
+      if (isOwner) {
+        const { data: userList } = await sb.rpc('get_all_users');
+        if (userList) userList.forEach(u => { if (u.nickname) siteUserNicks.add(u.nickname); });
+      }
 
       const registeredDate = new Date(s.created_at).toLocaleDateString('ko-KR', {
         year: 'numeric', month: '2-digit', day: '2-digit'
@@ -161,7 +192,7 @@
                 <span class="meta-value">${s.design_rights}</span>
               </div>` : ''}
             </div>
-            ${s.description ? `<p class="species-detail-desc">${s.description}</p>` : ''}
+            ${s.description ? `<div class="species-detail-desc ql-display">${typeof DOMPurify!=='undefined' ? DOMPurify.sanitize(s.description) : s.description}</div>` : ''}
             ${isOwner ? `
             <div class="species-detail-actions">
               <a href="character-register.html?species_id=${speciesId}&species=${encodeURIComponent(s.name)}" class="btn-secondary">개체 등록</a>
@@ -197,7 +228,7 @@
           panel.className = 'guide-tab-panel';
           panel.innerHTML = `
             ${g.image_url ? `<img class="guide-panel-img" src="${g.image_url}" alt="${label}">` : ''}
-            ${g.content ? `<p class="guide-section-text">${g.content.replace(/\n/g, '<br>')}</p>` : ''}
+            ${g.content ? `<div class="guide-section-text ql-display">${typeof DOMPurify!=='undefined' ? DOMPurify.sanitize(g.content) : g.content}</div>` : ''}
           `;
           tabPanels.appendChild(panel);
         });
@@ -381,6 +412,98 @@
 
     document.getElementById('charSort').addEventListener('change', renderChars);
 
+    // ── 소유권 이전 모달 ──────────────────────
+    function openTransferModal(charId, charName, currentOwner) {
+      transferCharId    = charId;
+      transferCharName  = charName;
+      transferFromOwner = currentOwner;
+      transferToNick    = null;
+
+      document.getElementById('transferInfo').textContent = `"${charName}" — 현재 소유주: ${currentOwner}`;
+      document.getElementById('transferSearch').value = '';
+      document.getElementById('transferUserList').innerHTML = '<p style="padding:12px; color:var(--text-mute); font-size:13px;">닉네임을 입력하세요</p>';
+      document.getElementById('transferSelectedDisplay').style.display = 'none';
+      document.getElementById('transferConfirmBtn').textContent = '이전하기';
+      document.getElementById('transferConfirmBtn').disabled = false;
+      document.getElementById('transferModal').style.display = 'flex';
+    }
+
+    function closeTransferModal() {
+      document.getElementById('transferModal').style.display = 'none';
+    }
+
+    function filterTransferUsers(q) {
+      const el = document.getElementById('transferUserList');
+      if (!q) {
+        el.innerHTML = '<p style="padding:12px; color:var(--text-mute); font-size:13px;">닉네임을 입력하세요</p>';
+        return;
+      }
+      const qLow = q.toLowerCase();
+      const matched = [...siteUserNicks].filter(nick => nick.toLowerCase().includes(qLow)).slice(0, 20);
+      if (!matched.length) {
+        el.innerHTML = '<p style="padding:12px; color:var(--text-mute); font-size:13px;">일치하는 유저가 없어요</p>';
+        return;
+      }
+      el.innerHTML = matched.map(nick => `
+        <div onclick="selectTransferUser('${nick}')" id="tItem_${nick.replace(/'/g,'')}"
+          style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border); transition:background 0.1s;"
+          onmouseover="this.style.background='var(--sky-pale)'" onmouseout="this.style.background= transferToNick==='${nick}' ? 'var(--sky-light)' : ''">
+          ${nick}
+        </div>
+      `).join('');
+    }
+
+    function selectTransferUser(nick) {
+      transferToNick = nick;
+      document.querySelectorAll('#transferUserList > div').forEach(el => {
+        const isSelected = el.id === `tItem_${nick.replace(/'/g,'')}`;
+        el.style.background = isSelected ? 'var(--sky-light)' : '';
+        el.style.fontWeight  = isSelected ? '600' : '';
+      });
+      const disp = document.getElementById('transferSelectedDisplay');
+      disp.textContent = `선택됨: ${nick}`;
+      disp.style.display = 'block';
+    }
+
+    async function confirmTransfer() {
+      if (!transferToNick) { alert('이전받을 유저를 선택해주세요.'); return; }
+      if (!confirm(`"${transferCharName}"의 소유권을\n${transferFromOwner} → ${transferToNick}\n으로 이전할까요?`)) return;
+
+      const btn = document.getElementById('transferConfirmBtn');
+      btn.textContent = '이전 중...';
+      btn.disabled = true;
+
+      const { error } = await sb.from('characters').update({
+        owner_nickname: transferToNick,
+        owner_contact:  null,
+      }).eq('id', transferCharId);
+
+      if (error) {
+        alert('이전에 실패했어요: ' + error.message);
+        btn.textContent = '이전하기';
+        btn.disabled = false;
+        return;
+      }
+
+      const char = allChars.find(c => String(c.id) === String(transferCharId));
+      await logTransfer({
+        character_name: transferCharName,
+        species_name:   char?.species_name || '',
+        from_nickname:  transferFromOwner,
+        to_nickname:    transferToNick,
+        method:         '종족주 소유권이전',
+      });
+
+      // 로컬 데이터 반영
+      if (char) {
+        char.owner_nickname = transferToNick;
+        char.owner_contact  = null;
+      }
+
+      closeTransferModal();
+      renderChars();
+    }
+
     function switchGuideTab(idx) {
       document.querySelectorAll('.guide-tab-btn').forEach((btn, i) => btn.classList.toggle('active', i === idx));
       document.querySelectorAll('.guide-tab-panel').forEach((panel, i) => panel.classList.toggle('active', i === idx));
@@ -403,6 +526,7 @@
   </script>
 </body>
 </html>
+
 
 
 

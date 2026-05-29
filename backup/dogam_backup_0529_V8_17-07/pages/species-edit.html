@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>종족 정보 수정 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+  <style>
+    .quill-wrap .ql-toolbar { border-radius:9px 9px 0 0; border:1.5px solid var(--border); border-bottom:none; font-family:inherit; }
+    .quill-wrap .ql-container { border-radius:0 0 9px 9px; border:1.5px solid var(--border); min-height:120px; font-size:14px; font-family:inherit; line-height:1.7; }
+    .quill-wrap:focus-within .ql-toolbar,
+    .quill-wrap:focus-within .ql-container { border-color:var(--sky); }
+    .quill-wrap .ql-editor { min-height:120px; }
+    .quill-wrap .ql-editor.ql-blank::before { color:#CBD5E1; font-style:normal; }
+    .ql-snow .ql-picker.ql-size .ql-picker-label::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item::before { content:'보통'; }
+    .ql-snow .ql-picker.ql-size [data-value="12px"]::before { content:'작게'; }
+    .ql-snow .ql-picker.ql-size [data-value="14px"]::before { content:'조금 작게'; }
+    .ql-snow .ql-picker.ql-size [data-value="18px"]::before { content:'조금 크게'; }
+    .ql-snow .ql-picker.ql-size [data-value="20px"]::before { content:'크게'; }
+    .ql-snow .ql-picker.ql-size [data-value="24px"]::before { content:'더 크게'; }
+    .ql-snow .ql-picker.ql-size [data-value="28px"]::before { content:'제목 크기'; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+      <div class="register-wrap">
+
+        <div class="breadcrumb" style="margin-bottom: 24px;">
+          <a href="index.html">홈</a>
+          <span>/</span>
+          <a href="species-list.html">전체 종족</a>
+          <span>/</span>
+          <span id="breadcrumbName">종족</span>
+          <span>/</span>
+          <span>정보 수정</span>
+        </div>
+
+        <h1 class="register-title">종족 정보 수정</h1>
+        <p class="register-subtitle">종족 정보를 수정해요</p>
+
+        <div class="register-form">
+
+          <!-- 대표 이미지 -->
+          <div class="form-group">
+            <label class="form-label">대표 이미지</label>
+            <div class="img-upload-box" id="imgUploadBox" onclick="document.getElementById('imgInput').click()">
+              <img id="imgPreview" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:10px;">
+              <div id="imgPlaceholder">
+                <p class="img-upload-text">클릭하여 이미지 업로드</p>
+                <p class="img-upload-hint">권장 크기: 500 x 500px</p>
+              </div>
+            </div>
+            <input type="file" id="imgInput" accept="image/*" style="display:none;" onchange="previewImage(this)">
+          </div>
+
+          <!-- 종족명 -->
+          <div class="form-group">
+            <label class="form-label">종족명 <span class="required">*</span></label>
+            <input type="text" id="speciesName" class="form-input" placeholder="종족 이름을 입력하세요">
+          </div>
+
+          <!-- 설명 -->
+          <div class="form-group">
+            <label class="form-label">종족 설명</label>
+            <div class="quill-wrap"><div id="quill_speciesDesc"></div></div>
+          </div>
+
+          <!-- 커스텀 필드 -->
+          <div class="form-group">
+            <label class="form-label">개체 항목 설정</label>
+            <p class="form-hint">이 종족의 개체를 등록할 때 입력받을 항목을 추가하세요</p>
+            <div class="custom-field-list" id="customFieldList"></div>
+            <button type="button" class="btn-field-add" id="addFieldBtn" onclick="addField()">+ 항목 추가</button>
+          </div>
+
+          <!-- 연관링크 -->
+          <div class="form-group">
+            <label class="form-label">연관링크 <span class="form-hint-inline">비워두면 상세페이지에 표시되지 않아요</span></label>
+            <input type="text" id="speciesLink" class="form-input" placeholder="포스타입, 트위터 등">
+          </div>
+
+          <!-- 디자인권 -->
+          <div class="form-group">
+            <label class="form-label">디자인권 <span class="form-hint-inline">비워두면 상세페이지에 표시되지 않아요</span></label>
+            <input type="text" id="speciesDesignRights" class="form-input" placeholder="문의, 판매중 등">
+          </div>
+
+          <!-- 종족주 안내 -->
+          <div class="form-group">
+            <label class="form-label">종족주 안내 <span class="form-hint-inline">비워두면 상세페이지에 표시되지 않아요</span></label>
+            <p class="form-hint" style="margin-bottom:12px;">소속 개체 위에 탭 형식으로 표시돼요</p>
+
+            <div class="guide-check-row">
+              <label class="guide-check-item">
+                <input type="checkbox" id="chk_worldview" onchange="toggleGuideBlock('worldview',this.checked)">
+                <span>세계관</span>
+              </label>
+              <label class="guide-check-item">
+                <input type="checkbox" id="chk_settings" onchange="toggleGuideBlock('settings',this.checked)">
+                <span>설정</span>
+              </label>
+              <label class="guide-check-item">
+                <input type="checkbox" id="chk_design_guide" onchange="toggleGuideBlock('design_guide',this.checked)">
+                <span>디자인 가이드</span>
+              </label>
+              <label class="guide-check-item">
+                <input type="checkbox" id="chk_tos" onchange="toggleGuideBlock('tos',this.checked)">
+                <span>종족용 TOS</span>
+              </label>
+              <label class="guide-check-item">
+                <input type="checkbox" id="chk_custom" onchange="toggleGuideBlock('custom',this.checked)">
+                <span>직접입력</span>
+              </label>
+            </div>
+
+            <div id="guideBlock_worldview" class="guide-section-block" style="display:none;" data-type="worldview">
+              <div class="guide-section-head-fixed"><span class="guide-section-label">세계관</span></div>
+              <div class="quill-wrap"><div class="guide-quill-target"></div></div>
+              <div class="guide-img-area">
+                <div class="guide-img-box" onclick="this.nextElementSibling.click()"><span class="guide-img-placeholder">+ 이미지 추가 (선택)</span></div>
+                <input type="file" class="guide-img-input" accept="image/*" style="display:none;" onchange="previewGuideImgEl(this)">
+              </div>
+            </div>
+
+            <div id="guideBlock_settings" class="guide-section-block" style="display:none;" data-type="settings">
+              <div class="guide-section-head-fixed"><span class="guide-section-label">설정</span></div>
+              <div class="quill-wrap"><div class="guide-quill-target"></div></div>
+              <div class="guide-img-area">
+                <div class="guide-img-box" onclick="this.nextElementSibling.click()"><span class="guide-img-placeholder">+ 이미지 추가 (선택)</span></div>
+                <input type="file" class="guide-img-input" accept="image/*" style="display:none;" onchange="previewGuideImgEl(this)">
+              </div>
+            </div>
+
+            <div id="guideBlock_design_guide" class="guide-section-block" style="display:none;" data-type="design_guide">
+              <div class="guide-section-head-fixed"><span class="guide-section-label">디자인 가이드</span></div>
+              <div class="quill-wrap"><div class="guide-quill-target"></div></div>
+              <div class="guide-img-area">
+                <div class="guide-img-box" onclick="this.nextElementSibling.click()"><span class="guide-img-placeholder">+ 이미지 추가 (선택)</span></div>
+                <input type="file" class="guide-img-input" accept="image/*" style="display:none;" onchange="previewGuideImgEl(this)">
+              </div>
+            </div>
+
+            <div id="guideBlock_tos" class="guide-section-block" style="display:none;" data-type="tos">
+              <div class="guide-section-head-fixed"><span class="guide-section-label">종족용 TOS</span></div>
+              <div class="quill-wrap"><div class="guide-quill-target"></div></div>
+              <div class="guide-img-area">
+                <div class="guide-img-box" onclick="this.nextElementSibling.click()"><span class="guide-img-placeholder">+ 이미지 추가 (선택)</span></div>
+                <input type="file" class="guide-img-input" accept="image/*" style="display:none;" onchange="previewGuideImgEl(this)">
+              </div>
+            </div>
+
+            <div id="guideBlock_custom" style="display:none;">
+              <div id="customSections"></div>
+              <button type="button" class="guide-add-btn" id="addCustomBtn" onclick="addCustomSection()">+ 직접입력 추가</button>
+            </div>
+          </div>
+
+          <!-- 민감한 요소 -->
+          <div class="form-group">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer; white-space:nowrap; font-size:14px; font-weight:500; color:var(--text);">
+                <input type="checkbox" id="isSensitive" style="width:16px; height:16px; cursor:pointer; accent-color:var(--sky); flex-shrink:0;">
+                민감한 요소 포함
+              </label>
+              <input type="text" id="sensitiveNote" class="form-input" placeholder="시선공포, 쨍한색 등" style="flex:1; min-width:160px;">
+            </div>
+          </div>
+
+          <!-- 에러 -->
+          <p class="auth-error" id="formError"></p>
+
+          <!-- 버튼 -->
+          <div class="register-actions">
+            <a href="#" id="cancelBtn" class="btn-ghost">취소</a>
+            <button type="button" class="btn-secondary" id="submitBtn" onclick="submitEdit()">저장하기</button>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 도감</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/main.js"></script>
+  <script src="../js/utils.js?v=2"></script>
+  <script>
+    const speciesId = new URLSearchParams(window.location.search).get('id');
+    let currentImageUrl = null;
+
+    // ── Quill 초기화 ──────────────────────────
+    const SizeStyle = Quill.import('attributors/style/size');
+    SizeStyle.whitelist = ['12px','14px','16px','18px','20px','24px','28px'];
+    Quill.register(SizeStyle, true);
+    const QUILL_TOOLBAR = [
+      [{ size: ['12px','14px', false,'18px','20px','24px','28px'] }],
+      ['bold','italic','underline'],
+      [{ color: [] }],
+      [{ align: [] }],
+      [{ list: 'ordered' },{ list: 'bullet' }],
+      ['link','clean'],
+    ];
+    function makeQuill(el, placeholder = '내용을 입력하세요') {
+      return new Quill(el, { theme:'snow', placeholder, modules:{ toolbar: QUILL_TOOLBAR } });
+    }
+    function getQuillContent(block) {
+      const c = block.querySelector('.ql-container');
+      if (!c) return '';
+      const q = Quill.find(c);
+      return q && q.getLength() > 1 ? q.root.innerHTML : '';
+    }
+    function setQuillContent(block, html) {
+      const c = block.querySelector('.ql-container');
+      if (!c) return;
+      const q = Quill.find(c);
+      if (q && html) q.root.innerHTML = html;
+    }
+
+    // 설명 Quill
+    const descQuill = makeQuill(document.getElementById('quill_speciesDesc'), '이 종족에 대한 설명을 입력하세요');
+
+    // 고정 가이드 블록 Quill 미리 초기화
+    for (const type of ['worldview','settings','design_guide','tos']) {
+      const target = document.getElementById(`guideBlock_${type}`)?.querySelector('.guide-quill-target');
+      if (target) makeQuill(target);
+    }
+    // ─────────────────────────────────────────
+
+    document.getElementById('cancelBtn').href = `species.html?id=${speciesId}`;
+
+    async function init() {
+      if (!speciesId) { window.location.href = 'species-list.html'; return; }
+
+      const user = await getUser();
+      if (!user) { window.location.href = 'login.html'; return; }
+
+      const { data: s, error } = await sb.from('species').select('*').eq('id', speciesId).single();
+      if (error || !s) { window.location.href = 'species-list.html'; return; }
+
+      const isOwner = (user.user_metadata?.display_name || user.user_metadata?.nickname) === s.owner_nickname;
+      if (!isOwner) { window.location.href = `species.html?id=${speciesId}`; return; }
+
+      document.getElementById('breadcrumbName').textContent = s.name;
+      document.getElementById('speciesName').value = s.name;
+      if (s.description) descQuill.root.innerHTML = s.description;
+      document.getElementById('speciesLink').value = s.link || '';
+      document.getElementById('speciesDesignRights').value = s.design_rights || '';
+
+      if (s.image_url) {
+        currentImageUrl = s.image_url;
+        document.getElementById('imgPreview').src = s.image_url;
+        document.getElementById('imgPreview').style.display = 'block';
+        document.getElementById('imgPlaceholder').style.display = 'none';
+      }
+
+      if (s.custom_fields?.length) s.custom_fields.forEach(f => addField(f));
+      if (s.guide?.length) s.guide.forEach(g => loadGuideData(g));
+
+      document.getElementById('isSensitive').checked = !!s.is_sensitive;
+      document.getElementById('sensitiveNote').value  = s.sensitive_note || '';
+    }
+
+    function loadGuideData(g) {
+      if (g.type === 'custom') {
+        document.getElementById('chk_custom').checked = true;
+        document.getElementById('guideBlock_custom').style.display = '';
+        addCustomSection(g);
+        updateCustomAddBtn();
+      } else {
+        const chk   = document.getElementById(`chk_${g.type}`);
+        const block = document.getElementById(`guideBlock_${g.type}`);
+        if (!chk || !block) return;
+        chk.checked = true;
+        block.style.display = '';
+        if (g.content) setQuillContent(block, g.content);
+        if (g.image_url) setBlockImage(block, g.image_url);
+      }
+    }
+
+    function setBlockImage(block, imageUrl) {
+      const box = block.querySelector('.guide-img-box');
+      if (!box) return;
+      box.innerHTML = `<img class="guide-img-preview" src="${imageUrl}"><button type="button" class="guide-img-remove" onclick="removeGuideImg(event,this)">✕</button>`;
+      const fileInput = block.querySelector('.guide-img-input');
+      const hidden = document.createElement('input');
+      hidden.type = 'hidden';
+      hidden.className = 'guide-img-url';
+      hidden.value = imageUrl;
+      fileInput.after(hidden);
+    }
+
+    function previewImage(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        document.getElementById('imgPreview').src = e.target.result;
+        document.getElementById('imgPreview').style.display = 'block';
+        document.getElementById('imgPlaceholder').style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function toggleGuideBlock(type, checked) {
+      if (type === 'custom') {
+        const block = document.getElementById('guideBlock_custom');
+        if (checked) {
+          block.style.display = '';
+          if (!document.querySelectorAll('.guide-custom-row').length) addCustomSection();
+        } else {
+          block.style.display = 'none';
+          document.getElementById('customSections').innerHTML = '';
+        }
+      } else {
+        const block = document.getElementById(`guideBlock_${type}`);
+        if (!block) return;
+        if (checked) {
+          block.style.display = '';
+        } else {
+          block.style.display = 'none';
+          setQuillContent(block, '');
+          const box = block.querySelector('.guide-img-box');
+          if (box) box.innerHTML = `<span class="guide-img-placeholder">+ 이미지 추가 (선택)</span>`;
+          const fileInput = block.querySelector('.guide-img-input');
+          if (fileInput) fileInput.value = '';
+          const hidden = block.querySelector('.guide-img-url');
+          if (hidden) hidden.remove();
+        }
+      }
+    }
+
+    function addCustomSection(data = null) {
+      const count = document.querySelectorAll('.guide-custom-row').length;
+      if (count >= 6) return;
+      const container = document.getElementById('customSections');
+      const row = document.createElement('div');
+      row.className = 'guide-section-block guide-custom-row';
+      row.dataset.type = 'custom';
+      row.innerHTML = `
+        <div class="guide-section-head">
+          <input type="text" class="form-input guide-custom-title" placeholder="소제목을 입력하세요" value="${data?.title || ''}">
+          <button type="button" class="btn-field-remove" onclick="removeCustomRow(this)">✕</button>
+        </div>
+        <div class="quill-wrap"><div class="guide-quill-target"></div></div>
+        <div class="guide-img-area">
+          <div class="guide-img-box" onclick="this.nextElementSibling.click()"><span class="guide-img-placeholder">+ 이미지 추가 (선택)</span></div>
+          <input type="file" class="guide-img-input" accept="image/*" style="display:none;" onchange="previewGuideImgEl(this)">
+        </div>
+      `;
+      if (data?.image_url) setBlockImage(row, data.image_url);
+      container.appendChild(row);
+      const customQ = makeQuill(row.querySelector('.guide-quill-target'));
+      if (data?.content) customQ.root.innerHTML = data.content;
+      updateCustomAddBtn();
+    }
+
+    function removeCustomRow(btn) {
+      btn.closest('.guide-custom-row').remove();
+      updateCustomAddBtn();
+      if (!document.querySelectorAll('.guide-custom-row').length) {
+        document.getElementById('chk_custom').checked = false;
+        document.getElementById('guideBlock_custom').style.display = 'none';
+      }
+    }
+
+    function updateCustomAddBtn() {
+      const count = document.querySelectorAll('.guide-custom-row').length;
+      document.getElementById('addCustomBtn').style.display = count >= 6 ? 'none' : '';
+    }
+
+    function previewGuideImgEl(input) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const box = input.previousElementSibling;
+        box.innerHTML = `<img class="guide-img-preview" src="${e.target.result}"><button type="button" class="guide-img-remove" onclick="removeGuideImg(event,this)">✕</button>`;
+        const hidden = input.nextElementSibling;
+        if (hidden?.classList.contains('guide-img-url')) hidden.remove();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function removeGuideImg(e, btn) {
+      e.stopPropagation();
+      const box = btn.parentElement;
+      box.innerHTML = `<span class="guide-img-placeholder">+ 이미지 추가 (선택)</span>`;
+      const fileInput = box.nextElementSibling;
+      fileInput.value = '';
+      const hidden = fileInput.nextElementSibling;
+      if (hidden?.classList.contains('guide-img-url')) hidden.remove();
+    }
+
+    async function uploadGuideImg(imgFile) {
+      const blob     = await compressImage(imgFile);
+      const fileName = `guide_${Date.now()}_${Math.random().toString(36).slice(2,7)}.jpg`;
+      const { error } = await sb.storage.from('images').upload(fileName, blob, { upsert: true, contentType: 'image/jpeg' });
+      if (error) return null;
+      const { data } = sb.storage.from('images').getPublicUrl(fileName);
+      return data.publicUrl;
+    }
+
+    async function collectGuide() {
+      const guide = [];
+      for (const type of ['worldview', 'settings', 'design_guide', 'tos']) {
+        if (!document.getElementById(`chk_${type}`)?.checked) continue;
+        const block   = document.getElementById(`guideBlock_${type}`);
+        const content = getQuillContent(block);
+        let imageUrl  = block.querySelector('.guide-img-url')?.value || null;
+        const imgFile = block.querySelector('.guide-img-input')?.files[0];
+        if (imgFile) imageUrl = await uploadGuideImg(imgFile);
+        if (!content && !imageUrl) continue;
+        guide.push({ type, content, image_url: imageUrl });
+      }
+      if (document.getElementById('chk_custom')?.checked) {
+        for (const row of document.querySelectorAll('.guide-custom-row')) {
+          const title   = row.querySelector('.guide-custom-title')?.value.trim();
+          if (!title) continue;
+          const content = getQuillContent(row);
+          let imageUrl  = row.querySelector('.guide-img-url')?.value || null;
+          const imgFile = row.querySelector('.guide-img-input')?.files[0];
+          if (imgFile) imageUrl = await uploadGuideImg(imgFile);
+          if (!content && !imageUrl) continue;
+          guide.push({ type: 'custom', title, content, image_url: imageUrl });
+        }
+      }
+      return guide;
+    }
+
+    function addField(value = '') {
+      const list = document.getElementById('customFieldList');
+      const row  = document.createElement('div');
+      row.className = 'custom-field-row';
+      row.innerHTML = `
+        <input type="text" class="form-input field-input" placeholder="항목명 (예: 속성, 나이, 서식지)" value="${value}">
+        <button type="button" class="btn-field-remove" onclick="this.parentElement.remove()">✕</button>
+      `;
+      list.appendChild(row);
+    }
+
+    async function submitEdit() {
+      const name    = document.getElementById('speciesName').value.trim();
+      const desc    = descQuill.getLength() > 1 ? descQuill.root.innerHTML : '';
+      const errorEl = document.getElementById('formError');
+      const btn     = document.getElementById('submitBtn');
+
+      errorEl.textContent = '';
+      if (!name) { errorEl.textContent = '종족명을 입력해주세요.'; return; }
+
+      btn.textContent = '저장 중...';
+      btn.disabled = true;
+
+      const fields = [...document.querySelectorAll('.field-input')].map(i => i.value.trim()).filter(v => v);
+
+      let imageUrl = currentImageUrl;
+      const imgFile = document.getElementById('imgInput').files[0];
+      if (imgFile) {
+        const blob     = await compressImage(imgFile);
+        const fileName = `species_${Date.now()}.jpg`;
+        const { error: uploadError } = await sb.storage.from('images').upload(fileName, blob, { upsert: true, contentType: 'image/jpeg' });
+        if (uploadError) {
+          errorEl.textContent = `이미지 업로드 실패: ${uploadError.message}`;
+          btn.textContent = '저장하기';
+          btn.disabled = false;
+          return;
+        }
+        const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);
+        imageUrl = urlData.publicUrl;
+      }
+
+      const link         = document.getElementById('speciesLink').value.trim();
+      const designRights = document.getElementById('speciesDesignRights').value.trim();
+      const guide        = await collectGuide();
+
+      const isSensitive  = document.getElementById('isSensitive').checked;
+      const sensitiveNote = document.getElementById('sensitiveNote').value.trim();
+
+      const { error } = await sb.from('species').update({
+        name,
+        description:    desc || null,
+        image_url:      imageUrl,
+        custom_fields:  fields.length ? fields : null,
+        link:           link || null,
+        design_rights:  designRights || null,
+        guide:          guide.length ? guide : null,
+        is_sensitive:   isSensitive,
+        sensitive_note: isSensitive ? (sensitiveNote || null) : null,
+      }).eq('id', speciesId);
+
+      if (error) {
+        errorEl.textContent = `저장에 실패했어요: ${error.message}`;
+        btn.textContent = '저장하기';
+        btn.disabled = false;
+        return;
+      }
+
+      window.location.href = `species.html?id=${speciesId}`;
+    }
+
+    init();
+  </script>
+</body>
+</html>

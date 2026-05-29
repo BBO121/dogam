@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>유저 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .user-list {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .user-row {
+      display: grid;
+      grid-template-columns: 110px 1fr 80px;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 16px;
+      border-bottom: 1px solid var(--border);
+      text-decoration: none;
+      color: inherit;
+      transition: background 0.1s;
+    }
+    .user-row:last-child { border-bottom: none; }
+    .user-row:hover { background: var(--sky-pale); }
+    .user-row-name {
+      font-size: 14px;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .user-row-badges {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .user-row-badges .badge-admin,
+    .user-row-badges .badge-role,
+    .user-row-badges .badge-user {
+      margin: 0;
+    }
+    .user-row-date {
+      font-size: 12px;
+      color: var(--text-mute);
+      text-align: right;
+    }
+    .users-search input {
+      width: 100%;
+      padding: 9px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      box-sizing: border-box;
+      margin-bottom: 16px;
+    }
+    .users-search input:focus { border-color: var(--sky); }
+    .users-count {
+      font-size: 13px;
+      color: var(--text-mute);
+      margin-bottom: 12px;
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+      <div class="breadcrumb" style="margin-bottom:20px;">
+        <a href="index.html">홈</a>
+        <span>/</span>
+        <span>유저</span>
+      </div>
+
+      <h1 class="page-title" style="margin-bottom:20px;">유저</h1>
+
+      <div class="users-search">
+        <input type="text" id="searchInput" placeholder="닉네임으로 검색..." oninput="filterUsers(this.value)">
+      </div>
+
+      <p id="usersCount" class="users-count"></p>
+
+      <p id="loadingMsg" class="page-loading">불러오는 중...</p>
+      <div id="userList" class="user-list" style="display:none;"></div>
+      <div id="paginationWrap"></div>
+      <p id="emptyMsg" style="display:none; color:var(--text-mute); font-size:14px; text-align:center; padding:40px 0;">검색 결과가 없어요.</p>
+    </main>
+  </div>
+
+  <footer class="footer"><p>© 2026 도감</p></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    const TESTERS = ['Moulow', 'moulow', 'Sawol'];
+    let allUsers = [];
+    let speciesOwnerNicks = new Set();
+    const pager = createPager(renderList);
+
+    function getBadgesHtml(u) {
+      const badges = [];
+      const isSpeciesOwner = u.role === 'species_owner' || speciesOwnerNicks.has(u.nickname);
+
+      if (u.role === 'admin') badges.push('<span class="badge-admin">관리자</span>');
+      if (isSpeciesOwner)     badges.push('<span class="badge-role">종족주</span>');
+      if (!u.role || (u.role !== 'admin' && !isSpeciesOwner)) badges.push('<span class="badge-user">일반유저</span>');
+      if (TESTERS.includes(u.nickname)) badges.push('<span style="font-size:10px; padding:3px 8px; background:#dcfce7; color:#166534; border-radius:4px; font-weight:700; display:inline-block;">테스터</span>');
+      return badges.join('');
+    }
+
+    function renderList(list) {
+      const el    = document.getElementById('userList');
+      const empty = document.getElementById('emptyMsg');
+
+      if (!list.length) {
+        el.style.display    = 'none';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+      el.style.display    = '';
+
+      el.innerHTML = list.map(u => {
+        const displayName = u.nickname || u.login_id || '—';
+
+        const joinDate = new Date(u.created_at).toLocaleDateString('ko-KR', {
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        }).replace(/\. /g, '.').replace(/\.$/, '');
+
+        return `
+          <a href="profile.html?user=${encodeURIComponent(displayName)}" class="user-row">
+            <div class="user-row-badges">${getBadgesHtml(u)}</div>
+            <span class="user-row-name">${displayName}</span>
+            <span class="user-row-date">${joinDate}</span>
+          </a>
+        `;
+      }).join('');
+    }
+
+    function badgePriority(u) {
+      if (u.login_id === 'admin') return 0;
+      if (u.role === 'admin')          return 1;
+      if (TESTERS.includes(u.nickname)) return 2;
+      if (u.role === 'species_owner')  return 3;
+      return 4;
+    }
+
+    function sortUsers(list) {
+      return [...list].sort((a, b) => {
+        const diff = badgePriority(a) - badgePriority(b);
+        if (diff !== 0) return diff;
+        return (a.nickname || a.login_id || '').localeCompare(b.nickname || b.login_id || '', 'ko');
+      });
+    }
+
+    function filterUsers(q) {
+      const qLow = q.toLowerCase().trim();
+      const filtered = qLow
+        ? allUsers.filter(u => (u.nickname || u.login_id || '').toLowerCase().includes(qLow))
+        : allUsers;
+
+      const count = document.getElementById('usersCount');
+      const empty = document.getElementById('emptyMsg');
+      if (!filtered.length) {
+        document.getElementById('userList').style.display = 'none';
+        document.getElementById('paginationWrap').innerHTML = '';
+        empty.style.display = 'block';
+        count.textContent = '';
+        return;
+      }
+      empty.style.display = 'none';
+      count.textContent = `총 ${filtered.length}명`;
+      pager.load(filtered);
+    }
+
+    async function loadUsers() {
+      const [{ data, error }, { data: spData }] = await Promise.all([
+        sb.rpc('get_all_users'),
+        sb.from('species').select('owner_nickname'),
+      ]);
+      document.getElementById('loadingMsg').style.display = 'none';
+
+      if (error || !data) {
+        document.getElementById('emptyMsg').style.display = 'block';
+        return;
+      }
+
+      (spData || []).forEach(s => { if (s.owner_nickname) speciesOwnerNicks.add(s.owner_nickname); });
+
+      allUsers = sortUsers(data.filter(u => u.nickname || u.login_id));
+      document.getElementById('usersCount').textContent = `총 ${allUsers.length}명`;
+      pager.load(allUsers);
+    }
+
+    loadUsers();
+  </script>
+</body>
+</html>

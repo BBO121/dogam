@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>유저 — 도감</title>
+  <title>유저 — 종족연구소</title>
   <link rel="stylesheet" href="../css/style.css">
   <style>
     .user-list {
@@ -70,7 +70,7 @@
 
   <header class="header">
     <div class="header-inner">
-      <a href="index.html" class="logo">도감</a>
+      <a href="index.html" class="logo">종족연구소</a>
       <nav class="header-nav">
         <a href="login.html" class="btn-login">로그인</a>
       </nav>
@@ -102,7 +102,7 @@
     </main>
   </div>
 
-  <footer class="footer"><p>© 2026 도감</p></footer>
+  <footer class="footer"><p>© 2026 종족연구소</p></footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/auth.js"></script>
@@ -112,20 +112,17 @@
   <script>
     const TESTERS = ['Moulow', 'moulow', 'Sawol'];
     let allUsers = [];
+    let speciesOwnerNicks = new Set();
     const pager = createPager(renderList);
 
     function getBadgesHtml(u) {
       const badges = [];
-      if (u.role === 'admin') {
-        badges.push('<span class="badge-admin">관리자</span>');
-      } else if (u.role === 'species_owner') {
-        badges.push('<span class="badge-role">종족주</span>');
-      } else {
-        badges.push('<span class="badge-user">일반유저</span>');
-      }
-      if (TESTERS.includes(u.nickname)) {
-        badges.push('<span style="font-size:10px; padding:3px 8px; background:#dcfce7; color:#166534; border-radius:4px; font-weight:700; display:inline-block;">테스터</span>');
-      }
+      const isSpeciesOwner = u.role === 'species_owner' || speciesOwnerNicks.has(u.nickname);
+
+      if (u.role === 'admin') badges.push('<span class="badge-admin">관리자</span>');
+      if (isSpeciesOwner)     badges.push('<span class="badge-role">종족주</span>');
+      if (!u.role || (u.role !== 'admin' && !isSpeciesOwner)) badges.push('<span class="badge-user">일반유저</span>');
+      if (TESTERS.includes(u.nickname)) badges.push('<span style="font-size:10px; padding:3px 8px; background:#dcfce7; color:#166534; border-radius:4px; font-weight:700; display:inline-block;">테스터</span>');
       return badges.join('');
     }
 
@@ -196,13 +193,18 @@
     }
 
     async function loadUsers() {
-      const { data, error } = await sb.rpc('get_all_users');
+      const [{ data, error }, { data: spData }] = await Promise.all([
+        sb.rpc('get_all_users'),
+        sb.from('species').select('owner_nickname'),
+      ]);
       document.getElementById('loadingMsg').style.display = 'none';
 
       if (error || !data) {
         document.getElementById('emptyMsg').style.display = 'block';
         return;
       }
+
+      (spData || []).forEach(s => { if (s.owner_nickname) speciesOwnerNicks.add(s.owner_nickname); });
 
       allUsers = sortUsers(data.filter(u => u.nickname || u.login_id));
       document.getElementById('usersCount').textContent = `총 ${allUsers.length}명`;
@@ -213,3 +215,4 @@
   </script>
 </body>
 </html>
+

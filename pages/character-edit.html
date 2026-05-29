@@ -3,14 +3,53 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>개체 정보 수정 — 도감</title>
+  <title>개체 정보 수정 — 종족연구소</title>
   <link rel="stylesheet" href="../css/style.css">
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+  <style>
+    .quill-wrap .ql-toolbar {
+      border-radius: 9px 9px 0 0;
+      border: 1.5px solid var(--border);
+      border-bottom: none;
+      font-family: inherit;
+    }
+    .quill-wrap .ql-toolbar:focus-within,
+    .quill-wrap:focus-within .ql-toolbar { border-color: var(--sky); }
+    .quill-wrap .ql-container {
+      border-radius: 0 0 9px 9px;
+      border: 1.5px solid var(--border);
+      min-height: 130px;
+      font-size: 14px;
+      font-family: inherit;
+      line-height: 1.7;
+    }
+    .quill-wrap:focus-within .ql-container { border-color: var(--sky); }
+    .quill-wrap .ql-editor { min-height: 130px; }
+    .quill-wrap .ql-editor.ql-blank::before { color: #CBD5E1; font-style: normal; }
+
+
+    /* 글씨 크기 드롭다운 라벨 */
+    .ql-snow .ql-picker.ql-size .ql-picker-label::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item::before { content: '보통'; }
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="12px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="12px"]::before { content: '작게'; }
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="14px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="14px"]::before { content: '조금 작게'; }
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="18px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="18px"]::before { content: '조금 크게'; }
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="20px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="20px"]::before { content: '크게'; }
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="24px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="24px"]::before { content: '더 크게'; }
+    .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="28px"]::before,
+    .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="28px"]::before { content: '제목 크기'; }
+  </style>
 </head>
 <body>
 
   <header class="header">
     <div class="header-inner">
-      <a href="index.html" class="logo">도감</a>
+      <a href="index.html" class="logo">종족연구소</a>
       <nav class="header-nav">
         <a href="login.html" class="btn-login">로그인</a>
       </nav>
@@ -167,6 +206,18 @@
             </div>
           </div>
 
+          <!-- 섹션 (설정/관계/직접입력) -->
+          <div class="form-group">
+            <label class="form-label">섹션 <span class="form-hint-inline">탭으로 표시돼요 · 드래그로 순서 변경</span></label>
+            <div id="sectionList"></div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+              <button type="button" id="btnAddSettings" class="btn-field-add" onclick="addSection('settings')">+ 설정</button>
+              <button type="button" id="btnAddRelation" class="btn-field-add" onclick="addSection('relation')">+ 관계</button>
+              <button type="button" id="btnAddCustom" class="btn-field-add" onclick="addSection('custom')">+ 직접입력</button>
+            </div>
+            <p id="customCountNote" style="font-size:12px; color:var(--text-mute); margin-top:6px; display:none;"></p>
+          </div>
+
           <!-- 에러 -->
           <p class="auth-error" id="editError"></p>
 
@@ -182,10 +233,12 @@
   </div>
 
   <footer class="footer">
-    <p>© 2026 도감</p>
+    <p>© 2026 종족연구소</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
@@ -200,11 +253,257 @@
     let designerType         = 'site';
     let selectedDesignerNick = null;
     let allUsers             = [];
-    let currentImageUrl    = null;
+    let currentImageUrl      = null;
     let addedCategories      = [];
-    let existingExtraImages = []; // DB에 저장된 추가 이미지 URL
-    let removedExtraImages  = []; // 삭제할 기존 이미지 URL
-    let newExtraFiles       = []; // 새로 추가한 파일
+    let existingExtraImages  = [];
+    let removedExtraImages   = [];
+    let newExtraFiles        = [];
+    let allSpecies           = [];
+    let sectionDragSrc       = null;
+    const quillInstances     = new Map();
+
+    // 글씨 크기 등록
+    const SizeStyle = Quill.import('attributors/style/size');
+    SizeStyle.whitelist = ['12px', '14px', '16px', '18px', '20px', '24px', '28px'];
+    Quill.register(SizeStyle, true);
+
+    const QUILL_TOOLBAR = [
+      [{ size: ['12px', '14px', false, '18px', '20px', '24px', '28px'] }],
+      ['bold', 'italic', 'underline'],
+      [{ color: [] }],
+      [{ align: [] }],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      ['link', 'clean'],
+    ];
+
+    // ── 섹션 관리 ──────────────────────────────
+    function updateSectionAddButtons() {
+      const cards = [...document.querySelectorAll('#sectionList .section-card')];
+      const hasSettings   = cards.some(c => c.dataset.type === 'settings');
+      const hasRelation   = cards.some(c => c.dataset.type === 'relation');
+      const customCount   = cards.filter(c => c.dataset.type === 'custom').length;
+
+      document.getElementById('btnAddSettings').style.display = hasSettings ? 'none' : '';
+      document.getElementById('btnAddRelation').style.display = hasRelation ? 'none' : '';
+      document.getElementById('btnAddCustom').style.display   = customCount >= 6 ? 'none' : '';
+
+      const note = document.getElementById('customCountNote');
+      note.style.display  = customCount > 0 ? '' : 'none';
+      note.textContent    = `직접입력 ${customCount}/6`;
+    }
+
+    function addDragEvents(card) {
+      const header = card.querySelector('.section-card-header');
+      header.addEventListener('mousedown', () => { card.draggable = true; });
+      card.addEventListener('dragstart', e => {
+        sectionDragSrc = card;
+        e.dataTransfer.effectAllowed = 'move';
+        setTimeout(() => card.classList.add('dragging'), 0);
+      });
+      card.addEventListener('dragend', () => {
+        card.classList.remove('dragging');
+        document.querySelectorAll('.section-card').forEach(c => c.classList.remove('drag-over'));
+        card.draggable = false;
+      });
+      card.addEventListener('dragover', e => { e.preventDefault(); if (sectionDragSrc !== card) card.classList.add('drag-over'); });
+      card.addEventListener('dragleave', () => card.classList.remove('drag-over'));
+      card.addEventListener('drop', e => {
+        e.preventDefault();
+        card.classList.remove('drag-over');
+        if (sectionDragSrc && sectionDragSrc !== card) {
+          const list = document.getElementById('sectionList');
+          const all  = [...list.children];
+          list.insertBefore(sectionDragSrc, all.indexOf(sectionDragSrc) < all.indexOf(card) ? card.nextSibling : card);
+        }
+      });
+    }
+
+    function makeSettingsCard(data = null) {
+      const div = document.createElement('div');
+      div.className = 'section-card';
+      div.dataset.type = 'settings';
+      div.dataset.id   = 'settings';
+      div.innerHTML = `
+        <div class="section-card-header">
+          <span class="section-drag-handle">⠿⠿</span>
+          <span class="section-card-label">설정</span>
+          <button type="button" onclick="removeSection(this)" style="background:none;border:none;color:var(--text-mute);cursor:pointer;font-size:16px;padding:0 2px;">✕</button>
+        </div>
+        <div class="section-card-body">
+          <div class="quill-wrap"><div class="quill-editor-target"></div></div>
+        </div>`;
+      addDragEvents(div);
+      return div;
+    }
+
+    function makeRelationCard(data = null) {
+      const div = document.createElement('div');
+      div.className = 'section-card';
+      div.dataset.type = 'relation';
+      div.dataset.id   = 'relation';
+      div.innerHTML = `
+        <div class="section-card-header">
+          <span class="section-drag-handle">⠿⠿</span>
+          <span class="section-card-label">관계</span>
+          <button type="button" onclick="removeSection(this)" style="background:none;border:none;color:var(--text-mute);cursor:pointer;font-size:16px;padding:0 2px;">✕</button>
+        </div>
+        <div class="section-card-body">
+          <div class="relation-list"></div>
+          <button type="button" class="btn-field-add" onclick="addRelationItem(this.previousElementSibling)">+ 관계 추가</button>
+        </div>`;
+      addDragEvents(div);
+      if (data?.relations?.length) {
+        const list = div.querySelector('.relation-list');
+        data.relations.forEach(r => addRelationItem(list, r));
+      }
+      return div;
+    }
+
+    function makeCustomCard(data = null) {
+      const id = data?.id || 'custom_' + Date.now();
+      const div = document.createElement('div');
+      div.className = 'section-card';
+      div.dataset.type = 'custom';
+      div.dataset.id   = id;
+      div.innerHTML = `
+        <div class="section-card-header">
+          <span class="section-drag-handle">⠿⠿</span>
+          <span class="section-card-label">직접입력</span>
+          <button type="button" onclick="removeSection(this)" style="background:none;border:none;color:var(--text-mute);cursor:pointer;font-size:16px;padding:0 2px;">✕</button>
+        </div>
+        <div class="section-card-body">
+          <input type="text" class="form-input section-title-input" placeholder="제목을 입력하세요" value="${data?.title || ''}">
+          <div class="quill-wrap"><div class="quill-editor-target"></div></div>
+        </div>`;
+      addDragEvents(div);
+      return div;
+    }
+
+    function initCardQuill(card, content = '') {
+      const target = card.querySelector('.quill-editor-target');
+      if (!target) return;
+      const id = card.dataset.id;
+      const quill = new Quill(target, {
+        theme: 'snow',
+        placeholder: '내용을 작성하세요...',
+        modules: { toolbar: QUILL_TOOLBAR },
+      });
+      if (content) quill.root.innerHTML = content;
+      quillInstances.set(id, quill);
+    }
+
+    function addSection(type) {
+      const cards = [...document.querySelectorAll('#sectionList .section-card')];
+      if (type === 'settings' && cards.some(c => c.dataset.type === 'settings')) return;
+      if (type === 'relation' && cards.some(c => c.dataset.type === 'relation')) return;
+      if (type === 'custom' && cards.filter(c => c.dataset.type === 'custom').length >= 6) return;
+
+      const card = type === 'settings' ? makeSettingsCard()
+                 : type === 'relation' ? makeRelationCard()
+                 : makeCustomCard();
+      document.getElementById('sectionList').appendChild(card);
+      initCardQuill(card);
+      updateSectionAddButtons();
+    }
+
+    function removeSection(btn) {
+      const card = btn.closest('.section-card');
+      quillInstances.delete(card.dataset.id);
+      card.remove();
+      updateSectionAddButtons();
+    }
+
+    function addRelationItem(listEl, data = null) {
+      const itemId = 'rel_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5);
+      const div = document.createElement('div');
+      div.className = 'relation-item';
+      div.innerHTML = `
+        <div style="display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
+          <select class="form-input rel-species-select" style="flex:1; min-width:120px; padding:8px 10px;" onchange="loadRelChars(this, '${itemId}_chars')">
+            <option value="">종족 선택</option>
+            ${allSpecies.map(s => `<option value="${s.id}" data-name="${s.name}" ${data?.species_name === s.name ? 'selected' : ''}>${s.name}</option>`).join('')}
+          </select>
+          <select class="form-input rel-char-select" id="${itemId}_chars" style="flex:1; min-width:120px; padding:8px 10px;" data-saved-id="${data?.char_id || ''}">
+            <option value="">개체 선택</option>
+          </select>
+        </div>
+        <input type="text" class="form-input rel-label" placeholder="관계 유형 (예: 친구, 라이벌)" value="${data?.relation_label || ''}">
+        <div class="quill-wrap"><div class="rel-desc-quill-target"></div></div>
+        <button type="button" onclick="this.closest('.relation-item').remove()" style="padding:4px 10px; border:1px solid #fca5a5; border-radius:6px; background:#fff; color:#ef4444; font-size:12px; cursor:pointer; font-family:inherit;">관계 삭제</button>`;
+      listEl.appendChild(div);
+      if (data?.species_name) loadRelChars(div.querySelector('.rel-species-select'), `${itemId}_chars`);
+
+      // rel-desc Quill 초기화
+      const relDescQ = new Quill(div.querySelector('.rel-desc-quill-target'), {
+        theme: 'snow',
+        placeholder: '설명 (선택사항)',
+        modules: { toolbar: QUILL_TOOLBAR },
+      });
+      if (data?.description) relDescQ.root.innerHTML = data.description;
+    }
+
+    async function loadRelChars(speciesSelect, charSelectId) {
+      const charSelect  = document.getElementById(charSelectId);
+      if (!charSelect) return;
+      const speciesName = speciesSelect.options[speciesSelect.selectedIndex]?.dataset?.name;
+      const savedId     = charSelect.dataset.savedId;
+
+      if (!speciesName) { charSelect.innerHTML = '<option value="">개체 선택</option>'; return; }
+
+      charSelect.innerHTML = '<option value="">불러오는 중...</option>';
+      const { data } = await sb.from('characters').select('id, name').eq('species_name', speciesName).order('name');
+      charSelect.innerHTML = '<option value="">개체 선택</option>' +
+        (data || []).map(c => `<option value="${c.id}" data-name="${c.name}" ${c.id === savedId ? 'selected' : ''}>${c.name}</option>`).join('');
+    }
+
+    function collectSections() {
+      const sections = [];
+      document.querySelectorAll('#sectionList .section-card').forEach(card => {
+        const type = card.dataset.type;
+        const id   = card.dataset.id;
+        if (type === 'settings') {
+          const quill = quillInstances.get(id);
+          const content = quill ? quill.root.innerHTML : '';
+          const hasContent = quill && quill.getLength() > 1;
+          if (hasContent) sections.push({ id, type, content });
+        } else if (type === 'relation') {
+          const relations = [];
+          card.querySelectorAll('.relation-item').forEach(item => {
+            const speciesOpt = item.querySelector('.rel-species-select option:checked');
+            const charOpt    = item.querySelector('.rel-char-select option:checked');
+            if (!charOpt?.value) return;
+            relations.push({
+              char_id:        charOpt.value,
+              char_name:      charOpt.dataset.name || charOpt.textContent.trim(),
+              species_name:   speciesOpt?.dataset?.name || '',
+              relation_label: item.querySelector('.rel-label').value.trim(),
+              description: (() => { const c = item.querySelector('.ql-container'); const q = c && Quill.find(c); return q && q.getLength() > 1 ? q.root.innerHTML : ''; })(),
+            });
+          });
+          if (relations.length) sections.push({ id, type, relations });
+        } else if (type === 'custom') {
+          const title = card.querySelector('.section-title-input').value.trim();
+          const quill = quillInstances.get(id);
+          const content = quill ? quill.root.innerHTML : '';
+          const hasContent = quill && quill.getLength() > 1;
+          if (title || hasContent) sections.push({ id, type, title, content });
+        }
+      });
+      return sections;
+    }
+
+    function renderExistingSections(sectionsData) {
+      const list = document.getElementById('sectionList');
+      sectionsData.forEach(s => {
+        const card = s.type === 'settings' ? makeSettingsCard(s)
+                   : s.type === 'relation' ? makeRelationCard(s)
+                   : makeCustomCard(s);
+        list.appendChild(card);
+        initCardQuill(card, s.content || '');
+      });
+      updateSectionAddButtons();
+    }
+    // ────────────────────────────────────────
 
     if (!charId) { window.location.href = 'character-list.html'; }
 
@@ -217,7 +516,7 @@
       const { data: c, error } = await sb.from('characters').select('*').eq('id', charId).single();
       if (error || !c) { window.location.href = 'character-list.html'; return; }
 
-      const isOwner = user.user_metadata?.role === 'admin' || (user.user_metadata?.display_name || user.user_metadata?.nickname) === c.owner_nickname;
+      const isOwner = (user.user_metadata?.display_name || user.user_metadata?.nickname) === c.owner_nickname;
       if (!isOwner) { window.location.href = `character.html?id=${charId}`; return; }
 
       currentUser = user;
@@ -262,7 +561,12 @@
       addedCategories = c.char_categories || [];
       renderAddedCategories();
 
+      const { data: spList } = await sb.from('species').select('id, name').order('name');
+      allSpecies = spList || [];
+
       await Promise.all([loadUsers(c.owner_nickname, c.owner_contact, c.designer_nickname, c.designer_contact), loadCustomFields(c.species_name, c.custom_field_values), loadExistingCategories(c.species_name)]);
+
+      renderExistingSections(c.char_sections || []);
     }
 
     const PRESET_COLORS = [
@@ -656,6 +960,8 @@
       const isSensitive   = document.getElementById('isSensitive').checked;
       const sensitiveNote = document.getElementById('sensitiveNote').value.trim();
 
+      const sections = collectSections();
+
       const { error } = await sb.from('characters').update({
         name,
         designer_nickname:   designer,
@@ -669,6 +975,7 @@
         char_categories:     addedCategories.length ? addedCategories : null,
         is_sensitive:        isSensitive,
         sensitive_note:      isSensitive ? (sensitiveNote || null) : null,
+        char_sections:       sections.length ? sections : null,
       }).eq('id', charId);
 
       if (error) {
@@ -683,3 +990,4 @@
   </script>
 </body>
 </html>
+

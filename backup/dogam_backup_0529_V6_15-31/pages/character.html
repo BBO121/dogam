@@ -1,0 +1,209 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>개체 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+
+      <div id="charContent">
+        <p class="page-loading">불러오는 중...</p>
+      </div>
+
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 도감</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    const charId = new URLSearchParams(window.location.search).get('id');
+    let afterDeleteHref = 'species-list.html';
+
+    function revealSensitive(overlayEl, e) {
+      e.stopPropagation();
+      e.preventDefault();
+      const wrap = overlayEl.parentElement;
+      wrap.querySelectorAll('.blurred').forEach(el => el.classList.remove('blurred'));
+      overlayEl.remove();
+    }
+
+    async function cancelPendingTransfer() {
+      if (!confirm('이전 요청을 취소할까요?')) return;
+      const { error } = await sb.from('characters').update({ pending_transfer: null }).eq('id', charId);
+      if (error) { alert('취소에 실패했어요.'); return; }
+      window.location.reload();
+    }
+
+    async function deleteCharacter() {
+      if (!confirm('정말 이 개체를 삭제할까요? 되돌릴 수 없어요.')) return;
+      const { error } = await sb.from('characters').delete().eq('id', charId);
+      if (error) { alert('삭제에 실패했어요.'); return; }
+      window.location.href = afterDeleteHref;
+    }
+
+    if (!charId) {
+      document.getElementById('charContent').innerHTML = '<p class="page-loading">잘못된 접근이에요.</p>';
+    } else {
+      loadCharacter();
+    }
+
+    async function loadCharacter() {
+      const user = await getUser();
+      const userNickname = user?.user_metadata?.display_name || user?.user_metadata?.nickname || null;
+      const isAdminUser  = user?.user_metadata?.role === 'admin';
+
+      const [{ data: c, error }, { data: siteUserData }] = await Promise.all([
+        sb.from('characters').select('*').eq('id', charId).single(),
+        sb.rpc('get_all_users'),
+      ]);
+
+      if (error || !c) {
+        document.getElementById('charContent').innerHTML = '<p class="page-loading">개체를 찾을 수 없어요.</p>';
+        return;
+      }
+
+      const siteNicks = new Set((siteUserData || []).map(u => u.nickname).filter(Boolean));
+
+      document.title = `${c.name} — 도감`;
+
+      const isOwner = isAdminUser || userNickname === c.owner_nickname;
+
+      // 종족 페이지 링크용 species id 조회
+      let speciesHref = 'species-list.html';
+      if (c.species_name) {
+        const { data: sp } = await sb.from('species').select('id').eq('name', c.species_name).single();
+        if (sp) speciesHref = `species.html?id=${sp.id}`;
+      }
+      let categoryBadgeHtml = '';
+      if (c.char_categories?.length) {
+        const badges = c.char_categories.map(cat => {
+          const r = parseInt(cat.color.slice(1,3),16), g = parseInt(cat.color.slice(3,5),16), b = parseInt(cat.color.slice(5,7),16);
+          const tc = (0.299*r+0.587*g+0.114*b)/255 > 0.5 ? '#000' : '#fff';
+          return `<span style="display:inline-block; padding:3px 12px; border-radius:20px; background:${cat.color}; color:${tc}; font-size:12px; font-weight:600;">${cat.label}</span>`;
+        }).join('');
+        categoryBadgeHtml = `<div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;">${badges}</div>`;
+      }
+      afterDeleteHref = speciesHref;
+
+      const registeredDate = new Date(c.created_at).toLocaleDateString('ko-KR', {
+        year: 'numeric', month: '2-digit', day: '2-digit'
+      }).replace(/\. /g, '.').replace(/\.$/, '');
+
+      const additionalImgs = (c.additional_images || []).map(url => `
+        <div style="width:100%; border-radius:var(--radius); overflow:hidden; margin-top:10px; ${c.is_sensitive ? 'position:relative;' : ''}">
+          <img src="${url}" class="${c.is_sensitive ? 'blurred' : ''}" style="width:100%; display:block; object-fit:cover;">
+          ${c.is_sensitive ? `<div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span><span class="sensitive-overlay-label">WARNING${c.sensitive_note ? ' : ' + c.sensitive_note : ''}</span><span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div>` : ''}
+        </div>
+      `).join('');
+
+      document.getElementById('charContent').innerHTML = `
+        <div class="char-page-header">
+          <div class="breadcrumb">
+            ${c.species_name ? `<a href="${speciesHref}">${c.species_name}</a><span>/</span>` : ''}
+            <span>${c.name}</span>
+          </div>
+          <h1 class="char-page-name">${c.name}</h1>
+        </div>
+
+        <div class="char-body">
+          <div class="char-img-wrap">
+            <div class="char-img-area">
+              ${c.image_url
+                ? (c.is_sensitive
+                    ? `<div style="position:relative; overflow:hidden; border-radius:var(--radius);"><img src="${c.image_url}" alt="${c.name}" class="blurred" style="width:100%; height:auto; display:block;"><div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span><span class="sensitive-overlay-label">WARNING${c.sensitive_note ? ' : ' + c.sensitive_note : ''}</span><span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div></div>`
+                    : `<img src="${c.image_url}" alt="${c.name}" style="width:100%; height:auto; display:block;">`)
+                : ''}
+            </div>
+            ${additionalImgs}
+          </div>
+
+          <aside class="char-info-panel">
+            ${c.pending_transfer ? `
+            <div style="padding:10px 14px; background:#fffbeb; border:1px solid #fde68a; border-radius:10px; margin-bottom:12px; font-size:13px; color:#92400e; font-weight:500;">
+              이전 확인 중 · <strong>${c.pending_transfer.to}</strong>님에게
+            </div>` : ''}
+            ${categoryBadgeHtml}
+            ${c.species_name ? `
+            <div class="char-info-row">
+              <span class="char-info-label">종족</span>
+              <a href="${speciesHref}" class="char-info-value char-info-link">${c.species_name}</a>
+            </div>` : ''}
+            ${c.designer_nickname ? `
+            <div class="char-info-row">
+              <span class="char-info-label">디자이너</span>
+              <span class="char-info-value">${siteNicks.has(c.designer_nickname)
+                ? `<a href="profile.html?user=${encodeURIComponent(c.designer_nickname)}" style="color:inherit;text-decoration:none;">${c.designer_nickname}</a>`
+                : `<span style="display:inline-block;font-size:10px;font-weight:600;color:#555;background:#e8e8e8;border-radius:4px;padding:1px 5px;margin-right:5px;vertical-align:middle;line-height:1.6;">Site-OFF</span>${c.designer_nickname}`
+              }${c.designer_contact ? ` <span style="color:var(--text-mute);font-size:12px;">(${c.designer_contact})</span>` : ''}</span>
+            </div>` : ''}
+            <div class="char-info-row">
+              <span class="char-info-label">소유주</span>
+              <span class="char-info-value">${c.owner_nickname
+                ? (siteNicks.has(c.owner_nickname)
+                    ? `<a href="profile.html?user=${encodeURIComponent(c.owner_nickname)}" style="color:inherit;text-decoration:none;">${c.owner_nickname}</a>`
+                    : `<span style="display:inline-block;font-size:10px;font-weight:600;color:#555;background:#e8e8e8;border-radius:4px;padding:1px 5px;margin-right:5px;vertical-align:middle;line-height:1.6;">Site-OFF</span>${c.owner_nickname}`)
+                : '—'
+              }${c.owner_contact ? ` <span style="color:var(--text-mute);font-size:12px;">(${c.owner_contact})</span>` : ''}</span>
+            </div>
+            <div class="char-info-row">
+              <span class="char-info-label">등록일</span>
+              <span class="char-info-value">${registeredDate}</span>
+            </div>
+
+            ${c.description ? `
+            <div class="char-info-divider"></div>
+            <p class="char-info-desc">${c.description}</p>` : ''}
+
+            ${c.custom_field_values && Object.keys(c.custom_field_values).length ? `
+            <div class="char-info-divider"></div>
+            ${Object.entries(c.custom_field_values).map(([k, v]) => `
+              <div class="char-info-row">
+                <span class="char-info-label">${k}</span>
+                <span class="char-info-value">${v}</span>
+              </div>
+            `).join('')}` : ''}
+
+            ${isOwner ? `
+            <div class="char-info-divider"></div>
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <button onclick="deleteCharacter()" style="padding:8px 16px; border:1px solid #fca5a5; border-radius:8px; background:#fff; color:#ef4444; font-size:13px; cursor:pointer; font-family:inherit;">개체 삭제</button>
+              <div style="display:flex; gap:8px;">
+                ${c.pending_transfer
+                  ? `<button onclick="cancelPendingTransfer()" style="padding:6px 14px; border:1px solid #fde68a; border-radius:8px; background:#fffbeb; color:#92400e; font-size:13px; cursor:pointer;">이전 취소</button>`
+                  : `<a href="character-transfer.html?id=${charId}" class="btn-ghost">개체 이전</a>`
+                }
+                <a href="character-edit.html?id=${charId}" class="btn-ghost">개체 정보 수정</a>
+              </div>
+            </div>` : ''}
+          </aside>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,466 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>어드민 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+
+      <div id="pageLoading" class="page-loading">불러오는 중...</div>
+
+      <div id="pageContent" style="display:none;">
+
+        <div style="padding: 24px 0 0;">
+          <h1 class="list-page-title">어드민</h1>
+        </div>
+
+        <!-- 탭 -->
+        <div class="profile-tabs">
+          <button class="profile-tab active" data-tab="Notices">공지 관리</button>
+          <button class="profile-tab" data-tab="Users">유저 관리</button>
+          <button class="profile-tab" data-tab="Species">종족 관리</button>
+          <button class="profile-tab" data-tab="Characters">개체 관리</button>
+        </div>
+
+        <!-- 공지 관리 탭 -->
+        <div id="tabNotices" class="tab-content">
+
+          <section class="section">
+            <!-- 작성 버튼 -->
+            <div class="section-header">
+              <h2 class="settings-section-title" style="margin-bottom:0;">공지 목록</h2>
+              <button class="btn-secondary" onclick="toggleWriteForm()">+ 새 공지 작성</button>
+            </div>
+
+            <!-- 인라인 작성 폼 -->
+            <div id="writeForm" class="admin-write-form" style="display:none;">
+              <div class="form-group">
+                <label class="notice-pin-label">
+                  <input type="checkbox" id="isPinned" class="notice-pin-check">
+                  <span>상단 고정</span>
+                </label>
+              </div>
+              <div class="form-group">
+                <label class="form-label">제목 <span class="required">*</span></label>
+                <input type="text" id="noticeTitle" class="form-input" placeholder="공지 제목">
+              </div>
+              <div class="form-group">
+                <label class="form-label">내용 <span class="required">*</span></label>
+                <textarea id="noticeContent" class="form-textarea" rows="6" placeholder="공지 내용"></textarea>
+              </div>
+              <p class="auth-error" id="writeError"></p>
+              <div class="form-actions" style="gap:8px; display:flex; justify-content:flex-end;">
+                <button class="btn-ghost" onclick="toggleWriteForm()">취소</button>
+                <button class="btn-secondary" id="writeSubmitBtn" onclick="submitNotice()">등록</button>
+              </div>
+            </div>
+
+            <!-- 공지 목록 -->
+            <div id="noticeTableWrap" style="margin-top: 16px;">
+              <div class="admin-card-list" id="noticeTableBody"></div>
+              <p id="noticeEmpty" class="empty-state" style="display:none;">등록된 공지가 없어요.</p>
+            </div>
+            <div id="pgNotices"></div>
+          </section>
+
+        </div>
+
+        <!-- 유저 관리 탭 -->
+        <div id="tabUsers" class="tab-content" style="display:none;">
+          <section class="section">
+            <h2 class="settings-section-title">유저 목록</h2>
+            <div class="admin-card-list" id="userTableBody"></div>
+            <p id="userEmpty" class="empty-state" style="display:none;">유저가 없어요.</p>
+            <div id="pgUsers"></div>
+          </section>
+        </div>
+
+        <!-- 종족 관리 탭 -->
+        <div id="tabSpecies" class="tab-content" style="display:none;">
+          <section class="section">
+            <h2 class="settings-section-title">종족 목록</h2>
+            <div class="admin-card-list" id="speciesTableBody"></div>
+            <p id="speciesAdminEmpty" class="empty-state" style="display:none;">등록된 종족이 없어요.</p>
+            <div id="pgSpecies"></div>
+          </section>
+        </div>
+
+        <!-- 개체 관리 탭 -->
+        <div id="tabCharacters" class="tab-content" style="display:none;">
+          <section class="section">
+            <div class="section-header" style="margin-bottom:12px;">
+              <h2 class="settings-section-title" style="margin-bottom:0;">개체 목록</h2>
+              <input type="text" class="list-search" id="charAdminSearch" placeholder="이름 검색" style="width:200px;" oninput="filterAdminChars(this.value)">
+            </div>
+            <div class="admin-card-list" id="charTableBody"></div>
+            <p id="charAdminEmpty" class="empty-state" style="display:none;">등록된 개체가 없어요.</p>
+            <div id="pgChars"></div>
+          </section>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 도감</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    let adminUser = null;
+
+    const noticePager  = createPager(renderNoticeRows,  'pgNotices');
+    const userPager    = createPager(renderUserRows,     'pgUsers');
+    const speciesPager = createPager(renderSpeciesRows,  'pgSpecies');
+    const charPager    = createPager(renderCharRows,     'pgChars');
+
+    async function initPage() {
+      const user = await getUser();
+      if (!user || user.user_metadata?.role !== 'admin') {
+        window.location.href = 'index.html';
+        return;
+      }
+      adminUser = user;
+
+      document.getElementById('pageLoading').style.display = 'none';
+      document.getElementById('pageContent').style.display = 'block';
+
+      loadNotices();
+      loadUsers();
+    }
+
+    // ── 탭 전환 ──────────────────────────────
+    const tabLoaded = {};
+    document.querySelectorAll('.profile-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.profile-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
+        document.getElementById('tab' + btn.dataset.tab).style.display = 'block';
+        if (btn.dataset.tab === 'Species' && !tabLoaded.Species) {
+          tabLoaded.Species = true; loadAdminSpecies();
+        }
+        if (btn.dataset.tab === 'Characters' && !tabLoaded.Characters) {
+          tabLoaded.Characters = true; loadAdminChars();
+        }
+      });
+    });
+
+    // ── 공지 관리 ────────────────────────────
+    function renderNoticeRows(slice) {
+      document.getElementById('noticeTableBody').innerHTML = slice.map(n => {
+        const date = new Date(n.created_at).toLocaleDateString('ko-KR', {
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        }).replace(/\. /g, '.').replace(/\.$/, '');
+        return `
+          <div class="admin-card-row">
+            <div class="admin-card-left">
+              ${n.is_pinned ? '<span class="notice-pin" style="flex-shrink:0;">고정</span>' : ''}
+              <span class="admin-card-name">${n.title}</span>
+            </div>
+            <div class="admin-card-right">
+              <span class="admin-card-date">${date}</span>
+              <button class="admin-btn-delete" onclick="deleteNotice(${n.id})">삭제</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function loadNotices() {
+      const { data, error } = await sb
+        .from('notices')
+        .select('*')
+        .order('is_pinned', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      const empty = document.getElementById('noticeEmpty');
+
+      if (error || !data || data.length === 0) {
+        document.getElementById('noticeTableBody').innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+      noticePager.load(data);
+    }
+
+    function toggleWriteForm() {
+      const form = document.getElementById('writeForm');
+      const isOpen = form.style.display === 'none';
+      form.style.display = isOpen ? 'block' : 'none';
+      if (!isOpen) {
+        document.getElementById('noticeTitle').value = '';
+        document.getElementById('noticeContent').value = '';
+        document.getElementById('isPinned').checked = false;
+        document.getElementById('writeError').textContent = '';
+      }
+    }
+
+    async function submitNotice() {
+      const title    = document.getElementById('noticeTitle').value.trim();
+      const content  = document.getElementById('noticeContent').value.trim();
+      const isPinned = document.getElementById('isPinned').checked;
+      const errorEl  = document.getElementById('writeError');
+      const btn      = document.getElementById('writeSubmitBtn');
+
+      errorEl.textContent = '';
+      if (!title)   { errorEl.textContent = '제목을 입력해주세요.'; return; }
+      if (!content) { errorEl.textContent = '내용을 입력해주세요.'; return; }
+
+      btn.textContent = '등록 중...';
+      btn.disabled = true;
+
+      const { error } = await sb.from('notices').insert({
+        title, content,
+        is_pinned: isPinned,
+        author: adminUser?.user_metadata?.nickname || '관리자',
+      });
+
+      if (error) {
+        console.error('[notice insert error]', error);
+        errorEl.textContent = `등록에 실패했어요. (${error.message})`;
+      } else {
+        toggleWriteForm();
+        loadNotices();
+      }
+
+      btn.textContent = '등록';
+      btn.disabled = false;
+    }
+
+    async function deleteNotice(id) {
+      if (!confirm('정말 삭제할까요?')) return;
+      await sb.from('notices').delete().eq('id', id);
+      loadNotices();
+    }
+
+    // ── 유저 관리 ────────────────────────────
+    const TESTERS = ['Moulow', 'moulow', 'Sawol'];
+
+    function adminUserPriority(u) {
+      if (u.login_id === 'admin')          return 0;
+      if (u.role === 'admin')              return 1;
+      if (TESTERS.includes(u.nickname))    return 2;
+      if (u.role === 'species_owner')      return 3;
+      return 4;
+    }
+
+    function sortAdminUsers(list) {
+      return [...list].sort((a, b) => {
+        const diff = adminUserPriority(a) - adminUserPriority(b);
+        if (diff !== 0) return diff;
+        return (a.nickname || a.login_id || '').localeCompare(b.nickname || b.login_id || '', 'ko');
+      });
+    }
+
+    function renderUserRows(slice) {
+      document.getElementById('userTableBody').innerHTML = slice.map(u => {
+        const date = new Date(u.created_at).toLocaleDateString('ko-KR', {
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        }).replace(/\. /g, '.').replace(/\.$/, '');
+        const roleLabel      = u.role === 'admin' ? '관리자' : u.role === 'species_owner' ? '종족주' : '일반유저';
+        const roleBadgeClass = u.role === 'admin' ? 'badge-admin' : u.role === 'species_owner' ? 'badge-species-owner' : 'badge-user';
+        const safeNick = (u.nickname || '').replace(/'/g, "\\'");
+        const actions = u.role === 'admin' ? '' : `
+          <div class="admin-card-actions">
+            ${u.role === 'species_owner'
+              ? `<button class="admin-btn-revoke" onclick="setRole('${u.id}', '')">권한 회수</button>`
+              : `<button class="admin-btn-grant" onclick="setRole('${u.id}', 'species_owner')">종족주 임명</button>`}
+            <button class="admin-btn-delete" onclick="deleteUser('${u.id}', '${safeNick}')">삭제</button>
+          </div>`;
+        return `
+          <div class="admin-card-row" id="user-row-${u.id}">
+            <div class="admin-card-left">
+              <span class="${roleBadgeClass}">${roleLabel}</span>
+              <span class="admin-card-name">${u.nickname || '—'}</span>
+            </div>
+            <div class="admin-card-right">
+              <span class="admin-card-date">${date}</span>
+              ${actions}
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function loadUsers() {
+      const { data, error } = await sb.rpc('get_all_users');
+      const empty = document.getElementById('userEmpty');
+
+      if (error || !data || data.length === 0) {
+        document.getElementById('userTableBody').innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+      console.log('[get_all_users 첫번째 row]', data[0]);
+      userPager.load(sortAdminUsers(data));
+    }
+
+    async function setRole(userId, role) {
+      const label = role === 'species_owner' ? '종족주 임명' : '권한 회수';
+      if (!confirm(`${label}할까요?`)) return;
+
+      const { error } = await sb.rpc('set_user_role', {
+        target_id: userId,
+        new_role: role,
+      });
+
+      if (error) {
+        alert('변경에 실패했어요.\n\n' + error.message);
+        console.error('[setRole error]', error);
+        return;
+      }
+      loadUsers();
+    }
+
+    async function deleteUser(userId, nickname) {
+      if (!confirm(`"${nickname}" 유저를 삭제할까요?\n개체·종족·이전 내역의 닉네임은 (알수없음)으로 바뀌어요.`)) return;
+
+      if (nickname) {
+        await Promise.all([
+          sb.from('characters').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname),
+          sb.from('characters').update({ designer_nickname: '(알수없음)' }).eq('designer_nickname', nickname),
+          sb.from('species').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname),
+          sb.from('character_transfers').update({ from_nickname: '(알수없음)' }).eq('from_nickname', nickname),
+          sb.from('character_transfers').update({ to_nickname: '(알수없음)' }).eq('to_nickname', nickname),
+        ]);
+      }
+
+      const { error } = await sb.rpc('delete_user', { target_id: userId });
+      if (error) { alert('계정 삭제에 실패했어요.'); return; }
+      loadUsers();
+    }
+
+    // ── 종족 관리 ────────────────────────────
+    function renderSpeciesRows(slice) {
+      document.getElementById('speciesTableBody').innerHTML = slice.map(s => {
+        const date = new Date(s.created_at).toLocaleDateString('ko-KR', {
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        }).replace(/\. /g, '.').replace(/\.$/, '');
+        return `
+          <div class="admin-card-row" id="species-row-${s.id}">
+            <div class="admin-card-left">
+              <a href="species.html?id=${s.id}" class="admin-card-name">${s.name}</a>
+              <span class="admin-card-meta">${s.owner_nickname || '—'}</span>
+            </div>
+            <div class="admin-card-right">
+              <span class="admin-card-date">${date}</span>
+              <button class="admin-btn-delete" onclick="deleteSpecies('${s.id}', '${s.name.replace(/'/g, "\\'")}')">삭제</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function loadAdminSpecies() {
+      const { data, error } = await sb
+        .from('species')
+        .select('id, name, owner_nickname, created_at')
+        .order('created_at', { ascending: false });
+
+      const empty = document.getElementById('speciesAdminEmpty');
+
+      if (error || !data || data.length === 0) {
+        document.getElementById('speciesTableBody').innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+      speciesPager.load(data);
+    }
+
+    async function deleteSpecies(id, name) {
+      if (!confirm(`"${name}" 종족을 삭제할까요?\n소속 개체도 함께 삭제돼요.`)) return;
+      const { error } = await sb.rpc('admin_delete_species', { species_id: id, p_species_name: name });
+      if (error) { alert('삭제에 실패했어요: ' + error.message); return; }
+      loadAdminSpecies();
+    }
+
+    // ── 개체 관리 ────────────────────────────
+    let allAdminChars = [];
+
+    function renderCharRows(slice) {
+      document.getElementById('charTableBody').innerHTML = slice.map(c => {
+        const date = new Date(c.created_at).toLocaleDateString('ko-KR', {
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        }).replace(/\. /g, '.').replace(/\.$/, '');
+        return `
+          <div class="admin-card-row" id="char-row-${c.id}">
+            <div class="admin-card-left">
+              <a href="character.html?id=${c.id}" class="admin-card-name">${c.name}</a>
+              <span class="admin-card-meta">${[c.species_name, c.owner_nickname].filter(Boolean).join(' · ')}</span>
+            </div>
+            <div class="admin-card-right">
+              <span class="admin-card-date">${date}</span>
+              <button class="admin-btn-delete" onclick="deleteChar('${c.id}', '${c.name.replace(/'/g, "\\'")}')">삭제</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function loadAdminChars() {
+      const { data, error } = await sb
+        .from('characters')
+        .select('id, name, species_name, owner_nickname, created_at')
+        .order('created_at', { ascending: false });
+
+      const empty = document.getElementById('charAdminEmpty');
+
+      if (error || !data || data.length === 0) {
+        document.getElementById('charTableBody').innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+      allAdminChars = data;
+      charPager.load(data);
+    }
+
+    function filterAdminChars(q) {
+      const qLow = q.toLowerCase();
+      const filtered = q
+        ? allAdminChars.filter(c =>
+            c.name.toLowerCase().includes(qLow) ||
+            (c.species_name || '').toLowerCase().includes(qLow) ||
+            (c.owner_nickname || '').toLowerCase().includes(qLow))
+        : allAdminChars;
+      charPager.load(filtered);
+    }
+
+    async function deleteChar(id, name) {
+      if (!confirm(`"${name}" 개체를 삭제할까요?`)) return;
+      const { error } = await sb.from('characters').delete().eq('id', id);
+      if (error) { alert('삭제에 실패했어요.'); return; }
+      allAdminChars = allAdminChars.filter(c => c.id !== id);
+      charPager.load(allAdminChars);
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

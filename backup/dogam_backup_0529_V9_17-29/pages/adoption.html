@@ -1,0 +1,106 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>분양란 — 도감</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">도감</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main">
+
+      <div style="padding-top: 24px; margin-bottom: 20px;">
+        <h1 class="list-page-title">분양</h1>
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-top:6px;">
+          <p class="list-page-count" id="adoptionCount" style="margin-top:0;"></p>
+          <a href="adoption-write.html" class="btn-secondary" id="writeBtn" style="display:none;">글 작성</a>
+        </div>
+      </div>
+
+      <div id="adoptionGrid" class="adoption-grid"></div>
+      <div id="paginationWrap"></div>
+
+      <div id="emptyState" class="empty-state-wrap" style="display:none;">
+        <div class="empty-state-icon">🐾</div>
+        <p class="empty-state-title">등록된 분양 글이 없어요</p>
+      </div>
+
+    </main>
+  </div>
+
+  <footer class="footer"><p>© 2026 도감</p></footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    const TYPE_LABEL = { free: '무료', paid: '유료', auction: '경매', etc: '기타' };
+    const TYPE_CLASS  = { free: 'adoption-type--free', paid: 'adoption-type--paid', auction: 'adoption-type--auction', etc: 'adoption-type--paid' };
+
+    async function initPage() {
+      const user = await getUser();
+      const role = user?.user_metadata?.role;
+      if (user) {
+        document.getElementById('writeBtn').style.display = 'inline-flex';
+      }
+
+      const { data, error } = await sb
+        .from('adoptions')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error || !data || data.length === 0) {
+        document.getElementById('emptyState').style.display = 'flex';
+        return;
+      }
+
+      document.getElementById('adoptionCount').textContent = `총 ${data.length}개`;
+
+      pager.load(data);
+    }
+
+    function renderItems(list) {
+      document.getElementById('adoptionGrid').innerHTML = list.map(a => {
+        const imgStyle = a.image_url
+          ? `background-image:url('${a.image_url}');background-size:cover;background-position:center;`
+          : '';
+        const typeLabel = TYPE_LABEL[a.adoption_type] || '';
+        const typeClass = TYPE_CLASS[a.adoption_type] || '';
+        const closed    = a.status === '완료';
+
+        return `
+          <a class="adoption-card${closed ? ' adoption-card--closed' : ''}" href="adoption-detail.html?id=${a.id}">
+            <div class="adoption-card-img" style="${imgStyle}"></div>
+            <div class="adoption-card-info">
+              <div class="adoption-card-badges">
+                <span class="adoption-type-badge ${typeClass}">${typeLabel}</span>
+                <span class="adoption-status ${closed ? 'adoption-status--closed' : ''}">${a.status || '분양중'}</span>
+              </div>
+              <p class="adoption-card-charname">${a.character_name || '—'}</p>
+              <p class="adoption-card-species">${a.species_name || '—'}</p>
+            </div>
+          </a>
+        `;
+      }).join('');
+    }
+
+    const pager = createPager(renderItems);
+
+    initPage();
+  </script>
+</body>
+</html>
