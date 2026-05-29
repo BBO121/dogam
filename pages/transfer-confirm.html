@@ -235,7 +235,7 @@
     }
 
     async function acceptTransfer() {
-      const errorEl = document.getElementById('confirmError');
+      const errorEl    = document.getElementById('confirmError');
       const acceptBtn  = document.querySelector('.btn-accept');
       const declineBtn = document.querySelector('.btn-decline');
       errorEl.textContent = '';
@@ -246,32 +246,54 @@
       const myNick = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
 
       try {
-        // 1. 소유주 변경 (한 번 더 소유주 확인 후 업데이트)
-        const { data: freshChar } = await sb.from('characters').select('owner_nickname').eq('id', charId).single();
-        if (!freshChar || freshChar.owner_nickname !== fromNick) {
+        // 1. 현재 상태 재확인 (소유주 + pending_transfer 포함)
+        const { data: freshChar, error: fetchErr } = await sb
+          .from('characters')
+          .select('owner_nickname, pending_transfer')
+          .eq('id', charId)
+          .single();
+
+        if (fetchErr || !freshChar) throw new Error('개체 정보를 불러올 수 없어요.');
+        if (freshChar.owner_nickname !== fromNick) {
           showExpired('이미 처리되었거나 유효하지 않은 요청이에요.');
           return;
         }
+        if (!freshChar.pending_transfer || freshChar.pending_transfer.to !== myNick) {
+          showExpired('이전 요청 정보가 일치하지 않아요.');
+          return;
+        }
 
-        const { error: updateError } = await sb
+        // 2. 소유주 변경 — select()로 실제 변경 행 수 검증
+        const { data: updated, error: updateErr } = await sb
           .from('characters')
           .update({ owner_nickname: myNick })
-          .eq('id', charId);
-        if (updateError) throw updateError;
+          .eq('id', charId)
+          .eq('owner_nickname', fromNick)   // 현재 소유주가 fromNick인 행만 대상
+          .select('id, owner_nickname');
 
-        // 2. 이전 로그 기록
-        await logTransfer({
+        if (updateErr) throw updateErr;
+
+        if (!updated || updated.length === 0) {
+          throw new Error('소유자 변경에 실패했어요. (0 rows updated)\n관리자에게 문의해 주세요.');
+        }
+        if (updated[0].owner_nickname !== myNick) {
+          throw new Error('소유자가 올바르게 변경되지 않았어요.');
+        }
+
+        // 3. 이전 로그 기록
+        const { error: logErr } = await logTransfer({
           character_name: charData.name,
           species_name:   charData.species_name || null,
           from_nickname:  fromNick,
           to_nickname:    myNick,
           method,
         });
+        if (logErr) console.warn('[logTransfer 오류]', logErr);
 
-        // 3. 이전 대기 상태 해제
+        // 4. 이전 대기 상태 해제
         await sb.from('characters').update({ pending_transfer: null }).eq('id', charId);
 
-        // 4. 보낸 사람에게 수락 알림
+        // 5. 보낸 사람에게 수락 알림
         await sb.from('notifications').insert({
           user_nickname: fromNick,
           type:          'transfer_accepted',
@@ -282,8 +304,8 @@
 
         window.location.href = `character.html?id=${charId}`;
       } catch (e) {
-        console.error(e);
-        errorEl.textContent = '처리에 실패했어요. 다시 시도해주세요.';
+        console.error('[acceptTransfer 오류]', e);
+        errorEl.textContent = e.message || '처리에 실패했어요. 다시 시도해주세요.';
         acceptBtn.disabled  = false;
         declineBtn.disabled = false;
         acceptBtn.textContent = '이전 받기';
@@ -301,8 +323,17 @@
       const myNick = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
 
       try {
-        // 이전 대기 상태 해제
-        await sb.from('characters').update({ pending_transfer: null }).eq('id', charId);
+        // pending_transfer 해제 — select()로 실제 변경 확인
+        const { data: cleared, error: clearErr } = await sb
+          .from('characters')
+          .update({ pending_transfer: null })
+          .eq('id', charId)
+          .select('id');
+
+        if (clearErr) throw clearErr;
+        if (!cleared || cleared.length === 0) {
+          console.warn('[declineTransfer] pending_transfer 해제 실패 (0 rows)');
+        }
 
         // 보낸 사람에게 거절 알림
         await sb.from('notifications').insert({
@@ -313,7 +344,7 @@
           is_read:       false,
         });
       } catch (e) {
-        console.error(e);
+        console.error('[declineTransfer 오류]', e);
       }
 
       window.location.href = 'index.html';
