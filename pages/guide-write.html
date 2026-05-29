@@ -118,6 +118,7 @@
     const SizeStyle = Quill.import('attributors/style/size');
     SizeStyle.whitelist = ['12px', '14px', '16px', '18px', '20px', '24px', '28px'];
     Quill.register(SizeStyle, true);
+    Quill.register(Quill.import('attributors/style/align'), true);
 
     const quill = new Quill('#guideContentEditor', {
       theme: 'snow',
