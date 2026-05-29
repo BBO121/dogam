@@ -68,7 +68,7 @@
           <span>작성</span>
         </div>
 
-        <h1 class="register-title">가이드 작성</h1>
+        <h1 class="register-title" id="pageTitle">가이드 작성</h1>
 
         <form class="register-form" id="guideForm">
 
@@ -95,7 +95,7 @@
           <p class="auth-error" id="writeError"></p>
 
           <div class="register-actions">
-            <a href="guide.html" class="btn-ghost">취소</a>
+            <a href="guide.html" class="btn-ghost" id="cancelBtn">취소</a>
             <button type="submit" class="btn-secondary" id="submitBtn">등록하기</button>
           </div>
 
@@ -105,7 +105,7 @@
   </div>
 
   <footer class="footer">
-    <p>© 2026 종족연구소</p>
+    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a></p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -135,11 +135,28 @@
       },
     });
 
+    const editId = new URLSearchParams(window.location.search).get('edit');
+
     async function initPage() {
       const user = await getUser();
       if (!user || user.user_metadata?.role !== 'admin') {
         window.location.href = 'index.html';
         return;
+      }
+
+      if (editId) {
+        document.getElementById('pageTitle').textContent = '가이드 수정';
+        document.title = '가이드 수정 — 종족연구소';
+        document.getElementById('submitBtn').textContent = '수정하기';
+        document.querySelector('.breadcrumb span:last-child').textContent = '수정';
+
+        const { data, error } = await sb.from('guides').select('*').eq('id', editId).single();
+        if (error || !data) { window.location.href = 'guide.html'; return; }
+
+        document.getElementById('guideTitle').value = data.title;
+        document.getElementById('isPinned').checked = data.is_pinned;
+        quill.clipboard.dangerouslyPasteHTML(data.content || '');
+        document.getElementById('cancelBtn').href = `guide-detail.html?id=${editId}`;
       }
     }
 
@@ -158,26 +175,30 @@
       if (!title)   { errorEl.textContent = '제목을 입력해주세요.'; return; }
       if (isEmpty)  { errorEl.textContent = '내용을 입력해주세요.'; return; }
 
-      btn.textContent = '등록 중...';
+      btn.textContent = editId ? '수정 중...' : '등록 중...';
       btn.disabled = true;
 
-      const user = await getUser();
-      const { error } = await sb.from('guides').insert({
-        title,
-        content,
-        is_pinned: isPinned,
-        author: user?.user_metadata?.nickname || '관리자',
-      });
+      let error;
+      if (editId) {
+        ({ error } = await sb.from('guides').update({ title, content, is_pinned: isPinned }).eq('id', editId));
+      } else {
+        const user = await getUser();
+        ({ error } = await sb.from('guides').insert({
+          title, content,
+          is_pinned: isPinned,
+          author: user?.user_metadata?.nickname || '관리자',
+        }));
+      }
 
       if (error) {
-        console.error('[guide insert error]', error);
-        errorEl.textContent = `등록에 실패했어요. (${error.message})`;
-        btn.textContent = '등록하기';
+        console.error('[guide save error]', error);
+        errorEl.textContent = `저장에 실패했어요. (${error.message})`;
+        btn.textContent = editId ? '수정하기' : '등록하기';
         btn.disabled = false;
         return;
       }
 
-      window.location.href = 'guide.html';
+      window.location.href = editId ? `guide-detail.html?id=${editId}` : 'guide.html';
     });
 
     initPage();

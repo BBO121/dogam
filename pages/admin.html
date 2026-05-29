@@ -34,6 +34,7 @@
         <!-- 탭 -->
         <div class="profile-tabs">
           <button class="profile-tab active" data-tab="Notices">공지 관리</button>
+          <button class="profile-tab" data-tab="Guides">가이드 관리</button>
           <button class="profile-tab" data-tab="Users">유저 관리</button>
           <button class="profile-tab" data-tab="Species">종족 관리</button>
           <button class="profile-tab" data-tab="Characters">개체 관리</button>
@@ -82,6 +83,25 @@
 
         </div>
 
+        <!-- 가이드 관리 탭 -->
+        <div id="tabGuides" class="tab-content" style="display:none;">
+
+          <section class="section">
+            <div class="section-header">
+              <h2 class="settings-section-title" style="margin-bottom:0;">가이드 목록</h2>
+              <a href="guide-write.html" class="btn-secondary">+ 새 가이드 작성</a>
+            </div>
+
+            <!-- 가이드 목록 -->
+            <div id="guideTableWrap" style="margin-top: 16px;">
+              <div class="admin-card-list" id="guideTableBody"></div>
+              <p id="guideEmpty" class="empty-state" style="display:none;">등록된 가이드가 없어요.</p>
+            </div>
+            <div id="pgGuides"></div>
+          </section>
+
+        </div>
+
         <!-- 유저 관리 탭 -->
         <div id="tabUsers" class="tab-content" style="display:none;">
           <section class="section">
@@ -120,7 +140,7 @@
   </div>
 
   <footer class="footer">
-    <p>© 2026 종족연구소</p>
+    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a></p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -132,6 +152,7 @@
     let adminUser = null;
 
     const noticePager  = createPager(renderNoticeRows,  'pgNotices');
+    const guidePager   = createPager(renderGuideRows,   'pgGuides');
     const userPager    = createPager(renderUserRows,     'pgUsers');
     const speciesPager = createPager(renderSpeciesRows,  'pgSpecies');
     const charPager    = createPager(renderCharRows,     'pgChars');
@@ -159,6 +180,9 @@
         btn.classList.add('active');
         document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
         document.getElementById('tab' + btn.dataset.tab).style.display = 'block';
+        if (btn.dataset.tab === 'Guides' && !tabLoaded.Guides) {
+          tabLoaded.Guides = true; loadGuides();
+        }
         if (btn.dataset.tab === 'Species' && !tabLoaded.Species) {
           tabLoaded.Species = true; loadAdminSpecies();
         }
@@ -178,10 +202,11 @@
           <div class="admin-card-row">
             <div class="admin-card-left">
               ${n.is_pinned ? '<span class="notice-pin" style="flex-shrink:0;">고정</span>' : ''}
-              <span class="admin-card-name">${n.title}</span>
+              <a href="notice-detail.html?id=${n.id}" class="admin-card-name">${n.title}</a>
             </div>
             <div class="admin-card-right">
               <span class="admin-card-date">${date}</span>
+              <button class="admin-btn-edit" onclick="location.href='notice-write.html?edit=${n.id}'">수정</button>
               <button class="admin-btn-delete" onclick="deleteNotice(${n.id})">삭제</button>
             </div>
           </div>`;
@@ -255,6 +280,52 @@
       if (!confirm('정말 삭제할까요?')) return;
       await sb.from('notices').delete().eq('id', id);
       loadNotices();
+    }
+
+    // ── 가이드 관리 ──────────────────────────
+    function renderGuideRows(slice) {
+      document.getElementById('guideTableBody').innerHTML = slice.map(g => {
+        const date = new Date(g.created_at).toLocaleDateString('ko-KR', {
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        }).replace(/\. /g, '.').replace(/\.$/, '');
+        return `
+          <div class="admin-card-row">
+            <div class="admin-card-left">
+              ${g.is_pinned ? '<span class="notice-pin" style="flex-shrink:0;">고정</span>' : ''}
+              <a href="guide-detail.html?id=${g.id}" class="admin-card-name">${g.title}</a>
+            </div>
+            <div class="admin-card-right">
+              <span class="admin-card-date">${date}</span>
+              <button class="admin-btn-edit" onclick="location.href='guide-write.html?edit=${g.id}'">수정</button>
+              <button class="admin-btn-delete" onclick="deleteGuide(${g.id})">삭제</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function loadGuides() {
+      const { data, error } = await sb
+        .from('guides')
+        .select('*')
+        .order('is_pinned', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      const empty = document.getElementById('guideEmpty');
+
+      if (error || !data || data.length === 0) {
+        document.getElementById('guideTableBody').innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+      guidePager.load(data);
+    }
+
+    async function deleteGuide(id) {
+      if (!confirm('정말 삭제할까요?')) return;
+      await sb.from('guides').delete().eq('id', id);
+      loadGuides();
     }
 
     // ── 유저 관리 ────────────────────────────

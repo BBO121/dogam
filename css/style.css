@@ -517,6 +517,16 @@ a {
   background: var(--white);
 }
 
+.footer a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.footer a:hover {
+  color: var(--sky-dark);
+}
+
 /* ═══════════════════════════════════════
    브레드크럼
 ═══════════════════════════════════════ */
@@ -2863,6 +2873,23 @@ a {
 
 .admin-btn-revoke:hover {
   background: #FEF3C7;
+}
+
+.admin-btn-edit {
+  padding: 5px 12px;
+  background: #EFF6FF;
+  color: #2563EB;
+  border: 1.5px solid #BFDBFE;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.admin-btn-edit:hover {
+  background: #DBEAFE;
 }
 
 /* 어드민 카드 리스트 */
