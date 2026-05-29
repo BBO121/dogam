@@ -181,24 +181,41 @@
       btn.textContent = editId ? '수정 중...' : '등록 중...';
       btn.disabled = true;
 
-      let error;
       if (editId) {
-        ({ error } = await sb.from('notices').update({ title, content, is_pinned: isPinned }).eq('id', editId));
+        const { data: updated, error } = await sb
+          .from('notices')
+          .update({ title, content, is_pinned: isPinned })
+          .eq('id', editId)
+          .select('id');
+
+        if (error) {
+          console.error('[notice update error]', error);
+          errorEl.textContent = `수정에 실패했어요. (${error.message})`;
+          btn.textContent = '수정하기';
+          btn.disabled = false;
+          return;
+        }
+        if (!updated || updated.length === 0) {
+          errorEl.textContent = '수정에 실패했어요. (변경된 공지가 없어요 — RLS 정책을 확인해 주세요)';
+          btn.textContent = '수정하기';
+          btn.disabled = false;
+          return;
+        }
       } else {
         const user = await getUser();
-        ({ error } = await sb.from('notices').insert({
+        const { error } = await sb.from('notices').insert({
           title, content,
           is_pinned: isPinned,
           author: user?.user_metadata?.nickname || '관리자',
-        }));
-      }
+        });
 
-      if (error) {
-        console.error('[notice save error]', error);
-        errorEl.textContent = `저장에 실패했어요. (${error.message})`;
-        btn.textContent = editId ? '수정하기' : '등록하기';
-        btn.disabled = false;
-        return;
+        if (error) {
+          console.error('[notice insert error]', error);
+          errorEl.textContent = `등록에 실패했어요. (${error.message})`;
+          btn.textContent = '등록하기';
+          btn.disabled = false;
+          return;
+        }
       }
 
       window.location.href = editId ? `notice-detail.html?id=${editId}` : 'notice.html';
