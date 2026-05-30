@@ -69,7 +69,7 @@
 
       const { data, error } = await sb
         .from('species')
-        .select('id, name, image_url, description, is_sensitive, sensitive_note')
+        .select('id, name, image_url, is_sensitive, sensitive_note')
         .eq('owner_nickname', nickname)
         .order('name');
 
@@ -97,7 +97,6 @@
           <div class="species-img"${s.image_url ? ` style="background-image:url('${s.image_url}');background-size:cover;background-position:center;"` : ''}></div>`}
           <div class="species-info">
             <p class="species-name">${s.name}</p>
-            <p class="species-count">${s.description ? s.description.slice(0, 30) + (s.description.length > 30 ? '…' : '') : '설명 없음'}</p>
           </div>
         </a>
       `).join('');

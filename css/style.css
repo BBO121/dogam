@@ -1478,6 +1478,7 @@ a {
   font-size: 14px;
   color: var(--text-sub);
   line-height: 1.8;
+  white-space: pre-wrap;
 }
 
 .species-detail-actions {
@@ -3437,6 +3438,7 @@ a {
   color: var(--text);
   line-height: 1.75;
   margin: 0;
+  white-space: pre-wrap;
 }
 
 /* ═══════════════════════════════════════
