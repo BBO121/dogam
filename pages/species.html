@@ -46,6 +46,7 @@
             <select id="charSort" class="list-sort" style="margin:0;">
               <option value="recent">최근 등록순</option>
               <option value="name">이름순</option>
+              <option value="charNumber">개체번호순</option>
             </select>
             <button id="manageBtn" style="display:none; padding:6px 14px; border:1px solid var(--border); border-radius:8px; background:#fff; font-size:13px; cursor:pointer; color:var(--text-sub);" onclick="toggleManage()">관리</button>
           </div>
@@ -243,12 +244,16 @@
       // 소속 개체
       const { data: chars } = await sb
         .from('characters')
-        .select('id, name, species_name, owner_nickname, image_url, created_at, is_sensitive, sensitive_note, char_categories')
+        .select('id, name, species_name, owner_nickname, image_url, created_at, is_sensitive, sensitive_note, char_categories, char_number')
         .eq('species_name', s.name)
         .order('created_at', { ascending: false });
 
       allChars = chars || [];
       renderCategoryFilter();
+      const saved = localStorage.getItem('speciesCharSort');
+      if (['recent', 'name', 'charNumber'].includes(saved)) {
+        document.getElementById('charSort').value = saved;
+      }
       renderChars();
 
       const countEl = document.getElementById('charCountMeta');
@@ -317,6 +322,28 @@
 
       if (sort === 'name') {
         list.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+      } else if (sort === 'charNumber') {
+        const getGroup = str => {
+          if (!str) return 4;
+          if (/\d/.test(str)) return 0;
+          if (/^[a-zA-Z]/.test(str)) return 1;
+          if (/^[가-힣ᄀ-ᇿ㄰-㆏]/.test(str)) return 2;
+          return 3;
+        };
+        const firstNum = str => { const m = str.match(/\d+/); return parseInt(m[0], 10); };
+        list.sort((a, b) => {
+          const aStr = a.char_number || '';
+          const bStr = b.char_number || '';
+          const aG = getGroup(aStr);
+          const bG = getGroup(bStr);
+          if (aG !== bG) return aG - bG;
+          if (aG === 0) {
+            const diff = firstNum(aStr) - firstNum(bStr);
+            return diff !== 0 ? diff : aStr.localeCompare(bStr, 'ko');
+          }
+          if (aG === 4) return 0;
+          return aStr.localeCompare(bStr, 'ko');
+        });
       }
 
       document.getElementById('charCount').textContent = list.length;
@@ -414,7 +441,10 @@
       overlayEl.remove();
     }
 
-    document.getElementById('charSort').addEventListener('change', renderChars);
+    document.getElementById('charSort').addEventListener('change', () => {
+      localStorage.setItem('speciesCharSort', document.getElementById('charSort').value);
+      renderChars();
+    });
 
     // ── 소유권 이전 모달 ──────────────────────
     function openTransferModal(charId, charName, currentOwner) {

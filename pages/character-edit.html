@@ -163,6 +163,12 @@
             </div>
           </div>
 
+          <!-- 개체번호 -->
+          <div class="form-group">
+            <label class="form-label">개체번호 <span class="form-hint" style="display:inline; margin:0 0 0 6px;">선택사항</span></label>
+            <input type="text" id="charNumber" class="form-input" placeholder="예) NO.001">
+          </div>
+
           <!-- 설명 -->
           <div class="form-group">
             <label class="form-label">설명</label>
@@ -544,8 +550,9 @@
       }
 
       // 기존 데이터 채우기
-      document.getElementById('charName').value = c.name;
-      document.getElementById('charDesc').value  = c.description || '';
+      document.getElementById('charName').value   = c.name;
+      document.getElementById('charNumber').value = c.char_number || '';
+      document.getElementById('charDesc').value   = c.description || '';
 
       if (c.image_url) {
         currentImageUrl = c.image_url;
@@ -976,6 +983,7 @@
 
       const { error } = await sb.from('characters').update({
         name,
+        char_number:         document.getElementById('charNumber').value.trim() || null,
         designer_nickname:   designer,
         designer_contact:    designer_contact,
         owner_nickname:      owner,

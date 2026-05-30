@@ -127,6 +127,12 @@
             </div>
           </div>
 
+          <!-- 개체번호 -->
+          <div class="form-group">
+            <label class="form-label">개체번호 <span class="form-hint" style="display:inline; margin:0 0 0 6px;">선택사항</span></label>
+            <input type="text" id="charNumber" class="form-input" placeholder="예) NO.001">
+          </div>
+
           <!-- 설명 -->
           <div class="form-group">
             <label class="form-label">설명</label>
@@ -599,6 +605,7 @@
       // DB 저장
       const { error } = await sb.from('characters').insert({
         name,
+        char_number:         document.getElementById('charNumber').value.trim() || null,
         species_name:        speciesName || null,
         designer_nickname:   designer,
         designer_contact:    designer_contact,

@@ -290,6 +290,11 @@
               <span class="char-info-label">종족</span>
               <a href="${speciesHref}" class="char-info-value char-info-link">${c.species_name}</a>
             </div>` : ''}
+            ${c.char_number ? `
+            <div class="char-info-row">
+              <span class="char-info-label">개체번호</span>
+              <span class="char-info-value">${c.char_number}</span>
+            </div>` : ''}
             ${c.designer_nickname ? `
             <div class="char-info-row">
               <span class="char-info-label">디자이너</span>
