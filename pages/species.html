@@ -172,7 +172,9 @@
               <div class="meta-item">
                 <span class="meta-label">종족주</span>
                 <span class="meta-value">${s.owner_nickname
-                  ? `<a href="profile.html?user=${encodeURIComponent(s.owner_nickname)}" class="meta-link">${s.owner_nickname}</a>`
+                  ? (s.owner_user_id
+                      ? `<a href="profile.html?user=${encodeURIComponent(s.owner_nickname)}" class="meta-link">${s.owner_nickname}</a>`
+                      : s.owner_nickname)
                   : '—'}</span>
               </div>
               <div class="meta-item">
