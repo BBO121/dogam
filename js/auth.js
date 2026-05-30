@@ -64,65 +64,33 @@ async function deleteAccount() {
   window.location.href = 'index.html';
 }
 
-// 내 캐릭터 조회
+// 내 캐릭터 조회 — owner_user_id 기준만, 오프사이트 제외
 async function getMyCharacters(userId, nickname) {
-  console.log('[getMyCharacters] 호출 — userId:', userId, '/ nickname:', nickname);
-
-  const { data: byNick, error: nickError } = await sb
+  if (!userId) return { data: [], error: null };
+  const { data, error } = await sb
     .from('characters').select('*')
-    .eq('owner_nickname', nickname)
+    .eq('owner_user_id', userId)
+    .neq('owner_is_offsite', true)
     .order('created_at', { ascending: false });
-  console.log('[getMyCharacters] byNick:', byNick?.length, '건 / error:', nickError);
-
-  if (nickError) {
-    console.error('[getMyCharacters] byNick 에러 → 종료:', nickError);
-    return { data: null, error: nickError };
-  }
-
-  let byId = null;
-  if (userId) {
-    const { data: _byId, error: idError } = await sb
-      .from('characters').select('*')
-      .eq('owner_user_id', userId)
-      .order('created_at', { ascending: false });
-    byId = _byId;
-    console.log('[getMyCharacters] byId:', byId?.length, '건 / error:', idError);
-  }
-
-  const seen = new Set();
-  const data = [...(byNick || []), ...(byId || [])].filter(c => {
-    if (seen.has(c.id)) return false;
-    seen.add(c.id);
-    return true;
-  }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  console.log('[getMyCharacters] 최종 merged:', data.length, '건');
-  return { data, error: null };
+  return { data, error };
 }
 
-// 내 종족 조회
+// 내 종족 조회 (UUID 우선, 표시용 nickname fallback)
 async function getMySpecies(userId, nickname) {
-  const { data: byNick, error: nickError } = await sb
-    .from('species').select('*')
-    .eq('owner_nickname', nickname)
-    .order('created_at', { ascending: false });
-  if (nickError) return { data: null, error: nickError };
-
-  let byId = null;
   if (userId) {
-    const { data: _byId } = await sb
+    const { data: byId, error } = await sb
       .from('species').select('*')
       .eq('owner_user_id', userId)
       .order('created_at', { ascending: false });
-    byId = _byId;
+    if (!error && byId?.length) return { data: byId, error: null };
   }
-
-  const seen = new Set();
-  const data = [...(byNick || []), ...(byId || [])].filter(s => {
-    if (seen.has(s.id)) return false;
-    seen.add(s.id);
-    return true;
-  }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  return { data, error: null };
+  if (!nickname) return { data: [], error: null };
+  const { data, error } = await sb
+    .from('species').select('*')
+    .eq('owner_nickname', nickname)
+    .is('owner_user_id', null)
+    .order('created_at', { ascending: false });
+  return { data, error };
 }
 
 // 캐릭터 이전 로그 기록
@@ -160,9 +128,10 @@ async function updateHeader() {
 
     const TESTERS = ['Moulow', 'moulow', 'Sawol'];
     const roleIsSpeciesOwner = user.user_metadata?.role === 'species_owner';
-    const { data: spByNick } = await sb.from('species').select('id').eq('owner_nickname', nickname).limit(1);
     const { data: spById }   = await sb.from('species').select('id').eq('owner_user_id', user.id).limit(1);
-    const isSpeciesOwner = roleIsSpeciesOwner || !!(spByNick?.length || spById?.length);
+    const { data: spByNick } = spById?.length ? { data: null } :
+      await sb.from('species').select('id').eq('owner_nickname', nickname).is('owner_user_id', null).limit(1);
+    const isSpeciesOwner = roleIsSpeciesOwner || !!(spById?.length || spByNick?.length);
     const isTester = TESTERS.includes(nickname);
 
     if (loginBtn) {

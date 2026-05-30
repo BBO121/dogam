@@ -260,8 +260,7 @@
       const { data: s, error } = await sb.from('species').select('*').eq('id', speciesId).single();
       if (error || !s) { window.location.href = 'species-list.html'; return; }
 
-      const _seNick = user.user_metadata?.display_name || user.user_metadata?.nickname;
-      const isOwner = s.owner_user_id ? (user.id === s.owner_user_id) : (_seNick === s.owner_nickname);
+      const isOwner = !!(user.id && s.owner_user_id && user.id === s.owner_user_id);
       if (!isOwner) { window.location.href = `species.html?id=${speciesId}`; return; }
 
       document.getElementById('breadcrumbName').textContent = s.name;

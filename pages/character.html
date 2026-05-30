@@ -199,7 +199,7 @@
       document.title = `${c.name} — 종족연구소`;
 
       const userId  = user?.id || null;
-      const isOwner = c.owner_user_id ? (userId === c.owner_user_id) : (userNickname === c.owner_nickname);
+      const isOwner = !!(userId && c.owner_user_id && userId === c.owner_user_id);
 
       // 종족 페이지 링크용 species id 조회 + 종족주 판별
       let speciesHref = 'species-list.html';
@@ -208,7 +208,9 @@
         const { data: sp } = await sb.from('species').select('id, owner_nickname, owner_user_id').eq('name', c.species_name).single();
         if (sp) {
           speciesHref = `species.html?id=${sp.id}`;
-          isSpeciesOwner = sp.owner_user_id ? (userId === sp.owner_user_id) : (userNickname === sp.owner_nickname);
+          isSpeciesOwner = sp.owner_user_id
+            ? !!(userId && userId === sp.owner_user_id)
+            : (userNickname === sp.owner_nickname);
         }
       }
       let categoryBadgeHtml = '';
@@ -288,10 +290,10 @@
               <span class="char-info-label">소유주</span>
               <span class="char-info-value">${c.owner_nickname
                 ? (c.owner_is_offsite
-                    ? `<span style="display:inline-block;font-size:10px;font-weight:600;color:#555;background:#e8e8e8;border-radius:4px;padding:1px 5px;margin-right:5px;vertical-align:middle;line-height:1.6;">Site-OFF</span>${c.owner_nickname}${isSpeciesOwner ? `<br><span style="display:inline-flex;align-items:center;gap:8px;margin-top:6px;"><span style="font-size:11px;color:var(--text-mute);">사이트에 가입한 유저로 소유주를 변경해요.</span><button onclick="openTransferModal()" style="flex-shrink:0;font-size:12px;font-weight:700;color:var(--sky-deep);background:var(--sky-light);border:1px solid var(--sky);border-radius:6px;padding:5px 14px;cursor:pointer;font-family:inherit;">소유권 이전</button></span>` : ''}`
+                    ? `${isSpeciesOwner ? `<button onclick="openTransferModal()" style="flex-shrink:0;font-size:12px;font-weight:700;color:var(--sky-deep);background:var(--sky-light);border:1px solid var(--sky);border-radius:6px;padding:5px 14px;cursor:pointer;font-family:inherit;margin-right:6px;vertical-align:middle;">소유권 이전</button>` : ''}<span style="display:inline-block;font-size:10px;font-weight:600;color:#555;background:#e8e8e8;border-radius:4px;padding:1px 5px;margin-right:5px;vertical-align:middle;line-height:1.6;">Site-OFF</span>${c.owner_nickname}`
                     : (c.owner_user_id || siteNicks.has(c.owner_nickname)
-                        ? `<a href="profile.html?user=${encodeURIComponent(c.owner_nickname)}" style="color:inherit;text-decoration:none;">${c.owner_nickname}</a>${isOwner ? `<br><span style="display:inline-flex;align-items:center;gap:8px;margin-top:6px;"><button onclick="openTransferModal()" style="flex-shrink:0;font-size:12px;font-weight:700;color:var(--sky-deep);background:var(--sky-light);border:1px solid var(--sky);border-radius:6px;padding:5px 14px;cursor:pointer;font-family:inherit;">소유권 이전</button></span>` : ''}`
-                        : `${c.owner_nickname}${isOwner ? `<br><span style="display:inline-flex;align-items:center;gap:8px;margin-top:6px;"><button onclick="openTransferModal()" style="flex-shrink:0;font-size:12px;font-weight:700;color:var(--sky-deep);background:var(--sky-light);border:1px solid var(--sky);border-radius:6px;padding:5px 14px;cursor:pointer;font-family:inherit;">소유권 이전</button></span>` : ''}`))
+                        ? `<a href="profile.html?user=${encodeURIComponent(c.owner_nickname)}" style="color:inherit;text-decoration:none;">${c.owner_nickname}</a>`
+                        : `${c.owner_nickname}`))
                 : '—'
               }${c.owner_contact ? ` <span style="color:var(--text-mute);font-size:12px;">(${c.owner_contact})</span>` : ''}</span>
             </div>

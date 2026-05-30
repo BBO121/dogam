@@ -249,6 +249,12 @@
         if (error) throw error;
         if (!data?.ok) throw new Error(data?.error || '이전 수락에 실패했어요.');
 
+        // RPC가 owner_user_id를 업데이트하지 않으므로 직접 설정
+        await sb.from('characters').update({
+          owner_user_id:    currentUser.id,
+          owner_is_offsite: false,
+        }).eq('id', charId);
+
         window.location.href = `character.html?id=${charId}`;
       } catch (e) {
         console.error('[acceptTransfer 오류]', e);

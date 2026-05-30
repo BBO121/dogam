@@ -135,7 +135,7 @@
       document.title = `${s.name} — 종족연구소`;
 
       const speciesUserId = user?.id || null;
-      isOwner = s.owner_user_id ? (speciesUserId === s.owner_user_id) : (userNickname === s.owner_nickname);
+      isOwner = !!(speciesUserId && s.owner_user_id && speciesUserId === s.owner_user_id);
 
       // 종족주일 때 사이트 유저 목록 로드 (오프사이트 판별용)
       if (isOwner) {

@@ -91,15 +91,12 @@
       }
 
       const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname || '유저';
-      console.log('[my-characters] user.id:', user.id, '/ nickname:', nickname);
       const { data, error } = await getMyCharacters(user.id, nickname);
-      console.log('[my-characters] 결과 data:', data?.length, '/ error:', error);
 
       document.getElementById('pageLoading').style.display = 'none';
       document.getElementById('pageContent').style.display = 'block';
 
       if (error || !data) {
-        console.warn('[my-characters] 빈 화면 — error:', error);
         document.getElementById('emptyState').style.display = 'flex';
         return;
       }
