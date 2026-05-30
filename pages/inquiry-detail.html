@@ -163,7 +163,8 @@
         return;
       }
 
-      if (!isAdminUser && data.nickname !== nickname) {
+      const isOwner = data.user_id != null ? data.user_id === user.id : data.nickname === nickname;
+      if (!isAdminUser && !isOwner) {
         window.location.href = 'inquiry.html';
         return;
       }
@@ -212,7 +213,7 @@
             document.getElementById('userReplyDate').textContent = rDate;
           }
           document.getElementById('userReplySection').style.display = 'block';
-        } else if (!isAdminUser && data.nickname === nickname) {
+        } else if (!isAdminUser && isOwner) {
           // 문의 작성자 본인이고 아직 대댓글 없을 때 작성 폼 표시
           document.getElementById('userReplyForm').style.display = 'block';
         }
@@ -223,7 +224,7 @@
         document.getElementById('statusSelect').value = data.status || '접수됨';
         if (data.answer) document.getElementById('answerInput').value = data.answer;
         document.getElementById('deleteBtn').style.display = 'inline-flex';
-      } else if (data.nickname === nickname && !data.answer) {
+      } else if (isOwner && !data.answer) {
         document.getElementById('deleteBtn').style.display = 'inline-flex';
       }
 

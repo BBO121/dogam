@@ -118,11 +118,17 @@
       btn.textContent = '이전 중...';
       btn.disabled = true;
 
+      const targetUserId = _nickToId[_transferToNick] || null;
+      console.log('[소유권 이전] 대상 닉네임:', _transferToNick, '/ UUID:', targetUserId);
+
       const { data: updated, error } = await sb.from('characters').update({
-        owner_nickname: _transferToNick,
-        owner_user_id:  _nickToId[_transferToNick] || null,
-        owner_contact:  null,
+        owner_nickname:   _transferToNick,
+        owner_user_id:    targetUserId,
+        owner_is_offsite: false,
+        owner_contact:    null,
       }).eq('id', charId).select('id');
+
+      console.log('[소유권 이전] update 결과 — data:', updated, '/ error:', error);
 
       if (error || !updated?.length) {
         alert('이전에 실패했어요: ' + (error?.message || 'DB에 반영되지 않았어요. Supabase에서 SQL을 먼저 실행했는지 확인해주세요.'));
@@ -326,7 +332,11 @@
                 }
                 <a href="character-edit.html?id=${charId}" class="btn-ghost">개체 정보 수정</a>
               </div>
-            </div>` : ''}
+            </div>` : (isSpeciesOwner && c.owner_is_offsite ? `
+            <div class="char-info-divider"></div>
+            <div style="display:flex; justify-content:flex-end;">
+              <button onclick="openTransferModal()" class="btn-ghost">소유권 이전</button>
+            </div>` : '')}
           </aside>
         </div>
 

@@ -165,7 +165,8 @@
         return;
       }
 
-      if (!isAdminUser && data.nickname !== nickname) {
+      const isOwner = data.user_id != null ? data.user_id === user.id : data.nickname === nickname;
+      if (!isAdminUser && !isOwner) {
         window.location.href = 'bug-report.html';
         return;
       }
@@ -210,7 +211,7 @@
             document.getElementById('userReplyDate').textContent = rDate;
           }
           document.getElementById('userReplySection').style.display = 'block';
-        } else if (!isAdminUser && data.nickname === nickname) {
+        } else if (!isAdminUser && isOwner) {
           document.getElementById('userReplyForm').style.display = 'block';
         }
       }
@@ -220,7 +221,7 @@
         document.getElementById('statusSelect').value = data.status || '접수됨';
         if (data.answer) document.getElementById('answerInput').value = data.answer;
         document.getElementById('deleteBtn').style.display = 'inline-flex';
-      } else if (data.nickname === nickname && !data.answer) {
+      } else if (isOwner && !data.answer) {
         document.getElementById('deleteBtn').style.display = 'inline-flex';
       }
 
