@@ -70,7 +70,7 @@
       const { data, error } = await sb
         .from('species')
         .select('id, name, image_url, is_sensitive, sensitive_note')
-        .eq('owner_nickname', nickname)
+        .or(`owner_user_id.eq.${user.id},and(owner_user_id.is.null,owner_nickname.eq.${nickname})`)
         .order('name');
 
       document.getElementById('pageLoading').style.display = 'none';

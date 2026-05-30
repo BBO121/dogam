@@ -924,7 +924,7 @@
       try {
         await Promise.all([
           sb.from('characters')
-            .update({ owner_nickname: myNick })
+            .update({ owner_nickname: myNick, owner_user_id: currentUser.id })
             .eq('name', a.character_name),
           logTransfer({
             character_name: a.character_name,
@@ -1005,9 +1005,13 @@
         return;
       }
 
+      const { data: recipientUserList } = await sb.rpc('get_all_users');
+      const recipientUser = (recipientUserList || []).find(u => u.nickname === recipient);
+      const recipientUserId = recipientUser?.id || null;
+
       await Promise.all([
         sb.from('characters')
-          .update({ owner_nickname: recipient })
+          .update({ owner_nickname: recipient, owner_user_id: recipientUserId })
           .eq('name', a.character_name),
         logTransfer({
           character_name: a.character_name,

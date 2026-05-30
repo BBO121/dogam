@@ -226,6 +226,7 @@
     let selectedDefaultDesignerNick = null;
     let defaultOwnerType            = 'site';
     let selectedDefaultOwnerNick    = null;
+    let selectedDefaultOwnerNickId  = null;
     let itemStates                  = {};
 
     document.getElementById('cancelBtn').href = speciesId ? `species.html?id=${speciesId}` : 'species-list.html';
@@ -258,7 +259,7 @@
       const myName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
       const { data } = await sb.rpc('get_all_users');
       allUsers = (data || [])
-        .map(u => ({ nickname: u.nickname || '', loginId: u.login_id || u.nickname || '' }))
+        .map(u => ({ nickname: u.nickname || '', loginId: u.login_id || u.nickname || '', id: u.id || '' }))
         .filter(u => u.nickname)
         .sort((a, b) => a.nickname.localeCompare(b.nickname, 'ko'));
       renderDefaultDesignerList([]);
@@ -323,7 +324,8 @@
     }
 
     function selectDefaultOwner(nick) {
-      selectedDefaultOwnerNick = nick;
+      selectedDefaultOwnerNick   = nick;
+      selectedDefaultOwnerNickId = allUsers.find(u => u.nickname === nick)?.id || null;
       document.querySelectorAll('#defaultOwnerUserList > div').forEach(el => {
         el.style.background = el.id === `doItem_${nick}` ? 'var(--sky-light)' : '';
         el.style.fontWeight  = el.id === `doItem_${nick}` ? '600' : '';
@@ -546,7 +548,8 @@
 
     function selectItemOwner(id, nick) {
       if (!itemStates[id]) itemStates[id] = {};
-      itemStates[id].selectedOwner = nick;
+      itemStates[id].selectedOwner   = nick;
+      itemStates[id].selectedOwnerId = allUsers.find(u => u.nickname === nick)?.id || null;
       document.querySelectorAll(`#itemOList_${id} > div`).forEach(el => {
         const sel = el.id === `ioItem_${id}_${nick}`;
         el.style.background = sel ? 'var(--sky-light)' : '';
@@ -620,9 +623,13 @@
         const designer = (state.designerType === 'external'
           ? document.getElementById(`itemDExtName_${id}`)?.value.trim()
           : state.selectedDesigner) || defaultDesigner;
-        const owner    = (state.ownerType === 'external'
+        const itemOwnerType = state.ownerType || defaultOwnerType;
+        const owner    = (itemOwnerType === 'external'
           ? document.getElementById(`itemOExtName_${id}`)?.value.trim()
           : state.selectedOwner) || defaultOwner;
+        const ownerUserId = itemOwnerType === 'site'
+          ? (state.selectedOwnerId || selectedDefaultOwnerNickId || null)
+          : null;
         const desc     = document.getElementById(`desc_${id}`).value.trim() || defaultDesc;
         const file  = itemStates[id]?.file || document.getElementById(`file_${id}`).files[0];
 
@@ -665,6 +672,7 @@
             species_name:        speciesName || null,
             designer_nickname:   designer || null,
             owner_nickname:      owner,
+            owner_user_id:       ownerUserId,
             description:         desc || null,
             image_url,
             custom_field_values: Object.keys(customFieldValues).length ? customFieldValues : null,

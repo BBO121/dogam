@@ -59,6 +59,27 @@
             <div id="answerContent" class="notice-detail-content" style="color:var(--text);"></div>
             <p id="answerDate" style="font-size:12px; color:var(--text-mute); margin-top:10px;"></p>
           </div>
+
+          <!-- 유저 대댓글 표시 -->
+          <div id="userReplySection" style="display:none; margin-top:12px;">
+            <div style="background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px;">
+              <p style="font-size:12px; font-weight:700; color:var(--text-sub); margin-bottom:8px;">↩ <span id="userReplyAuthor"></span>의 답글</p>
+              <div id="userReplyContent" class="notice-detail-content" style="color:var(--text); font-size:14px;"></div>
+              <p id="userReplyDate" style="font-size:12px; color:var(--text-mute); margin-top:8px;"></p>
+            </div>
+          </div>
+
+          <!-- 유저 대댓글 작성 폼 (버그리포트 작성자만, 아직 대댓글 없을 때) -->
+          <div id="userReplyForm" style="display:none; margin-top:12px;">
+            <div style="background:#fff; border:1px solid var(--border); border-radius:var(--radius); padding:16px 20px;">
+              <p style="font-size:13px; font-weight:600; color:var(--text); margin-bottom:10px;">↩ 답글 달기</p>
+              <textarea id="userReplyInput" class="form-textarea" rows="3" placeholder="관리자 답변에 추가로 남길 내용을 입력하세요"></textarea>
+              <p class="auth-error" id="userReplyError" style="margin-top:6px;"></p>
+              <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:10px;">
+                <button class="btn-secondary" style="font-size:13px;" onclick="submitUserReply()">답글 등록</button>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- 관리자 전용 답변 작성 폼 -->
@@ -166,7 +187,7 @@
 
       document.getElementById('detailContent').innerHTML = data.content.replace(/\n/g, '<br>');
 
-if (data.answer) {
+      if (data.answer) {
         document.getElementById('answerContent').innerHTML = data.answer.replace(/\n/g, '<br>');
         if (data.answered_at) {
           const aDate = new Date(data.answered_at).toLocaleDateString('ko-KR', {
@@ -175,6 +196,23 @@ if (data.answer) {
           document.getElementById('answerDate').textContent = `답변일: ${aDate}`;
         }
         document.getElementById('answerSection').style.display = 'block';
+
+        // 대댓글 표시
+        if (data.user_reply) {
+          const replyContentEl = document.getElementById('userReplyContent');
+          replyContentEl.style.whiteSpace = 'pre-wrap';
+          replyContentEl.textContent = data.user_reply;
+          document.getElementById('userReplyAuthor').textContent = data.user_replied_by || data.nickname;
+          if (data.user_replied_at) {
+            const rDate = new Date(data.user_replied_at).toLocaleDateString('ko-KR', {
+              year: 'numeric', month: '2-digit', day: '2-digit'
+            }).replace(/\. /g, '.').replace(/\.$/, '');
+            document.getElementById('userReplyDate').textContent = rDate;
+          }
+          document.getElementById('userReplySection').style.display = 'block';
+        } else if (!isAdminUser && data.nickname === nickname) {
+          document.getElementById('userReplyForm').style.display = 'block';
+        }
       }
 
       if (isAdminUser) {
@@ -218,6 +256,37 @@ if (data.answer) {
         link:          `bug-report-detail.html?id=${currentId}`,
         is_read:       false,
       });
+
+      window.location.reload();
+    }
+
+    async function submitUserReply() {
+      const reply   = document.getElementById('userReplyInput').value.trim();
+      const errorEl = document.getElementById('userReplyError');
+      errorEl.textContent = '';
+      if (!reply) { errorEl.textContent = '내용을 입력해주세요.'; return; }
+
+      const user = await getUser();
+      const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname;
+
+      const { error } = await sb
+        .from('bug_reports')
+        .update({
+          user_reply:      reply,
+          user_replied_at: new Date().toISOString(),
+          user_replied_by: nickname,
+        })
+        .eq('id', currentId);
+
+      if (error) { errorEl.textContent = `등록에 실패했어요. (${error.message})`; return; }
+
+      await sb.from('notifications').insert({
+        user_nickname: 'admin',
+        type:          'bug_reply',
+        message:       `"${nickname}"님이 버그리포트 답변에 대댓글을 달았어요.`,
+        link:          `bug-report-detail.html?id=${currentId}`,
+        is_read:       false,
+      }).catch(() => {});
 
       window.location.reload();
     }

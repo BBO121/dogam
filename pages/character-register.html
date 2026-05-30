@@ -198,6 +198,7 @@
     let currentUser          = null;
     let ownerType            = 'site';
     let selectedNick         = null;
+    let selectedNickId       = null;
     let designerType         = 'site';
     let selectedDesignerNick = null;
     let allUsers             = [];
@@ -340,7 +341,7 @@
 
       const { data } = await sb.rpc('get_all_users');
       allUsers = (data || [])
-        .map(u => ({ nickname: u.nickname || '', loginId: u.login_id || u.nickname || '' }))
+        .map(u => ({ nickname: u.nickname || '', loginId: u.login_id || u.nickname || '', id: u.id || '' }))
         .filter(u => u.nickname)
         .sort((a, b) => a.nickname.localeCompare(b.nickname, 'ko'));
 
@@ -366,7 +367,8 @@
     }
 
     function selectUser(nick) {
-      selectedNick = nick;
+      selectedNick   = nick;
+      selectedNickId = allUsers.find(u => u.nickname === nick)?.id || null;
       document.querySelectorAll('#ownerUserList > div').forEach(el => {
         el.style.background = el.id === `userItem_${nick}` ? 'var(--sky-light)' : '';
         el.style.fontWeight  = el.id === `userItem_${nick}` ? '600' : '';
@@ -601,6 +603,7 @@
         designer_nickname:   designer,
         designer_contact:    designer_contact,
         owner_nickname:      owner,
+        owner_user_id:       ownerType === 'site' ? (selectedNickId || null) : null,
         owner_contact:       externalContact || null,
         description:         desc || null,
         image_url,

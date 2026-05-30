@@ -39,6 +39,7 @@
           <button class="profile-tab" data-tab="Users">유저 관리</button>
           <button class="profile-tab" data-tab="Species">종족 관리</button>
           <button class="profile-tab" data-tab="Characters">개체 관리</button>
+          <button class="profile-tab" data-tab="Adoptions">분양 관리</button>
         </div>
 
         <!-- 공지 관리 탭 -->
@@ -136,6 +137,19 @@
           </section>
         </div>
 
+        <!-- 분양 관리 탭 -->
+        <div id="tabAdoptions" class="tab-content" style="display:none;">
+          <section class="section">
+            <div class="section-header" style="margin-bottom:12px;">
+              <h2 class="settings-section-title" style="margin-bottom:0;">분양 목록</h2>
+              <input type="text" class="list-search" id="adoptionAdminSearch" placeholder="캐릭터명 / 작성자 검색" style="width:220px;" oninput="filterAdminAdoptions(this.value)">
+            </div>
+            <div class="admin-card-list" id="adoptionTableBody"></div>
+            <p id="adoptionAdminEmpty" class="empty-state" style="display:none;">등록된 분양글이 없어요.</p>
+            <div id="pgAdoptions"></div>
+          </section>
+        </div>
+
       </div>
     </main>
   </div>
@@ -152,11 +166,12 @@
   <script>
     let adminUser = null;
 
-    const noticePager  = createPager(renderNoticeRows,  'pgNotices');
-    const guidePager   = createPager(renderGuideRows,   'pgGuides');
-    const userPager    = createPager(renderUserRows,     'pgUsers');
-    const speciesPager = createPager(renderSpeciesRows,  'pgSpecies');
-    const charPager    = createPager(renderCharRows,     'pgChars');
+    const noticePager   = createPager(renderNoticeRows,   'pgNotices');
+    const guidePager    = createPager(renderGuideRows,    'pgGuides');
+    const userPager     = createPager(renderUserRows,     'pgUsers');
+    const speciesPager  = createPager(renderSpeciesRows,  'pgSpecies');
+    const charPager     = createPager(renderCharRows,     'pgChars');
+    const adoptionPager = createPager(renderAdoptionRows, 'pgAdoptions');
 
     async function initPage() {
       const user = await getUser();
@@ -189,6 +204,9 @@
         }
         if (btn.dataset.tab === 'Characters' && !tabLoaded.Characters) {
           tabLoaded.Characters = true; loadAdminChars();
+        }
+        if (btn.dataset.tab === 'Adoptions' && !tabLoaded.Adoptions) {
+          tabLoaded.Adoptions = true; loadAdminAdoptions();
         }
       });
     });
@@ -414,9 +432,11 @@
 
       if (nickname) {
         await Promise.all([
-          sb.from('characters').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname),
+          sb.from('characters').update({ owner_nickname: '(알수없음)', owner_user_id: null }).eq('owner_user_id', userId),
+          sb.from('characters').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname).is('owner_user_id', null),
           sb.from('characters').update({ designer_nickname: '(알수없음)' }).eq('designer_nickname', nickname),
-          sb.from('species').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname),
+          sb.from('species').update({ owner_nickname: '(알수없음)', owner_user_id: null }).eq('owner_user_id', userId),
+          sb.from('species').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname).is('owner_user_id', null),
           sb.from('character_transfers').update({ from_nickname: '(알수없음)' }).eq('from_nickname', nickname),
           sb.from('character_transfers').update({ to_nickname: '(알수없음)' }).eq('to_nickname', nickname),
         ]);
@@ -530,6 +550,70 @@
       if (error) { alert('삭제에 실패했어요.'); return; }
       allAdminChars = allAdminChars.filter(c => c.id !== id);
       charPager.load(allAdminChars);
+    }
+
+    // ── 분양 관리 ────────────────────────────
+    const TYPE_LABEL_ADMIN = { free: '무료', paid: '유료', auction: '경매', etc: '기타' };
+    let allAdminAdoptions = [];
+
+    function renderAdoptionRows(slice) {
+      document.getElementById('adoptionTableBody').innerHTML = slice.map(a => {
+        const date = new Date(a.created_at).toLocaleDateString('ko-KR', {
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        }).replace(/\. /g, '.').replace(/\.$/, '');
+        const typeLabel   = TYPE_LABEL_ADMIN[a.adoption_type] || a.adoption_type || '—';
+        const statusColor = a.status === '완료' ? 'color:var(--text-mute)' : 'color:var(--sky-dark)';
+        return `
+          <div class="admin-card-row" id="adoption-row-${a.id}">
+            <div class="admin-card-left">
+              <a href="adoption-detail.html?id=${a.id}" class="admin-card-name">${a.character_name || '—'}</a>
+              <span class="admin-card-meta">${[a.species_name, a.author].filter(Boolean).join(' · ')} · ${typeLabel} · <span style="${statusColor}">${a.status || '분양중'}</span></span>
+            </div>
+            <div class="admin-card-right">
+              <span class="admin-card-date">${date}</span>
+              <button class="admin-btn-delete" onclick="deleteAdoption('${a.id}', '${(a.character_name || '').replace(/'/g, "\\'")}')">삭제</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function loadAdminAdoptions() {
+      const { data, error } = await sb
+        .from('adoptions')
+        .select('id, character_name, species_name, adoption_type, status, author, created_at')
+        .order('created_at', { ascending: false });
+
+      const empty = document.getElementById('adoptionAdminEmpty');
+
+      if (error || !data || data.length === 0) {
+        document.getElementById('adoptionTableBody').innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+      allAdminAdoptions = data;
+      adoptionPager.load(data);
+    }
+
+    function filterAdminAdoptions(q) {
+      const qLow = q.toLowerCase();
+      const filtered = q
+        ? allAdminAdoptions.filter(a =>
+            (a.character_name || '').toLowerCase().includes(qLow) ||
+            (a.species_name   || '').toLowerCase().includes(qLow) ||
+            (a.author         || '').toLowerCase().includes(qLow))
+        : allAdminAdoptions;
+      adoptionPager.load(filtered);
+    }
+
+    async function deleteAdoption(id, name) {
+      if (!confirm(`"${name}" 분양글을 삭제할까요?`)) return;
+      const { data: deleted, error } = await sb.from('adoptions').delete().eq('id', id).select('id');
+      if (error) { alert('삭제에 실패했어요: ' + error.message); return; }
+      if (!deleted?.length) { alert('삭제 권한이 없어요.\nSupabase에서 관리자 DELETE 정책을 추가해주세요.'); return; }
+      allAdminAdoptions = allAdminAdoptions.filter(a => String(a.id) !== String(id));
+      adoptionPager.load(allAdminAdoptions);
     }
 
     initPage();

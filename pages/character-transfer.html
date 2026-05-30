@@ -166,7 +166,8 @@
       charData = c;
 
       const myNick  = user.user_metadata?.display_name || user.user_metadata?.nickname;
-      if (myNick !== c.owner_nickname) {
+      const isCharOwner = c.owner_user_id ? (user.id === c.owner_user_id) : (myNick === c.owner_nickname);
+      if (!isCharOwner) {
         window.location.href = `character.html?id=${charId}`;
         return;
       }

@@ -65,21 +65,21 @@ async function deleteAccount() {
 }
 
 // 내 캐릭터 조회
-async function getMyCharacters(nickname) {
+async function getMyCharacters(userId, nickname) {
   const { data, error } = await sb
     .from('characters')
     .select('*')
-    .eq('owner_nickname', nickname)
+    .or(`owner_user_id.eq.${userId},and(owner_user_id.is.null,owner_nickname.eq.${nickname})`)
     .order('created_at', { ascending: false });
   return { data, error };
 }
 
 // 내 종족 조회
-async function getMySpecies(nickname) {
+async function getMySpecies(userId, nickname) {
   const { data, error } = await sb
     .from('species')
     .select('*')
-    .eq('owner_nickname', nickname)
+    .or(`owner_user_id.eq.${userId},and(owner_user_id.is.null,owner_nickname.eq.${nickname})`)
     .order('created_at', { ascending: false });
   return { data, error };
 }
@@ -119,7 +119,8 @@ async function updateHeader() {
 
     const TESTERS = ['Moulow', 'moulow', 'Sawol'];
     const roleIsSpeciesOwner = user.user_metadata?.role === 'species_owner';
-    const { data: ownedSpecies } = await sb.from('species').select('id').eq('owner_nickname', nickname).limit(1);
+    const { data: ownedSpecies } = await sb.from('species').select('id')
+      .or(`owner_user_id.eq.${user.id},and(owner_user_id.is.null,owner_nickname.eq.${nickname})`).limit(1);
     const isSpeciesOwner = roleIsSpeciesOwner || (ownedSpecies && ownedSpecies.length > 0);
     const isTester = TESTERS.includes(nickname);
 

@@ -182,7 +182,8 @@ async function updateSidebarLogin() {
       const TESTERS = ['Moulow', 'moulow', 'Sawol'];
       const isTester = TESTERS.includes(nickname);
       const roleIsSpeciesOwner = user.user_metadata?.role === 'species_owner';
-      const { data: ownedSpecies } = await sb.from('species').select('id').eq('owner_nickname', nickname).limit(1);
+      const { data: ownedSpecies } = await sb.from('species').select('id')
+        .or(`owner_user_id.eq.${user.id},and(owner_user_id.is.null,owner_nickname.eq.${nickname})`).limit(1);
       const isSpeciesOwner = roleIsSpeciesOwner || (ownedSpecies && ownedSpecies.length > 0);
 
       const badges = [];

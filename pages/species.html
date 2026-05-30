@@ -101,6 +101,7 @@
     let manageMode     = false;
     let activeCategory = null;
     let siteUserNicks  = new Set();
+    let nickToId       = {};
 
     // 소유권 이전 모달 상태
     let transferCharId      = null;
@@ -133,12 +134,13 @@
 
       document.title = `${s.name} — 종족연구소`;
 
-      isOwner = userNickname === s.owner_nickname;
+      const speciesUserId = user?.id || null;
+      isOwner = s.owner_user_id ? (speciesUserId === s.owner_user_id) : (userNickname === s.owner_nickname);
 
       // 종족주일 때 사이트 유저 목록 로드 (오프사이트 판별용)
       if (isOwner) {
         const { data: userList } = await sb.rpc('get_all_users');
-        if (userList) userList.forEach(u => { if (u.nickname) siteUserNicks.add(u.nickname); });
+        if (userList) userList.forEach(u => { if (u.nickname) siteUserNicks.add(u.nickname); if (u.nickname && u.id) nickToId[u.nickname] = u.id; });
       }
 
       const registeredDate = new Date(s.created_at).toLocaleDateString('ko-KR', {
@@ -473,13 +475,14 @@
       btn.textContent = '이전 중...';
       btn.disabled = true;
 
-      const { error } = await sb.from('characters').update({
+      const { data: updated, error } = await sb.from('characters').update({
         owner_nickname: transferToNick,
+        owner_user_id:  nickToId[transferToNick] || null,
         owner_contact:  null,
-      }).eq('id', transferCharId);
+      }).eq('id', transferCharId).select('id');
 
-      if (error) {
-        alert('이전에 실패했어요: ' + error.message);
+      if (error || !updated?.length) {
+        alert('이전에 실패했어요: ' + (error?.message || 'DB에 반영되지 않았어요. Supabase에서 SQL을 먼저 실행했는지 확인해주세요.'));
         btn.textContent = '이전하기';
         btn.disabled = false;
         return;

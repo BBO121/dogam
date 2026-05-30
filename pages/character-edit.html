@@ -516,7 +516,8 @@
       const { data: c, error } = await sb.from('characters').select('*').eq('id', charId).single();
       if (error || !c) { window.location.href = 'character-list.html'; return; }
 
-      const isOwner = (user.user_metadata?.display_name || user.user_metadata?.nickname) === c.owner_nickname;
+      const _edNick = user.user_metadata?.display_name || user.user_metadata?.nickname;
+      const isOwner = c.owner_user_id ? (user.id === c.owner_user_id) : (_edNick === c.owner_nickname);
       if (!isOwner) { window.location.href = `character.html?id=${charId}`; return; }
 
       currentUser = user;

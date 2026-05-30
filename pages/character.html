@@ -63,6 +63,7 @@
 
     // 소유권 이전 모달 상태
     let _siteNicks      = new Set();
+    let _nickToId       = {};
     let _charData       = null;
     let _transferToNick = null;
 
@@ -117,13 +118,14 @@
       btn.textContent = '이전 중...';
       btn.disabled = true;
 
-      const { error } = await sb.from('characters').update({
+      const { data: updated, error } = await sb.from('characters').update({
         owner_nickname: _transferToNick,
+        owner_user_id:  _nickToId[_transferToNick] || null,
         owner_contact:  null,
-      }).eq('id', charId);
+      }).eq('id', charId).select('id');
 
-      if (error) {
-        alert('이전에 실패했어요: ' + error.message);
+      if (error || !updated?.length) {
+        alert('이전에 실패했어요: ' + (error?.message || 'DB에 반영되지 않았어요. Supabase에서 SQL을 먼저 실행했는지 확인해주세요.'));
         btn.textContent = '이전하기';
         btn.disabled = false;
         return;
@@ -190,21 +192,23 @@
       }
 
       const siteNicks = new Set((siteUserData || []).map(u => u.nickname).filter(Boolean));
+      _nickToId = Object.fromEntries((siteUserData || []).filter(u => u.nickname && u.id).map(u => [u.nickname, u.id]));
       _siteNicks = siteNicks;
       _charData  = c;
 
       document.title = `${c.name} — 종족연구소`;
 
-      const isOwner = userNickname === c.owner_nickname;
+      const userId  = user?.id || null;
+      const isOwner = c.owner_user_id ? (userId === c.owner_user_id) : (userNickname === c.owner_nickname);
 
       // 종족 페이지 링크용 species id 조회 + 종족주 판별
       let speciesHref = 'species-list.html';
       let isSpeciesOwner = false;
       if (c.species_name) {
-        const { data: sp } = await sb.from('species').select('id, owner_nickname').eq('name', c.species_name).single();
+        const { data: sp } = await sb.from('species').select('id, owner_nickname, owner_user_id').eq('name', c.species_name).single();
         if (sp) {
           speciesHref = `species.html?id=${sp.id}`;
-          isSpeciesOwner = userNickname === sp.owner_nickname;
+          isSpeciesOwner = sp.owner_user_id ? (userId === sp.owner_user_id) : (userNickname === sp.owner_nickname);
         }
       }
       let categoryBadgeHtml = '';
