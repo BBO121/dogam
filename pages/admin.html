@@ -531,6 +531,7 @@
             </div>
             <div class="admin-card-right">
               <span class="admin-card-date">${date}</span>
+              <button class="admin-btn-edit" onclick="location.href='character-edit.html?id=${c.id}'">수정</button>
               <button class="admin-btn-edit" onclick="openAdminTransferModal('${c.id}', '${safeName}', '${safeNick}')">이전</button>
               <button class="admin-btn-delete" onclick="deleteChar('${c.id}', '${safeName}')">삭제</button>
             </div>
