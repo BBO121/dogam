@@ -457,7 +457,7 @@
           sb.from('characters').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname).is('owner_user_id', null).eq('owner_is_offsite', false),
           sb.from('characters').update({ designer_nickname: '(알수없음)' }).eq('designer_nickname', nickname),
           sb.from('species').update({ owner_nickname: '(알수없음)', owner_user_id: null }).eq('owner_user_id', userId),
-          sb.from('species').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname),
+          sb.from('species').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname).is('owner_user_id', null),
           sb.from('character_transfers').update({ from_nickname: '(알수없음)' }).eq('from_nickname', nickname),
           sb.from('character_transfers').update({ to_nickname: '(알수없음)' }).eq('to_nickname', nickname),
         ]);
