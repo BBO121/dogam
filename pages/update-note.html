@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>가이드 — 종족연구소</title>
+  <title>업데이트노트 — 종족연구소</title>
   <link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
@@ -24,22 +24,22 @@
     <main class="main">
 
       <div style="padding-top: 24px; margin-bottom: 20px;">
-        <h1 class="list-page-title">가이드</h1>
+        <h1 class="list-page-title">업데이트노트</h1>
         <div style="display:flex; align-items:center; justify-content:space-between; margin-top:6px;">
-          <p class="list-page-count" id="guideCount" style="margin-top:0;"></p>
+          <p class="list-page-count" id="noticeCount" style="margin-top:0;"></p>
           <div style="display:flex; align-items:center; gap:12px;">
             <button onclick="toggleView()" id="toggleBtn" class="notice-toggle-btn" style="display:none;">목록보기 ›</button>
-            <a href="guide-write.html" class="btn-secondary" id="writeBtn" style="display:none;">작성하기</a>
+            <a href="update-note-write.html" class="btn-secondary" id="writeBtn" style="display:none;">작성하기</a>
           </div>
         </div>
       </div>
 
-      <div id="guideList"></div>
+      <div id="noticeList"></div>
       <div id="paginationWrap"></div>
 
       <div id="emptyState" class="empty-state-wrap" style="display:none;">
-        <div class="empty-state-icon">📖</div>
-        <p class="empty-state-title">가이드가 없어요</p>
+        <div class="empty-state-icon">📋</div>
+        <p class="empty-state-title">업데이트노트가 없어요</p>
       </div>
 
     </main>
@@ -55,7 +55,7 @@
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
   <script>
-    let _guideData = null;
+    let _noteData = null;
     let isListMode = false;
 
     async function initPage() {
@@ -65,7 +65,7 @@
       }
 
       const { data, error } = await sb
-        .from('guides')
+        .from('update_notes')
         .select('*')
         .order('is_pinned', { ascending: false })
         .order('created_at', { ascending: false });
@@ -75,14 +75,14 @@
         return;
       }
 
-      document.getElementById('guideCount').textContent = `총 ${data.length}개`;
+      document.getElementById('noticeCount').textContent = `총 ${data.length}개`;
       document.getElementById('toggleBtn').style.display = 'inline';
-      _guideData = data;
+      _noteData = data;
       pager.load(data);
     }
 
-    function renderGuides(list) {
-      const container = document.getElementById('guideList');
+    function renderNotices(list) {
+      const container = document.getElementById('noticeList');
 
       if (isListMode) {
         container.className = 'notice-list';
@@ -91,7 +91,7 @@
             year: 'numeric', month: '2-digit', day: '2-digit'
           }).replace(/\. /g, '.').replace(/\.$/, '');
           return `
-            <a class="notice-item" href="guide-detail.html?id=${n.id}">
+            <a class="notice-item" href="update-note-detail.html?id=${n.id}">
               <div class="notice-header-left">
                 ${n.is_pinned ? '<span class="notice-pin">고정</span>' : ''}
                 <span class="notice-title">${n.title}</span>
@@ -123,16 +123,15 @@
       }
     }
 
-    const pager = createPager(renderGuides);
+    const pager = createPager(renderNotices);
 
     function toggleView() {
       isListMode = !isListMode;
       document.getElementById('toggleBtn').textContent = isListMode ? '내용보기 ›' : '목록보기 ›';
-      if (_guideData) pager.load(_guideData);
+      if (_noteData) pager.load(_noteData);
     }
 
     initPage();
   </script>
 </body>
 </html>
-

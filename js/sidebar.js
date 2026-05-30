@@ -10,6 +10,7 @@ async function initSidebar() {
     <nav class="sidebar-menu">
       <a href="index.html"        class="sidebar-item ${path === 'index.html' ? 'active' : ''}">홈</a>
       <a href="notice.html"       class="sidebar-item ${path === 'notice.html' || path === 'notice-detail.html' ? 'active' : ''}">공지사항</a>
+      <a href="update-note.html" class="sidebar-item ${path === 'update-note.html' || path === 'update-note-detail.html' ? 'active' : ''}">업데이트노트</a>
       <a href="guide.html"        class="sidebar-item ${path === 'guide.html'  || path === 'guide-detail.html'  ? 'active' : ''}">가이드</a>
       <a href="adoption.html"     class="sidebar-item ${path === 'adoption.html' || path === 'adoption-detail.html' ? 'active' : ''}">분양</a>
     </nav>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>가이드 작성 — 종족연구소</title>
+  <title>업데이트노트 작성 — 종족연구소</title>
   <link rel="stylesheet" href="../css/style.css">
   <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
   <style>
@@ -63,39 +63,42 @@
         <div class="breadcrumb" style="margin-bottom: 24px;">
           <a href="index.html">홈</a>
           <span>/</span>
-          <a href="guide.html">가이드</a>
+          <a href="update-note.html">업데이트노트</a>
           <span>/</span>
           <span>작성</span>
         </div>
 
-        <h1 class="register-title" id="pageTitle">가이드 작성</h1>
+        <h1 class="register-title" id="pageTitle">업데이트노트 작성</h1>
 
-        <form class="register-form" id="guideForm">
+        <form class="register-form" id="noteForm">
 
+          <!-- 고정 여부 -->
           <div class="form-group">
             <label class="notice-pin-label">
               <input type="checkbox" id="isPinned" class="notice-pin-check">
               <span>상단 고정</span>
             </label>
-            <p class="form-hint">체크하면 가이드 목록 최상단에 고정돼요</p>
+            <p class="form-hint">체크하면 목록 최상단에 고정돼요</p>
           </div>
 
+          <!-- 제목 -->
           <div class="form-group">
             <label class="form-label">제목 <span class="required">*</span></label>
-            <input type="text" id="guideTitle" class="form-input" placeholder="가이드 제목을 입력하세요">
+            <input type="text" id="noteTitle" class="form-input" placeholder="업데이트노트 제목을 입력하세요">
           </div>
 
+          <!-- 내용 -->
           <div class="form-group">
             <label class="form-label">내용 <span class="required">*</span></label>
             <div class="quill-wrap">
-              <div id="guideContentEditor"></div>
+              <div id="noteContentEditor"></div>
             </div>
           </div>
 
           <p class="auth-error" id="writeError"></p>
 
           <div class="register-actions">
-            <a href="guide.html" class="btn-ghost" id="cancelBtn">취소</a>
+            <a href="update-note.html" class="btn-ghost" id="cancelBtn">취소</a>
             <button type="submit" class="btn-secondary" id="submitBtn">등록하기</button>
           </div>
 
@@ -120,9 +123,9 @@
     Quill.register(SizeStyle, true);
     Quill.register(Quill.import('attributors/style/align'), true);
 
-    const quill = new Quill('#guideContentEditor', {
+    const quill = new Quill('#noteContentEditor', {
       theme: 'snow',
-      placeholder: '가이드 내용을 입력하세요',
+      placeholder: '업데이트노트 내용을 입력하세요',
       modules: {
         toolbar: [
           [{ size: ['12px', '14px', false, '18px', '20px', '24px', '28px'] }],
@@ -145,25 +148,25 @@
       }
 
       if (editId) {
-        document.getElementById('pageTitle').textContent = '가이드 수정';
-        document.title = '가이드 수정 — 종족연구소';
+        document.getElementById('pageTitle').textContent = '업데이트노트 수정';
+        document.title = '업데이트노트 수정 — 종족연구소';
         document.getElementById('submitBtn').textContent = '수정하기';
         document.querySelector('.breadcrumb span:last-child').textContent = '수정';
 
-        const { data, error } = await sb.from('guides').select('*').eq('id', editId).single();
-        if (error || !data) { window.location.href = 'guide.html'; return; }
+        const { data, error } = await sb.from('update_notes').select('*').eq('id', editId).single();
+        if (error || !data) { window.location.href = 'update-note.html'; return; }
 
-        document.getElementById('guideTitle').value = data.title;
+        document.getElementById('noteTitle').value = data.title;
         document.getElementById('isPinned').checked = data.is_pinned;
         quill.clipboard.dangerouslyPasteHTML(data.content || '');
-        document.getElementById('cancelBtn').href = `guide-detail.html?id=${editId}`;
+        document.getElementById('cancelBtn').href = `update-note-detail.html?id=${editId}`;
       }
     }
 
-    document.getElementById('guideForm').addEventListener('submit', async (e) => {
+    document.getElementById('noteForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const title    = document.getElementById('guideTitle').value.trim();
+      const title    = document.getElementById('noteTitle').value.trim();
       const content  = quill.root.innerHTML.trim();
       const isEmpty  = quill.getText().trim().length === 0;
       const isPinned = document.getElementById('isPinned').checked;
@@ -172,42 +175,40 @@
 
       errorEl.textContent = '';
 
-      if (!title)   { errorEl.textContent = '제목을 입력해주세요.'; return; }
-      if (isEmpty)  { errorEl.textContent = '내용을 입력해주세요.'; return; }
+      if (!title)  { errorEl.textContent = '제목을 입력해주세요.'; return; }
+      if (isEmpty) { errorEl.textContent = '내용을 입력해주세요.'; return; }
 
       btn.textContent = editId ? '수정 중...' : '등록 중...';
       btn.disabled = true;
 
       if (editId) {
         const { data: updated, error } = await sb
-          .from('guides')
+          .from('update_notes')
           .update({ title, content, is_pinned: isPinned })
           .eq('id', editId)
           .select('id');
 
         if (error) {
-          console.error('[guide update error]', error);
           errorEl.textContent = `수정에 실패했어요. (${error.message})`;
           btn.textContent = '수정하기';
           btn.disabled = false;
           return;
         }
         if (!updated || updated.length === 0) {
-          errorEl.textContent = '수정에 실패했어요. (변경된 가이드가 없어요 — RLS 정책을 확인해 주세요)';
+          errorEl.textContent = '수정에 실패했어요. (변경된 항목이 없어요 — RLS 정책을 확인해 주세요)';
           btn.textContent = '수정하기';
           btn.disabled = false;
           return;
         }
       } else {
         const user = await getUser();
-        const { error } = await sb.from('guides').insert({
+        const { error } = await sb.from('update_notes').insert({
           title, content,
           is_pinned: isPinned,
           author: user?.user_metadata?.nickname || '관리자',
         });
 
         if (error) {
-          console.error('[guide insert error]', error);
           errorEl.textContent = `등록에 실패했어요. (${error.message})`;
           btn.textContent = '등록하기';
           btn.disabled = false;
@@ -215,11 +216,10 @@
         }
       }
 
-      window.location.href = editId ? `guide-detail.html?id=${editId}` : 'guide.html';
+      window.location.href = editId ? `update-note-detail.html?id=${editId}` : 'update-note.html';
     });
 
     initPage();
   </script>
 </body>
 </html>
-

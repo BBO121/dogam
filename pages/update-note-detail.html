@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>가이드 — 종족연구소</title>
+  <title>업데이트노트 — 종족연구소</title>
   <link rel="stylesheet" href="../css/style.css">
   <style>
     .notice-detail-content .ql-align-center  { text-align: center; }
@@ -32,11 +32,13 @@
 
       <div id="pageContent" style="display:none;">
 
+        <!-- 상단 네비 -->
         <div class="notice-detail-nav">
           <span id="navCount" class="notice-nav-count"></span>
-          <a href="guide.html" class="notice-nav-list-btn">목록보기</a>
+          <a href="update-note.html" class="notice-nav-list-btn">목록보기</a>
         </div>
 
+        <!-- 본문 -->
         <article class="notice-detail-article">
 
           <div>
@@ -55,8 +57,15 @@
 
         </article>
 
+        <!-- 관리자 수정/삭제 버튼 -->
+        <div id="adminActions" style="display:none; margin-top:16px; display:none; justify-content:flex-end; gap:8px;">
+          <a id="editBtn" href="#" class="btn-ghost">수정</a>
+          <button onclick="deleteNote()" style="padding:8px 16px; border:1px solid #fca5a5; border-radius:8px; background:#fff; color:#ef4444; font-size:13px; cursor:pointer; font-family:inherit;">삭제</button>
+        </div>
+
+        <!-- 하단 목록 버튼 -->
         <div class="notice-detail-bottom">
-          <a href="guide.html" class="btn-ghost">← 목록으로</a>
+          <a href="update-note.html" class="btn-ghost">← 목록으로</a>
         </div>
 
       </div>
@@ -75,29 +84,26 @@
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
   <script>
+    const params = new URLSearchParams(window.location.search);
+    const noteId = params.get('id');
+
     async function initPage() {
-      const params = new URLSearchParams(window.location.search);
-      const id = params.get('id');
+      if (!noteId) { window.location.href = 'update-note.html'; return; }
 
-      if (!id) {
-        window.location.href = 'guide.html';
-        return;
-      }
-
-      const [{ data, error }, { count }] = await Promise.all([
-        sb.from('guides').select('*').eq('id', id).single(),
-        sb.from('guides').select('*', { count: 'exact', head: true })
+      const [{ data, error }, { count }, userResult] = await Promise.all([
+        sb.from('update_notes').select('*').eq('id', noteId).single(),
+        sb.from('update_notes').select('*', { count: 'exact', head: true }),
+        getUser(),
       ]);
 
-      if (error || !data) {
-        window.location.href = 'guide.html';
-        return;
-      }
+      if (error || !data) { window.location.href = 'update-note.html'; return; }
+
+      const user = userResult;
 
       document.title = `${data.title} — 종족연구소`;
 
       if (count) {
-        document.getElementById('navCount').textContent = `가이드 총 ${count}개`;
+        document.getElementById('navCount').textContent = `업데이트노트 총 ${count}개`;
       }
 
       if (data.is_pinned) {
@@ -115,12 +121,24 @@
 
       document.getElementById('detailContent').innerHTML = DOMPurify.sanitize(data.content);
 
+      if (user?.user_metadata?.role === 'admin') {
+        const actions = document.getElementById('adminActions');
+        document.getElementById('editBtn').href = `update-note-write.html?edit=${noteId}`;
+        actions.style.display = 'flex';
+      }
+
       document.getElementById('pageLoading').style.display = 'none';
       document.getElementById('pageContent').style.display = 'block';
+    }
+
+    async function deleteNote() {
+      if (!confirm('이 업데이트노트를 삭제할까요?')) return;
+      const { error } = await sb.from('update_notes').delete().eq('id', noteId);
+      if (error) { alert('삭제에 실패했어요: ' + error.message); return; }
+      window.location.href = 'update-note.html';
     }
 
     initPage();
   </script>
 </body>
 </html>
-

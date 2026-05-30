@@ -62,11 +62,14 @@
         </div>
       </div>
 
-      <!-- 공지사항 바 -->
-      <div class="notice-bar" id="noticeBar" style="display:none;">
-        <span class="notice-bar-label">공지</span>
-        <a class="notice-bar-title" id="noticeBarTitle" href="notice.html"></a>
-        <a class="notice-bar-more" href="notice.html">전체보기 ›</a>
+      <!-- 공지/업데이트 바 묶음 -->
+      <div style="display:flex; flex-direction:column; gap:3px; margin-bottom:16px;">
+        <div class="notice-bar" id="noticeBar" style="display:none; margin-bottom:0;">
+          <span class="notice-bar-label">공지</span>
+          <a class="notice-bar-title" id="noticeBarTitle" href="notice.html"></a>
+          <a class="notice-bar-more" href="notice.html">전체보기 ›</a>
+        </div>
+        <div id="updateNoteBar"></div>
       </div>
 
       <!-- 종족 섹션 -->
@@ -97,7 +100,7 @@
 
   <!-- 푸터 -->
   <footer class="footer">
-    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a></p>
+    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.1</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -114,10 +117,12 @@
         { data: speciesList },
         { data: adoptionList },
         { data: noticeList },
+        { data: updateNoteList },
       ] = await Promise.all([
         sb.from('species').select('id, name, image_url, is_sensitive, sensitive_note').order('created_at', { ascending: false }).limit(18),
         sb.from('adoptions').select('id, character_name, species_name, adoption_type, status, image_url').order('created_at', { ascending: false }).limit(8),
         sb.from('notices').select('id, title').order('is_pinned', { ascending: false }).order('created_at', { ascending: false }).limit(1),
+        sb.from('update_notes').select('id, title').eq('is_pinned', true).order('created_at', { ascending: false }).limit(2),
       ]);
 
       // 공지 바 렌더
@@ -127,6 +132,17 @@
         titleEl.textContent = noticeList[0].title;
         titleEl.href = `notice-detail.html?id=${noticeList[0].id}`;
         bar.style.display = 'flex';
+      }
+
+      // 업데이트노트 바 렌더
+      if (updateNoteList && updateNoteList.length > 0) {
+        document.getElementById('updateNoteBar').innerHTML = updateNoteList.map((n, i) => `
+          <div class="notice-bar" style="display:flex; margin-bottom:0;">
+            <span class="notice-bar-label">업데이트</span>
+            <a class="notice-bar-title" href="update-note-detail.html?id=${n.id}">${n.title}</a>
+            ${i === 0 ? `<a class="notice-bar-more" href="update-note.html">전체보기 ›</a>` : ''}
+          </div>
+        `).join('');
       }
 
       // 종족 렌더
