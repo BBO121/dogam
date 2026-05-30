@@ -604,6 +604,7 @@
         designer_contact:    designer_contact,
         owner_nickname:      owner,
         owner_user_id:       ownerType === 'site' ? (selectedNickId || null) : null,
+        owner_is_offsite:    ownerType !== 'site',
         owner_contact:       externalContact || null,
         description:         desc || null,
         image_url,

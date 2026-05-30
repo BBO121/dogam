@@ -67,11 +67,17 @@
         document.getElementById('registerBtn').style.display = 'inline-flex';
       }
 
-      const { data, error } = await sb
-        .from('species')
-        .select('id, name, image_url, is_sensitive, sensitive_note')
-        .or(`owner_user_id.eq.${user.id},and(owner_user_id.is.null,owner_nickname.eq.${nickname})`)
-        .order('name');
+      const { data: byNick, error: nickError } = await sb
+        .from('species').select('id, name, image_url, is_sensitive, sensitive_note')
+        .eq('owner_nickname', nickname).order('name');
+      const { data: byId } = await sb
+        .from('species').select('id, name, image_url, is_sensitive, sensitive_note')
+        .eq('owner_user_id', user.id).order('name');
+      const seen = new Set();
+      const data = [...(byNick || []), ...(byId || [])].filter(s => {
+        if (seen.has(s.id)) return false; seen.add(s.id); return true;
+      }).sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+      const error = nickError;
 
       document.getElementById('pageLoading').style.display = 'none';
       document.getElementById('pageContent').style.display = 'block';

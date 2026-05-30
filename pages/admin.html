@@ -154,6 +154,27 @@
     </main>
   </div>
 
+  <!-- 관리자 개체 이전 모달 -->
+  <div id="adminTransferModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:500; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:#fff; border-radius:16px; padding:24px; width:min(100%, 400px); max-height:85vh; display:flex; flex-direction:column; gap:14px; box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+      <h3 style="margin:0; font-size:16px; font-weight:700;">소유권 이전 (관리자)</h3>
+      <p id="adminTransferInfo" style="margin:0; font-size:13px; color:var(--text-sub);"></p>
+      <div>
+        <p style="font-size:12px; font-weight:600; color:var(--text-sub); margin-bottom:6px;">닉네임으로 검색</p>
+        <input type="text" class="form-input" id="adminTransferSearch" placeholder="닉네임 입력..." oninput="filterAdminTransferUsers(this.value)" autocomplete="off">
+      </div>
+      <div id="adminTransferUserList" style="border:1px solid var(--border); border-radius:10px; max-height:200px; overflow-y:auto; background:#fff;">
+        <p style="padding:12px; color:var(--text-mute); font-size:13px;">닉네임을 입력하세요</p>
+      </div>
+      <p id="adminTransferSelectedDisplay" style="margin:0; font-size:13px; color:var(--sky-deep); display:none;"></p>
+      <p class="auth-error" id="adminTransferError"></p>
+      <div style="display:flex; gap:8px; justify-content:flex-end;">
+        <button class="btn-ghost" onclick="closeAdminTransferModal()">취소</button>
+        <button class="btn-secondary" id="adminTransferConfirmBtn" onclick="confirmAdminTransfer()">이전하기</button>
+      </div>
+    </div>
+  </div>
+
   <footer class="footer">
     <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a></p>
   </footer>
@@ -433,10 +454,10 @@
       if (nickname) {
         await Promise.all([
           sb.from('characters').update({ owner_nickname: '(알수없음)', owner_user_id: null }).eq('owner_user_id', userId),
-          sb.from('characters').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname).is('owner_user_id', null),
+          sb.from('characters').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname).is('owner_user_id', null).eq('owner_is_offsite', false),
           sb.from('characters').update({ designer_nickname: '(알수없음)' }).eq('designer_nickname', nickname),
           sb.from('species').update({ owner_nickname: '(알수없음)', owner_user_id: null }).eq('owner_user_id', userId),
-          sb.from('species').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname).is('owner_user_id', null),
+          sb.from('species').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname),
           sb.from('character_transfers').update({ from_nickname: '(알수없음)' }).eq('from_nickname', nickname),
           sb.from('character_transfers').update({ to_nickname: '(알수없음)' }).eq('to_nickname', nickname),
         ]);
@@ -500,6 +521,8 @@
         const date = new Date(c.created_at).toLocaleDateString('ko-KR', {
           year: 'numeric', month: '2-digit', day: '2-digit'
         }).replace(/\. /g, '.').replace(/\.$/, '');
+        const safeName = c.name.replace(/'/g, "\\'");
+        const safeNick = (c.owner_nickname || '').replace(/'/g, "\\'");
         return `
           <div class="admin-card-row" id="char-row-${c.id}">
             <div class="admin-card-left">
@@ -508,7 +531,8 @@
             </div>
             <div class="admin-card-right">
               <span class="admin-card-date">${date}</span>
-              <button class="admin-btn-delete" onclick="deleteChar('${c.id}', '${c.name.replace(/'/g, "\\'")}')">삭제</button>
+              <button class="admin-btn-edit" onclick="openAdminTransferModal('${c.id}', '${safeName}', '${safeNick}')">이전</button>
+              <button class="admin-btn-delete" onclick="deleteChar('${c.id}', '${safeName}')">삭제</button>
             </div>
           </div>`;
       }).join('');
@@ -517,7 +541,7 @@
     async function loadAdminChars() {
       const { data, error } = await sb
         .from('characters')
-        .select('id, name, species_name, owner_nickname, created_at')
+        .select('id, name, species_name, owner_nickname, owner_user_id, created_at')
         .order('created_at', { ascending: false });
 
       const empty = document.getElementById('charAdminEmpty');
@@ -548,7 +572,95 @@
       if (!confirm(`"${name}" 개체를 삭제할까요?`)) return;
       const { error } = await sb.from('characters').delete().eq('id', id);
       if (error) { alert('삭제에 실패했어요.'); return; }
-      allAdminChars = allAdminChars.filter(c => c.id !== id);
+      allAdminChars = allAdminChars.filter(c => String(c.id) !== String(id));
+      charPager.load(allAdminChars);
+    }
+
+    // ── 관리자 개체 이전 ──────────────────────
+    let _adminTransferCharId   = null;
+    let _adminTransferCharName = null;
+    let _adminTransferToNick   = null;
+    let _adminTransferToId     = null;
+    let _adminAllUsers         = [];
+
+    async function openAdminTransferModal(charId, charName, currentOwner) {
+      _adminTransferCharId   = charId;
+      _adminTransferCharName = charName;
+      _adminTransferToNick   = null;
+      _adminTransferToId     = null;
+
+      document.getElementById('adminTransferInfo').textContent = `"${charName}" — 현재 소유주: ${currentOwner || '—'}`;
+      document.getElementById('adminTransferSearch').value = '';
+      document.getElementById('adminTransferUserList').innerHTML = '<p style="padding:12px; color:var(--text-mute); font-size:13px;">닉네임을 입력하세요</p>';
+      document.getElementById('adminTransferSelectedDisplay').style.display = 'none';
+      document.getElementById('adminTransferError').textContent = '';
+      document.getElementById('adminTransferConfirmBtn').textContent = '이전하기';
+      document.getElementById('adminTransferConfirmBtn').disabled = false;
+      document.getElementById('adminTransferModal').style.display = 'flex';
+
+      if (!_adminAllUsers.length) {
+        const { data } = await sb.rpc('get_all_users');
+        _adminAllUsers = (data || []).filter(u => u.nickname).sort((a, b) => a.nickname.localeCompare(b.nickname, 'ko'));
+      }
+    }
+
+    function closeAdminTransferModal() {
+      document.getElementById('adminTransferModal').style.display = 'none';
+    }
+
+    function filterAdminTransferUsers(q) {
+      const el = document.getElementById('adminTransferUserList');
+      if (!q) { el.innerHTML = '<p style="padding:12px; color:var(--text-mute); font-size:13px;">닉네임을 입력하세요</p>'; return; }
+      const qLow = q.toLowerCase();
+      const matched = _adminAllUsers.filter(u => u.nickname.toLowerCase().includes(qLow)).slice(0, 20);
+      if (!matched.length) { el.innerHTML = '<p style="padding:12px; color:var(--text-mute); font-size:13px;">일치하는 유저가 없어요</p>'; return; }
+      el.innerHTML = matched.map(u => `
+        <div onclick="selectAdminTransferUser('${u.nickname.replace(/'/g, "\\'")}', '${u.id}')"
+          style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border); transition:background 0.1s;"
+          onmouseover="this.style.background='var(--sky-pale)'" onmouseout="this.style.background=''">
+          ${u.nickname}
+        </div>`).join('');
+    }
+
+    function selectAdminTransferUser(nick, userId) {
+      _adminTransferToNick = nick;
+      _adminTransferToId   = userId;
+      document.querySelectorAll('#adminTransferUserList > div').forEach(el => el.style.background = '');
+      event.currentTarget.style.background = 'var(--sky-light)';
+      const disp = document.getElementById('adminTransferSelectedDisplay');
+      disp.textContent = `선택됨: ${nick}`;
+      disp.style.display = 'block';
+    }
+
+    async function confirmAdminTransfer() {
+      const errorEl = document.getElementById('adminTransferError');
+      const btn     = document.getElementById('adminTransferConfirmBtn');
+      errorEl.textContent = '';
+
+      if (!_adminTransferToNick) { errorEl.textContent = '이전받을 유저를 선택해주세요.'; return; }
+      if (!confirm(`"${_adminTransferCharName}"의 소유권을\n${_adminTransferToNick}님에게 이전할까요?`)) return;
+
+      btn.textContent = '이전 중...';
+      btn.disabled = true;
+
+      const { data: updated, error } = await sb.from('characters').update({
+        owner_nickname: _adminTransferToNick,
+        owner_user_id:  _adminTransferToId || null,
+        owner_contact:  null,
+        owner_is_offsite: false,
+      }).eq('id', _adminTransferCharId).select('id');
+
+      if (error || !updated?.length) {
+        errorEl.textContent = error?.message || '이전에 실패했어요.';
+        btn.textContent = '이전하기';
+        btn.disabled = false;
+        return;
+      }
+
+      const char = allAdminChars.find(c => String(c.id) === String(_adminTransferCharId));
+      if (char) { char.owner_nickname = _adminTransferToNick; char.owner_user_id = _adminTransferToId; }
+
+      closeAdminTransferModal();
       charPager.load(allAdminChars);
     }
 

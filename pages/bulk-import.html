@@ -673,6 +673,7 @@
             designer_nickname:   designer || null,
             owner_nickname:      owner,
             owner_user_id:       ownerUserId,
+            owner_is_offsite:    itemOwnerType !== 'site',
             description:         desc || null,
             image_url,
             custom_field_values: Object.keys(customFieldValues).length ? customFieldValues : null,

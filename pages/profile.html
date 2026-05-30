@@ -379,8 +379,8 @@
       document.getElementById('profileLoading').style.display = 'none';
       document.getElementById('profileContent').style.display = 'block';
 
-      loadMySpecies(displayName);
-      loadMyCharacters(displayName);
+      loadMySpecies(null, displayName);
+      loadMyCharacters(null, displayName);
     }
 
     async function initMyProfile(user) {
@@ -392,9 +392,9 @@
         year: 'numeric', month: '2-digit', day: '2-digit'
       }).replace(/\. /g, '.').replace(/\.$/, '');
 
-      const { data: myOwnedSp } = await sb.from('species').select('id')
-        .or(`owner_user_id.eq.${user.id},and(owner_user_id.is.null,owner_nickname.eq.${displayName})`).limit(1);
-      const isSpeciesOwner = user.user_metadata?.role === 'species_owner' || (myOwnedSp && myOwnedSp.length > 0);
+      const { data: mySpByNick } = await sb.from('species').select('id').eq('owner_nickname', displayName).limit(1);
+      const { data: mySpById }   = await sb.from('species').select('id').eq('owner_user_id', user.id).limit(1);
+      const isSpeciesOwner = user.user_metadata?.role === 'species_owner' || !!(mySpByNick?.length || mySpById?.length);
 
       document.getElementById('breadcrumbName').textContent = displayName;
       document.getElementById('profileName').textContent    = displayName;
@@ -439,12 +439,12 @@
       if (_avatarUrl) _syncData.avatar_url = _avatarUrl;
       sb.from('user_profiles').upsert(_syncData, { onConflict: 'nickname' });
 
-      loadMySpecies(displayName);
-      loadMyCharacters(displayName);
+      loadMySpecies(user.id, displayName);
+      loadMyCharacters(user.id, displayName);
     }
 
-    async function loadMySpecies(nickname) {
-      const { data, error } = await getMySpecies(nickname);
+    async function loadMySpecies(userId, nickname) {
+      const { data, error } = await getMySpecies(userId, nickname);
       const countEl = document.getElementById('mySpeciesCount');
       const gridEl  = document.getElementById('mySpeciesPreview');
       const emptyEl = document.getElementById('mySpeciesEmpty');
@@ -471,8 +471,8 @@
       `).join('');
     }
 
-    async function loadMyCharacters(nickname) {
-      const { data, error } = await getMyCharacters(nickname);
+    async function loadMyCharacters(userId, nickname) {
+      const { data, error } = await getMyCharacters(userId, nickname);
 
       if (error || !data) {
         document.getElementById('myCharEmpty').style.display = 'block';
@@ -572,9 +572,9 @@
       } else {
         if (newDisplayName !== oldDisplayName) {
           await Promise.all([
-            sb.from('characters').update({ owner_nickname: newDisplayName }).eq('owner_nickname', oldDisplayName).is('owner_user_id', null),
+            sb.from('characters').update({ owner_nickname: newDisplayName }).eq('owner_nickname', oldDisplayName).eq('owner_is_offsite', false),
             sb.from('characters').update({ designer_nickname: newDisplayName }).eq('designer_nickname', oldDisplayName),
-            sb.from('species').update({ owner_nickname: newDisplayName }).eq('owner_nickname', oldDisplayName).is('owner_user_id', null),
+            sb.from('species').update({ owner_nickname: newDisplayName }).eq('owner_nickname', oldDisplayName),
             sb.from('character_transfers').update({ from_nickname: newDisplayName }).eq('from_nickname', oldDisplayName),
             sb.from('character_transfers').update({ to_nickname: newDisplayName }).eq('to_nickname', oldDisplayName),
             sb.from('notifications').update({ user_nickname: newDisplayName }).eq('user_nickname', oldDisplayName),
@@ -652,10 +652,10 @@
       if (nickname) {
         await Promise.all([
           sb.from('characters').update({ owner_nickname: '(알수없음)', owner_user_id: null }).eq('owner_user_id', currentUser.id),
-          sb.from('characters').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname).is('owner_user_id', null),
+          sb.from('characters').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname).is('owner_user_id', null).eq('owner_is_offsite', false),
           sb.from('characters').update({ designer_nickname: '(알수없음)' }).eq('designer_nickname', nickname),
           sb.from('species').update({ owner_nickname: '(알수없음)', owner_user_id: null }).eq('owner_user_id', currentUser.id),
-          sb.from('species').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname).is('owner_user_id', null),
+          sb.from('species').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname),
           sb.from('character_transfers').update({ from_nickname: '(알수없음)' }).eq('from_nickname', nickname),
           sb.from('character_transfers').update({ to_nickname: '(알수없음)' }).eq('to_nickname', nickname),
         ]);
