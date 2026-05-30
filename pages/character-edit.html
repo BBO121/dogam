@@ -518,15 +518,26 @@
 
       const isAdminEd = user.user_metadata?.role === 'admin';
       const isOwner   = !!(user.id && c.owner_user_id && user.id === c.owner_user_id);
-      if (!isOwner && !isAdminEd) { window.location.href = `character.html?id=${charId}`; return; }
+
+      let isSpeciesOwner = false;
+      let spData = null;
+      if (c.species_name) {
+        const { data: sp } = await sb.from('species').select('id, owner_user_id').eq('name', c.species_name).single();
+        spData = sp;
+        isSpeciesOwner = !!(user.id && sp?.owner_user_id && user.id === sp.owner_user_id);
+      }
+
+      if (!isOwner && !isAdminEd && !(isSpeciesOwner && c.owner_is_offsite)) {
+        window.location.href = `character.html?id=${charId}`; return;
+      }
 
       currentUser = user;
 
       // 브레드크럼
       document.getElementById('breadcrumbChar').textContent = c.name;
       document.getElementById('breadcrumbChar').href = `character.html?id=${charId}`;
-      if (c.species_name) {
-        const { data: sp } = await sb.from('species').select('id').eq('name', c.species_name).single();
+      if (c.species_name && spData) {
+        const sp = spData;
         const spHref = sp ? `species.html?id=${sp.id}` : 'species-list.html';
         document.getElementById('breadcrumbSpecies').textContent = c.species_name;
         document.getElementById('breadcrumbSpecies').href = spHref;

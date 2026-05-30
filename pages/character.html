@@ -210,15 +210,21 @@
       // 종족 페이지 링크용 species id 조회 + 종족주 판별
       let speciesHref = 'species-list.html';
       let isSpeciesOwner = false;
+      console.log('[DEBUG] userId:', userId);
+      console.log('[DEBUG] c.owner_is_offsite:', c.owner_is_offsite, '| type:', typeof c.owner_is_offsite);
+      console.log('[DEBUG] c.owner_user_id:', c.owner_user_id);
+      console.log('[DEBUG] c.species_name:', c.species_name);
       if (c.species_name) {
         const { data: sp } = await sb.from('species').select('id, owner_nickname, owner_user_id').eq('name', c.species_name).single();
+        console.log('[DEBUG] sp:', sp);
         if (sp) {
           speciesHref = `species.html?id=${sp.id}`;
-          isSpeciesOwner = sp.owner_user_id
-            ? !!(userId && userId === sp.owner_user_id)
-            : (userNickname === sp.owner_nickname);
+          isSpeciesOwner = !!(userId && sp.owner_user_id && userId === sp.owner_user_id);
         }
       }
+      console.log('[DEBUG] isOwner:', isOwner);
+      console.log('[DEBUG] isSpeciesOwner:', isSpeciesOwner);
+      console.log('[DEBUG] 버튼 표시 조건:', isOwner || (isSpeciesOwner && c.owner_is_offsite));
       let categoryBadgeHtml = '';
       if (c.char_categories?.length) {
         const badges = c.char_categories.map(cat => {
@@ -321,22 +327,19 @@
               </div>
             `).join('')}` : ''}
 
-            ${isOwner ? `
+            ${isOwner || (isSpeciesOwner && c.owner_is_offsite) ? `
             <div class="char-info-divider"></div>
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <button onclick="deleteCharacter()" style="padding:8px 16px; border:1px solid #fca5a5; border-radius:8px; background:#fff; color:#ef4444; font-size:13px; cursor:pointer; font-family:inherit;">개체 삭제</button>
+            <div style="display:flex; justify-content:${isOwner ? 'space-between' : 'flex-end'}; align-items:center;">
+              ${isOwner ? `<button onclick="deleteCharacter()" style="padding:8px 16px; border:1px solid #fca5a5; border-radius:8px; background:#fff; color:#ef4444; font-size:13px; cursor:pointer; font-family:inherit;">개체 삭제</button>` : ''}
               <div style="display:flex; gap:8px;">
-                ${c.pending_transfer
+                ${isOwner ? (c.pending_transfer
                   ? `<button onclick="cancelPendingTransfer()" style="padding:6px 14px; border:1px solid #fde68a; border-radius:8px; background:#fffbeb; color:#92400e; font-size:13px; cursor:pointer;">이전 취소</button>`
-                  : `<a href="character-transfer.html?id=${charId}" class="btn-ghost">개체 이전</a>`
-                }
+                  : `<a href="character-transfer.html?id=${charId}" class="btn-ghost">개체 이전</a>`)
+                  : ''}
+                ${isSpeciesOwner && c.owner_is_offsite ? `<button onclick="openTransferModal()" class="btn-ghost">소유권 이전</button>` : ''}
                 <a href="character-edit.html?id=${charId}" class="btn-ghost">개체 정보 수정</a>
               </div>
-            </div>` : (isSpeciesOwner && c.owner_is_offsite ? `
-            <div class="char-info-divider"></div>
-            <div style="display:flex; justify-content:flex-end;">
-              <button onclick="openTransferModal()" class="btn-ghost">소유권 이전</button>
-            </div>` : '')}
+            </div>` : ''}
           </aside>
         </div>
 
