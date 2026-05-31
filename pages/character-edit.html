@@ -212,6 +212,38 @@
             </div>
           </div>
 
+          <!-- 분양 규칙 개별 설정 -->
+          <div class="form-group">
+            <label class="form-label">분양 규칙 개별 설정</label>
+            <p class="form-hint" style="margin-bottom:10px;">종족 따름이면 해당 종족의 기본 설정을 따릅니다.</p>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                <span style="font-size:13px; color:var(--text); width:60px; flex-shrink:0;">재분양</span>
+                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowResale" value="null" checked style="accent-color:var(--sky);"> 종족 따름</label>
+                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowResale" value="true" style="accent-color:var(--sky);"> 허용</label>
+                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowResale" value="false" style="accent-color:var(--sky);"> 불가</label>
+              </div>
+              <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                <span style="font-size:13px; color:var(--text); width:60px; flex-shrink:0;">무료분양</span>
+                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowFreeAdoption" value="null" checked style="accent-color:var(--sky);"> 종족 따름</label>
+                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowFreeAdoption" value="true" style="accent-color:var(--sky);"> 허용</label>
+                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowFreeAdoption" value="false" style="accent-color:var(--sky);"> 불가</label>
+              </div>
+              <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                <span style="font-size:13px; color:var(--text); width:60px; flex-shrink:0;">유료/경매</span>
+                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowPaidAdoption" value="null" checked style="accent-color:var(--sky);"> 종족 따름</label>
+                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowPaidAdoption" value="true" style="accent-color:var(--sky);"> 허용</label>
+                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowPaidAdoption" value="false" style="accent-color:var(--sky);"> 불가</label>
+              </div>
+              <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                <span style="font-size:13px; color:var(--text); width:60px; flex-shrink:0;">기타분양</span>
+                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowOtherAdoption" value="null" checked style="accent-color:var(--sky);"> 종족 따름</label>
+                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowOtherAdoption" value="true" style="accent-color:var(--sky);"> 허용</label>
+                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowOtherAdoption" value="false" style="accent-color:var(--sky);"> 불가</label>
+              </div>
+            </div>
+          </div>
+
           <!-- 섹션 (설정/관계/직접입력) -->
           <div class="form-group">
             <label class="form-label">섹션 <span class="form-hint-inline">탭으로 표시돼요 · 드래그로 순서 변경</span></label>
@@ -576,6 +608,16 @@
 
       document.getElementById('isSensitive').checked = !!c.is_sensitive;
       document.getElementById('sensitiveNote').value  = c.sensitive_note || '';
+
+      function setTristate(name, val) {
+        const v = (val === null || val === undefined) ? 'null' : String(val);
+        const el = document.querySelector(`input[name="${name}"][value="${v}"]`);
+        if (el) el.checked = true;
+      }
+      setTristate('allowFreeAdoption',  c.allow_free_adoption);
+      setTristate('allowResale',         c.allow_resale);
+      setTristate('allowPaidAdoption',   c.allow_paid_adoption);
+      setTristate('allowOtherAdoption',  c.allow_other_adoption);
 
       addedCategories = c.char_categories || [];
       renderAddedCategories();
@@ -979,6 +1021,11 @@
       const isSensitive   = document.getElementById('isSensitive').checked;
       const sensitiveNote = document.getElementById('sensitiveNote').value.trim();
 
+      function getTristate(name) {
+        const v = document.querySelector(`input[name="${name}"]:checked`)?.value;
+        return v === 'true' ? true : v === 'false' ? false : null;
+      }
+
       const sections = collectSections();
 
       const { error } = await sb.from('characters').update({
@@ -996,6 +1043,10 @@
         char_categories:     addedCategories.length ? addedCategories : null,
         is_sensitive:        isSensitive,
         sensitive_note:      isSensitive ? (sensitiveNote || null) : null,
+        allow_free_adoption:  getTristate('allowFreeAdoption'),
+        allow_resale:         getTristate('allowResale'),
+        allow_paid_adoption:  getTristate('allowPaidAdoption'),
+        allow_other_adoption: getTristate('allowOtherAdoption'),
         char_sections:       sections.length ? sections : null,
       }).eq('id', charId);
 

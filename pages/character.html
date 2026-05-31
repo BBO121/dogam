@@ -210,12 +210,14 @@
       // 종족 페이지 링크용 species id 조회 + 종족주 판별
       let speciesHref = 'species-list.html';
       let isSpeciesOwner = false;
+      let sp = null;
       console.log('[DEBUG] userId:', userId);
       console.log('[DEBUG] c.owner_is_offsite:', c.owner_is_offsite, '| type:', typeof c.owner_is_offsite);
       console.log('[DEBUG] c.owner_user_id:', c.owner_user_id);
       console.log('[DEBUG] c.species_name:', c.species_name);
       if (c.species_name) {
-        const { data: sp } = await sb.from('species').select('id, owner_nickname, owner_user_id').eq('name', c.species_name).single();
+        const { data: spData } = await sb.from('species').select('id, owner_nickname, owner_user_id, allow_free_adoption, allow_resale, allow_paid_adoption, allow_other_adoption').eq('name', c.species_name).single();
+        sp = spData;
         console.log('[DEBUG] sp:', sp);
         if (sp) {
           speciesHref = `species.html?id=${sp.id}`;
@@ -257,6 +259,22 @@
           ${c.is_sensitive ? `<div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span><span class="sensitive-overlay-label">WARNING${c.sensitive_note ? ' : ' + c.sensitive_note : ''}</span><span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div>` : ''}
         </div>
       `).join('');
+
+      const adoptionRulesHtml = [
+        { label: '재분양',    charVal: c.allow_resale,         spVal: sp?.allow_resale         },
+        { label: '무료분양',  charVal: c.allow_free_adoption,  spVal: sp?.allow_free_adoption  },
+        { label: '유료/경매', charVal: c.allow_paid_adoption,  spVal: sp?.allow_paid_adoption  },
+        { label: '기타분양',  charVal: c.allow_other_adoption, spVal: sp?.allow_other_adoption },
+      ].map(({ label, charVal, spVal }) => {
+        const isCharSet = charVal !== null && charVal !== undefined;
+        const finalVal  = isCharSet ? charVal : (spVal ?? true);
+        const source    = isCharSet ? '개체 개별 설정' : '종족 설정';
+        const color     = finalVal ? 'var(--sky-deep)' : '#ef4444';
+        return `<div class="char-info-row">
+          <span class="char-info-label">${label}</span>
+          <span class="char-info-value"><span style="font-weight:600; color:${color};">${finalVal ? '가능' : '불가능'}</span><span style="font-size:11px; color:var(--text-mute); margin-left:4px;">(${source})</span></span>
+        </div>`;
+      }).join('');
 
       document.getElementById('charContent').innerHTML = `
         <div class="char-page-header">
@@ -318,6 +336,10 @@
               <span class="char-info-label">등록일</span>
               <span class="char-info-value">${registeredDate}</span>
             </div>
+
+            <div class="char-info-divider"></div>
+            <p class="char-info-label" style="margin-bottom:6px; font-weight:700;">📜 분양 규칙</p>
+            ${adoptionRulesHtml}
 
             ${c.description ? `
             <div class="char-info-divider"></div>

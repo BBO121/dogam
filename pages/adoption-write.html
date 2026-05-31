@@ -43,6 +43,7 @@
             <div id="charPreview" style="display:none; margin-top:10px; width:100px; height:100px; border-radius:var(--radius); overflow:hidden; border:1px solid var(--border);">
               <img id="charPreviewImg" style="width:100%; height:100%; object-fit:cover;">
             </div>
+            <p id="resaleWarning" style="display:none; margin-top:8px; font-size:13px; color:#92400e; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:8px 12px;">⚠ 재분양 불가 설정 되어있는 개체입니다. 유의해주세요!</p>
           </div>
 
           <!-- 분양 형식 -->
@@ -199,6 +200,7 @@
     let selectedFreeType    = 'normal';
     let selectedCloseMethod = 'date';
     let myCharacters        = [];
+    let speciesRulesMap     = {};
 
     function fmtNum(el) {
       const raw = el.value.replace(/[^0-9]/g, '');
@@ -219,6 +221,10 @@
       } else {
         preview.style.display = 'none';
       }
+
+      const sp = speciesRulesMap[char?.species_name] || {};
+      const finalAllowResale = char ? (char.allow_resale ?? sp.allow_resale ?? true) : true;
+      document.getElementById('resaleWarning').style.display = (char && !finalAllowResale) ? 'block' : 'none';
     }
 
     function setType(type) {
@@ -287,11 +293,14 @@
     async function loadCharacters(user) {
       const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname;
 
-      const [{ data: chars }, { data: activeAdoptions }] = await Promise.all([
-        sb.from('characters').select('id, name, species_name, image_url')
+      const [{ data: chars }, { data: activeAdoptions }, { data: allSpecies }] = await Promise.all([
+        sb.from('characters').select('id, name, species_name, image_url, allow_free_adoption, allow_resale, allow_paid_adoption, allow_other_adoption')
           .eq('owner_user_id', user.id).neq('owner_is_offsite', true).order('name'),
         sb.from('adoptions').select('character_id').in('status', ['분양중', '확인 대기중']),
+        sb.from('species').select('name, allow_free_adoption, allow_resale, allow_paid_adoption, allow_other_adoption'),
       ]);
+
+      speciesRulesMap = Object.fromEntries((allSpecies || []).map(s => [s.name, s]));
 
       if (!chars || chars.length === 0) {
         showNoChars('분양 가능한 캐릭터가 없어요. 먼저 캐릭터를 등록해주세요.');
@@ -348,10 +357,22 @@
         }
       }
 
+      // 분양 규칙 검증
+      const char = myCharacters.find(c => String(c.id) === charId);
+      const sp   = speciesRulesMap[char?.species_name] || {};
+      if (selectedType === 'free' && !(char.allow_free_adoption ?? sp.allow_free_adoption ?? true)) {
+        errorEl.textContent = '무료분양 불가능 개체입니다!'; return;
+      }
+      if ((selectedType === 'paid' || selectedType === 'auction') && !(char.allow_paid_adoption ?? sp.allow_paid_adoption ?? true)) {
+        errorEl.textContent = '유료분양 불가능 개체입니다!'; return;
+      }
+      if (selectedType === 'etc' && !(char.allow_other_adoption ?? sp.allow_other_adoption ?? true)) {
+        errorEl.textContent = '기타분양 불가능 개체입니다!'; return;
+      }
+
       btn.textContent = '등록 중...';
       btn.disabled = true;
 
-      const char    = myCharacters.find(c => String(c.id) === charId);
       const user    = await getUser();
       const extraImages = [1,2,3]
         .map(i => document.getElementById(`extraImg${i}`).value.trim())

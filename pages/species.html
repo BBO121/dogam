@@ -197,6 +197,14 @@
                 <span class="meta-value">${s.design_rights}</span>
               </div>` : ''}
             </div>
+            <div style="margin-top:16px; padding:14px 16px; background:var(--sky-pale); border-radius:10px; border:1px solid var(--sky-light);">
+              <p style="font-size:13px; font-weight:700; color:var(--text); margin-bottom:8px;">📜 분양 규칙</p>
+              <div style="display:flex; flex-direction:column; gap:6px;">
+                ${[['재분양', s.allow_resale], ['무료분양', s.allow_free_adoption], ['유료/경매', s.allow_paid_adoption], ['기타분양', s.allow_other_adoption]].map(([label, val]) =>
+                  `<div style="display:flex; gap:8px; align-items:center; font-size:13px;"><span style="color:var(--text-sub); width:64px; flex-shrink:0;">${label}</span><span style="font-weight:600; color:${val !== false ? 'var(--sky-deep)' : '#ef4444'};">${val !== false ? '가능' : '불가능'}</span></div>`
+                ).join('')}
+              </div>
+            </div>
             ${s.description ? `<div class="species-detail-desc ql-display">${typeof DOMPurify!=='undefined' ? DOMPurify.sanitize(s.description) : s.description}</div>` : ''}
             ${isOwner ? `
             <div class="species-detail-actions">

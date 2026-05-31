@@ -181,6 +181,29 @@
             </div>
           </div>
 
+          <!-- 분양 규칙 -->
+          <div class="form-group">
+            <label class="form-label">분양 규칙</label>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px; color:var(--text);">
+                <input type="checkbox" id="allowResale" checked style="width:16px; height:16px; cursor:pointer; accent-color:var(--sky); flex-shrink:0;">
+                재분양 허용
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px; color:var(--text);">
+                <input type="checkbox" id="allowFreeAdoption" checked style="width:16px; height:16px; cursor:pointer; accent-color:var(--sky); flex-shrink:0;">
+                무료분양 허용
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px; color:var(--text);">
+                <input type="checkbox" id="allowPaidAdoption" checked style="width:16px; height:16px; cursor:pointer; accent-color:var(--sky); flex-shrink:0;">
+                유료/경매 허용
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px; color:var(--text);">
+                <input type="checkbox" id="allowOtherAdoption" checked style="width:16px; height:16px; cursor:pointer; accent-color:var(--sky); flex-shrink:0;">
+                기타분양 허용
+              </label>
+            </div>
+          </div>
+
           <!-- 에러 -->
           <p class="auth-error" id="formError"></p>
 
@@ -279,8 +302,12 @@
       if (s.custom_fields?.length) s.custom_fields.forEach(f => addField(f));
       if (s.guide?.length) s.guide.forEach(g => loadGuideData(g));
 
-      document.getElementById('isSensitive').checked = !!s.is_sensitive;
-      document.getElementById('sensitiveNote').value  = s.sensitive_note || '';
+      document.getElementById('isSensitive').checked      = !!s.is_sensitive;
+      document.getElementById('sensitiveNote').value       = s.sensitive_note || '';
+      document.getElementById('allowFreeAdoption').checked  = s.allow_free_adoption  !== false;
+      document.getElementById('allowResale').checked         = s.allow_resale          !== false;
+      document.getElementById('allowPaidAdoption').checked   = s.allow_paid_adoption   !== false;
+      document.getElementById('allowOtherAdoption').checked  = s.allow_other_adoption  !== false;
     }
 
     function loadGuideData(g) {
@@ -506,8 +533,12 @@
         link:           link || null,
         design_rights:  designRights || null,
         guide:          guide.length ? guide : null,
-        is_sensitive:   isSensitive,
-        sensitive_note: isSensitive ? (sensitiveNote || null) : null,
+        is_sensitive:        isSensitive,
+        sensitive_note:      isSensitive ? (sensitiveNote || null) : null,
+        allow_free_adoption:  document.getElementById('allowFreeAdoption').checked,
+        allow_resale:         document.getElementById('allowResale').checked,
+        allow_paid_adoption:  document.getElementById('allowPaidAdoption').checked,
+        allow_other_adoption: document.getElementById('allowOtherAdoption').checked,
       }).eq('id', speciesId);
 
       if (error) {
