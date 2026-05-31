@@ -15,7 +15,10 @@ function compressImage(file, maxSize = 1200, quality = 0.82) {
         const canvas = document.createElement('canvas');
         canvas.width  = width;
         canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#F8FAFC';
+        ctx.fillRect(0, 0, width, height);
+        ctx.drawImage(img, 0, 0, width, height);
         canvas.toBlob(blob => resolve(blob), 'image/jpeg', quality);
       };
       img.src = e.target.result;
