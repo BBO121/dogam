@@ -8,11 +8,22 @@ async function initSidebar() {
     <div class="sidebar-user-block" id="sidebarUserBlock"></div>
 
     <nav class="sidebar-menu">
-      <a href="index.html"        class="sidebar-item ${path === 'index.html' ? 'active' : ''}">홈</a>
-      <a href="notice.html"       class="sidebar-item ${path === 'notice.html' || path === 'notice-detail.html' ? 'active' : ''}">공지사항</a>
-      <a href="update-note.html" class="sidebar-item ${path === 'update-note.html' || path === 'update-note-detail.html' ? 'active' : ''}">업데이트노트</a>
-      <a href="guide.html"        class="sidebar-item ${path === 'guide.html'  || path === 'guide-detail.html'  ? 'active' : ''}">가이드</a>
-      <a href="adoption.html"     class="sidebar-item ${path === 'adoption.html' || path === 'adoption-detail.html' ? 'active' : ''}">분양</a>
+      <a href="index.html"  class="sidebar-item ${path === 'index.html' ? 'active' : ''}">홈</a>
+      <a href="notice.html" class="sidebar-item ${path === 'notice.html' || path === 'notice-detail.html' ? 'active' : ''}">공지사항</a>
+    </nav>
+
+    <div class="sidebar-accordion" id="accNotes">
+      <button class="sidebar-accordion-btn" onclick="toggleAccordion('accNotes')">
+        연구소 노트<span class="sidebar-accordion-arrow" id="arrNotes"></span>
+      </button>
+      <div class="sidebar-accordion-body" id="bodyNotes">
+        <a href="update-note.html" class="sidebar-subitem ${path === 'update-note.html' || path === 'update-note-detail.html' || path === 'update-note-write.html' ? 'active' : ''}">업데이트</a>
+        <a href="dev-log.html"     class="sidebar-subitem ${path === 'dev-log.html' || path === 'dev-log-detail.html' || path === 'dev-log-write.html' ? 'active' : ''}">개발일지</a>
+      </div>
+    </div>
+
+    <nav class="sidebar-menu">
+      <a href="guide.html" class="sidebar-item ${path === 'guide.html' || path === 'guide-detail.html' ? 'active' : ''}">가이드</a>
     </nav>
 
     <div class="sidebar-divider"></div>
@@ -27,6 +38,8 @@ async function initSidebar() {
     </div>
 
     <a href="character-list.html" class="sidebar-accordion-btn ${path === 'character-list.html' || path === 'character.html' ? 'active' : ''}" style="text-decoration:none; display:flex; align-items:center;">개체</a>
+
+    <a href="adoption.html" class="sidebar-accordion-btn ${path === 'adoption.html' || path === 'adoption-detail.html' || path === 'adoption-write.html' ? 'active' : ''}" style="text-decoration:none; display:flex; align-items:center;">분양</a>
 
     <a href="users.html" class="sidebar-accordion-btn ${path === 'users.html' || path === 'profile.html' && new URLSearchParams(window.location.search).get('user') ? 'active' : ''}" style="text-decoration:none; display:flex; align-items:center;">유저</a>
 
@@ -62,6 +75,14 @@ async function initSidebar() {
       <a href="bug-report.html" class="sidebar-item ${path === 'bug-report.html' || path === 'bug-report-write.html' || path === 'bug-report-detail.html' ? 'active' : ''}" style="justify-content:space-between;">버그리포트<span class="sidebar-notif-badge" id="sidebarBugBadge" style="display:none">0</span></a>
     </nav>
   `;
+
+  // 연구소 노트 하위 페이지면 아코디언 자동 열기
+  const notePages = ['update-note.html','update-note-detail.html','update-note-write.html',
+                     'dev-log.html','dev-log-detail.html','dev-log-write.html'];
+  if (notePages.includes(path)) {
+    document.getElementById('bodyNotes').classList.add('open');
+    document.getElementById('arrNotes').style.transform = 'rotate(180deg)';
+  }
 
   // 종족 관련 페이지: 버튼 active 표시 (모바일/PC 공통)
   if (path === 'species.html' || path === 'species-list.html') {
