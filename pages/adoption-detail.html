@@ -669,7 +669,9 @@
         ? (details.close_at
             ? `${new Date(details.close_at).toLocaleString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })} 마감`
             : '날짜 미정')
-        : `마지막 입찰 후 ${details.close_hours}시간 마감`;
+        : (details.close_hours
+            ? `마지막 입찰 후 ${details.close_hours}시간 마감`
+            : '마지막 입찰 후 마감 (시간 미설정)');
 
       const infoBox = document.getElementById('adoptionInfoBox');
       infoBox.innerHTML = `

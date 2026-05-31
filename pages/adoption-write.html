@@ -348,6 +348,10 @@
         if (!document.getElementById('startPrice').value.trim())   { errorEl.textContent = '시작가를 입력해주세요.'; return; }
         if (!document.getElementById('instantPrice').value.trim()) { errorEl.textContent = '즉시 낙찰가를 입력해주세요.'; return; }
         if (!document.getElementById('bidUnit').value.trim())      { errorEl.textContent = '입찰 단위를 입력해주세요.'; return; }
+        const closeHours = document.getElementById('closeHours').value.trim();
+        if (selectedCloseMethod === 'last_bid' && (!closeHours || Number(closeHours) <= 0)) {
+          errorEl.textContent = '마지막 입찰 후 마감 시간을 입력해주세요.'; return;
+        }
       }
 
       // 무료 추첨/선착순 날짜 필수 검증
