@@ -18,7 +18,7 @@ async function initSidebar() {
     <div class="sidebar-divider"></div>
 
     <div class="sidebar-accordion" id="accSpecies">
-      <button class="sidebar-accordion-btn" onclick="toggleAccordion('accSpecies')">
+      <button class="sidebar-accordion-btn" id="btnSpecies" onclick="onSpeciesClick(this)">
         종족<span class="sidebar-accordion-arrow" id="arrSpecies"></span>
       </button>
       <div class="sidebar-accordion-body" id="bodySpecies">
@@ -63,17 +63,37 @@ async function initSidebar() {
     </nav>
   `;
 
-  // 종족 관련 페이지면 종족 아코디언 자동 열기
+  // 종족 관련 페이지: 버튼 active 표시 (모바일/PC 공통)
   if (path === 'species.html' || path === 'species-list.html') {
-    document.getElementById('bodySpecies').classList.add('open');
-    document.getElementById('arrSpecies').style.transform = 'rotate(180deg)';
+    document.getElementById('btnSpecies')?.classList.add('active');
   }
-
 
   // 내 정보 하위 페이지면 아코디언 자동 열기
   if (path === 'profile.html' || path === 'transfer-history.html') {
     document.getElementById('bodyMyInfo').classList.add('open');
     document.getElementById('arrMyInfo').style.transform = 'rotate(180deg)';
+  }
+
+  // 플라이아웃 패널 주입 (PC 전용)
+  if (!document.getElementById('flyoutSpecies')) {
+    const el = document.createElement('div');
+    el.id = 'flyoutSpecies';
+    el.className = 'species-flyout';
+    document.body.appendChild(el);
+  }
+
+  // 바텀시트 주입 (모바일 전용)
+  if (!document.getElementById('speciesSheetOverlay')) {
+    const overlay = document.createElement('div');
+    overlay.id = 'speciesSheetOverlay';
+    overlay.className = 'species-sheet-overlay';
+    overlay.addEventListener('click', dismissSpeciesSheet);
+    document.body.appendChild(overlay);
+
+    const panel = document.createElement('div');
+    panel.id = 'speciesSheetPanel';
+    panel.className = 'species-sheet-panel';
+    document.body.appendChild(panel);
   }
 
   loadSpeciesSidebar();
@@ -139,35 +159,80 @@ function closeSidebar() {
   document.body.style.overflow = '';
 }
 
+// 초성/문자 그룹 반환
+function getSpeciesGroup(name) {
+  const ch   = name?.[0] || '';
+  const code = ch.charCodeAt(0);
+  if ((code >= 0x41 && code <= 0x5A) || (code >= 0x61 && code <= 0x7A)) return 'A-Z';
+  if (code >= 0xAC00 && code <= 0xD7A3) {
+    const cho = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+    return cho[Math.floor((code - 0xAC00) / (21 * 28))];
+  }
+  return '#';
+}
+
+const FLYOUT_GROUP_ORDER = ['A-Z','ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ','#'];
+
 async function loadSpeciesSidebar() {
-  const body = document.getElementById('bodySpecies');
+  const body       = document.getElementById('bodySpecies');
+  const flyout     = document.getElementById('flyoutSpecies');
+  const sheetPanel = document.getElementById('speciesSheetPanel');
   if (!body) return;
 
   const { data, error } = await sb.from('species').select('id, name').order('name');
 
-  const allLink = `<a href="species-list.html" class="sidebar-subitem sidebar-subitem--all">전체보기</a>`;
+  const q    = new URLSearchParams(window.location.search);
+  const curr = q.get('id');
 
+  const allLink       = `<a href="species-list.html" class="sidebar-subitem sidebar-subitem--all">전체보기</a>`;
+  const allLinkFlyout = `<a href="species-list.html" class="flyout-all-link">전체보기</a>`;
+
+  // ── 모바일 아코디언 body (숨겨져 있으나 혹시 모를 대비) ──
   if (error || !data || data.length === 0) {
-    const dummy = ['드래곤','엘프','요정','늑대인간','슬라임','골렘'];
-    body.innerHTML = allLink + dummy.map(name =>
-      `<a href="species-list.html" class="sidebar-subitem" style="opacity:0.45;">${name}</a>`
-    ).join('');
+    body.innerHTML = allLink;
   } else {
-    const q    = new URLSearchParams(window.location.search);
-    const curr = q.get('id');
     body.innerHTML = allLink + data.map(s =>
       `<a href="species.html?id=${s.id}" class="sidebar-subitem ${curr === String(s.id) ? 'active' : ''}">${s.name}</a>`
     ).join('');
   }
 
-  // 종족 목록 로드 후 새로 생긴 링크에도 닫기 이벤트 등록
-  body.querySelectorAll('a').forEach(el => {
-    el.addEventListener('click', () => {
-      if (window.innerWidth <= 767 && !el.classList.contains('sidebar-accordion-btn')) {
-        closeSidebar();
-      }
+  // ── 플라이아웃·바텀시트 공용 그룹화 HTML ──────────────────
+  let groupedHtml = allLinkFlyout;
+  if (error || !data || data.length === 0) {
+    const dummy = ['드래곤','엘프','요정','늑대인간','슬라임','골렘'];
+    groupedHtml += dummy.map(n =>
+      `<a href="species-list.html" class="sidebar-subitem" style="opacity:0.45;">${n}</a>`
+    ).join('');
+  } else {
+    const groups = {};
+    data.forEach(s => {
+      const g = getSpeciesGroup(s.name);
+      (groups[g] = groups[g] || []).push(s);
     });
-  });
+    FLYOUT_GROUP_ORDER.forEach(g => {
+      if (!groups[g]) return;
+      groupedHtml += `<div class="flyout-group-label">${g}</div>`;
+      groupedHtml += groups[g].map(s =>
+        `<a href="species.html?id=${s.id}" class="sidebar-subitem ${curr === String(s.id) ? 'active' : ''}">${s.name}</a>`
+      ).join('');
+    });
+  }
+
+  // 플라이아웃 (PC)
+  if (flyout) {
+    flyout.innerHTML = groupedHtml;
+    flyout.querySelectorAll('a').forEach(el => {
+      el.addEventListener('click', () => { if (window.innerWidth >= 768) closeFlyout(); });
+    });
+  }
+
+  // 바텀시트 (모바일)
+  if (sheetPanel) {
+    sheetPanel.innerHTML = '<div class="species-sheet-handle"></div>' + groupedHtml;
+    sheetPanel.querySelectorAll('a').forEach(el => {
+      el.addEventListener('click', closeSpeciesSheet);
+    });
+  }
 }
 
 async function updateSidebarLogin() {
@@ -206,6 +271,77 @@ async function updateSidebarLogin() {
     if (block) {
       block.innerHTML = `<a href="login.html" class="btn-login">로그인</a>`;
     }
+  }
+}
+
+// ── 종족 플라이아웃 (PC 전용) ─────────────────────────
+function onSpeciesClick(btn) {
+  if (window.innerWidth < 768) {
+    closeSidebar();
+    openSpeciesSheet();
+  } else {
+    const flyout = document.getElementById('flyoutSpecies');
+    if (flyout && flyout.classList.contains('open')) {
+      closeFlyout();
+    } else {
+      openFlyout(btn);
+    }
+  }
+}
+
+function openFlyout(btn) {
+  const flyout = document.getElementById('flyoutSpecies');
+  if (!flyout) return;
+
+  const rect = btn.getBoundingClientRect();
+  flyout.style.top  = rect.top + 'px';
+  flyout.style.left = (rect.right + 6) + 'px';
+  flyout.classList.add('open');
+
+  // 뷰포트 하단 벗어나면 위로 조정
+  const fr = flyout.getBoundingClientRect();
+  if (fr.bottom > window.innerHeight - 12) {
+    flyout.style.top = Math.max(12, window.innerHeight - fr.height - 12) + 'px';
+  }
+
+  btn.classList.add('flyout-open');
+  setTimeout(() => document.addEventListener('click', onFlyoutOutsideClick), 0);
+}
+
+function closeFlyout() {
+  const flyout = document.getElementById('flyoutSpecies');
+  const btn    = document.getElementById('btnSpecies');
+  if (flyout) flyout.classList.remove('open');
+  if (btn)    btn.classList.remove('flyout-open');
+  document.removeEventListener('click', onFlyoutOutsideClick);
+}
+
+function openSpeciesSheet() {
+  const overlay = document.getElementById('speciesSheetOverlay');
+  const panel   = document.getElementById('speciesSheetPanel');
+  if (overlay) overlay.classList.add('show');
+  if (panel)   { panel.classList.add('open'); panel.scrollTop = 0; }
+  document.body.style.overflow = 'hidden';
+}
+
+function closeSpeciesSheet() {
+  const overlay = document.getElementById('speciesSheetOverlay');
+  const panel   = document.getElementById('speciesSheetPanel');
+  if (overlay) overlay.classList.remove('show');
+  if (panel)   panel.classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function dismissSpeciesSheet() {
+  closeSpeciesSheet();
+  toggleSidebar();
+}
+
+function onFlyoutOutsideClick(e) {
+  const flyout = document.getElementById('flyoutSpecies');
+  const btn    = document.getElementById('btnSpecies');
+  if (flyout && btn && !flyout.contains(e.target) && !btn.contains(e.target)) {
+    closeFlyout();
   }
 }
 
