@@ -266,7 +266,7 @@
       myNick = currentUser?.user_metadata?.display_name || currentUser?.user_metadata?.nickname || null;
 
       const [{ data: adoption, error }, { count }] = await Promise.all([
-        sb.from('adoptions').select('*').eq('id', adoptionId).single(),
+        sb.from('adoptions').select('*, characters(is_sensitive, sensitive_note)').eq('id', adoptionId).single(),
         sb.from('adoptions').select('*', { count: 'exact', head: true }),
       ]);
 
@@ -307,19 +307,42 @@
       document.getElementById('pageContent').style.display = 'block';
     }
 
+    function revealSensitive(overlayEl, e) {
+      e.stopPropagation();
+      e.preventDefault();
+      const wrap = overlayEl.parentElement;
+      wrap.querySelectorAll('.blurred').forEach(el => el.classList.remove('blurred'));
+      overlayEl.remove();
+    }
+
+    function buildSensitiveOverlay(note) {
+      return `<div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span>${note ? '<span class="sensitive-overlay-note">' + note + '</span>' : ''}<span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div>`;
+    }
+
     async function renderMain(a) {
+      const isSensitive   = a.characters?.is_sensitive === true;
+      const sensitiveNote = a.characters?.sensitive_note || null;
+
       // 메인 이미지
       const mainImg = document.getElementById('mainImg');
       if (a.image_url) {
-        mainImg.style.backgroundImage    = `url('${a.image_url}')`;
-        mainImg.style.backgroundSize     = 'cover';
-        mainImg.style.backgroundPosition = 'center';
+        if (isSensitive) {
+          mainImg.style.position = 'relative';
+          mainImg.style.overflow = 'hidden';
+          mainImg.innerHTML = `<div style="position:absolute;inset:0;background-image:url('${a.image_url}');background-size:cover;background-position:center;" class="blurred"></div>${buildSensitiveOverlay(sensitiveNote)}`;
+        } else {
+          mainImg.style.backgroundImage    = `url('${a.image_url}')`;
+          mainImg.style.backgroundSize     = 'cover';
+          mainImg.style.backgroundPosition = 'center';
+        }
       }
 
       // 추가 이미지
       if (a.extra_images && a.extra_images.length > 0) {
         document.getElementById('extraImgsRow').innerHTML = a.extra_images.map(url =>
-          `<div class="adoption-extra-img" style="background-image:url('${url}');background-size:cover;background-position:center;"></div>`
+          isSensitive
+            ? `<div class="adoption-extra-img" style="position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background-image:url('${url}');background-size:cover;background-position:center;" class="blurred"></div>${buildSensitiveOverlay(sensitiveNote)}</div>`
+            : `<div class="adoption-extra-img" style="background-image:url('${url}');background-size:cover;background-position:center;"></div>`
         ).join('');
       }
 
