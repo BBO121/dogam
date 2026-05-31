@@ -1004,6 +1004,12 @@
         btn.textContent = '저장하기'; btn.disabled = false; return;
       }
 
+      // 캐릭터 이름 변경 시 분양글 character_name 동기화
+      const { error: adoptionSyncErr } = await sb.from('adoptions')
+        .update({ character_name: name })
+        .eq('character_id', charId);
+      if (adoptionSyncErr) console.warn('[adoption sync] character_name 동기화 실패:', adoptionSyncErr.message);
+
       window.location.href = `character.html?id=${charId}`;
     });
 
