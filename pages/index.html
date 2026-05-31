@@ -120,7 +120,7 @@
         { data: updateNoteList },
       ] = await Promise.all([
         sb.from('species').select('id, name, image_url, is_sensitive, sensitive_note').order('created_at', { ascending: false }).limit(18),
-        sb.from('adoptions').select('id, character_name, species_name, adoption_type, status, image_url').order('created_at', { ascending: false }).limit(8),
+        sb.from('adoptions').select('id, character_name, species_name, adoption_type, status, image_url, characters(is_sensitive, sensitive_note)').order('created_at', { ascending: false }).limit(8),
         sb.from('notices').select('id, title').order('is_pinned', { ascending: false }).order('created_at', { ascending: false }).limit(1),
         sb.from('update_notes').select('id, title').eq('is_pinned', true).order('created_at', { ascending: false }).limit(2),
       ]);
@@ -174,6 +174,10 @@
           overlayEl.remove();
         }
 
+        function buildSensitiveOverlay(note) {
+          return `<div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span>${note ? '<span class="sensitive-overlay-note">' + note + '</span>' : ''}<span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div>`;
+        }
+
 2      }
 
       // 분양 렌더
@@ -183,13 +187,23 @@
         document.getElementById('adoptionEmpty').style.display = 'block';
       } else {
         document.getElementById('adoptionGrid').innerHTML = adoptionList.map(a => {
-          const imgStyle  = a.image_url ? `background-image:url('${a.image_url}');background-size:cover;background-position:center;` : '';
+          const isSensitive   = a.characters?.is_sensitive === true;
+          const sensitiveNote = a.characters?.sensitive_note || null;
           const typeLabel = TYPE_LABEL[a.adoption_type] || '';
           const typeClass = TYPE_CLASS[a.adoption_type] || '';
           const closed    = a.status === '완료';
+
+          let cardImgHtml;
+          if (isSensitive && a.image_url) {
+            cardImgHtml = `<div class="adoption-card-img" style="position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background-image:url('${a.image_url}');background-size:cover;background-position:center;" class="blurred"></div>${buildSensitiveOverlay(sensitiveNote)}</div>`;
+          } else {
+            const imgStyle = a.image_url ? `background-image:url('${a.image_url}');background-size:cover;background-position:center;` : '';
+            cardImgHtml = `<div class="adoption-card-img" style="${imgStyle}"></div>`;
+          }
+
           return `
             <a class="adoption-card${closed ? ' adoption-card--closed' : ''}" href="adoption-detail.html?id=${a.id}">
-              <div class="adoption-card-img" style="${imgStyle}"></div>
+              ${cardImgHtml}
               <div class="adoption-card-info">
                 <div class="adoption-card-badges">
                   <span class="adoption-type-badge ${typeClass}">${typeLabel}</span>
