@@ -196,7 +196,16 @@
 
     async function initPage() {
       const user = await getUser();
-      if (!user || !isAdminOrStaff(user.user_metadata?.role)) {
+      const role = user?.user_metadata?.role;
+
+      console.log('[admin access]', {
+        role,
+        isAdminOrStaffExists: typeof window.isAdminOrStaff,
+        result: window.isAdminOrStaff?.(role),
+        metadata: user?.user_metadata,
+      });
+
+      if (!user || (role !== 'admin' && role !== 'staff')) {
         window.location.href = 'index.html';
         return;
       }
