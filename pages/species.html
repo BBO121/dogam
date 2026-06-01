@@ -539,7 +539,9 @@
         character_name: transferCharName,
         species_name:   char?.species_name || '',
         from_nickname:  transferFromOwner,
+        from_user_id:   char?.owner_user_id || null,
         to_nickname:    transferToNick,
+        to_user_id:     nickToId[transferToNick] || null,
         method:         '종족주 소유권이전',
       });
 

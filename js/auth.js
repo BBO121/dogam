@@ -90,27 +90,33 @@ async function getMySpecies(userId) {
 }
 
 // 캐릭터 이전 로그 기록
-async function logTransfer({ character_name, species_name, from_nickname, to_nickname, method }) {
+async function logTransfer({ character_name, species_name, from_nickname, from_user_id, to_nickname, to_user_id, method }) {
   const { error } = await sb.from('character_transfers').insert({
     character_name,
     species_name,
     from_nickname,
+    from_user_id: from_user_id || null,
     to_nickname,
+    to_user_id:   to_user_id   || null,
     method,
   });
   return { error };
 }
 
-// 이전 내역 조회 — nickname은 문자열 또는 배열 모두 허용
-async function getTransferHistory(nicknames) {
+// 이전 내역 조회 — user_id 기준 + 구 데이터 nickname fallback
+async function getTransferHistory(userId, nicknames) {
+  const orParts = userId ? [`from_user_id.eq.${userId}`, `to_user_id.eq.${userId}`] : [];
   const nicks = [...new Set([].concat(nicknames).filter(Boolean))];
-  const orParts = nicks.flatMap(n => [`from_nickname.eq.${n}`, `to_nickname.eq.${n}`]).join(',');
+  nicks.forEach(n => orParts.push(`from_nickname.eq.${n}`, `to_nickname.eq.${n}`));
+  if (!orParts.length) return { data: [], error: null };
   const { data, error } = await sb
     .from('character_transfers')
     .select('*')
-    .or(orParts)
+    .or(orParts.join(','))
     .order('created_at', { ascending: false });
-  return { data, error };
+  const seen = new Set();
+  const unique = (data || []).filter(t => { if (seen.has(t.id)) return false; seen.add(t.id); return true; });
+  return { data: unique, error };
 }
 
 // 헤더 상태 업데이트

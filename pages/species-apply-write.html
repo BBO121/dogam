@@ -103,10 +103,9 @@
       }
 
       // 이미 접수된 신청이 있으면 중복 방지
-      const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname;
       const { data } = await sb.from('species_applications')
         .select('id, status')
-        .eq('nickname', nickname)
+        .eq('user_id', user.id)
         .in('status', ['접수됨', '검토중'])
         .limit(1);
       if (data && data.length > 0) {
@@ -155,6 +154,7 @@
       const user = await getUser();
       if (!user) { window.location.href = 'login.html'; return; }
       const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname;
+      // nickname은 표시용으로만 저장, 권한은 user_id 기준
 
       // 이미지 업로드
       let image_url = null;
@@ -174,6 +174,7 @@
         title:        speciesName,
         species_name: speciesName,
         nickname,
+        user_id:      user.id,
         image_url,
         link: link || null,
         status: '접수됨',

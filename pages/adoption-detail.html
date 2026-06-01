@@ -255,6 +255,7 @@
     let currentAdoption = null;
     let myNick          = null;
     let auctionDetails  = null;
+    let idToNick        = {};
 
     const TYPE_LABEL = { free: '무료', paid: '유료', auction: '경매', etc: '기타' };
     const TYPE_CLASS  = { free: 'adoption-type--free', paid: 'adoption-type--paid', auction: 'adoption-type--auction', etc: 'adoption-type--paid' };
@@ -265,12 +266,14 @@
       currentUser = await getUser();
       myNick = currentUser?.user_metadata?.display_name || currentUser?.user_metadata?.nickname || null;
 
-      const [{ data: adoption, error }, { count }] = await Promise.all([
+      const [{ data: adoption, error }, { count }, { data: userList }] = await Promise.all([
         sb.from('adoptions').select('*, characters(is_sensitive, sensitive_note)').eq('id', adoptionId).single(),
         sb.from('adoptions').select('*', { count: 'exact', head: true }),
+        sb.rpc('get_all_users'),
       ]);
 
       if (error || !adoption) { window.location.href = 'adoption.html'; return; }
+      if (userList) userList.forEach(u => { if (u.id && u.nickname) idToNick[u.id] = u.nickname; });
 
       currentAdoption = adoption;
       document.title = `${adoption.character_name} 분양 — 종족연구소`;
@@ -359,7 +362,7 @@
 
       document.getElementById('detailCharName').textContent = a.character_name || '—';
       document.getElementById('detailSpecies').textContent  = a.species_name   || '—';
-      document.getElementById('detailAuthor').textContent   = a.author         || '익명';
+      document.getElementById('detailAuthor').textContent   = (a.user_id && idToNick[a.user_id]) || a.author || '익명';
 
       const date = new Date(a.created_at).toLocaleDateString('ko-KR', {
         year: 'numeric', month: '2-digit', day: '2-digit'
@@ -407,7 +410,7 @@
         document.getElementById('contactWrap').style.display  = 'flex';
       }
 
-      const isAuthor = currentUser && (currentUser.id === a.user_id || myNick === a.author);
+      const isAuthor = !!(currentUser?.id && a.user_id && currentUser.id === a.user_id);
       const isOpen   = a.status === '분양중';
 
       if (!isOpen) {
@@ -978,7 +981,9 @@
             character_name: a.character_name,
             species_name:   a.species_name,
             from_nickname:  a.author,
+            from_user_id:   a.user_id,
             to_nickname:    myNick,
+            to_user_id:     currentUser?.id,
             method:         a.adoption_type === 'auction' ? '경매' : '무료분양',
           }),
           sb.from('notifications').insert({
@@ -1048,39 +1053,15 @@
       const recipientUser   = (recipientUserList || []).find(u => u.nickname === recipient);
       const recipientUserId = recipientUser?.id || null;
 
-      // characters 먼저 업데이트 (분양자는 owner_user_id = auth.uid() 이므로 RLS 통과)
-      const { data: charUpdated, error: charError } = await sb.from('characters')
-        .update({
-          owner_nickname:   recipient,
-          owner_user_id:    recipientUserId,
-          owner_is_offsite: false,
-        })
-        .eq('id', a.character_id)
-        .select('id');
+      // RPC로 characters + adoptions 원자적 처리 (SECURITY DEFINER)
+      const { data: result, error: transferError } = await sb.rpc('complete_adoption_transfer', {
+        p_adoption_id:    Number(adoptionId),
+        p_new_owner_id:   recipientUserId,
+        p_new_owner_nick: recipient,
+      });
 
-      console.log('[confirmComplete] characters update:', charUpdated, '/ error:', charError);
-
-      if (charError) {
-        errorEl.textContent = `소유권 이전에 실패했어요: ${charError.message}`;
-        btn.textContent = '분양 완료';
-        btn.disabled    = false;
-        return;
-      }
-
-      if (!charUpdated || charUpdated.length === 0) {
-        errorEl.textContent = '소유권 이전에 실패했어요. 권한을 확인하거나 관리자에게 문의해주세요.';
-        btn.textContent = '분양 완료';
-        btn.disabled    = false;
-        return;
-      }
-
-      // characters 성공 후에만 adoptions 완료 처리
-      const { error: adoptionError } = await sb.from('adoptions')
-        .update({ status: '완료' })
-        .eq('id', adoptionId);
-
-      if (adoptionError) {
-        errorEl.textContent = `분양 완료 처리에 실패했어요: ${adoptionError.message}`;
+      if (transferError || !result?.ok) {
+        errorEl.textContent = `소유권 이전에 실패했어요: ${transferError?.message || result?.error || '알 수 없는 오류'}`;
         btn.textContent = '분양 완료';
         btn.disabled    = false;
         return;
@@ -1093,7 +1074,9 @@
             character_name: a.character_name,
             species_name:   a.species_name,
             from_nickname:  a.author,
+            from_user_id:   a.user_id,
             to_nickname:    recipient,
+            to_user_id:     recipientUserId,
             method,
           }),
           sb.from('notifications').insert({

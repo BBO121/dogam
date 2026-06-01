@@ -142,7 +142,9 @@
         character_name: _charData.name,
         species_name:   _charData.species_name || '',
         from_nickname:  _charData.owner_nickname,
+        from_user_id:   _charData.owner_user_id || null,
         to_nickname:    _transferToNick,
+        to_user_id:     _nickToId[_transferToNick] || null,
         method:         '종족주 소유권이전',
       });
 

@@ -150,24 +150,25 @@
       }
 
       const isAdminUser = isAdminOrStaff(user.user_metadata?.role);
-      const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname;
 
-      const { data, error } = await sb
-        .from('inquiries')
-        .select('*')
-        .eq('id', currentId)
-        .single();
+      const [{ data, error }, { data: userList }] = await Promise.all([
+        sb.from('inquiries').select('*').eq('id', currentId).single(),
+        sb.rpc('get_all_users'),
+      ]);
+      const idToNick = Object.fromEntries((userList || []).filter(u => u.id && u.nickname).map(u => [u.id, u.nickname]));
 
       if (error || !data) {
         window.location.href = 'inquiry.html';
         return;
       }
 
-      const isOwner = data.user_id != null ? data.user_id === user.id : data.nickname === nickname;
+      const isOwner = data.user_id != null ? data.user_id === user.id : false;
       if (!isAdminUser && !isOwner) {
         window.location.href = 'inquiry.html';
         return;
       }
+
+      const authorNick = (data.user_id && idToNick[data.user_id]) || data.nickname;
 
       document.title = `${data.title} — 종족연구소`;
 
@@ -177,7 +178,7 @@
 
       reportNickname = data.nickname;
       document.getElementById('detailTitle').textContent = data.title;
-      document.getElementById('detailNickname').textContent = data.nickname;
+      document.getElementById('detailNickname').textContent = authorNick;
 
       const date = new Date(data.created_at).toLocaleDateString('ko-KR', {
         year: 'numeric', month: '2-digit', day: '2-digit'
@@ -205,7 +206,7 @@
           const replyContentEl = document.getElementById('userReplyContent');
           replyContentEl.style.whiteSpace = 'pre-wrap';
           replyContentEl.textContent = data.user_reply;
-          document.getElementById('userReplyAuthor').textContent = data.user_replied_by || data.nickname;
+          document.getElementById('userReplyAuthor').textContent = data.user_replied_by || authorNick;
           if (data.user_replied_at) {
             const rDate = new Date(data.user_replied_at).toLocaleDateString('ko-KR', {
               year: 'numeric', month: '2-digit', day: '2-digit'

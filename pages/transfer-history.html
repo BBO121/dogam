@@ -65,22 +65,29 @@
   <script src="../js/main.js"></script>
   <script>
     let myNickname  = '';
-    let myNicknames = []; // display_name + login_id 모두 포함
+    let myNicknames = [];
+    let myUserId    = null;
     let allData     = [];
     let currentFilter = 'all';
     let charIdMap   = {};
     let spIdMap     = {};
+    let idToNick    = {};
     const pager = createPager(renderTable);
 
     async function initPage() {
       const user = await getUser();
       if (!user) { window.location.href = 'login.html'; return; }
 
+      myUserId    = user.id;
       myNickname  = user.user_metadata?.display_name || user.user_metadata?.nickname || '';
       const loginId = user.user_metadata?.nickname || '';
       myNicknames = [...new Set([myNickname, loginId].filter(Boolean))];
 
-      const { data, error } = await getTransferHistory(myNicknames);
+      const [{ data, error }, { data: userList }] = await Promise.all([
+        getTransferHistory(myUserId, myNicknames),
+        sb.rpc('get_all_users'),
+      ]);
+      if (userList) userList.forEach(u => { if (u.id && u.nickname) idToNick[u.id] = u.nickname; });
 
       document.getElementById('pageLoading').style.display = 'none';
       document.getElementById('pageContent').style.display = 'block';
@@ -113,8 +120,12 @@
       currentFilter = filter;
 
       let filtered = allData;
-      if (filter === 'received') filtered = allData.filter(t => myNicknames.includes(t.to_nickname));
-      if (filter === 'sent')     filtered = allData.filter(t => myNicknames.includes(t.from_nickname));
+      if (filter === 'received') filtered = allData.filter(t =>
+        t.to_user_id === myUserId || (!t.to_user_id && myNicknames.includes(t.to_nickname))
+      );
+      if (filter === 'sent') filtered = allData.filter(t =>
+        t.from_user_id === myUserId || (!t.from_user_id && myNicknames.includes(t.from_nickname))
+      );
 
       const emptyEl = document.getElementById('transferEmpty');
       if (filtered.length === 0) {
@@ -129,9 +140,11 @@
 
     const linkStyle = 'color:inherit;text-decoration:none;cursor:pointer;';
 
-    function nickLink(nick) {
-      if (!nick) return '—';
-      return `<a href="profile.html?user=${encodeURIComponent(nick)}" style="${linkStyle}">${nick}</a>`;
+    function nickLink(userId, storedNick) {
+      const displayNick = (userId && idToNick[userId]) || storedNick;
+      if (!displayNick) return '—';
+      if (userId) return `<a href="profile.html?user=${encodeURIComponent(displayNick)}" style="${linkStyle}">${displayNick}</a>`;
+      return displayNick;
     }
     function charLink(name) {
       if (!name) return '—';
@@ -180,8 +193,8 @@
                   </span>
                   <span class="transfer-char">${charLink(t.character_name)}</span>
                   <span class="transfer-species">${spLink(t.species_name)}</span>
-                  <span class="transfer-from ${isSent ? 'transfer-me' : ''}">${nickLink(t.from_nickname)}</span>
-                  <span class="transfer-to ${!isSent ? 'transfer-me' : ''}">${nickLink(t.to_nickname)}</span>
+                  <span class="transfer-from ${isSent ? 'transfer-me' : ''}">${nickLink(t.from_user_id, t.from_nickname)}</span>
+                  <span class="transfer-to ${!isSent ? 'transfer-me' : ''}">${nickLink(t.to_user_id, t.to_nickname)}</span>
                   <span class="transfer-method-badge"
                     style="${hasDetail ? 'cursor:pointer;display:flex;align-items:center;gap:6px;' : ''}"
                     ${hasDetail ? `onclick="toggleDetail('detail_${i}', this)"` : ''}>

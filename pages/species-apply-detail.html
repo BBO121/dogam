@@ -138,19 +138,20 @@
       if (!user) { window.location.href = 'login.html'; return; }
 
       const isAdminUser = isAdminOrStaff(user.user_metadata?.role);
-      const nickname    = user.user_metadata?.display_name || user.user_metadata?.nickname;
-      adminNickname     = nickname;
+      adminNickname     = user.user_metadata?.display_name || user.user_metadata?.nickname;
 
-      const { data, error } = await sb
-        .from('species_applications')
-        .select('*')
-        .eq('id', currentId)
-        .single();
+      const [{ data, error }, { data: userList }] = await Promise.all([
+        sb.from('species_applications').select('*').eq('id', currentId).single(),
+        sb.rpc('get_all_users'),
+      ]);
+      const idToNick = Object.fromEntries((userList || []).filter(u => u.id && u.nickname).map(u => [u.id, u.nickname]));
 
       if (error || !data) { window.location.href = 'species-apply.html'; return; }
-      if (!isAdminUser && data.nickname !== nickname) { window.location.href = 'species-apply.html'; return; }
+      if (!isAdminUser && data.user_id !== user.id) { window.location.href = 'species-apply.html'; return; }
 
-      applicantNickname = data.nickname;
+      applicantNickname = (data.user_id && idToNick[data.user_id]) || data.nickname;
+      const applicantUserId = data.user_id || null;
+
       document.title = `${data.species_name} 종족주 신청 — 종족연구소`;
 
       // 상태 뱃지
@@ -159,7 +160,7 @@
       statusEl.style.cssText = STATUS_STYLE[data.status] || STATUS_STYLE['접수됨'];
 
       document.getElementById('detailTitle').textContent     = `${data.species_name} 종족주 신청`;
-      document.getElementById('detailNickname').textContent  = data.nickname;
+      document.getElementById('detailNickname').textContent  = applicantNickname;
       const date = new Date(data.created_at).toLocaleDateString('ko-KR', {
         year: 'numeric', month: '2-digit', day: '2-digit'
       }).replace(/\. /g, '.').replace(/\.$/, '');
@@ -200,7 +201,7 @@
           document.getElementById('approveBtn').style.display = 'none';
           document.getElementById('rejectBtn').style.display  = 'none';
         }
-      } else if (data.nickname === nickname && !data.answer) {
+      } else if (data.user_id === user.id && !data.answer) {
         document.getElementById('deleteBtn').style.display = 'inline-flex';
       }
 
@@ -240,16 +241,13 @@
       const btn = document.getElementById('approveBtn');
       btn.textContent = '처리 중...'; btn.disabled = true;
 
-      // 유저 UUID 조회
-      const { data: users } = await sb.rpc('get_all_users');
-      const target = (users || []).find(u => u.nickname === applicantNickname);
-      if (!target) {
+      if (!applicantUserId) {
         alert('해당 유저를 찾을 수 없어요.'); btn.textContent = '✓ 승인 + 권한 부여'; btn.disabled = false; return;
       }
 
       // 종족주 권한 부여
       const { error: roleError } = await sb.rpc('set_user_role', {
-        target_id: target.id,
+        target_id: applicantUserId,
         new_role: 'species_owner',
       });
       if (roleError) {

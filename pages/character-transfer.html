@@ -182,11 +182,11 @@
           `<img src="${c.image_url}" alt="${c.name}">`;
       }
 
-      // 유저 목록 로드 (현재 소유주 제외)
+      // 유저 목록 로드 (현재 소유주 제외 — owner_user_id 기준)
       const { data: userData } = await sb.rpc('get_all_users');
       allUsers = (userData || [])
-        .map(u => ({ nickname: u.nickname || '', loginId: u.login_id || u.nickname || '' }))
-        .filter(u => u.nickname && u.nickname !== c.owner_nickname)
+        .map(u => ({ id: u.id, nickname: u.nickname || '', loginId: u.login_id || u.nickname || '' }))
+        .filter(u => u.nickname && u.id !== c.owner_user_id)
         .sort((a, b) => a.nickname.localeCompare(b.nickname, 'ko'));
     }
 
@@ -206,7 +206,7 @@
             <div onclick="selectRecipient('${u.nickname}')" id="rItem_${u.nickname}"
               style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border);"
               onmouseover="this.style.background='var(--sky-pale)'"
-              onmouseout="this.style.background= selectedRecipient==='${u.nickname}' ? 'var(--sky-light)' : ''">
+              onmouseout="this.style.background= selectedRecipient?.nick==='${u.nickname}' ? 'var(--sky-light)' : ''">
               ${u.nickname}${u.loginId !== u.nickname
                 ? `<span style="color:var(--text-mute); font-size:11px; margin-left:6px;">(${u.loginId})</span>` : ''}
             </div>`).join('')
@@ -214,7 +214,8 @@
     }
 
     function selectRecipient(nick) {
-      selectedRecipient = nick;
+      const found = allUsers.find(u => u.nickname === nick);
+      selectedRecipient = found ? { nick: found.nickname, id: found.id } : { nick, id: null };
       document.querySelectorAll('#recipientList > div').forEach(el => {
         const sel = el.id === `rItem_${nick}`;
         el.style.background = sel ? 'var(--sky-light)' : '';
@@ -237,7 +238,7 @@
       errorEl.textContent = '';
 
       if (!selectedRecipient) { errorEl.textContent = '받는 사람을 선택해주세요.'; return; }
-      if (!confirm(`'${charData.name}'을(를) ${selectedRecipient}님에게 이전 요청을 보낼까요?`)) return;
+      if (!confirm(`'${charData.name}'을(를) ${selectedRecipient.nick}님에게 이전 요청을 보낼까요?`)) return;
 
       btn.disabled = true;
       btn.textContent = '전송 중...';
@@ -247,11 +248,13 @@
       const method = selectedMethod + (memo ? ` / ${memo}` : '');
 
       try {
-        // 받는 사람에게 확인 요청 알림
-        const confirmLink = `transfer-confirm.html?char_id=${charId}&from=${encodeURIComponent(myNick)}&to=${encodeURIComponent(selectedRecipient)}&method=${encodeURIComponent(method)}`;
+        const confirmLink = `transfer-confirm.html?char_id=${charId}`
+          + `&from=${encodeURIComponent(myNick)}&from_user_id=${encodeURIComponent(currentUser.id)}`
+          + `&to=${encodeURIComponent(selectedRecipient.nick)}&to_user_id=${encodeURIComponent(selectedRecipient.id || '')}`
+          + `&method=${encodeURIComponent(method)}`;
 
         const { error: notifError } = await sb.from('notifications').insert({
-          user_nickname: selectedRecipient,
+          user_nickname: selectedRecipient.nick,
           type:          'transfer_request',
           message:       `${myNick}님이 '${charData.name}'을(를) 이전하려 해요. 확인해주세요!`,
           link:          confirmLink,
@@ -261,7 +264,14 @@
 
         // 이전 대기 상태 저장
         await sb.from('characters').update({
-          pending_transfer: { to: selectedRecipient, from: myNick, method, link: confirmLink }
+          pending_transfer: {
+            to:          selectedRecipient.nick,
+            to_user_id:  selectedRecipient.id || null,
+            from:        myNick,
+            from_user_id: currentUser.id,
+            method,
+            link:        confirmLink,
+          }
         }).eq('id', charId);
 
         window.location.href = `character.html?id=${charId}`;

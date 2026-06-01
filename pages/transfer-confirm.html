@@ -166,11 +166,13 @@
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
   <script>
-    const params    = new URLSearchParams(window.location.search);
-    const charId    = params.get('char_id');
-    const fromNick  = params.get('from');
-    const toNick    = params.get('to');
-    const method    = params.get('method') || '';
+    const params      = new URLSearchParams(window.location.search);
+    const charId      = params.get('char_id');
+    const fromNick    = params.get('from');
+    const fromUserId  = params.get('from_user_id') || null;
+    const toNick      = params.get('to');
+    const toUserId    = params.get('to_user_id')   || null;
+    const method      = params.get('method') || '';
 
     let currentUser = null;
     let charData    = null;
@@ -189,8 +191,9 @@
 
       const myNick = user.user_metadata?.display_name || user.user_metadata?.nickname;
 
-      // 본인 확인
-      if (myNick !== toNick) {
+      // 본인 확인 — user_id 우선, 없으면 nickname fallback
+      const isForMe = toUserId ? currentUser.id === toUserId : myNick === toNick;
+      if (!isForMe) {
         showExpired('이 이전 요청은 나에게 온 요청이 아니에요.');
         return;
       }
@@ -201,8 +204,11 @@
       const { data: c, error } = await sb.from('characters').select('*').eq('id', charId).single();
       if (error || !c) { showExpired('개체를 찾을 수 없어요.'); return; }
 
-      // 현재 소유주가 요청자와 일치하는지 확인 (이미 처리됐거나 변경된 경우 차단)
-      if (c.owner_nickname !== fromNick) {
+      // 소유주 유효성 검증 — owner_user_id 우선, 없으면 nickname fallback
+      const ownerMatch = fromUserId && c.owner_user_id
+        ? c.owner_user_id === fromUserId
+        : c.owner_nickname === fromNick;
+      if (!ownerMatch) {
         showExpired('이미 처리되었거나 유효하지 않은 요청이에요.');
         return;
       }
@@ -254,6 +260,17 @@
           owner_user_id:    currentUser.id,
           owner_is_offsite: false,
         }).eq('id', charId);
+
+        // 이전 기록 저장
+        await logTransfer({
+          character_name: charData.name,
+          species_name:   charData.species_name || '',
+          from_nickname:  fromNick,
+          from_user_id:   fromUserId,
+          to_nickname:    toNick,
+          to_user_id:     currentUser.id,
+          method,
+        });
 
         window.location.href = `character.html?id=${charId}`;
       } catch (e) {
