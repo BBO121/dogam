@@ -75,7 +75,7 @@
         return;
       }
 
-      isAdminUser = user.user_metadata?.role === 'admin';
+      isAdminUser = isAdminOrStaff(user.user_metadata?.role);
       const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname;
 
       let query = sb.from('bug_reports').select('*').order('created_at', { ascending: false });

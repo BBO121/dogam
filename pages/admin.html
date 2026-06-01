@@ -196,7 +196,7 @@
 
     async function initPage() {
       const user = await getUser();
-      if (!user || user.user_metadata?.role !== 'admin') {
+      if (!user || !isAdminOrStaff(user.user_metadata?.role)) {
         window.location.href = 'index.html';
         return;
       }
@@ -374,9 +374,10 @@
     function adminUserPriority(u) {
       if (u.login_id === 'admin')          return 0;
       if (u.role === 'admin')              return 1;
-      if (TESTERS.includes(u.nickname))    return 2;
-      if (u.role === 'species_owner')      return 3;
-      return 4;
+      if (u.role === 'staff')              return 2;
+      if (TESTERS.includes(u.nickname))    return 3;
+      if (u.role === 'species_owner')      return 4;
+      return 5;
     }
 
     function sortAdminUsers(list) {
@@ -392,8 +393,8 @@
         const date = new Date(u.created_at).toLocaleDateString('ko-KR', {
           year: 'numeric', month: '2-digit', day: '2-digit'
         }).replace(/\. /g, '.').replace(/\.$/, '');
-        const roleLabel      = u.role === 'admin' ? '관리자' : u.role === 'species_owner' ? '종족주' : '일반유저';
-        const roleBadgeClass = u.role === 'admin' ? 'badge-admin' : u.role === 'species_owner' ? 'badge-species-owner' : 'badge-user';
+        const roleLabel      = u.role === 'admin' ? '관리자' : u.role === 'staff' ? '스태프' : u.role === 'species_owner' ? '종족주' : '일반유저';
+        const roleBadgeClass = u.role === 'admin' ? 'badge-admin' : u.role === 'staff' ? 'badge-staff' : u.role === 'species_owner' ? 'badge-species-owner' : 'badge-user';
         const safeNick = (u.nickname || '').replace(/'/g, "\\'");
         const actions = u.role === 'admin' ? '' : `
           <div class="admin-card-actions">

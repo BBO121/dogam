@@ -1763,6 +1763,17 @@ a {
   margin-left: 6px;
 }
 
+.badge-staff {
+  display: inline-block;
+  padding: 3px 8px;
+  background: #DCFCE7;
+  color: #16A34A;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 6px;
+}
+
 .btn-logout {
   background: none;
   border: 1.5px solid var(--border);

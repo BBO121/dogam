@@ -139,7 +139,7 @@
 
     async function initPage() {
       const user = await getUser();
-      if (!user || user.user_metadata?.role !== 'admin') {
+      if (!user || !isAdminOrStaff(user.user_metadata?.role)) {
         window.location.href = 'index.html';
         return;
       }

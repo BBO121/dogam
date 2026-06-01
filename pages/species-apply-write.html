@@ -97,7 +97,7 @@
 
       // 이미 종족주거나 관리자면 신청 불필요
       const role = user.user_metadata?.role;
-      if (role === 'species_owner' || role === 'admin') {
+      if (role === 'species_owner' || isAdminOrStaff(role)) {
         window.location.href = 'species-apply.html';
         return;
       }

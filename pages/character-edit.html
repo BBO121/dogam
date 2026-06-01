@@ -554,7 +554,7 @@
       const { data: c, error } = await sb.from('characters').select('*').eq('id', charId).single();
       if (error || !c) { window.location.href = 'character-list.html'; return; }
 
-      const isAdminEd = user.user_metadata?.role === 'admin';
+      const isAdminEd = isAdminOrStaff(user.user_metadata?.role);
       const isOwner   = !!(user.id && c.owner_user_id && user.id === c.owner_user_id);
 
       let isSpeciesOwner = false;

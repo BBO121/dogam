@@ -185,7 +185,7 @@
     async function loadCharacter() {
       const user = await getUser();
       const userNickname = user?.user_metadata?.display_name || user?.user_metadata?.nickname || null;
-      const isAdminUser  = user?.user_metadata?.role === 'admin';
+      const isAdminUser  = isAdminOrStaff(user?.user_metadata?.role);
 
       const [{ data: c, error }, { data: siteUserData }] = await Promise.all([
         sb.from('characters').select('*').eq('id', charId).single(),

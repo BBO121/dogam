@@ -60,7 +60,7 @@
 
     async function initPage() {
       const user = await getUser();
-      if (user?.user_metadata?.role === 'admin') {
+      if (isAdminOrStaff(user?.user_metadata?.role)) {
         document.getElementById('writeBtn').style.display = 'inline-flex';
       }
 

@@ -121,7 +121,7 @@
 
       document.getElementById('detailContent').innerHTML = DOMPurify.sanitize(data.content);
 
-      if (user?.user_metadata?.role === 'admin') {
+      if (isAdminOrStaff(user?.user_metadata?.role)) {
         const actions = document.getElementById('adminActions');
         document.getElementById('editBtn').href = `update-note-write.html?edit=${noteId}`;
         actions.style.display = 'flex';

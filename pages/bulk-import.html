@@ -235,7 +235,7 @@
       const user = await getUser();
       if (!user) { window.location.href = 'login.html'; return; }
       const role = user.user_metadata?.role;
-      if (role !== 'admin' && role !== 'species_owner') { window.location.href = 'index.html'; return; }
+      if (!isAdminOrStaff(role) && role !== 'species_owner') { window.location.href = 'index.html'; return; }
 
       currentUser = user;
 

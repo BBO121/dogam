@@ -266,6 +266,7 @@ async function updateSidebarLogin() {
     if (block) {
       const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname || '유저';
       const admin = user.user_metadata?.role === 'admin';
+      const staff = user.user_metadata?.role === 'staff';
       const TESTERS = ['Moulow', 'moulow', 'Sawol'];
       const isTester = TESTERS.includes(nickname);
       const roleIsSpeciesOwner = user.user_metadata?.role === 'species_owner';
@@ -275,10 +276,11 @@ async function updateSidebarLogin() {
       const isSpeciesOwner = roleIsSpeciesOwner || !!(spById?.length || spByNick?.length);
 
       const badges = [];
-      if (admin)          badges.push(`<a href="admin.html" class="badge-admin">관리자</a>`);
-      if (isTester)       badges.push(`<span style="font-size:10px;padding:3px 8px;background:#dcfce7;color:#166534;border-radius:4px;font-weight:700;">테스터</span>`);
-      if (isSpeciesOwner) badges.push(`<span class="badge-role">종족주</span>`);
-      if (!admin && !isTester && !isSpeciesOwner) badges.push(`<span class="badge-user">일반유저</span>`);
+      if (admin)                                        badges.push(`<a href="admin.html" class="badge-admin">관리자</a>`);
+      if (staff)                                        badges.push(`<a href="admin.html" class="badge-staff">스태프</a>`);
+      if (isTester && !staff)                           badges.push(`<span style="font-size:10px;padding:3px 8px;background:#dcfce7;color:#166534;border-radius:4px;font-weight:700;">테스터</span>`);
+      if (isSpeciesOwner)                               badges.push(`<span class="badge-role">종족주</span>`);
+      if (!admin && !staff && !isTester && !isSpeciesOwner) badges.push(`<span class="badge-user">일반유저</span>`);
 
       block.innerHTML = `
         <div class="sidebar-user-row">
@@ -378,7 +380,7 @@ function toggleAccordion(id) {
 
 async function loadAdminBadges() {
   const user = await getUser();
-  if (user?.user_metadata?.role !== 'admin') return;
+  if (!isAdminOrStaff(user?.user_metadata?.role)) return;
 
   const [{ count: inquiryCount }, { count: bugCount }, { count: applyCount }] = await Promise.all([
     sb.from('inquiries').select('*', { count: 'exact', head: true }).eq('status', '접수됨'),

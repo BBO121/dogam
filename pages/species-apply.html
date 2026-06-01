@@ -70,7 +70,7 @@
       const user = await getUser();
       if (!user) { window.location.href = 'login.html'; return; }
 
-      isAdminUser = user.user_metadata?.role === 'admin';
+      isAdminUser = isAdminOrStaff(user.user_metadata?.role);
       const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname;
 
       // 이미 승인된 유저는 신청하기 버튼 숨김

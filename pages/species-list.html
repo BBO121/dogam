@@ -132,7 +132,7 @@
     async function initPage() {
       const user = await getUser();
       const role = user?.user_metadata?.role;
-      if (role === 'admin' || role === 'species_owner') {
+      if (isAdminOrStaff(role) || role === 'species_owner') {
         document.getElementById('btnRegisterSpecies').style.display = '';
       }
     }

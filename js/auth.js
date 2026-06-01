@@ -1,3 +1,7 @@
+window.isAdmin        = (role) => role === 'admin';
+window.isStaff        = (role) => role === 'staff';
+window.isAdminOrStaff = (role) => role === 'admin' || role === 'staff';
+
 const SUPABASE_URL = 'https://tnvkfcqphdxdyvswbkfe.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_iaH_vCaDJfekUiZ85_JO7w_T_iDGNfg';
 
@@ -40,10 +44,10 @@ async function getUser() {
   return user;
 }
 
-// 관리자 여부
+// 관리자/스태프 여부
 async function isAdmin() {
   const user = await getUser();
-  return user?.user_metadata?.role === 'admin';
+  return isAdminOrStaff(user?.user_metadata?.role);
 }
 
 // 프로필 업데이트 (소개글 등)
@@ -121,6 +125,7 @@ async function getTransferHistory(nicknames) {
 async function updateHeader() {
   const user = await getUser();
   const admin = user?.user_metadata?.role === 'admin';
+  const staff = user?.user_metadata?.role === 'staff';
   const loginBtn = document.querySelector('.btn-login');
 
   if (user) {
@@ -142,10 +147,11 @@ async function updateHeader() {
 
       // 뱃지: 관리자 → 테스터 → 종족주 순으로 닉네임 앞에
       const headerBadges = [];
-      if (admin)                              headerBadges.push(`<a href="admin.html" class="badge-admin">관리자</a>`);
-      if (isTester)                           headerBadges.push(`<span style="font-size:10px; padding:3px 8px; background:#dcfce7; color:#166534; border-radius:4px; font-weight:700; display:inline-block; margin-right:4px;">테스터</span>`);
-      if (isSpeciesOwner)                     headerBadges.push(`<span class="badge-role">종족주</span>`);
-      if (!admin && !isTester && !isSpeciesOwner) headerBadges.push(`<span class="badge-user">일반유저</span>`);
+      if (admin)                                        headerBadges.push(`<a href="admin.html" class="badge-admin">관리자</a>`);
+      if (staff)                                        headerBadges.push(`<a href="admin.html" class="badge-staff">스태프</a>`);
+      if (isTester && !staff)                           headerBadges.push(`<span style="font-size:10px; padding:3px 8px; background:#dcfce7; color:#166534; border-radius:4px; font-weight:700; display:inline-block; margin-right:4px;">테스터</span>`);
+      if (isSpeciesOwner)                               headerBadges.push(`<span class="badge-role">종족주</span>`);
+      if (!admin && !staff && !isTester && !isSpeciesOwner) headerBadges.push(`<span class="badge-user">일반유저</span>`);
       if (headerBadges.length) {
         loginBtn.insertAdjacentHTML('beforebegin', headerBadges.join(''));
       }

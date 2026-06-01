@@ -283,7 +283,7 @@
       const { data: s, error } = await sb.from('species').select('*').eq('id', speciesId).single();
       if (error || !s) { window.location.href = 'species-list.html'; return; }
 
-      const isAdmin = user.user_metadata?.role === 'admin';
+      const isAdmin = isAdminOrStaff(user.user_metadata?.role);
       const isOwner = !!(user.id && s.owner_user_id && user.id === s.owner_user_id);
       if (!isOwner && !isAdmin) { window.location.href = `species.html?id=${speciesId}`; return; }
 
