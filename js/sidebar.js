@@ -270,10 +270,8 @@ async function updateSidebarLogin() {
       const TESTERS = ['Moulow', 'moulow', 'Sawol'];
       const isTester = TESTERS.includes(nickname);
       const roleIsSpeciesOwner = user.user_metadata?.role === 'species_owner';
-      const { data: spById }   = await sb.from('species').select('id').eq('owner_user_id', user.id).limit(1);
-      const { data: spByNick } = spById?.length ? { data: null } :
-        await sb.from('species').select('id').eq('owner_nickname', nickname).is('owner_user_id', null).limit(1);
-      const isSpeciesOwner = roleIsSpeciesOwner || !!(spById?.length || spByNick?.length);
+      const { data: spById } = await sb.from('species').select('id').eq('owner_user_id', user.id).limit(1);
+      const isSpeciesOwner = roleIsSpeciesOwner || !!spById?.length;
 
       const badges = [];
       if (admin)                                        badges.push(`<a href="admin.html" class="badge-admin">관리자</a>`);

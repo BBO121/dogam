@@ -66,18 +66,28 @@
   <script src="../js/main.js"></script>
   <script>
     let allChars = [];
+    let idToNick = {};
+    let ownerParamId = null;
     const ownerParam = new URLSearchParams(window.location.search).get('owner');
     const pager = createPager(render);
 
     async function loadCharacters() {
-      const { data, error } = await sb
-        .from('characters')
-        .select('id, name, species_name, owner_nickname, image_url, created_at, is_sensitive, sensitive_note')
-        .order('created_at', { ascending: false });
+      const [{ data, error }, { data: userList }] = await Promise.all([
+        sb.from('characters')
+          .select('id, name, species_name, owner_nickname, owner_user_id, image_url, created_at, is_sensitive, sensitive_note')
+          .order('created_at', { ascending: false }),
+        sb.rpc('get_all_users'),
+      ]);
 
       if (error || !data) {
         document.getElementById('characterGrid').innerHTML = '<p class="page-loading">불러오기 실패</p>';
         return;
+      }
+
+      if (userList) userList.forEach(u => { if (u.id && u.nickname) idToNick[u.id] = u.nickname; });
+      if (ownerParam && userList) {
+        const found = userList.find(u => u.nickname === ownerParam);
+        ownerParamId = found?.id || null;
       }
 
       allChars = data;
@@ -111,7 +121,7 @@
       let list = allChars.filter(c =>
         (!q          || c.name.toLowerCase().includes(qLow)) &&
         (!sp         || c.species_name === sp) &&
-        (!ownerParam || c.owner_nickname === ownerParam)
+        (!ownerParam || (ownerParamId ? c.owner_user_id === ownerParamId : c.owner_nickname === ownerParam))
       );
 
       if (sort === 'name') list = [...list].sort((a,b) => a.name.localeCompare(b.name,'ko'));
@@ -143,7 +153,7 @@
           <div class="character-info">
             <p class="character-name">${c.name}</p>
             <p class="character-species">${c.species_name || ''}</p>
-            <p class="character-owner">소유주: ${c.owner_nickname || '—'}</p>
+            <p class="character-owner">소유주: ${(c.owner_user_id && idToNick[c.owner_user_id]) || c.owner_nickname || '—'}</p>
           </div>
         </a>
       `).join('');

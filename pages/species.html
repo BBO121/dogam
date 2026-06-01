@@ -103,6 +103,7 @@
     let activeCategory = null;
     let siteUserNicks  = new Set();
     let nickToId       = {};
+    let idToNick       = {};
 
     // 소유권 이전 모달 상태
     let transferCharId      = null;
@@ -138,11 +139,12 @@
       const speciesUserId = user?.id || null;
       isOwner = !!(speciesUserId && s.owner_user_id && speciesUserId === s.owner_user_id);
 
-      // 종족주일 때 사이트 유저 목록 로드 (오프사이트 판별용)
-      if (isOwner) {
-        const { data: userList } = await sb.rpc('get_all_users');
-        if (userList) userList.forEach(u => { if (u.nickname) siteUserNicks.add(u.nickname); if (u.nickname && u.id) nickToId[u.nickname] = u.id; });
-      }
+      // 사이트 유저 목록 로드 (닉네임 최신화 + 오프사이트 판별용)
+      const { data: userList } = await sb.rpc('get_all_users');
+      if (userList) userList.forEach(u => {
+        if (u.nickname) siteUserNicks.add(u.nickname);
+        if (u.nickname && u.id) { nickToId[u.nickname] = u.id; idToNick[u.id] = u.nickname; }
+      });
 
       const registeredDate = new Date(s.created_at).toLocaleDateString('ko-KR', {
         year: 'numeric', month: '2-digit', day: '2-digit'
@@ -151,6 +153,10 @@
       const fields = s.custom_fields?.length
         ? s.custom_fields.map(f => `<span class="field-tag">${f}</span>`).join('')
         : '';
+
+      const ownerDisplayNick = s.owner_user_id
+        ? (idToNick[s.owner_user_id] || s.owner_nickname)
+        : s.owner_nickname;
 
       document.getElementById('speciesDetail').innerHTML = `
         <div class="species-detail-top">
@@ -172,10 +178,10 @@
             <div class="species-detail-meta">
               <div class="meta-item">
                 <span class="meta-label">종족주</span>
-                <span class="meta-value">${s.owner_nickname
+                <span class="meta-value">${ownerDisplayNick
                   ? (s.owner_user_id
-                      ? `<a href="profile.html?user=${encodeURIComponent(s.owner_nickname)}" class="meta-link">${s.owner_nickname}</a>`
-                      : s.owner_nickname)
+                      ? `<a href="profile.html?user=${encodeURIComponent(ownerDisplayNick)}" class="meta-link">${ownerDisplayNick}</a>`
+                      : ownerDisplayNick)
                   : '—'}</span>
               </div>
               <div class="meta-item">
@@ -252,7 +258,7 @@
       // 소속 개체
       const { data: chars } = await sb
         .from('characters')
-        .select('id, name, species_name, owner_nickname, image_url, created_at, is_sensitive, sensitive_note, char_categories, char_number')
+        .select('id, name, species_name, owner_nickname, owner_user_id, image_url, created_at, is_sensitive, sensitive_note, char_categories, char_number')
         .eq('species_name', s.name)
         .order('created_at', { ascending: false });
 
@@ -381,7 +387,7 @@
             <div class="character-info">
               <p class="character-name">${c.name}</p>
               <p class="character-species">${c.species_name || ''}</p>
-              <p class="character-owner">소유주: ${c.owner_nickname || '—'}</p>
+              <p class="character-owner">소유주: ${(c.owner_user_id && idToNick[c.owner_user_id]) || c.owner_nickname || '—'}</p>
             </div>
           </a>
         </div>

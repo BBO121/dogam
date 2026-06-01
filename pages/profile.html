@@ -327,7 +327,9 @@
       );
 
       const displayName = found?.nickname || nick;
-      const { data: otherOwnedSp } = await sb.from('species').select('id').eq('owner_nickname', displayName).limit(1);
+      const { data: otherOwnedSp } = found?.id
+        ? await sb.from('species').select('id').eq('owner_user_id', found.id).limit(1)
+        : { data: null };
       const isSpeciesOwner = found?.role === 'species_owner' || (otherOwnedSp && otherOwnedSp.length > 0);
       const bio            = profile?.bio        || '';
       const tos            = profile?.tos        || '';
@@ -395,10 +397,8 @@
         year: 'numeric', month: '2-digit', day: '2-digit'
       }).replace(/\. /g, '.').replace(/\.$/, '');
 
-      const { data: mySpById }   = await sb.from('species').select('id').eq('owner_user_id', user.id).limit(1);
-      const { data: mySpByNick } = mySpById?.length ? { data: null } :
-        await sb.from('species').select('id').eq('owner_nickname', displayName).is('owner_user_id', null).limit(1);
-      const isSpeciesOwner = user.user_metadata?.role === 'species_owner' || !!(mySpById?.length || mySpByNick?.length);
+      const { data: mySpById } = await sb.from('species').select('id').eq('owner_user_id', user.id).limit(1);
+      const isSpeciesOwner = user.user_metadata?.role === 'species_owner' || !!mySpById?.length;
 
       document.getElementById('breadcrumbName').textContent = displayName;
       document.getElementById('profileName').textContent    = displayName;
@@ -676,10 +676,8 @@
       if (nickname) {
         await Promise.all([
           sb.from('characters').update({ owner_nickname: '(알수없음)', owner_user_id: null }).eq('owner_user_id', currentUser.id),
-          sb.from('characters').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname).is('owner_user_id', null).eq('owner_is_offsite', false),
           sb.from('characters').update({ designer_nickname: '(알수없음)' }).eq('designer_nickname', nickname),
           sb.from('species').update({ owner_nickname: '(알수없음)', owner_user_id: null }).eq('owner_user_id', currentUser.id),
-          sb.from('species').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname).is('owner_user_id', null),
           sb.from('character_transfers').update({ from_nickname: '(알수없음)' }).eq('from_nickname', nickname),
           sb.from('character_transfers').update({ to_nickname: '(알수없음)' }).eq('to_nickname', nickname),
         ]);

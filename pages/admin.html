@@ -461,17 +461,13 @@
     async function deleteUser(userId, nickname) {
       if (!confirm(`"${nickname}" 유저를 삭제할까요?\n개체·종족·이전 내역의 닉네임은 (알수없음)으로 바뀌어요.`)) return;
 
-      if (nickname) {
-        await Promise.all([
-          sb.from('characters').update({ owner_nickname: '(알수없음)', owner_user_id: null }).eq('owner_user_id', userId),
-          sb.from('characters').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname).is('owner_user_id', null).eq('owner_is_offsite', false),
-          sb.from('characters').update({ designer_nickname: '(알수없음)' }).eq('designer_nickname', nickname),
-          sb.from('species').update({ owner_nickname: '(알수없음)', owner_user_id: null }).eq('owner_user_id', userId),
-          sb.from('species').update({ owner_nickname: '(알수없음)' }).eq('owner_nickname', nickname).is('owner_user_id', null),
-          sb.from('character_transfers').update({ from_nickname: '(알수없음)' }).eq('from_nickname', nickname),
-          sb.from('character_transfers').update({ to_nickname: '(알수없음)' }).eq('to_nickname', nickname),
-        ]);
-      }
+      await Promise.all([
+        sb.from('characters').update({ owner_nickname: '(알수없음)', owner_user_id: null }).eq('owner_user_id', userId),
+        sb.from('characters').update({ designer_nickname: '(알수없음)' }).eq('designer_nickname', nickname),
+        sb.from('species').update({ owner_nickname: '(알수없음)', owner_user_id: null }).eq('owner_user_id', userId),
+        sb.from('character_transfers').update({ from_nickname: '(알수없음)' }).eq('from_nickname', nickname),
+        sb.from('character_transfers').update({ to_nickname: '(알수없음)' }).eq('to_nickname', nickname),
+      ]);
 
       const { error } = await sb.rpc('delete_user', { target_id: userId });
       if (error) { alert('계정 삭제에 실패했어요.'); return; }

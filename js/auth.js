@@ -79,22 +79,14 @@ async function getMyCharacters(userId, nickname) {
   return { data, error };
 }
 
-// 내 종족 조회 (UUID 우선, 표시용 nickname fallback)
-async function getMySpecies(userId, nickname) {
-  if (userId) {
-    const { data: byId, error } = await sb
-      .from('species').select('*')
-      .eq('owner_user_id', userId)
-      .order('created_at', { ascending: false });
-    if (!error && byId?.length) return { data: byId, error: null };
-  }
-  if (!nickname) return { data: [], error: null };
+// 내 종족 조회 — owner_user_id 기준
+async function getMySpecies(userId) {
+  if (!userId) return { data: [], error: null };
   const { data, error } = await sb
     .from('species').select('*')
-    .eq('owner_nickname', nickname)
-    .is('owner_user_id', null)
+    .eq('owner_user_id', userId)
     .order('created_at', { ascending: false });
-  return { data, error };
+  return { data: data ?? [], error };
 }
 
 // 캐릭터 이전 로그 기록
@@ -133,10 +125,8 @@ async function updateHeader() {
 
     const TESTERS = ['Moulow', 'moulow', 'Sawol'];
     const roleIsSpeciesOwner = user.user_metadata?.role === 'species_owner';
-    const { data: spById }   = await sb.from('species').select('id').eq('owner_user_id', user.id).limit(1);
-    const { data: spByNick } = spById?.length ? { data: null } :
-      await sb.from('species').select('id').eq('owner_nickname', nickname).is('owner_user_id', null).limit(1);
-    const isSpeciesOwner = roleIsSpeciesOwner || !!(spById?.length || spByNick?.length);
+    const { data: spById } = await sb.from('species').select('id').eq('owner_user_id', user.id).limit(1);
+    const isSpeciesOwner = roleIsSpeciesOwner || !!spById?.length;
     const isTester = TESTERS.includes(nickname);
 
     if (loginBtn) {

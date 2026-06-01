@@ -64,6 +64,7 @@
     // 소유권 이전 모달 상태
     let _siteNicks      = new Set();
     let _nickToId       = {};
+    let _idToNick       = {};
     let _charData       = null;
     let _transferToNick = null;
 
@@ -199,6 +200,7 @@
 
       const siteNicks = new Set((siteUserData || []).map(u => u.nickname).filter(Boolean));
       _nickToId = Object.fromEntries((siteUserData || []).filter(u => u.nickname && u.id).map(u => [u.nickname, u.id]));
+      _idToNick = Object.fromEntries((siteUserData || []).filter(u => u.id && u.nickname).map(u => [u.id, u.nickname]));
       _siteNicks = siteNicks;
       _charData  = c;
 
@@ -276,6 +278,9 @@
         </div>`;
       }).join('');
 
+      const ownerDisplayNick = (!c.owner_is_offsite && c.owner_user_id && _idToNick[c.owner_user_id])
+        ? _idToNick[c.owner_user_id] : c.owner_nickname;
+
       document.getElementById('charContent').innerHTML = `
         <div class="char-page-header">
           <div class="breadcrumb">
@@ -326,9 +331,9 @@
               <span class="char-info-value">${c.owner_nickname
                 ? (c.owner_is_offsite
                     ? `${isSpeciesOwner ? `<button onclick="openTransferModal()" style="flex-shrink:0;font-size:12px;font-weight:700;color:var(--sky-deep);background:var(--sky-light);border:1px solid var(--sky);border-radius:6px;padding:5px 14px;cursor:pointer;font-family:inherit;margin-right:6px;vertical-align:middle;">소유권 이전</button>` : ''}<span style="display:inline-block;font-size:10px;font-weight:600;color:#555;background:#e8e8e8;border-radius:4px;padding:1px 5px;margin-right:5px;vertical-align:middle;line-height:1.6;">Site-OFF</span>${c.owner_nickname}`
-                    : (c.owner_user_id || siteNicks.has(c.owner_nickname)
-                        ? `<a href="profile.html?user=${encodeURIComponent(c.owner_nickname)}" style="color:inherit;text-decoration:none;">${c.owner_nickname}</a>`
-                        : `${c.owner_nickname}`))
+                    : (c.owner_user_id
+                        ? `<a href="profile.html?user=${encodeURIComponent(ownerDisplayNick)}" style="color:inherit;text-decoration:none;">${ownerDisplayNick}</a>`
+                        : `${ownerDisplayNick}`))
                 : '—'
               }${c.owner_contact ? ` <span style="color:var(--text-mute);font-size:12px;">(${c.owner_contact})</span>` : ''}</span>
             </div>
