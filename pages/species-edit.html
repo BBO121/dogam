@@ -283,8 +283,9 @@
       const { data: s, error } = await sb.from('species').select('*').eq('id', speciesId).single();
       if (error || !s) { window.location.href = 'species-list.html'; return; }
 
+      const isAdmin = user.user_metadata?.role === 'admin';
       const isOwner = !!(user.id && s.owner_user_id && user.id === s.owner_user_id);
-      if (!isOwner) { window.location.href = `species.html?id=${speciesId}`; return; }
+      if (!isOwner && !isAdmin) { window.location.href = `species.html?id=${speciesId}`; return; }
 
       document.getElementById('breadcrumbName').textContent = s.name;
       document.getElementById('speciesName').value = s.name;
@@ -525,7 +526,7 @@
       const isSensitive  = document.getElementById('isSensitive').checked;
       const sensitiveNote = document.getElementById('sensitiveNote').value.trim();
 
-      const { error } = await sb.from('species').update({
+      const { data, error } = await sb.from('species').update({
         name,
         description:    desc || null,
         image_url:      imageUrl,
@@ -539,10 +540,19 @@
         allow_resale:         document.getElementById('allowResale').checked,
         allow_paid_adoption:  document.getElementById('allowPaidAdoption').checked,
         allow_other_adoption: document.getElementById('allowOtherAdoption').checked,
-      }).eq('id', speciesId);
+      }).eq('id', speciesId).select();
+
+      console.log('[species update] data:', data, '/ error:', error);
 
       if (error) {
         errorEl.textContent = `저장에 실패했어요: ${error.message}`;
+        btn.textContent = '저장하기';
+        btn.disabled = false;
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        errorEl.textContent = '저장 권한이 없거나 변경할 수 없는 종족입니다.';
         btn.textContent = '저장하기';
         btn.disabled = false;
         return;

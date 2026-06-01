@@ -427,7 +427,22 @@
       }
 
       // 확인하기 버튼 (낙찰자 + 확인 대기중)
-      if (currentUser && myNick === a.winner_name && a.status === '확인 대기중') {
+      console.log('[confirmBtnWrap 조건]', {
+        currentUser: !!currentUser,
+        myNick,
+        winnerName: a.winner_name,
+        status: a.status,
+        match: currentUser && myNick === a.winner_name && a.status === '확인 대기중',
+      });
+      console.log('[nick debug]', {
+        myNick,
+        winnerName:    a.winner_name,
+        myNickLength:  myNick?.length,
+        winnerLength:  a.winner_name?.length,
+        myNickCodes:   myNick  ? [...myNick].map(c => c.charCodeAt(0))          : [],
+        winnerCodes:   a.winner_name ? [...a.winner_name].map(c => c.charCodeAt(0)) : [],
+      });
+      if (currentUser && myNick?.trim() === a.winner_name?.trim() && a.status === '확인 대기중') {
         document.getElementById('confirmBtnWrap').style.display = 'block';
       }
 
@@ -564,6 +579,7 @@
     }
 
     async function applyRaffle() {
+      console.log('[applyRaffle called]');
       const btn = document.querySelector('#freeActionArea .apply-btn');
       if (btn) { btn.disabled = true; btn.textContent = '신청 중...'; }
 
@@ -588,6 +604,7 @@
     }
 
     async function runRaffle() {
+      console.log('[runRaffle called]');
       if (!confirm('추첨을 진행할까요? 신청자 중 한 명이 랜덤으로 선택돼요.')) return;
 
       const { data: apps, error } = await sb.from('adoption_applications')
@@ -629,6 +646,7 @@
     }
 
     async function applyFirstCome() {
+      console.log('[applyFirstCome called]');
       const btn = document.querySelector('#freeActionArea .apply-btn');
       if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
 
@@ -924,33 +942,38 @@
     }
 
     async function confirmAdoption() {
+      console.log('[confirmAdoption called]');
       const btn = document.querySelector('#confirmBtnWrap button');
       if (btn) { btn.disabled = true; btn.textContent = '처리 중...'; }
 
       const a = currentAdoption;
 
-      const { data: updated, error } = await sb.from('adoptions')
-        .update({ status: '완료' })
-        .eq('id', adoptionId)
-        .select('id, status');
+      // characters 이전 + adoptions 완료를 서버사이드에서 원자적으로 처리
+      console.log('[confirmAdoption RPC args]', {
+        adoptionId,
+        currentUserId:       currentUser.id,
+        myNick,
+        winnerName:          a.winner_name,
+        currentUserMetadata: currentUser.user_metadata,
+      });
+
+      const { error } = await sb.rpc('confirm_adoption_transfer', {
+        p_adoption_id:    Number(adoptionId),
+        p_new_owner_id:   currentUser.id,
+        p_new_owner_nick: myNick,
+      });
+
+      console.log('[confirmAdoption RPC] error:', error);
 
       if (error) {
-        alert(`오류가 발생했어요: ${error.message}`);
+        alert(`소유권 이전에 실패했어요.\n${error.message}`);
         if (btn) { btn.disabled = false; btn.textContent = '확인하기'; }
         return;
       }
 
-      if (!updated || updated.length === 0) {
-        alert('처리에 실패했어요. 페이지를 새로고침한 후 다시 시도해주세요.');
-        if (btn) { btn.disabled = false; btn.textContent = '확인하기'; }
-        return;
-      }
-
+      // 소유권 이전 성공 후에만 알림 + 이전 기록
       try {
         await Promise.all([
-          sb.from('characters')
-            .update({ owner_nickname: myNick, owner_user_id: currentUser.id })
-            .eq('name', a.character_name),
           logTransfer({
             character_name: a.character_name,
             species_name:   a.species_name,
@@ -966,7 +989,7 @@
           }),
         ]);
       } catch (e) {
-        console.error('[confirmAdoption error]', e);
+        console.error('[confirmAdoption 후처리 오류]', e);
       }
 
       location.reload();
@@ -1003,6 +1026,7 @@
     }
 
     async function confirmComplete() {
+      console.log('[confirmComplete called]');
       const recipient = document.getElementById('recipientInput').value.trim();
       const errorEl   = document.getElementById('completeError');
       const btn       = document.getElementById('confirmCompleteBtn');
@@ -1019,39 +1043,69 @@
                    : a.adoption_type === 'etc'  ? '기타분양'
                    : '경매';
 
-      const { error } = await sb.from('adoptions')
-        .update({ status: '완료' })
-        .eq('id', adoptionId);
+      // recipient uid 조회
+      const { data: recipientUserList } = await sb.rpc('get_all_users');
+      const recipientUser   = (recipientUserList || []).find(u => u.nickname === recipient);
+      const recipientUserId = recipientUser?.id || null;
 
-      if (error) {
-        errorEl.textContent = '오류가 발생했어요. 다시 시도해주세요.';
+      // characters 먼저 업데이트 (분양자는 owner_user_id = auth.uid() 이므로 RLS 통과)
+      const { data: charUpdated, error: charError } = await sb.from('characters')
+        .update({
+          owner_nickname:   recipient,
+          owner_user_id:    recipientUserId,
+          owner_is_offsite: false,
+        })
+        .eq('id', a.character_id)
+        .select('id');
+
+      console.log('[confirmComplete] characters update:', charUpdated, '/ error:', charError);
+
+      if (charError) {
+        errorEl.textContent = `소유권 이전에 실패했어요: ${charError.message}`;
         btn.textContent = '분양 완료';
         btn.disabled    = false;
         return;
       }
 
-      const { data: recipientUserList } = await sb.rpc('get_all_users');
-      const recipientUser = (recipientUserList || []).find(u => u.nickname === recipient);
-      const recipientUserId = recipientUser?.id || null;
+      if (!charUpdated || charUpdated.length === 0) {
+        errorEl.textContent = '소유권 이전에 실패했어요. 권한을 확인하거나 관리자에게 문의해주세요.';
+        btn.textContent = '분양 완료';
+        btn.disabled    = false;
+        return;
+      }
 
-      await Promise.all([
-        sb.from('characters')
-          .update({ owner_nickname: recipient, owner_user_id: recipientUserId })
-          .eq('name', a.character_name),
-        logTransfer({
-          character_name: a.character_name,
-          species_name:   a.species_name,
-          from_nickname:  a.author,
-          to_nickname:    recipient,
-          method,
-        }),
-        sb.from('notifications').insert({
-          user_nickname: recipient,
-          type:          'adoption_confirmed',
-          message:       `🎉 "${a.character_name}" 분양이 확정됐어요!`,
-          link:          `adoption-detail.html?id=${adoptionId}`,
-        }),
-      ]);
+      // characters 성공 후에만 adoptions 완료 처리
+      const { error: adoptionError } = await sb.from('adoptions')
+        .update({ status: '완료' })
+        .eq('id', adoptionId);
+
+      if (adoptionError) {
+        errorEl.textContent = `분양 완료 처리에 실패했어요: ${adoptionError.message}`;
+        btn.textContent = '분양 완료';
+        btn.disabled    = false;
+        return;
+      }
+
+      // 성공 후에만 이전 기록 + 알림
+      try {
+        await Promise.all([
+          logTransfer({
+            character_name: a.character_name,
+            species_name:   a.species_name,
+            from_nickname:  a.author,
+            to_nickname:    recipient,
+            method,
+          }),
+          sb.from('notifications').insert({
+            user_nickname: recipient,
+            type:          'adoption_confirmed',
+            message:       `🎉 "${a.character_name}" 분양이 확정됐어요!`,
+            link:          `adoption-detail.html?id=${adoptionId}`,
+          }),
+        ]);
+      } catch (e) {
+        console.error('[confirmComplete 후처리 오류]', e);
+      }
 
       closeCompleteModal();
       location.reload();

@@ -482,6 +482,7 @@
             </div>
             <div class="admin-card-right">
               <span class="admin-card-date">${date}</span>
+              <button class="admin-btn-edit" onclick="location.href='species-edit.html?id=${s.id}'">수정</button>
               <button class="admin-btn-delete" onclick="deleteSpecies('${s.id}', '${s.name.replace(/'/g, "\\'")}')">삭제</button>
             </div>
           </div>`;
