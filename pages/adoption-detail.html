@@ -761,24 +761,28 @@
 
       // 낙찰 결과
       if (adoption.winner_name && adoption.status === '확인 대기중') {
+        const winnerBid = bids.find(b => b.bidder_name === adoption.winner_name);
+        const winnerDisplayName = (winnerBid?.bidder_id && idToNick[winnerBid.bidder_id]) || adoption.winner_name;
         document.getElementById('winnerBox').innerHTML = `
           <div class="adoption-winner-inner">
             <span class="adoption-winner-trophy">⏳</span>
             <div>
               <p class="adoption-winner-label">낙찰 확인 대기 중</p>
-              <p class="adoption-winner-name">${adoption.winner_name}</p>
+              <p class="adoption-winner-name">${winnerDisplayName}</p>
               <p class="adoption-winner-bid">${adoption.winner_bid || ''}</p>
             </div>
           </div>
         `;
         document.getElementById('winnerBox').style.display = 'block';
       } else if (adoption.winner_name && adoption.status === '완료') {
+        const winnerBid = bids.find(b => b.bidder_name === adoption.winner_name);
+        const winnerDisplayName = (winnerBid?.bidder_id && idToNick[winnerBid.bidder_id]) || adoption.winner_name;
         document.getElementById('winnerBox').innerHTML = `
           <div class="adoption-winner-inner">
             <span class="adoption-winner-trophy">🏆</span>
             <div>
               <p class="adoption-winner-label">낙찰자</p>
-              <p class="adoption-winner-name">${adoption.winner_name}</p>
+              <p class="adoption-winner-name">${winnerDisplayName}</p>
               <p class="adoption-winner-bid">${adoption.winner_bid || ''}</p>
             </div>
           </div>
@@ -793,6 +797,7 @@
       } else {
         const instantPrice = auctionDetails?.instant_price ? Number(auctionDetails.instant_price) : null;
         listEl.innerHTML = bids.map(bid => {
+          const currentBidderName = (bid.bidder_id && idToNick[bid.bidder_id]) || bid.bidder_name;
           const isInstantWin = instantPrice
             && Number(bid.bid_amount) === instantPrice
             && bid.bidder_name === adoption.winner_name;
@@ -800,14 +805,14 @@
           ${isInstantWin ? `<div class="bid-instant-notice">분양자의 확인을 기다려주세요</div>` : ''}
           <div class="adoption-bid-row">
             <div class="adoption-bid-info">
-              <span class="adoption-bid-name">${bid.bidder_name}</span>
+              <span class="adoption-bid-name">${currentBidderName}</span>
               <span class="adoption-bid-amount">${Number(bid.bid_amount).toLocaleString('ko-KR')}원</span>
               ${isInstantWin ? `<span class="bid-instant-badge">✨즉분가 낙찰✨</span><span class="bid-instant-desc"> 분양자의 확인을 기다려주세요</span>` : ''}
               <span class="adoption-bid-time">${timeAgo(bid.created_at)}</span>
             </div>
             ${isAuthor && isOpen ? `
               <button class="btn-award"
-                data-name="${escAttr(bid.bidder_name)}"
+                data-name="${escAttr(currentBidderName)}"
                 data-amount="${escAttr(bid.bid_amount)}"
                 onclick="awardBid(this)">분양확정</button>
             ` : ''}
