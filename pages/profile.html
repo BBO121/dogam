@@ -146,11 +146,14 @@
                 <p class="form-hint" style="margin-top:5px; font-size:12px; color:var(--text-mute);">변경 시 소유 개체·종족의 닉네임도 함께 바뀌어요.</p>
               </div>
               <div class="form-group">
+                <label class="form-label">소개글</label>
                 <div class="quill-wrap"><div id="quill_editBio"></div></div>
+                <p id="bioCharCount" style="font-size:12px; color:var(--text-mute); text-align:right; margin-top:4px;">0 / 300</p>
               </div>
               <div class="form-group">
                 <label class="form-label">개인공지 (TOS)</label>
                 <div class="quill-wrap"><div id="quill_editTos"></div></div>
+                <p id="tosCharCount" style="font-size:12px; color:var(--text-mute); text-align:right; margin-top:4px;">0 / 2000</p>
               </div>
               <p class="auth-error" id="editProfileError"></p>
               <p class="settings-success" id="editProfileSuccess"></p>
@@ -247,6 +250,25 @@
       theme:'snow', placeholder:'개인공지 또는 거래 조건을 입력해주세요', modules:{ toolbar: QUILL_TOOLBAR },
     });
     // ─────────────────────────────────────────
+    const BIO_MAX = 300;
+    const TOS_MAX = 2000;
+
+    function updateCharCount(quill, counterId, max) {
+      const len = Math.max(0, quill.getLength() - 1);
+      const el = document.getElementById(counterId);
+      if (!el) return;
+      el.textContent = `${len} / ${max}`;
+      el.style.color = len > max ? '#ef4444' : 'var(--text-mute)';
+    }
+
+    bioQuill.on('text-change', () => {
+      if (bioQuill.getLength() - 1 > BIO_MAX) bioQuill.deleteText(BIO_MAX, bioQuill.getLength());
+      updateCharCount(bioQuill, 'bioCharCount', BIO_MAX);
+    });
+    tosQuill.on('text-change', () => {
+      if (tosQuill.getLength() - 1 > TOS_MAX) tosQuill.deleteText(TOS_MAX, tosQuill.getLength());
+      updateCharCount(tosQuill, 'tosCharCount', TOS_MAX);
+    });
 
     function revealSensitive(overlayEl, e) {
       e.stopPropagation(); e.preventDefault();
@@ -391,14 +413,35 @@
     async function initMyProfile(user) {
       const nickname    = user.user_metadata?.nickname || '유저';
       const displayName = user.user_metadata?.display_name || nickname;
-      const bio         = user.user_metadata?.bio || '';
-      const tos         = user.user_metadata?.tos || '';
       const joinDate    = new Date(user.created_at).toLocaleDateString('ko-KR', {
         year: 'numeric', month: '2-digit', day: '2-digit'
       }).replace(/\. /g, '.').replace(/\.$/, '');
 
-      const { data: mySpById } = await sb.from('species').select('id').eq('owner_user_id', user.id).limit(1);
+      const [{ data: mySpById }, { data: myProfile }] = await Promise.all([
+        sb.from('species').select('id').eq('owner_user_id', user.id).limit(1),
+        sb.from('user_profiles').select('bio, tos').eq('nickname', displayName).single(),
+      ]);
       const isSpeciesOwner = user.user_metadata?.role === 'species_owner' || !!mySpById?.length;
+
+      // bio/tos: user_profiles 우선. user_metadata에 남은 데이터는 이관 후 제거
+      const metaBio = user.user_metadata?.bio || '';
+      const metaTos = user.user_metadata?.tos || '';
+      let bio = myProfile?.bio || '';
+      let tos = myProfile?.tos || '';
+
+      if (metaBio || metaTos) {
+        if (!bio && !tos) {
+          // user_profiles에 없으면 먼저 이관
+          bio = metaBio;
+          tos = metaTos;
+          await sb.from('user_profiles').upsert(
+            { nickname: displayName, bio, tos, joined_at: user.created_at },
+            { onConflict: 'nickname' }
+          );
+        }
+        // user_metadata에서 제거 (null로 덮어쓰기)
+        await updateProfile({ bio: null, tos: null });
+      }
 
       document.getElementById('breadcrumbName').textContent = displayName;
       document.getElementById('profileName').textContent    = displayName;
@@ -421,8 +464,8 @@
 
       document.getElementById('editId').value          = nickname;
       document.getElementById('editDisplayName').value = displayName;
-      if (bio) bioQuill.root.innerHTML = bio;
-      if (tos) tosQuill.root.innerHTML = tos;
+      if (bio) { bioQuill.root.innerHTML = bio; updateCharCount(bioQuill, 'bioCharCount', BIO_MAX); }
+      if (tos) { tosQuill.root.innerHTML = tos; updateCharCount(tosQuill, 'tosCharCount', TOS_MAX); }
 
       const avatarUrl = user.user_metadata?.avatar_url;
       if (avatarUrl) {
@@ -583,7 +626,7 @@
 
       const oldDisplayName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
 
-      const { error } = await updateProfile({ display_name: newDisplayName, bio, tos, avatar_url: currentUser.user_metadata?.avatar_url });
+      const { error } = await updateProfile({ display_name: newDisplayName, avatar_url: currentUser.user_metadata?.avatar_url });
 
       if (error) {
         errorEl.textContent = '저장에 실패했어요. 다시 시도해주세요.';
