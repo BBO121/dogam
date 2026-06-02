@@ -445,8 +445,13 @@
     }
 
     function onFileChange(input, id) {
-      const file = input.files[0];
+      const file    = input.files[0];
       if (!file) return;
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        document.getElementById('bulkError').textContent = `"${file.name}"은 지원하지 않는 형식이에요. PNG, GIF, JPG, WebP만 가능해요.`;
+        input.value = '';
+        return;
+      }
 
       if (!itemStates[id]) itemStates[id] = {};
       itemStates[id].file = file;
@@ -637,22 +642,24 @@
 
         try {
           // 이미지 업로드
-          let image_url = null;
+          let image_url     = null;
+          let thumbnail_url = null;
           if (file) {
-            const blob = await compressImage(file);
-            if (blob) {
-              const ext      = file.name.split('.').pop().toLowerCase();
-              const safeExt  = ['jpg','jpeg','png','gif','webp'].includes(ext) ? ext : 'jpg';
-              const fileName = `${Date.now()}_${Math.random().toString(36).slice(2)}.${safeExt}`;
-              const { error: uploadError } = await sb.storage.from('images').upload(fileName, blob, { contentType: `image/${safeExt === 'jpg' ? 'jpeg' : safeExt}` });
-              if (!uploadError) {
-                const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);
-                image_url = urlData.publicUrl;
-              } else {
-                console.warn(`[일괄등록] 이미지 업로드 실패 (${name}):`, uploadError.message);
-              }
-            } else {
-              console.warn(`[일괄등록] 이미지 압축 실패 (${name})`);
+            const blob     = await compressImage(file);
+            const mainName = `${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+            const { error: mainErr } = await sb.storage.from('images').upload(mainName, blob, {
+              contentType: 'image/jpeg',
+            });
+            if (mainErr) throw new Error(mainErr.message);
+            image_url = sb.storage.from('images').getPublicUrl(mainName).data.publicUrl;
+
+            const thumbBlob = await autoCenterCropToBlob(file, 3/4, 600, 0.85);
+            const thumbName = `${Date.now()}_${Math.random().toString(36).slice(2)}_thumb.jpg`;
+            const { error: thumbErr } = await sb.storage.from('images').upload(thumbName, thumbBlob, {
+              contentType: 'image/jpeg',
+            });
+            if (!thumbErr) {
+              thumbnail_url = sb.storage.from('images').getPublicUrl(thumbName).data.publicUrl;
             }
           }
 
@@ -676,6 +683,7 @@
             owner_is_offsite:    itemOwnerType !== 'site',
             description:         desc || null,
             image_url,
+            thumbnail_url,
             custom_field_values: Object.keys(customFieldValues).length ? customFieldValues : null,
             is_sensitive:        isSensitive,
             sensitive_note:      isSensitive ? sensitiveNote : null,
@@ -683,6 +691,7 @@
 
           if (error) failed.push(name);
         } catch (e) {
+          console.warn(`[일괄등록] 실패 (${name}):`, e.message);
           failed.push(name);
         }
 
@@ -715,7 +724,7 @@
     }
 
     function handleDropFiles(files) {
-      const imageFiles = [...files].filter(f => f.type.startsWith('image/'));
+      const imageFiles = [...files].filter(f => ALLOWED_IMAGE_TYPES.includes(f.type));
       let fileIndex = 0;
 
       // 빈 슬롯(이름 없고 이미지 없는 항목)부터 채우기

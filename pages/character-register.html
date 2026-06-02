@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>개체 등록 — 종족연구소</title>
   <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
 </head>
 <body>
 
@@ -47,9 +48,10 @@
               <img id="imagePreview" style="display:none; width:100%; height:100%; object-fit:cover; border-radius: var(--radius);">
               <div id="uploadPlaceholder">
                 <p class="img-upload-text">클릭하여 이미지 업로드</p>
-                <p class="img-upload-hint">권장 비율 3:4</p>
               </div>
             </div>
+            <p class="img-upload-ratio">권장 비율 3:4</p>
+            <p class="img-upload-meta">PNG · GIF · JPG · WebP &nbsp;·&nbsp; 최대 2MB · 2000×2000px 이하</p>
           </div>
 
           <!-- 추가 이미지 -->
@@ -227,11 +229,12 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
-  <script src="../js/utils.js?v=2"></script>
+  <script src="../js/utils.js"></script>
   <script>
     let currentUser          = null;
     let ownerType            = 'site';
@@ -241,6 +244,9 @@
     let selectedDesignerNick = null;
     let allUsers             = [];
     let addedCategories      = [];
+    let selectedMainFile     = null;
+    let pendingThumbnailBlob = null;
+    let cropperInstance      = null;
 
     const params      = new URLSearchParams(window.location.search);
     const speciesId   = params.get('species_id');
@@ -495,23 +501,51 @@
     // 추가 이미지 파일 목록
     let extraFiles = [];
 
-    // 메인 이미지 미리보기
+    // 메인 이미지 선택 → 크롭 모달 오픈
     document.getElementById('imageFile').addEventListener('change', (e) => {
-      const file = e.target.files[0];
+      const file    = e.target.files[0];
       if (!file) return;
+      const errorEl = document.getElementById('registerError');
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        errorEl.textContent = 'PNG, GIF, JPG, WebP 형식의 이미지만 업로드할 수 있어요.';
+        e.target.value = '';
+        return;
+      }
+      errorEl.textContent = '';
+      selectedMainFile     = file;
+      pendingThumbnailBlob = null;
+
       const reader = new FileReader();
-      reader.onload = (ev) => {
-        document.getElementById('imagePreview').src = ev.target.result;
-        document.getElementById('imagePreview').style.display = 'block';
-        document.getElementById('uploadPlaceholder').style.display = 'none';
+      reader.onload = ev => {
+        const cropImg = document.getElementById('cropImage');
+        cropImg.src   = ev.target.result;
+        document.getElementById('cropModal').style.display = 'flex';
+        if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+        cropperInstance = new Cropper(cropImg, {
+          aspectRatio: 3 / 4,
+          viewMode: 1,
+          dragMode: 'move',
+          autoCropArea: 0.85,
+          guides: true,
+          center: true,
+          highlight: true,
+          cropBoxMovable: false,
+          cropBoxResizable: false,
+          toggleDragModeOnDblclick: false,
+        });
       };
       reader.readAsDataURL(file);
     });
 
     // 추가 이미지 선택
     function addExtraImages(input) {
-      const files = [...input.files];
+      const files   = [...input.files];
+      const errorEl = document.getElementById('registerError');
       files.forEach(file => {
+        if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+          errorEl.textContent = `"${file.name}"은 지원하지 않는 형식이에요. PNG, GIF, JPG, WebP만 가능해요.`;
+          return;
+        }
         extraFiles.push(file);
         const reader = new FileReader();
         const idx = extraFiles.length - 1;
@@ -535,6 +569,46 @@
       btn.closest('div').remove();
     }
 
+    // ── 크롭 모달 ──────────────────────────────
+    async function confirmCrop() {
+      const errorEl = document.getElementById('registerError');
+      try {
+        pendingThumbnailBlob = await cropToBlob(cropperInstance, 600, 0.85);
+        showThumbPreview(pendingThumbnailBlob);
+        closeCropModal();
+      } catch (err) { errorEl.textContent = err.message; }
+    }
+
+    async function useCropAsIs() {
+      if (!selectedMainFile) return;
+      const errorEl = document.getElementById('registerError');
+      try {
+        pendingThumbnailBlob = await autoCenterCropToBlob(selectedMainFile, 3/4, 600, 0.85);
+        showThumbPreview(pendingThumbnailBlob);
+        closeCropModal();
+      } catch (err) { errorEl.textContent = err.message; }
+    }
+
+    function cancelCropModal() {
+      selectedMainFile = null; pendingThumbnailBlob = null;
+      document.getElementById('imageFile').value            = '';
+      document.getElementById('imagePreview').style.display = 'none';
+      document.getElementById('uploadPlaceholder').style.display = '';
+      closeCropModal();
+    }
+
+    function showThumbPreview(blob) {
+      const url = URL.createObjectURL(blob);
+      document.getElementById('imagePreview').src           = url;
+      document.getElementById('imagePreview').style.display = 'block';
+      document.getElementById('uploadPlaceholder').style.display = 'none';
+    }
+
+    function closeCropModal() {
+      document.getElementById('cropModal').style.display = 'none';
+      if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
+    }
+
     // 등록 제출
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -547,6 +621,7 @@
 
       errorEl.textContent = '';
       if (!name) { errorEl.textContent = '이름을 입력해주세요.'; return; }
+      if (!file) { errorEl.textContent = '대표 이미지를 등록해주세요.'; return; }
 
       let owner = currentUser.user_metadata?.nickname;
       if (ownerType === 'site') {
@@ -577,102 +652,113 @@
         ? document.getElementById('ownerExternalContact').value.trim()
         : null;
 
-      // 메인 이미지 업로드
-      let image_url = null;
-      if (file) {
-        console.log('[업로드 1] 파일 선택됨:', file.name, file.size + 'bytes');
+      try {
+        // 메인 이미지 + 썸네일 업로드
+        let image_url     = null;
+        let thumbnail_url = null;
+        if (file) {
+          const blob     = await compressImage(file);
+          const mainName = `${Date.now()}.jpg`;
+          const { error: mainErr } = await sb.storage.from('images').upload(mainName, blob, {
+            contentType: 'image/jpeg',
+          });
+          if (mainErr) throw new Error(`메인 이미지 업로드에 실패했어요. (${mainErr.message})`);
+          image_url = sb.storage.from('images').getPublicUrl(mainName).data.publicUrl;
 
-        const { data: { session } } = await sb.auth.getSession();
-        console.log('[업로드 2] 세션:', session ? '있음 (' + session.user.email + ')' : '없음!');
-
-        const blob = await compressImage(file);
-        console.log('[업로드 3] 압축 결과:', blob);
-
-        if (!blob) {
-          errorEl.textContent = '이미지 처리에 실패했어요. 다른 이미지를 사용해보세요.';
-          btn.textContent = '등록하기'; btn.disabled = false; return;
+          const thumbBlob = pendingThumbnailBlob || await autoCenterCropToBlob(file, 3/4, 600, 0.85);
+          const thumbName = `${Date.now()}_thumb.jpg`;
+          const { error: thumbErr } = await sb.storage.from('images').upload(thumbName, thumbBlob, {
+            contentType: 'image/jpeg',
+          });
+          if (thumbErr) throw new Error(`썸네일 업로드에 실패했어요. (${thumbErr.message})`);
+          thumbnail_url = sb.storage.from('images').getPublicUrl(thumbName).data.publicUrl;
         }
-        const ext      = file.name.split('.').pop().toLowerCase();
-        const safeExt  = ['jpg','jpeg','png','gif','webp'].includes(ext) ? ext : 'jpg';
-        const fileName = `${Date.now()}.${safeExt}`;
-        console.log('[업로드 4] 업로드 시작:', fileName);
 
-        const { error: uploadError } = await sb.storage.from('images').upload(fileName, blob, { contentType: `image/${safeExt === 'jpg' ? 'jpeg' : safeExt}` });
-        console.log('[업로드 5] 결과:', uploadError ? '실패: ' + uploadError.message : '성공');
-
-        if (uploadError) {
-          console.error('[업로드 상세 오류]', uploadError);
-          errorEl.textContent = `메인 이미지 업로드에 실패했어요. (${uploadError.message})`;
-          btn.textContent = '등록하기'; btn.disabled = false; return;
+        // 추가 이미지 업로드
+        const additional_images = [];
+        const validExtras = extraFiles.filter(f => f !== null);
+        for (const f of validExtras) {
+          const blob     = await compressImage(f);
+          const fileName = `${Date.now()}_extra_${Math.random().toString(36).slice(2)}.jpg`;
+          const { error: uploadError } = await sb.storage.from('images').upload(fileName, blob, {
+            contentType: 'image/jpeg',
+          });
+          if (uploadError) throw new Error(`추가 이미지 업로드에 실패했어요. (${f.name}: ${uploadError.message})`);
+          const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);
+          additional_images.push(urlData.publicUrl);
         }
-        const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);
-        image_url = urlData.publicUrl;
-      }
 
-      // 추가 이미지 업로드
-      const additional_images = [];
-      const validExtras = extraFiles.filter(f => f !== null);
-      for (const f of validExtras) {
-        const blob     = await compressImage(f);
-        const fileName = `${Date.now()}_extra_${Math.random().toString(36).slice(2)}.jpg`;
-        const { error: uploadError } = await sb.storage.from('images').upload(fileName, blob, { contentType: 'image/jpeg' });
-        if (uploadError) {
-          errorEl.textContent = '추가 이미지 업로드에 실패했어요.';
-          btn.textContent = '등록하기'; btn.disabled = false; return;
+        // 커스텀 필드 값 수집
+        const customFieldValues = {};
+        document.querySelectorAll('.custom-field-input').forEach(input => {
+          const val = input.value.trim();
+          if (val) customFieldValues[input.dataset.field] = val;
+        });
+
+        const isSensitive   = document.getElementById('isSensitive').checked;
+        const sensitiveNote = document.getElementById('sensitiveNote').value.trim();
+
+        function getTristate(name) {
+          const v = document.querySelector(`input[name="${name}"]:checked`)?.value;
+          return v === 'true' ? true : v === 'false' ? false : null;
         }
-        const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);
-        additional_images.push(urlData.publicUrl);
+
+        // DB 저장
+        const { error } = await sb.from('characters').insert({
+          name,
+          char_number:         document.getElementById('charNumber').value.trim() || null,
+          species_name:        speciesName || null,
+          designer_nickname:   designer,
+          designer_contact:    designer_contact,
+          owner_nickname:      owner,
+          owner_user_id:       ownerType === 'site' ? (selectedNickId || null) : null,
+          owner_is_offsite:    ownerType !== 'site',
+          owner_contact:       externalContact || null,
+          description:         desc || null,
+          image_url,
+          thumbnail_url,
+          additional_images:   additional_images.length ? additional_images : null,
+          custom_field_values: Object.keys(customFieldValues).length ? customFieldValues : null,
+          char_categories:     addedCategories.length ? addedCategories : null,
+          is_sensitive:        isSensitive,
+          sensitive_note:      isSensitive ? (sensitiveNote || null) : null,
+          allow_free_adoption:  getTristate('allowFreeAdoption'),
+          allow_resale:         getTristate('allowResale'),
+          allow_paid_adoption:  getTristate('allowPaidAdoption'),
+          allow_other_adoption: getTristate('allowOtherAdoption'),
+        });
+
+        if (error) throw new Error(`등록에 실패했어요: ${error.message}`);
+
+        window.location.href = speciesId ? `species.html?id=${speciesId}` : 'my-characters.html';
+      } catch (err) {
+        errorEl.textContent = err.message;
+      } finally {
+        btn.textContent = '등록하기';
+        btn.disabled = false;
       }
-
-      // 커스텀 필드 값 수집
-      const customFieldValues = {};
-      document.querySelectorAll('.custom-field-input').forEach(input => {
-        const val = input.value.trim();
-        if (val) customFieldValues[input.dataset.field] = val;
-      });
-
-      const isSensitive   = document.getElementById('isSensitive').checked;
-      const sensitiveNote = document.getElementById('sensitiveNote').value.trim();
-
-      function getTristate(name) {
-        const v = document.querySelector(`input[name="${name}"]:checked`)?.value;
-        return v === 'true' ? true : v === 'false' ? false : null;
-      }
-
-      // DB 저장
-      const { error } = await sb.from('characters').insert({
-        name,
-        char_number:         document.getElementById('charNumber').value.trim() || null,
-        species_name:        speciesName || null,
-        designer_nickname:   designer,
-        designer_contact:    designer_contact,
-        owner_nickname:      owner,
-        owner_user_id:       ownerType === 'site' ? (selectedNickId || null) : null,
-        owner_is_offsite:    ownerType !== 'site',
-        owner_contact:       externalContact || null,
-        description:         desc || null,
-        image_url,
-        additional_images:   additional_images.length ? additional_images : null,
-        custom_field_values: Object.keys(customFieldValues).length ? customFieldValues : null,
-        char_categories:     addedCategories.length ? addedCategories : null,
-        is_sensitive:        isSensitive,
-        sensitive_note:      isSensitive ? (sensitiveNote || null) : null,
-        allow_free_adoption:  getTristate('allowFreeAdoption'),
-        allow_resale:         getTristate('allowResale'),
-        allow_paid_adoption:  getTristate('allowPaidAdoption'),
-        allow_other_adoption: getTristate('allowOtherAdoption'),
-      });
-
-      if (error) {
-        errorEl.textContent = `등록에 실패했어요: ${error.message}`;
-        btn.textContent = '등록하기'; btn.disabled = false; return;
-      }
-
-      window.location.href = speciesId ? `species.html?id=${speciesId}` : 'my-characters.html';
     });
 
     initPage();
   </script>
+
+  <!-- 크롭 모달 -->
+  <div id="cropModal" class="crop-modal-overlay" style="display:none;">
+    <div class="crop-modal-box">
+      <div class="crop-modal-header">
+        <h3>썸네일 편집</h3>
+        <p>드래그로 이동 · 스크롤로 확대/축소 — 목록 카드에 표시될 영역을 선택하세요.</p>
+      </div>
+      <div class="crop-modal-canvas">
+        <img id="cropImage" src="">
+      </div>
+      <div class="crop-modal-footer">
+        <button type="button" class="btn-ghost" style="color:var(--text-mute);" onclick="cancelCropModal()">취소</button>
+        <button type="button" class="btn-ghost" onclick="useCropAsIs()">원본 그대로 사용</button>
+        <button type="button" class="btn-secondary" onclick="confirmCrop()">확정</button>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
 

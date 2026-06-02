@@ -62,10 +62,11 @@
               <img id="imgPreview" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:10px;">
               <div id="imgPlaceholder">
                 <p class="img-upload-text">클릭하여 이미지 업로드</p>
-                <p class="img-upload-hint">권장 크기: 500 x 500px</p>
               </div>
             </div>
             <input type="file" id="imgInput" accept="image/*" style="display:none;" onchange="previewImage(this)">
+            <p class="img-upload-ratio">권장 1:1 · 1000×1000px</p>
+            <p class="img-upload-meta">PNG · GIF · JPG · WebP &nbsp;·&nbsp; 최대 2MB · 2000×2000px 이하</p>
           </div>
 
           <!-- 종족명 -->
@@ -341,8 +342,15 @@
     }
 
     function previewImage(input) {
-      const file = input.files[0];
+      const file    = input.files[0];
       if (!file) return;
+      const errorEl = document.getElementById('formError');
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        errorEl.textContent = 'PNG, GIF, JPG, WebP 형식의 이미지만 업로드할 수 있어요.';
+        input.value = '';
+        return;
+      }
+      errorEl.textContent = '';
       const reader = new FileReader();
       reader.onload = e => {
         document.getElementById('imgPreview').src = e.target.result;
@@ -420,8 +428,15 @@
     }
 
     function previewGuideImgEl(input) {
-      const file = input.files[0];
+      const file    = input.files[0];
       if (!file) return;
+      const errorEl = document.getElementById('formError');
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        errorEl.textContent = 'PNG, GIF, JPG, WebP 형식의 이미지만 업로드할 수 있어요.';
+        input.value = '';
+        return;
+      }
+      errorEl.textContent = '';
       const reader = new FileReader();
       reader.onload = e => {
         const box = input.previousElementSibling;
@@ -446,7 +461,7 @@
       const blob     = await compressImage(imgFile);
       const fileName = `guide_${Date.now()}_${Math.random().toString(36).slice(2,7)}.jpg`;
       const { error } = await sb.storage.from('images').upload(fileName, blob, { upsert: true, contentType: 'image/jpeg' });
-      if (error) return null;
+      if (error) throw new Error(`가이드 이미지 업로드 실패: ${error.message}`);
       const { data } = sb.storage.from('images').getPublicUrl(fileName);
       return data.publicUrl;
     }
@@ -501,64 +516,54 @@
       btn.textContent = '저장 중...';
       btn.disabled = true;
 
-      const fields = [...document.querySelectorAll('.field-input')].map(i => i.value.trim()).filter(v => v);
+      try {
+        const fields = [...document.querySelectorAll('.field-input')].map(i => i.value.trim()).filter(v => v);
 
-      let imageUrl = currentImageUrl;
-      const imgFile = document.getElementById('imgInput').files[0];
-      if (imgFile) {
-        const blob     = await compressImage(imgFile);
-        const fileName = `species_${Date.now()}.jpg`;
-        const { error: uploadError } = await sb.storage.from('images').upload(fileName, blob, { upsert: true, contentType: 'image/jpeg' });
-        if (uploadError) {
-          errorEl.textContent = `이미지 업로드 실패: ${uploadError.message}`;
-          btn.textContent = '저장하기';
-          btn.disabled = false;
-          return;
+        let imageUrl = currentImageUrl;
+        const imgFile = document.getElementById('imgInput').files[0];
+        if (imgFile) {
+          const blob     = await compressImage(imgFile);
+          const fileName = `species_${Date.now()}.jpg`;
+          const { error: uploadError } = await sb.storage.from('images').upload(fileName, blob, {
+            upsert: true, contentType: 'image/jpeg',
+          });
+          if (uploadError) throw new Error(`이미지 업로드 실패: ${uploadError.message}`);
+          const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);
+          imageUrl = urlData.publicUrl;
         }
-        const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);
-        imageUrl = urlData.publicUrl;
-      }
 
-      const link         = document.getElementById('speciesLink').value.trim();
-      const designRights = document.getElementById('speciesDesignRights').value.trim();
-      const guide        = await collectGuide();
+        const link         = document.getElementById('speciesLink').value.trim();
+        const designRights = document.getElementById('speciesDesignRights').value.trim();
+        const guide        = await collectGuide();
+        const isSensitive  = document.getElementById('isSensitive').checked;
+        const sensitiveNote = document.getElementById('sensitiveNote').value.trim();
 
-      const isSensitive  = document.getElementById('isSensitive').checked;
-      const sensitiveNote = document.getElementById('sensitiveNote').value.trim();
+        const { data, error } = await sb.from('species').update({
+          name,
+          description:    desc || null,
+          image_url:      imageUrl,
+          custom_fields:  fields.length ? fields : null,
+          link:           link || null,
+          design_rights:  designRights || null,
+          guide:          guide.length ? guide : null,
+          is_sensitive:        isSensitive,
+          sensitive_note:      isSensitive ? (sensitiveNote || null) : null,
+          allow_free_adoption:  document.getElementById('allowFreeAdoption').checked,
+          allow_resale:         document.getElementById('allowResale').checked,
+          allow_paid_adoption:  document.getElementById('allowPaidAdoption').checked,
+          allow_other_adoption: document.getElementById('allowOtherAdoption').checked,
+        }).eq('id', speciesId).select();
 
-      const { data, error } = await sb.from('species').update({
-        name,
-        description:    desc || null,
-        image_url:      imageUrl,
-        custom_fields:  fields.length ? fields : null,
-        link:           link || null,
-        design_rights:  designRights || null,
-        guide:          guide.length ? guide : null,
-        is_sensitive:        isSensitive,
-        sensitive_note:      isSensitive ? (sensitiveNote || null) : null,
-        allow_free_adoption:  document.getElementById('allowFreeAdoption').checked,
-        allow_resale:         document.getElementById('allowResale').checked,
-        allow_paid_adoption:  document.getElementById('allowPaidAdoption').checked,
-        allow_other_adoption: document.getElementById('allowOtherAdoption').checked,
-      }).eq('id', speciesId).select();
+        if (error) throw new Error(`저장에 실패했어요: ${error.message}`);
+        if (!data || data.length === 0) throw new Error('저장 권한이 없거나 변경할 수 없는 종족입니다.');
 
-      console.log('[species update] data:', data, '/ error:', error);
-
-      if (error) {
-        errorEl.textContent = `저장에 실패했어요: ${error.message}`;
+        window.location.href = `species.html?id=${speciesId}`;
+      } catch (err) {
+        errorEl.textContent = err.message;
+      } finally {
         btn.textContent = '저장하기';
         btn.disabled = false;
-        return;
       }
-
-      if (!data || data.length === 0) {
-        errorEl.textContent = '저장 권한이 없거나 변경할 수 없는 종족입니다.';
-        btn.textContent = '저장하기';
-        btn.disabled = false;
-        return;
-      }
-
-      window.location.href = `species.html?id=${speciesId}`;
     }
 
     init();

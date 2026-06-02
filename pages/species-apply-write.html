@@ -54,9 +54,10 @@
               <img id="imagePreview" style="display:none; width:100%; height:100%; object-fit:cover; border-radius:var(--radius);">
               <div id="uploadPlaceholder">
                 <p class="img-upload-text">클릭하여 이미지 업로드</p>
-                <p class="img-upload-hint">종족 또는 개체가 담긴 이미지</p>
               </div>
             </div>
+            <p class="img-upload-ratio">종족 또는 개체가 담긴 이미지</p>
+            <p class="img-upload-meta">PNG · GIF · JPG · WebP &nbsp;·&nbsp; 최대 2MB · 2000×2000px 이하</p>
             <button type="button" id="removeImageBtn" class="btn-ghost" style="display:none; margin-top:8px; font-size:12px; color:#ef4444;" onclick="removeImage()">이미지 삭제</button>
 
             <div style="display:flex; align-items:center; gap:10px; margin:14px 0;">
@@ -115,8 +116,15 @@
     }
 
     function previewImage(input) {
-      const file = input.files[0];
+      const file    = input.files[0];
       if (!file) return;
+      const errorEl = document.getElementById('formError');
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        errorEl.textContent = 'PNG, GIF, JPG, WebP 형식의 이미지만 업로드할 수 있어요.';
+        input.value = '';
+        return;
+      }
+      errorEl.textContent = '';
       const reader = new FileReader();
       reader.onload = e => {
         document.getElementById('imagePreview').src = e.target.result;
@@ -151,41 +159,43 @@
       btn.textContent = '제출 중...';
       btn.disabled = true;
 
-      const user = await getUser();
-      if (!user) { window.location.href = 'login.html'; return; }
-      const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname;
-      // nickname은 표시용으로만 저장, 권한은 user_id 기준
+      try {
+        const user = await getUser();
+        if (!user) { window.location.href = 'login.html'; return; }
+        const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname;
 
-      // 이미지 업로드
-      let image_url = null;
-      if (imgFile) {
-        const blob     = await compressImage(imgFile);
-        const fileName = `apply_${Date.now()}.jpg`;
-        const { error: uploadError } = await sb.storage.from('images').upload(fileName, blob, { contentType: 'image/jpeg' });
-        if (uploadError) {
-          errorEl.textContent = `이미지 업로드에 실패했어요. (${uploadError.message})`;
-          btn.textContent = '제출하기'; btn.disabled = false; return;
+        // 이미지 업로드
+        let image_url = null;
+        if (imgFile) {
+          const blob     = await compressImage(imgFile);
+          const fileName = `apply_${Date.now()}.jpg`;
+          const { error: uploadError } = await sb.storage.from('images').upload(fileName, blob, {
+            contentType: 'image/jpeg',
+          });
+          if (uploadError) throw new Error(`이미지 업로드에 실패했어요. (${uploadError.message})`);
+          const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);
+          image_url = urlData.publicUrl;
         }
-        const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);
-        image_url = urlData.publicUrl;
+
+        const { error } = await sb.from('species_applications').insert({
+          title:        speciesName,
+          species_name: speciesName,
+          nickname,
+          user_id:      user.id,
+          image_url,
+          link: link || null,
+          status: '접수됨',
+        });
+
+        if (error) throw new Error(`제출에 실패했어요. (${error.message})`);
+
+        window.location.href = 'species-apply.html';
+      } catch (err) {
+        errorEl.textContent = err.message;
+      } finally {
+        btn.textContent = '제출하기';
+        btn.disabled = false;
       }
-
-      const { error } = await sb.from('species_applications').insert({
-        title:        speciesName,
-        species_name: speciesName,
-        nickname,
-        user_id:      user.id,
-        image_url,
-        link: link || null,
-        status: '접수됨',
-      });
-
-      if (error) {
-        errorEl.textContent = `제출에 실패했어요. (${error.message})`;
-        btn.textContent = '제출하기'; btn.disabled = false; return;
-      }
-
-      window.location.href = 'species-apply.html';
     });
 
     initPage();
