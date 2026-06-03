@@ -295,6 +295,7 @@
     let designerType         = 'site';
     let selectedDesignerNick = null;
     let allUsers             = [];
+    let originalOwnerUserId  = null;
     let currentImageUrl      = null;
     let addedCategories      = [];
     let existingExtraImages  = [];
@@ -635,7 +636,8 @@
       const { data: spList } = await sb.from('species').select('id, name').order('name');
       allSpecies = spList || [];
 
-      await Promise.all([loadUsers(c.owner_nickname, c.owner_contact, c.designer_nickname, c.designer_contact), loadCustomFields(c.species_name, c.custom_field_values), loadExistingCategories(c.species_name)]);
+      originalOwnerUserId = c.owner_user_id || null;
+      await Promise.all([loadUsers(c.owner_nickname, c.owner_contact, c.designer_nickname, c.designer_contact, c.owner_is_offsite), loadCustomFields(c.species_name, c.custom_field_values), loadExistingCategories(c.species_name)]);
 
       renderExistingSections(c.char_sections || []);
     }
@@ -754,7 +756,7 @@
       });
     }
 
-    async function loadUsers(currentOwner, currentContact, currentDesigner, currentDesignerContact) {
+    async function loadUsers(currentOwner, currentContact, currentDesigner, currentDesignerContact, currentOwnerIsOffsite) {
       const { data } = await sb.rpc('get_all_users');
       allUsers = (data || [])
         .map(u => ({ nickname: u.nickname || '', loginId: u.login_id || u.nickname || '' }))
@@ -764,8 +766,11 @@
       renderUserList([]);
       renderDesignerList([]);
 
-      // 기존 소유주 판별
-      if (allUsers.some(u => u.nickname === currentOwner)) {
+      // 기존 소유주 판별 — owner_is_offsite=false면 allUsers 매칭 실패와 무관하게 site 유지
+      if (!currentOwnerIsOffsite) {
+        setOwnerType('site');
+        if (currentOwner) selectUser(currentOwner);
+      } else if (allUsers.some(u => u.nickname === currentOwner)) {
         setOwnerType('site');
         selectUser(currentOwner);
       } else {
@@ -1115,6 +1120,7 @@
           designer_contact:    designer_contact,
           owner_nickname:      owner,
           owner_is_offsite:    ownerType !== 'site',
+          owner_user_id:       ownerType === 'site' ? originalOwnerUserId : null,
           owner_contact:       externalContact || null,
           description:         desc || null,
           image_url,
