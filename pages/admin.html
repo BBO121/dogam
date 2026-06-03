@@ -500,7 +500,7 @@
         .from('species')
         .select('id, name, owner_nickname, created_at')
         .order('created_at', { ascending: false });
-
+        data?.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
       const empty = document.getElementById('speciesAdminEmpty');
 
       if (error || !data || data.length === 0) {
