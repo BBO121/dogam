@@ -24,6 +24,28 @@
     }
     .comment-confirm-btn:hover { background:var(--sky-deep); }
     .comment-content { font-size:14px; line-height:1.6; white-space:pre-wrap; word-break:break-word; }
+    .mention { color:var(--sky-deep); font-weight:600; }
+    .mention-dropdown {
+      position:absolute; top:calc(100% + 2px); left:0; right:0; z-index:200;
+      background:#fff; border:1px solid var(--border); border-radius:8px;
+      overflow:hidden; max-height:180px; overflow-y:auto;
+      box-shadow:0 4px 12px rgba(0,0,0,0.12);
+    }
+    .mention-dropdown-item {
+      padding:9px 14px; font-size:14px; cursor:pointer; transition:background 0.1s;
+    }
+    .mention-dropdown-item:hover { background:var(--sky-pale); }
+    .mention-chips-wrap { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+    .mention-chip {
+      display:inline-flex; align-items:center; gap:4px;
+      background:var(--sky-pale); color:var(--sky-deep);
+      font-size:12px; font-weight:600; padding:3px 8px 3px 10px;
+      border-radius:20px; border:1px solid #BAE6FD;
+    }
+    .mention-chip-remove {
+      border:none; background:none; color:var(--sky-deep);
+      cursor:pointer; font-size:15px; line-height:1; padding:0;
+    }
     .comment-reply-btn { border:none; background:none; font-size:12px; color:var(--sky-deep); cursor:pointer; padding:4px 0 0; }
     .replies { margin-top:10px; padding-left:16px; border-left:2px solid var(--border); display:flex; flex-direction:column; gap:8px; }
     .reply-item { padding:10px 12px; background:var(--sky-pale); border-radius:8px; }
@@ -175,6 +197,11 @@
             <!-- 낙찰 결과 -->
             <div id="winnerBox" class="adoption-winner-box" style="display:none;"></div>
 
+            <!-- 작성자 전용: 즉분가 확정 버튼 (즉분 대기중 상태) -->
+            <div id="instantConfirmWrap" style="display:none; margin-bottom:12px;">
+              <button onclick="confirmInstantBid()" class="btn-secondary" style="width:100%;">분양확정</button>
+            </div>
+
             <!-- 입찰 목록 -->
             <div id="bidList" class="adoption-bid-list"></div>
 
@@ -198,16 +225,29 @@
           </div>
         </div>
 
-        <!-- 댓글 섹션 (경매 제외) -->
+        <!-- 신청자 목록 섹션 (free/random 전용) -->
+        <div class="comments-section" id="applicantSection" style="display:none;">
+          <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
+            <h2 style="margin:0;">신청자 목록</h2>
+          </div>
+          <div id="applicantList"><p class="page-loading">불러오는 중...</p></div>
+        </div>
+
+        <!-- 댓글 섹션 (전 분양 타입 공통) -->
         <div class="comments-section" id="commentsSection">
           <div style="display:flex; align-items:center; gap:12px; margin-bottom:8px;">
-            <h2 id="commentSectionTitle" style="margin:0;">댓글</h2>
+            <h2 style="margin:0;">댓글</h2>
           </div>
           <!-- 유료/기타 안내문 -->
           <div id="commentNotice" class="adoption-notice" style="display:none;"></div>
           <div id="commentList"><p class="page-loading">불러오는 중...</p></div>
           <div id="commentInputArea" class="comment-input-area" style="display:none;">
-            <textarea id="commentTextarea" class="comment-textarea" rows="3" placeholder="댓글을 남겨주세요..."></textarea>
+            <p style="font-size:12px; color:var(--text-mute); margin:0 0 4px;">@닉네임으로 유저를 언급하면 해당 유저에게 알림이 전송됩니다.</p>
+            <div style="position:relative;">
+              <textarea id="commentTextarea" class="comment-textarea" rows="3" placeholder="댓글을 남겨주세요..."></textarea>
+              <div id="commentMentionDropdown" class="mention-dropdown" style="display:none;"></div>
+            </div>
+            <div id="commentMentionChips" class="mention-chips-wrap"></div>
             <div style="display:flex; justify-content:flex-end;">
               <button onclick="submitComment()" class="btn-secondary" style="padding:8px 20px; font-size:13px;">등록</button>
             </div>
@@ -256,6 +296,8 @@
     let myNick          = null;
     let auctionDetails  = null;
     let idToNick        = {};
+    let allNicknames    = [];
+    const activeMentions = new Map(); // taId → Set<nick>
 
     const TYPE_LABEL = { free: '무료', paid: '유료', auction: '경매', etc: '기타' };
     const TYPE_CLASS  = { free: 'adoption-type--free', paid: 'adoption-type--paid', auction: 'adoption-type--auction', etc: 'adoption-type--paid' };
@@ -273,7 +315,10 @@
       ]);
 
       if (error || !adoption) { window.location.href = 'adoption.html'; return; }
-      if (userList) userList.forEach(u => { if (u.id && u.nickname) idToNick[u.id] = u.nickname; });
+      if (userList) userList.forEach(u => {
+        if (u.id && u.nickname) idToNick[u.id] = u.nickname;
+        if (u.nickname) allNicknames.push(u.nickname);
+      });
 
       currentAdoption = adoption;
       document.title = `${adoption.character_name} 분양 — 종족연구소`;
@@ -283,7 +328,6 @@
 
       if (adoption.adoption_type === 'auction') {
         document.getElementById('auctionSection').style.display = 'block';
-        document.getElementById('commentsSection').style.display = 'none';
 
         const [{ data: details }, { data: bids }] = await Promise.all([
           sb.from('auction_details').select('*').eq('adoption_id', adoptionId).single(),
@@ -293,15 +337,12 @@
         auctionDetails = details;
         renderAuctionInfo(details);
         renderBids(adoption, bids || []);
+        loadComments();
       } else if (adoption.adoption_type === 'free') {
         if (adoption.free_type === 'random') {
-          // 댓글 섹션을 신청자 목록 섹션으로 재활용
-          document.getElementById('commentSectionTitle').textContent = '신청자 목록';
-          document.getElementById('commentInputArea').style.display = 'none';
-          document.getElementById('commentList').innerHTML = '<p class="page-loading">불러오는 중...</p>';
-        } else {
-          document.getElementById('commentsSection').style.display = 'none';
+          document.getElementById('applicantSection').style.display = 'block';
         }
+        loadComments();
       } else {
         loadComments();
       }
@@ -357,8 +398,9 @@
       const sb2 = document.getElementById('statusBadge');
       sb2.textContent = a.status || '분양중';
       sb2.className   = `adoption-status${
-        a.status === '완료'       ? ' adoption-status--closed'  :
-        a.status === '확인 대기중' ? ' adoption-status--pending' : ''}`;
+        a.status === '완료'        ? ' adoption-status--closed'  :
+        a.status === '확인 대기중' ? ' adoption-status--pending' :
+        a.status === '즉분 대기중' ? ' adoption-status--pending' : ''}`;
 
       document.getElementById('detailCharName').textContent = a.character_name || '—';
       document.getElementById('detailSpecies').textContent  = a.species_name   || '—';
@@ -413,7 +455,7 @@
       const isAuthor = !!(currentUser?.id && a.user_id && currentUser.id === a.user_id);
       const isOpen   = a.status === '분양중';
 
-      if (!isOpen) {
+      if (!isOpen && a.status !== '즉분 대기중') {
         const banner = document.getElementById('closedBanner');
         // 당첨자 본인이고 완료된 경우 → 특별 메시지
         if (currentUser && myNick === a.winner_name && a.status === '완료') {
@@ -451,10 +493,24 @@
 
       // 분양자 전용: 당첨자 확인 대기 안내 + 자동 새로고침 폴링
       if (isAuthor && a.winner_name && a.status === '확인 대기중') {
-        document.getElementById('ownerPendingNotice').style.display = 'block';
+        const pendingNotice = document.getElementById('ownerPendingNotice');
+        pendingNotice.querySelector('p:first-child').textContent = '소유권 이전 대기중';
+        pendingNotice.querySelector('p:last-child').textContent  = '당첨자가 확인하기 버튼을 누르면 캐릭터 소유권이 자동으로 이전돼요.';
+        pendingNotice.style.display = 'block';
         const pollConfirm = setInterval(async () => {
           const { data } = await sb.from('adoptions').select('status').eq('id', adoptionId).single();
           if (data?.status === '완료') { clearInterval(pollConfirm); location.reload(); }
+        }, 5000);
+      }
+      // 분양자 전용: 즉분 대기중 안내 + 자동 새로고침 폴링
+      if (isAuthor && a.winner_name && a.status === '즉분 대기중') {
+        const pendingNotice = document.getElementById('ownerPendingNotice');
+        pendingNotice.querySelector('p:first-child').textContent = '즉분가 낙찰 — 분양확정 대기';
+        pendingNotice.querySelector('p:last-child').textContent  = `${a.winner_name}님이 즉분가로 낙찰됐어요. 아래 분양확정 버튼을 눌러 확정해주세요.`;
+        pendingNotice.style.display = 'block';
+        const pollInstant = setInterval(async () => {
+          const { data } = await sb.from('adoptions').select('status').eq('id', adoptionId).single();
+          if (data?.status !== '즉분 대기중') { clearInterval(pollInstant); location.reload(); }
         }, 5000);
       }
 
@@ -486,11 +542,11 @@
           .select('applicant_nickname, applicant_id').eq('adoption_id', adoptionId).order('created_at');
         const applicantList = applicants || [];
 
-        // 댓글 섹션 자리에 신청자 리스트 표시
-        const commentListEl = document.getElementById('commentList');
-        if (commentListEl) {
+        // 신청자 목록 렌더링
+        const applicantListEl = document.getElementById('applicantList');
+        if (applicantListEl) {
           if (applicantList.length > 0) {
-            commentListEl.innerHTML = `
+            applicantListEl.innerHTML = `
               <div style="background:#fff; border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;">
                 ${applicantList.map((ap, i) => `
                   <div style="display:flex; align-items:center; gap:12px; padding:11px 16px; border-bottom:${i === applicantList.length - 1 ? 'none' : '1px solid var(--border)'};">
@@ -501,7 +557,7 @@
               </div>
             `;
           } else {
-            commentListEl.innerHTML = '<p style="font-size:14px; color:var(--text-mute); padding:12px 0;">아직 신청자가 없어요</p>';
+            applicantListEl.innerHTML = '<p style="font-size:14px; color:var(--text-mute); padding:12px 0;">아직 신청자가 없어요</p>';
           }
         }
 
@@ -760,7 +816,24 @@
       }
 
       // 낙찰 결과
-      if (adoption.winner_name && adoption.status === '확인 대기중') {
+      if (adoption.winner_name && adoption.status === '즉분 대기중') {
+        const winnerBid = bids.find(b => b.bidder_name === adoption.winner_name);
+        const winnerDisplayName = (winnerBid?.bidder_id && idToNick[winnerBid.bidder_id]) || adoption.winner_name;
+        document.getElementById('winnerBox').innerHTML = `
+          <div class="adoption-winner-inner">
+            <span class="adoption-winner-trophy">⏳</span>
+            <div>
+              <p class="adoption-winner-label">판매자 확정 대기 중</p>
+              <p class="adoption-winner-name">${winnerDisplayName}</p>
+              <p class="adoption-winner-bid">${adoption.winner_bid || ''}</p>
+            </div>
+          </div>
+        `;
+        document.getElementById('winnerBox').style.display = 'block';
+        if (isAuthor) {
+          document.getElementById('instantConfirmWrap').style.display = 'block';
+        }
+      } else if (adoption.winner_name && adoption.status === '확인 대기중') {
         const winnerBid = bids.find(b => b.bidder_name === adoption.winner_name);
         const winnerDisplayName = (winnerBid?.bidder_id && idToNick[winnerBid.bidder_id]) || adoption.winner_name;
         document.getElementById('winnerBox').innerHTML = `
@@ -883,16 +956,24 @@
       if (error) { errorEl.textContent = `입찰에 실패했어요. (${error.message})`; return; }
       document.getElementById('bidAmount').value = '';
 
-      // 즉분가 입찰 → 즉시 낙찰 처리
+      // 즉분가 입찰 → "즉분 대기중"으로 변경 (판매자 확정 대기)
       if (instNum !== null && bidNum === instNum) {
         const { data: instantUpdated, error: instantErr } = await sb.from('adoptions').update({
-          status:      '확인 대기중',
+          status:      '즉분 대기중',
           winner_name: myNick || '익명',
           winner_bid:  `${bidNum.toLocaleString('ko-KR')}원 (즉분가)`,
         }).eq('id', adoptionId).select('id');
 
-        if (instantErr || !instantUpdated || instantUpdated.length === 0) {
-          errorEl.textContent = '즉분가 낙찰 처리에 실패했어요. 잠시 후 다시 시도해주세요.';
+        console.log('[즉분가 update 결과]', { instantUpdated, instantErr });
+
+        if (instantErr) {
+          console.error('[즉분가 update 에러]', instantErr);
+          errorEl.innerHTML = `즉분가 낙찰 처리 실패<br><small style="word-break:break-all;">[ERR] code=${instantErr.code} / msg=${instantErr.message} / detail=${instantErr.details} / hint=${instantErr.hint}</small>`;
+          return;
+        }
+        if (!instantUpdated || instantUpdated.length === 0) {
+          console.error('[즉분가 update] 업데이트 행 없음', { adoptionId, instantUpdated });
+          errorEl.innerHTML = `즉분가 낙찰 처리 실패<br><small>[ERR] 업데이트된 행 없음 — RLS UPDATE 정책에 막혔거나 id 불일치 (adoptionId=${adoptionId})</small>`;
           return;
         }
 
@@ -900,13 +981,13 @@
           {
             user_nickname: currentAdoption.author,
             type:          'auction_instant',
-            message:       `🏆 "${currentAdoption.character_name}" 경매에 즉분가(${bidNum.toLocaleString('ko-KR')}원) 입찰이 들어왔어요! ${myNick}님이 즉시 낙찰됐어요.`,
+            message:       `🏆 "${currentAdoption.character_name}" 경매에 즉분가(${bidNum.toLocaleString('ko-KR')}원) 입찰이 들어왔어요! 분양확정 버튼을 눌러 확정해주세요.`,
             link:          `adoption-detail.html?id=${adoptionId}`,
           },
           {
             user_nickname: myNick,
             type:          'auction_win',
-            message:       `🏆 "${currentAdoption.character_name}" 경매에서 즉분가로 낙찰됐어요! 확인하기 버튼을 눌러주세요.`,
+            message:       `🏆 "${currentAdoption.character_name}" 경매에서 즉분가로 낙찰됐어요! 판매자의 분양확정을 기다려주세요.`,
             link:          `adoption-detail.html?id=${adoptionId}`,
           },
         ]);
@@ -943,6 +1024,25 @@
         user_nickname: name,
         type:          'auction_win',
         message:       `🏆 "${currentAdoption.character_name}" 경매에서 낙찰됐어요! 분양자가 확정을 처리할 예정이에요.`,
+        link:          `adoption-detail.html?id=${adoptionId}`,
+      });
+
+      location.reload();
+    }
+
+    async function confirmInstantBid() {
+      if (!confirm(`${currentAdoption.winner_name}님의 즉분가 낙찰을 확정하시겠어요?\n확정 후 당첨자에게 확인 요청이 전송됩니다.`)) return;
+
+      const { error } = await sb.from('adoptions').update({
+        status: '확인 대기중',
+      }).eq('id', adoptionId);
+
+      if (error) { alert('오류가 발생했어요. 잠시 후 다시 시도해주세요.'); return; }
+
+      await sb.from('notifications').insert({
+        user_nickname: currentAdoption.winner_name,
+        type:          'auction_win',
+        message:       `🏆 "${currentAdoption.character_name}" 즉분가 낙찰이 확정됐어요! 확인하기 버튼을 눌러 소유권을 받으세요.`,
         link:          `adoption-detail.html?id=${adoptionId}`,
       });
 
@@ -1143,7 +1243,7 @@
               ${isMine ? `<button class="comment-delete" onclick="deleteComment('${c.id}', false)">삭제</button>` : ''}
               ${canConfirm ? `<button class="comment-confirm-btn" onclick="openCompleteModal('${escAttr(c.author_nickname)}')">분양확정</button>` : ''}
             </div>
-            <p class="comment-content">${escapeHtml(c.content)}</p>
+            <p class="comment-content">${highlightMentions(escapeHtml(c.content))}</p>
             ${currentUser ? `<button class="comment-reply-btn" onclick="toggleReply('${c.id}')">답글</button>` : ''}
 
             ${childReplies.length ? `
@@ -1157,15 +1257,19 @@
                         <span class="comment-time">${timeAgo(r.created_at)}</span>
                         ${isMyReply ? `<button class="comment-delete" onclick="deleteComment('${r.id}', true)">삭제</button>` : ''}
                       </div>
-                      <p class="comment-content">${escapeHtml(r.content)}</p>
+                      <p class="comment-content">${highlightMentions(escapeHtml(r.content))}</p>
                       ${currentUser ? `<button class="comment-reply-btn" onclick="replyToReply('${c.id}')">답글</button>` : ''}
                     </div>
                   `;
                 }).join('')}
               </div>` : ''}
 
-            <div class="reply-input-wrap" id="replyWrap_${c.id}" style="display:none;">
-              <textarea class="reply-textarea" id="replyText_${c.id}" rows="2" placeholder="답글을 입력하세요..."></textarea>
+            <div class="reply-input-wrap" id="replyWrap_${c.id}" data-parent-nick="${escAttr(c.author_nickname)}" style="display:none;">
+              <div style="position:relative;">
+                <textarea class="reply-textarea" id="replyText_${c.id}" rows="2" placeholder="답글을 입력하세요..."></textarea>
+                <div id="replyMentionDropdown_${c.id}" class="mention-dropdown" style="display:none;"></div>
+              </div>
+              <div id="replyMentionChips_${c.id}" class="mention-chips-wrap"></div>
               <div style="display:flex; gap:8px; justify-content:flex-end;">
                 <button onclick="toggleReply('${c.id}')" class="btn-ghost" style="padding:6px 14px; font-size:12px;">취소</button>
                 <button onclick="submitReply('${c.id}')" class="btn-secondary" style="padding:6px 14px; font-size:12px;">등록</button>
@@ -1182,17 +1286,144 @@
         .replace(/\n/g,'<br>');
     }
 
+    function highlightMentions(html) {
+      return html.replace(/@([^\s<&]+)/g, (match, nick) =>
+        allNicknames.includes(nick)
+          ? `<span class="mention">@${nick}</span>`
+          : match
+      );
+    }
+
+    async function sendMentionNotifications(content, skipAuthorNick) {
+      const matches = [...content.matchAll(/@([^\s@]+)/g)].map(m => m[1]);
+      const unique  = [...new Set(matches)];
+      const toNotify = unique.filter(nick =>
+        nick !== myNick &&
+        allNicknames.includes(nick) &&
+        nick !== skipAuthorNick
+      );
+      if (!toNotify.length) return;
+      await sb.from('notifications').insert(
+        toNotify.map(nick => ({
+          user_nickname: nick,
+          type:          'adoption_mention',
+          message:       `💬 "${currentAdoption.character_name}" 분양 댓글에서 ${myNick}님이 언급했어요.`,
+          link:          `adoption-detail.html?id=${adoptionId}`,
+        }))
+      );
+    }
+
+    // ── 멘션 자동완성 ──────────────────────────────────
+    function _getDropdownEl(ta) {
+      if (ta.id === 'commentTextarea') return document.getElementById('commentMentionDropdown');
+      const m = ta.id.match(/^replyText_(.+)$/);
+      return m ? document.getElementById(`replyMentionDropdown_${m[1]}`) : null;
+    }
+
+    function getChipsEl(ta) {
+      if (ta.id === 'commentTextarea') return document.getElementById('commentMentionChips');
+      const m = ta.id.match(/^replyText_(.+)$/);
+      return m ? document.getElementById(`replyMentionChips_${m[1]}`) : null;
+    }
+
+    function mentionSearch(ta) {
+      const cursor = ta.selectionStart;
+      const before = ta.value.substring(0, cursor);
+      const atIdx  = before.lastIndexOf('@');
+      if (atIdx === -1) { hideMentionDropdown(); return; }
+      const query = before.substring(atIdx + 1);
+      if (/\s/.test(query)) { hideMentionDropdown(); return; }
+      const results = allNicknames
+        .filter(n => n !== myNick && n.toLowerCase().includes(query.toLowerCase()))
+        .slice(0, 8);
+      if (!results.length) { hideMentionDropdown(); return; }
+      showMentionDropdown(ta, results);
+    }
+
+    function showMentionDropdown(ta, results) {
+      const dropdown = _getDropdownEl(ta);
+      if (!dropdown) return;
+      dropdown.innerHTML = results.map(n =>
+        `<div class="mention-dropdown-item"
+          onmousedown="event.preventDefault(); selectMention('${escAttr(n)}', document.getElementById('${ta.id}'))">@${n}</div>`
+      ).join('');
+      dropdown.style.display = 'block';
+    }
+
+    function hideMentionDropdown() {
+      document.querySelectorAll('.mention-dropdown').forEach(d => d.style.display = 'none');
+    }
+
+    function selectMention(nick, ta) {
+      const cursor = ta.selectionStart;
+      const before = ta.value.substring(0, cursor);
+      const atIdx  = before.lastIndexOf('@');
+      ta.value = ta.value.substring(0, atIdx) + `@${nick} ` + ta.value.substring(cursor);
+      const newPos = atIdx + nick.length + 2;
+      ta.focus();
+      ta.setSelectionRange(newPos, newPos);
+      if (!activeMentions.has(ta.id)) activeMentions.set(ta.id, new Set());
+      activeMentions.get(ta.id).add(nick);
+      updateMentionChips(ta);
+      hideMentionDropdown();
+    }
+
+    function updateMentionChips(ta) {
+      const chipsEl = getChipsEl(ta);
+      if (!chipsEl) return;
+      const mentions = activeMentions.get(ta.id);
+      if (!mentions || !mentions.size) { chipsEl.innerHTML = ''; return; }
+      const inContent = [...mentions].filter(n => ta.value.includes(`@${n}`));
+      if (!inContent.length) { chipsEl.innerHTML = ''; return; }
+      chipsEl.innerHTML = inContent.map(n =>
+        `<span class="mention-chip">@${n}
+          <button class="mention-chip-remove" title="멘션 제거"
+            onmousedown="event.preventDefault(); removeMentionChip('${escAttr(n)}', document.getElementById('${ta.id}'))">×</button>
+        </span>`
+      ).join('');
+    }
+
+    function removeMentionChip(nick, ta) {
+      ta.value = ta.value.replace(new RegExp(`@${nick.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s?`, 'g'), '');
+      const mentions = activeMentions.get(ta.id);
+      if (mentions) mentions.delete(nick);
+      updateMentionChips(ta);
+      ta.focus();
+    }
+
     function toggleReply(parentId) {
-      const wrap = document.getElementById(`replyWrap_${parentId}`);
+      const wrap   = document.getElementById(`replyWrap_${parentId}`);
       const isOpen = wrap.style.display === 'block';
+      if (isOpen) {
+        activeMentions.delete(`replyText_${parentId}`);
+        const chips = document.getElementById(`replyMentionChips_${parentId}`);
+        if (chips) chips.innerHTML = '';
+      }
       wrap.style.display = isOpen ? 'none' : 'block';
-      if (!isOpen) document.getElementById(`replyText_${parentId}`).focus();
+      if (!isOpen) {
+        const ta         = document.getElementById(`replyText_${parentId}`);
+        const parentNick = wrap.dataset.parentNick;
+        if (parentNick && parentNick !== myNick && !ta.value.trim()) {
+          ta.value = `@${parentNick} `;
+          if (!activeMentions.has(ta.id)) activeMentions.set(ta.id, new Set());
+          activeMentions.get(ta.id).add(parentNick);
+          updateMentionChips(ta);
+        }
+        ta.focus();
+      }
     }
 
     function replyToReply(parentId) {
-      const wrap = document.getElementById(`replyWrap_${parentId}`);
+      const wrap       = document.getElementById(`replyWrap_${parentId}`);
       wrap.style.display = 'block';
-      const ta = document.getElementById(`replyText_${parentId}`);
+      const ta         = document.getElementById(`replyText_${parentId}`);
+      const parentNick = wrap.dataset.parentNick;
+      if (parentNick && parentNick !== myNick && !ta.value.trim()) {
+        ta.value = `@${parentNick} `;
+        if (!activeMentions.has(ta.id)) activeMentions.set(ta.id, new Set());
+        activeMentions.get(ta.id).add(parentNick);
+        updateMentionChips(ta);
+      }
       ta.focus();
     }
 
@@ -1210,17 +1441,25 @@
       });
       if (error) { errorEl.textContent = '등록에 실패했어요.'; return; }
       ta.value = '';
+      activeMentions.delete('commentTextarea');
+      document.getElementById('commentMentionChips').innerHTML = '';
+
+      const notifyPromises = [];
 
       // 분양자에게 댓글 알림 (본인 글 제외)
       if (currentAdoption && myNick !== currentAdoption.author) {
-        await sb.from('notifications').insert({
+        notifyPromises.push(sb.from('notifications').insert({
           user_nickname: currentAdoption.author,
           type:          'adoption_comment',
           message:       `💬 "${currentAdoption.character_name}" 분양 글에 댓글이 달렸어요.`,
           link:          `adoption-detail.html?id=${adoptionId}`,
-        });
+        }));
       }
 
+      // 멘션 알림 (분양자는 이미 adoption_comment 알림을 받으므로 제외)
+      notifyPromises.push(sendMentionNotifications(content, currentAdoption?.author));
+
+      await Promise.all(notifyPromises);
       loadComments();
     }
 
@@ -1236,17 +1475,27 @@
         content,
       });
       if (error) { alert('등록에 실패했어요.'); return; }
+      ta.value = '';
+      activeMentions.delete(ta.id);
+      const chipsEl = getChipsEl(ta);
+      if (chipsEl) chipsEl.innerHTML = '';
 
-      // 분양자에게 댓글 알림
+      const replyNotifyPromises = [];
+
+      // 분양자에게 댓글 알림 (본인 글 제외)
       if (currentAdoption && myNick !== currentAdoption.author) {
-        await sb.from('notifications').insert({
+        replyNotifyPromises.push(sb.from('notifications').insert({
           user_nickname: currentAdoption.author,
           type:          'adoption_comment',
           message:       `💬 "${currentAdoption.character_name}" 분양 글에 댓글이 달렸어요.`,
           link:          `adoption-detail.html?id=${adoptionId}`,
-        });
+        }));
       }
 
+      // 멘션 알림 (분양자 중복 제외)
+      replyNotifyPromises.push(sendMentionNotifications(content, currentAdoption?.author));
+
+      await Promise.all(replyNotifyPromises);
       loadComments();
     }
 
@@ -1282,6 +1531,21 @@
 
       window.location.href = 'adoption.html';
     }
+
+    // ── 멘션 자동완성 이벤트 위임 ──────────────────────────
+    document.addEventListener('input', e => {
+      const ta = e.target;
+      if (!ta.matches('#commentTextarea, [id^="replyText_"]')) return;
+      mentionSearch(ta);
+      const mentions = activeMentions.get(ta.id);
+      if (mentions && mentions.size) updateMentionChips(ta);
+    });
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') hideMentionDropdown();
+    });
+    document.addEventListener('click', e => {
+      if (!e.target.closest('.mention-dropdown')) hideMentionDropdown();
+    });
 
     initPage();
   </script>
