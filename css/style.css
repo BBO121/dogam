@@ -4075,7 +4075,7 @@ a {
     grid-template-columns: 1fr 1fr;
     gap: 8px;
   }
-  .species-detail-actions > * { text-align: center; justify-content: center; }
+  .species-detail-actions > * { text-align: center; justify-content: center; width: 100%; }
 
   /* 알림 패널 — 전체 너비 */
   .notif-panel {
