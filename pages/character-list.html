@@ -69,10 +69,9 @@
     let idToNick      = {};
     let isInitialLoad = true;
     let ownerParamId = null;
-    const _qs        = new URLSearchParams(window.location.search);
-    const ownerParam = _qs.get('owner');
-    const ownerIdParam  = _qs.get('owner_id');   // UUID 기준 조회
-    const ownerNameParam = _qs.get('owner_name'); // 화면 표시용 이름
+    const _qs          = new URLSearchParams(window.location.search);
+    const ownerParam   = _qs.get('owner');
+    const ownerIdParam = _qs.get('owner_id'); // UUID 기준 조회
     const pager = createPager(render);
 
     async function loadCharacters() {
@@ -93,7 +92,7 @@
       if (ownerIdParam) {
         // UUID 기준 직접 조회 (프로필 더보기 전용)
         ownerParamId = ownerIdParam;
-        const displayLabel = ownerNameParam || idToNick[ownerIdParam] || ownerIdParam;
+        const displayLabel = idToNick[ownerIdParam] || ownerIdParam;
         document.querySelector('.list-page-title').textContent = `${displayLabel}의 개체`;
       } else if (ownerParam && userList) {
         const found = userList.find(u => u.nickname === ownerParam);

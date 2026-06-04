@@ -423,10 +423,10 @@
       const speciesMoreEl = document.getElementById('speciesMoreLink');
       const charMoreEl    = document.getElementById('charMoreLink');
       if (speciesMoreEl) speciesMoreEl.href = found?.id
-        ? `my-species.html?owner_id=${found.id}&owner_name=${encodeURIComponent(displayName)}`
+        ? `my-species.html?owner_id=${found.id}`
         : `my-species.html?owner=${encodeURIComponent(displayName)}`;
       if (charMoreEl)    charMoreEl.href    = found?.id
-        ? `character-list.html?owner_id=${found.id}&owner_name=${encodeURIComponent(displayName)}`
+        ? `character-list.html?owner_id=${found.id}`
         : `character-list.html?owner=${encodeURIComponent(displayName)}`;
 
       document.getElementById('profileLoading').style.display = 'none';
