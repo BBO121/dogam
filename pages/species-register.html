@@ -216,10 +216,29 @@
   <script>
     let currentUser = null;
 
+    function _decodeJwt(token) {
+      try { return JSON.parse(atob(token.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); }
+      catch(e) { return null; }
+    }
+
     async function init() {
-      const { error: refreshError } = await sb.auth.refreshSession();
-      if (refreshError) { console.error('세션 갱신 실패:', refreshError); }
+      const { data: refreshData, error: refreshError } = await sb.auth.refreshSession();
+      console.group('[RLS 진단] init()');
+      console.log('1) refreshError:', refreshError);
+      if (refreshData?.session?.access_token) {
+        const jwt = _decodeJwt(refreshData.session.access_token);
+        console.log('2) JWT 전체 payload:', jwt);
+        console.log('3) JWT user_metadata.role:', jwt?.user_metadata?.role);
+        console.log('4) JWT app_metadata:', jwt?.app_metadata);
+        console.log('5) JWT sub(uid):', jwt?.sub);
+      } else {
+        console.warn('2) refreshData.session 없음:', refreshData);
+      }
+      console.groupEnd();
+
       currentUser = await getUser();
+      console.log('[RLS 진단] getUser() user_metadata.role:', currentUser?.user_metadata?.role);
+
       if (!currentUser) { window.location.href = 'login.html'; return; }
       const role = currentUser.user_metadata?.role;
       if (!isAdminOrStaff(role) && role !== 'species_owner') { window.location.href = 'index.html'; return; }
@@ -420,6 +439,22 @@
         const isSensitive  = document.getElementById('isSensitive').checked;
         const sensitiveNote = document.getElementById('sensitiveNote').value.trim();
 
+        // ── RLS 진단: INSERT 직전 세션 재확인 ──────────────
+        const { data: sesData } = await sb.auth.getSession();
+        const jwtNow = sesData?.session?.access_token ? _decodeJwt(sesData.session.access_token) : null;
+        const insertPayload = {
+          name, owner_nickname: nickname, owner_user_id: currentUser.id,
+        };
+        console.group('[RLS 진단] submitSpecies INSERT 직전');
+        console.log('A) currentUser.id:', currentUser.id);
+        console.log('B) currentUser user_metadata.role:', currentUser.user_metadata?.role);
+        console.log('C) 현재 JWT user_metadata.role:', jwtNow?.user_metadata?.role);
+        console.log('D) 현재 JWT app_metadata:', jwtNow?.app_metadata);
+        console.log('E) 현재 JWT sub(uid):', jwtNow?.sub);
+        console.log('F) INSERT 핵심 payload:', insertPayload);
+        console.groupEnd();
+        // ─────────────────────────────────────────────────
+
         const { data, error } = await sb.from('species').insert({
           name,
           description:    desc || null,
@@ -438,7 +473,14 @@
           allow_other_adoption: document.getElementById('allowOtherAdoption').checked,
         }).select('id').single();
 
-        if (error) throw new Error(`등록에 실패했어요: ${error.message}`);
+        if (error) {
+          console.group('[RLS 진단] INSERT 에러');
+          console.error('error 전체 객체:', error);
+          console.error('code:', error.code, '/ message:', error.message);
+          console.error('details:', error.details, '/ hint:', error.hint);
+          console.groupEnd();
+          throw new Error(`등록에 실패했어요: ${error.message}`);
+        }
 
         window.location.href = `species.html?id=${data.id}`;
       } catch (err) {
