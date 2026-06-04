@@ -5,10 +5,132 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>내 캐릭터 — 종족연구소</title>
   <link rel="stylesheet" href="../css/style.css">
+  <style>
+    /* 폴더 칩 */
+    .folder-chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:16px; }
+    .folder-chip {
+      padding:6px 12px; border:1.5px solid var(--border); border-radius:9px;
+      background:#fff; font-size:13px; font-weight:600; color:var(--text-sub);
+      cursor:pointer; font-family:inherit; transition:all 0.15s; white-space:nowrap;
+    }
+    .folder-chip:hover  { border-color:var(--sky-dark); color:var(--sky-dark); }
+    .folder-chip.active { background:var(--sky-dark); border-color:var(--sky-dark); color:#fff; }
+    .folder-chip-count  { font-weight:500; margin-left:4px; opacity:0.85; }
+    .folder-chip-manage {
+      padding:6px 12px; border:1.5px solid var(--sky-dark); border-radius:9px;
+      background:#fff; font-size:13px; font-weight:600; color:var(--sky-dark);
+      cursor:pointer; font-family:inherit; transition:all 0.15s; white-space:nowrap;
+    }
+    .folder-chip-manage:hover { background:var(--sky-pale); }
+
+    /* 카드 이름 행 (이름 + ⋮ 메뉴) */
+    .card-name-row { display:flex; align-items:flex-start; gap:4px; }
+    .card-name-row .character-name { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .card-menu-wrap { position:relative; flex-shrink:0; }
+    .card-menu-btn {
+      width:22px; height:22px; border-radius:4px;
+      background:transparent; border:none;
+      cursor:pointer; font-size:15px; font-weight:700;
+      display:flex; align-items:center; justify-content:center;
+      color:var(--text-mute); transition:background 0.12s, color 0.12s;
+      line-height:1;
+    }
+    .card-menu-btn:hover { background:var(--border); color:var(--text); }
+
+    /* 드롭다운 (버튼 위쪽으로 열림) */
+    .card-menu-dropdown {
+      position:absolute; bottom:calc(100% + 4px); right:0; z-index:200;
+      background:#fff; border:1px solid var(--border); border-radius:10px;
+      box-shadow:0 4px 12px rgba(0,0,0,0.12); min-width:140px; overflow:hidden;
+    }
+    .card-menu-item {
+      padding:10px 16px; font-size:13px; cursor:pointer;
+      transition:background 0.1s; white-space:nowrap; color:var(--text);
+    }
+    .card-menu-item:hover        { background:var(--sky-pale); }
+    .card-menu-item.danger       { color:#ef4444; }
+    .card-menu-item.danger:hover { background:#fff5f5; }
+
+    /* 개체 추가 플레이스홀더 — 액션 카드 */
+    .add-char-placeholder {
+      position:relative;
+      border:2px dashed var(--border); border-radius:var(--radius); overflow:hidden;
+      cursor:pointer; background:#fafbfc;
+      transition:border-color 0.15s, background 0.15s;
+    }
+    .add-char-placeholder:hover { border-color:var(--sky-dark); background:var(--sky-pale); }
+    .add-char-placeholder:hover .acp-plus  { color:var(--sky-dark); }
+    .add-char-placeholder:hover .acp-label { color:var(--sky-deep); }
+    .acp-sizer { opacity:0; pointer-events:none; }
+    .acp-inner {
+      position:absolute; inset:0;
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+    }
+    .acp-plus  { font-size:32px; color:var(--border); line-height:1; transition:color 0.15s; }
+    .acp-label { font-size:14px; font-weight:700; color:var(--text-mute); transition:color 0.15s; }
+
+    /* 공통 모달 */
+    .modal-overlay {
+      position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:500;
+      display:flex; align-items:center; justify-content:center; padding:20px;
+    }
+    .modal-box {
+      background:#fff; border-radius:var(--radius); padding:24px;
+      width:100%; display:flex; flex-direction:column; gap:14px; overflow:hidden;
+    }
+    .modal-title { font-size:16px; font-weight:700; margin:0; }
+
+    /* 폴더 관리 모달 */
+    .folder-list { display:flex; flex-direction:column; gap:8px; overflow-y:auto; max-height:280px; min-height:0; }
+    .folder-list-item {
+      display:flex; align-items:center; gap:8px; padding:10px 12px;
+      border:1px solid var(--border); border-radius:9px; background:#fafbfc;
+    }
+    .folder-list-name  { flex:1; font-size:14px; font-weight:600; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .folder-list-count { font-size:12px; color:var(--text-mute); flex-shrink:0; }
+    .folder-list-edit  { border:none; background:none; font-size:12px; color:var(--sky-deep); cursor:pointer; padding:2px 6px; flex-shrink:0; }
+    .folder-list-del   { border:none; background:none; font-size:12px; color:#ef4444;  cursor:pointer; padding:2px 6px; flex-shrink:0; }
+    .folder-add-row    { display:flex; gap:8px; flex-wrap:wrap; }
+    .folder-add-input  { flex:1; min-width:0; padding:9px 12px; border:1.5px solid var(--border); border-radius:9px; font-size:14px; font-family:inherit; outline:none; }
+    .folder-add-input:focus { border-color:var(--sky-dark); }
+    @media (max-width:480px) {
+      .folder-add-row { flex-direction:column; }
+      .folder-add-row .btn-secondary { width:100%; justify-content:center; }
+    }
+
+    /* 폴더 선택 모달 */
+    .folder-select-item {
+      padding:11px 14px; font-size:14px; font-weight:600; cursor:pointer;
+      border:1px solid var(--border); border-radius:9px; background:#fafbfc;
+      transition:background 0.15s, border-color 0.15s;
+    }
+    .folder-select-item:hover  { background:var(--sky-pale); border-color:var(--sky-light); }
+    .folder-select-item.active { background:var(--sky-pale); border-color:var(--sky-dark); color:var(--sky-deep); }
+
+    /* 개체 추가 모달 */
+    .add-char-modal { max-width:600px; max-height:85vh; }
+    .add-char-search {
+      width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:9px;
+      font-size:14px; font-family:inherit; outline:none; box-sizing:border-box; flex-shrink:0;
+    }
+    .add-char-search:focus { border-color:var(--sky-dark); }
+    .add-char-grid {
+      display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr));
+      gap:10px; overflow-y:auto; flex:1;
+    }
+    .add-char-card {
+      border:2px solid var(--border); border-radius:10px; overflow:hidden;
+      cursor:pointer; transition:border-color 0.15s, transform 0.1s; background:#fff;
+    }
+    .add-char-card:hover { border-color:var(--sky-dark); transform:translateY(-2px); }
+    .add-char-card-img  { width:100%; aspect-ratio:3/4; background:#f8fafc; background-size:cover; background-position:center; }
+    .add-char-card-info { padding:5px 7px 7px; }
+    .add-char-card-name    { font-size:12px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .add-char-card-species { font-size:11px; color:var(--text-mute); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  </style>
 </head>
 <body>
 
-  <!-- 헤더 -->
   <header class="header">
     <div class="header-inner">
       <a href="index.html" class="logo">종족연구소</a>
@@ -19,10 +141,7 @@
   </header>
 
   <div class="layout">
-
     <aside class="sidebar" id="sidebar"></aside>
-
-    <!-- 메인 콘텐츠 -->
     <main class="main">
 
       <div id="pageLoading" class="page-loading">불러오는 중...</div>
@@ -36,43 +155,73 @@
           </div>
         </div>
 
-        <!-- 필터 -->
+        <div class="folder-chips" id="folderChips"></div>
+
         <div class="list-controls">
-          <input
-            type="text"
-            id="filterInput"
-            class="list-search"
-            placeholder="이름으로 검색..."
-            oninput="filterCards()"
-          >
+          <input type="text" id="filterInput" class="list-search" placeholder="이름으로 검색..." oninput="filterCards()">
           <select class="list-sort" id="speciesFilter" onchange="filterCards()">
             <option value="">전체 종족</option>
           </select>
         </div>
 
-        <!-- 캐릭터 그리드 -->
         <div class="character-grid" id="charGrid"></div>
         <div id="paginationWrap"></div>
 
-        <!-- 빈 상태 -->
         <div id="emptyState" class="empty-state-wrap" style="display:none;">
           <div class="empty-state-icon">⭐</div>
           <p class="empty-state-title">등록된 개체가 없어요</p>
           <p class="empty-state-desc">아직 소유한 개체가 없어요.</p>
         </div>
-
-        <!-- 검색 결과 없음 -->
         <p id="noResult" class="empty-state" style="display:none;">검색 결과가 없어요.</p>
 
       </div>
-
     </main>
   </div>
 
-  <!-- 푸터 -->
   <footer class="footer">
     <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.1</p>
   </footer>
+
+  <!-- 폴더 관리 모달 -->
+  <div id="folderModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:380px; max-height:80vh;">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <h3 class="modal-title">폴더 관리</h3>
+        <button onclick="closeFolderModal()" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--text-mute);">✕</button>
+      </div>
+      <div class="folder-list" id="folderList"></div>
+      <div class="folder-add-row">
+        <input type="text" id="folderAddInput" class="folder-add-input" placeholder="새 폴더 이름..." maxlength="20"
+          onkeydown="if(event.key==='Enter') addFolder()">
+        <button onclick="addFolder()" class="btn-secondary" style="padding:9px 16px; font-size:13px; flex-shrink:0;">추가</button>
+      </div>
+      <p id="folderModalError" style="font-size:13px; color:#ef4444; margin:0; min-height:18px;"></p>
+    </div>
+  </div>
+
+  <!-- 폴더 선택 모달 -->
+  <div id="folderSelectModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="max-width:280px; max-height:70vh;">
+      <div style="display:flex; align-items:center; justify-content:space-between;">
+        <h3 class="modal-title">폴더 변경</h3>
+        <button onclick="closeFolderSelectModal()" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--text-mute);">✕</button>
+      </div>
+      <div class="folder-list" id="folderSelectList"></div>
+    </div>
+  </div>
+
+  <!-- 개체 추가 모달 -->
+  <div id="addCharModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box add-char-modal">
+      <div style="display:flex; align-items:center; justify-content:space-between; flex-shrink:0;">
+        <h3 class="modal-title" id="addCharModalTitle">개체 추가</h3>
+        <button onclick="closeAddCharModal()" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--text-mute);">✕</button>
+      </div>
+      <input type="text" id="addCharSearch" class="add-char-search" placeholder="개체명 또는 종족명 검색..."
+        oninput="renderAddCharGrid()">
+      <div class="add-char-grid" id="addCharGrid"></div>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/auth.js"></script>
@@ -80,94 +229,409 @@
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
   <script>
-    let allChars = [];
+    let allChars       = [];
+    let allFolders     = [];
+    let activeFolder   = 'all';
+    let currentUser    = null;
+    let openMenuId     = null;
+    let menuTargetChar = null;
     const pager = createPager(renderCards);
 
+    // ── 초기화 ─────────────────────────────────────────
     async function initPage() {
-      const user = await getUser();
-      if (!user) {
-        window.location.href = 'login.html';
-        return;
-      }
+      currentUser = await getUser();
+      if (!currentUser) { window.location.href = 'login.html'; return; }
 
-      const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname || '유저';
-      const { data, error } = await getMyCharacters(user.id, nickname);
+      const nickname = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname || '유저';
+      const [{ data: chars, error }, { data: folders }] = await Promise.all([
+        getMyCharacters(currentUser.id, nickname),
+        sb.from('character_folders').select('*').eq('user_id', currentUser.id).order('created_at'),
+      ]);
 
       document.getElementById('pageLoading').style.display = 'none';
-      document.getElementById('pageContent').style.display = 'block';
+      document.getElementById('pageContent').style.display  = 'block';
 
-      if (error || !data) {
-        document.getElementById('emptyState').style.display = 'flex';
-        return;
-      }
+      if (error || !chars) { document.getElementById('emptyState').style.display = 'flex'; return; }
 
-      allChars = data;
-      document.getElementById('charCount').textContent = data.length;
+      allChars   = chars;
+      allFolders = folders || [];
+      document.getElementById('charCount').textContent = chars.length;
 
-      if (data.length === 0) {
-        document.getElementById('emptyState').style.display = 'flex';
-        return;
-      }
+      if (chars.length === 0) { document.getElementById('emptyState').style.display = 'flex'; return; }
 
-      // 종족 필터 옵션 생성
-      const species = [...new Set(data.map(c => c.species_name).filter(Boolean))];
-      const select  = document.getElementById('speciesFilter');
+      const species = [...new Set(chars.map(c => c.species_name).filter(Boolean))];
+      const sel     = document.getElementById('speciesFilter');
       species.forEach(s => {
         const opt = document.createElement('option');
-        opt.value = s;
-        opt.textContent = s;
-        select.appendChild(opt);
+        opt.value = s; opt.textContent = s;
+        sel.appendChild(opt);
       });
 
-      pager.load(data);
+      renderFolderChips();
+      pager.load(chars);
     }
 
-    function revealSensitive(overlayEl, e) {
-      e.stopPropagation(); e.preventDefault();
-      const wrap = overlayEl.parentElement;
-      wrap.querySelectorAll('.blurred').forEach(el => el.classList.remove('blurred'));
-      overlayEl.remove();
+    // ── 폴더 칩 ───────────────────────────────────────
+    function renderFolderChips() {
+      const noneCount = allChars.filter(c => !c.folder_id).length;
+      document.getElementById('folderChips').innerHTML = `
+        <button class="folder-chip ${activeFolder === 'all' ? 'active' : ''}" onclick="setFolderFilter('all')">
+          전체<span class="folder-chip-count">${allChars.length}</span>
+        </button>
+        <button class="folder-chip ${activeFolder === 'none' ? 'active' : ''}" onclick="setFolderFilter('none')">
+          미분류<span class="folder-chip-count">${noneCount}</span>
+        </button>
+        ${allFolders.map(f => {
+          const cnt = allChars.filter(c => c.folder_id === f.id).length;
+          return `<button class="folder-chip ${activeFolder === f.id ? 'active' : ''}" onclick="setFolderFilter(${f.id})">
+            ${escHtml(f.name)}<span class="folder-chip-count">${cnt}</span>
+          </button>`;
+        }).join('')}
+        <button class="folder-chip-manage" onclick="openFolderModal()">폴더 관리</button>
+      `;
     }
 
+    function setFolderFilter(val) {
+      activeFolder = val;
+      renderFolderChips();
+      filterCards();
+    }
+
+    // ── 개체 추가 플레이스홀더 ────────────────────────
+    function addCharPlaceholderHtml() {
+      return typeof activeFolder === 'number'
+        ? `<div class="add-char-placeholder" onclick="openAddCharModal()">
+             <div class="acp-sizer">
+               <div class="character-img"></div>
+               <div class="character-info">
+                 <p class="character-name">&nbsp;</p>
+                 <p class="character-species">&nbsp;</p>
+               </div>
+             </div>
+             <div class="acp-inner">
+               <span class="acp-plus">+</span>
+               <p class="acp-label">개체 추가</p>
+             </div>
+           </div>`
+        : '';
+    }
+
+    // ── 카드 렌더링 ───────────────────────────────────
     function renderCards(list) {
-      const grid = document.getElementById('charGrid');
-      grid.innerHTML = list.map(c => `
-        <a href="character.html?id=${c.id}" class="character-card">
-          ${c.is_sensitive && c.image_url ? `
-          <div style="position:relative; overflow:hidden; border-radius:var(--radius);">
-            <div class="character-img blurred" style="background-image:url('${c.thumbnail_url || c.image_url}');background-size:cover;background-position:center;"></div>
-            <div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span>${c.sensitive_note ? '<span class="sensitive-overlay-note">' + c.sensitive_note + '</span>' : ''}<span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div>
-          </div>` : `
-          <div class="character-img" ${(c.thumbnail_url || c.image_url) ? `style="background-image:url('${c.thumbnail_url || c.image_url}');background-size:cover;background-position:center;"` : ''}></div>`}
-          <div class="character-info">
-            <p class="character-name">${c.name}</p>
-            <p class="character-species">${c.species_name || ''}</p>
-          </div>
-        </a>
-      `).join('');
+      const cardsHtml = list.map(c => {
+        const imgDiv = (c.thumbnail_url || c.image_url)
+          ? `style="background-image:url('${c.thumbnail_url || c.image_url}');background-size:cover;background-position:center;"`
+          : '';
+        const imgHtml = c.is_sensitive && c.image_url
+          ? `<div style="position:relative;overflow:hidden;border-radius:0;">
+               <div class="character-img blurred" ${imgDiv}></div>
+               <div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span>${c.sensitive_note ? '<span class="sensitive-overlay-note">' + c.sensitive_note + '</span>' : ''}<span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div>
+             </div>`
+          : `<div class="character-img" ${imgDiv}></div>`;
+
+        return `
+          <a href="character.html?id=${c.id}" class="character-card"
+             onclick="if(event.target.closest('.card-menu-wrap')){event.preventDefault();event.stopPropagation();return false;}">
+            ${imgHtml}
+            <div class="character-info">
+              <div class="card-name-row">
+                <p class="character-name">${c.name}</p>
+                <div class="card-menu-wrap">
+                  <button class="card-menu-btn" title="메뉴"
+                    onclick="event.preventDefault(); event.stopPropagation(); toggleCardMenu(${c.id})">⋮</button>
+                  <div class="card-menu-dropdown" id="cmenu_${c.id}" style="display:none;">
+                    <div class="card-menu-item" onclick="event.preventDefault(); event.stopPropagation(); openFolderSelectModal(${c.id})">폴더 변경</div>
+                    ${c.folder_id ? `<div class="card-menu-item danger" onclick="event.preventDefault(); event.stopPropagation(); removeFromFolder(${c.id})">미분류로 이동</div>` : ''}
+                  </div>
+                </div>
+              </div>
+              <p class="character-species">${c.species_name || ''}</p>
+            </div>
+          </a>`;
+      }).join('');
+
+      document.getElementById('charGrid').innerHTML = cardsHtml + addCharPlaceholderHtml();
     }
 
+    // ── ⋮ 메뉴 토글 ──────────────────────────────────
+    function toggleCardMenu(charId) {
+      const menuId = `cmenu_${charId}`;
+      if (openMenuId && openMenuId !== menuId) {
+        const prev = document.getElementById(openMenuId);
+        if (prev) prev.style.display = 'none';
+      }
+      const menu = document.getElementById(menuId);
+      if (!menu) return;
+      const isOpen = menu.style.display === 'block';
+      menu.style.display = isOpen ? 'none' : 'block';
+      openMenuId = isOpen ? null : menuId;
+    }
+
+    document.addEventListener('click', e => {
+      if (openMenuId && !e.target.closest('.card-menu-btn') && !e.target.closest('.card-menu-dropdown')) {
+        const el = document.getElementById(openMenuId);
+        if (el) el.style.display = 'none';
+        openMenuId = null;
+      }
+    });
+
+    // ── 폴더 변경 모달 ───────────────────────────────
+    function openFolderSelectModal(charId) {
+      if (openMenuId) {
+        const el = document.getElementById(openMenuId);
+        if (el) el.style.display = 'none';
+        openMenuId = null;
+      }
+      menuTargetChar = charId;
+      const char  = allChars.find(c => c.id === charId);
+      const items = [{ id: null, name: '미분류' }, ...allFolders];
+      document.getElementById('folderSelectList').innerHTML = items.map(f => {
+        const isCurrent = char?.folder_id === f.id;
+        return `<div class="folder-select-item${isCurrent ? ' active' : ''}"
+          onclick="assignFolder(${charId}, ${f.id === null ? 'null' : f.id})">
+          ${escHtml(f.name)}${isCurrent ? ' ✓' : ''}
+        </div>`;
+      }).join('');
+      document.getElementById('folderSelectModal').style.display = 'flex';
+    }
+
+    function closeFolderSelectModal() {
+      document.getElementById('folderSelectModal').style.display = 'none';
+      menuTargetChar = null;
+    }
+
+    document.getElementById('folderSelectModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('folderSelectModal')) closeFolderSelectModal();
+    });
+
+    // ── 폴더 배정 / 제거 ──────────────────────────────
+    async function assignFolder(charId, folderId) {
+      const { error } = await sb.from('characters')
+        .update({ folder_id: folderId })
+        .eq('id', charId)
+        .eq('owner_user_id', currentUser.id);
+      if (error) { alert('폴더 지정에 실패했어요.'); return; }
+      const char = allChars.find(c => c.id === charId);
+      if (char) char.folder_id = folderId;
+      closeFolderSelectModal();
+      renderFolderChips();
+      filterCards();
+    }
+
+    async function removeFromFolder(charId) {
+      if (openMenuId) {
+        const el = document.getElementById(openMenuId);
+        if (el) el.style.display = 'none';
+        openMenuId = null;
+      }
+      const { error } = await sb.from('characters')
+        .update({ folder_id: null })
+        .eq('id', charId)
+        .eq('owner_user_id', currentUser.id);
+      if (error) { alert('처리에 실패했어요.'); return; }
+      const char = allChars.find(c => c.id === charId);
+      if (char) char.folder_id = null;
+      renderFolderChips();
+      filterCards();
+    }
+
+    // ── 필터 ─────────────────────────────────────────
     function filterCards() {
       const q       = document.getElementById('filterInput').value.trim().toLowerCase();
       const species = document.getElementById('speciesFilter').value;
 
       const filtered = allChars.filter(c => {
+        if (activeFolder === 'none' && c.folder_id)                           return false;
+        if (typeof activeFolder === 'number' && c.folder_id !== activeFolder) return false;
         const matchName    = !q || c.name.toLowerCase().includes(q);
         const matchSpecies = !species || c.species_name === species;
         return matchName && matchSpecies;
       });
 
-      document.getElementById('noResult').style.display = filtered.length === 0 ? 'block' : 'none';
-      if (filtered.length === 0) {
-        document.getElementById('charGrid').innerHTML = '';
+      document.getElementById('noResult').style.display = 'none';
+
+      // 빈 폴더 — 추가 카드만 표시
+      if (typeof activeFolder === 'number' && !q && !species && filtered.length === 0) {
+        document.getElementById('charGrid').innerHTML  = addCharPlaceholderHtml();
         document.getElementById('paginationWrap').innerHTML = '';
+        return;
+      }
+      if (filtered.length === 0) {
+        document.getElementById('charGrid').innerHTML  = '';
+        document.getElementById('paginationWrap').innerHTML = '';
+        document.getElementById('noResult').style.display = 'block';
         return;
       }
       pager.load(filtered);
     }
 
+    // ── 개체 추가 모달 ───────────────────────────────
+    function openAddCharModal() {
+      const folder = allFolders.find(f => f.id === activeFolder);
+      document.getElementById('addCharModalTitle').textContent =
+        folder ? `"${folder.name}" 에 개체 추가` : '개체 추가';
+      document.getElementById('addCharSearch').value = '';
+      renderAddCharGrid();
+      document.getElementById('addCharModal').style.display = 'flex';
+    }
+
+    function closeAddCharModal() {
+      document.getElementById('addCharModal').style.display = 'none';
+    }
+
+    document.getElementById('addCharModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('addCharModal')) closeAddCharModal();
+    });
+
+    function renderAddCharGrid() {
+      const q = document.getElementById('addCharSearch').value.trim().toLowerCase();
+      const candidates = allChars.filter(c => {
+        if (typeof activeFolder === 'number' && c.folder_id === activeFolder) return false;
+        return !q || c.name.toLowerCase().includes(q) || (c.species_name || '').toLowerCase().includes(q);
+      });
+      const grid = document.getElementById('addCharGrid');
+      if (!candidates.length) {
+        grid.innerHTML = '<p style="font-size:14px;color:var(--text-mute);padding:12px 0;">추가할 개체가 없어요.</p>';
+        return;
+      }
+      grid.innerHTML = candidates.map(c => {
+        const imgStyle = (c.thumbnail_url || c.image_url)
+          ? `background-image:url('${c.thumbnail_url || c.image_url}');background-size:cover;background-position:center;`
+          : '';
+        return `
+          <div class="add-char-card" onclick="addCharToFolder(${c.id})" title="${escAttr(c.name)}">
+            <div class="add-char-card-img" style="${imgStyle}"></div>
+            <div class="add-char-card-info">
+              <p class="add-char-card-name">${escHtml(c.name)}</p>
+              <p class="add-char-card-species">${escHtml(c.species_name || '')}</p>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function addCharToFolder(charId) {
+      if (typeof activeFolder !== 'number') return;
+      const { error } = await sb.from('characters')
+        .update({ folder_id: activeFolder })
+        .eq('id', charId)
+        .eq('owner_user_id', currentUser.id);
+      if (error) { alert('추가에 실패했어요.'); return; }
+      const char = allChars.find(c => c.id === charId);
+      if (char) char.folder_id = activeFolder;
+      renderFolderChips();
+      renderAddCharGrid();
+      filterCards();
+    }
+
+    // ── 폴더 관리 모달 ───────────────────────────────
+    function openFolderModal() {
+      document.getElementById('folderModalError').textContent = '';
+      document.getElementById('folderAddInput').value = '';
+      renderFolderList();
+      document.getElementById('folderModal').style.display = 'flex';
+      document.getElementById('folderAddInput').focus();
+    }
+
+    function closeFolderModal() {
+      document.getElementById('folderModal').style.display = 'none';
+    }
+
+    document.getElementById('folderModal').addEventListener('click', e => {
+      if (e.target === document.getElementById('folderModal')) closeFolderModal();
+    });
+
+    function renderFolderList() {
+      const el = document.getElementById('folderList');
+      if (!allFolders.length) {
+        el.innerHTML = '<p style="font-size:13px;color:var(--text-mute);padding:4px 0;">아직 폴더가 없어요.</p>';
+        return;
+      }
+      el.innerHTML = allFolders.map(f => {
+        const cnt = allChars.filter(c => c.folder_id === f.id).length;
+        return `
+          <div class="folder-list-item" id="fi_${f.id}">
+            <span class="folder-list-name">${escHtml(f.name)}</span>
+            <span class="folder-list-count">${cnt}개</span>
+            <button class="folder-list-edit" onclick="startEditFolder(${f.id})">수정</button>
+            <button class="folder-list-del"  onclick="deleteFolder(${f.id})">삭제</button>
+          </div>`;
+      }).join('');
+    }
+
+    async function addFolder() {
+      const input = document.getElementById('folderAddInput');
+      const name  = input.value.trim();
+      const errEl = document.getElementById('folderModalError');
+      errEl.textContent = '';
+      if (!name) { errEl.textContent = '폴더 이름을 입력해주세요.'; return; }
+      if (allFolders.some(f => f.name === name)) { errEl.textContent = '같은 이름의 폴더가 이미 있어요.'; return; }
+      const { data, error } = await sb.from('character_folders')
+        .insert({ user_id: currentUser.id, name }).select().single();
+      if (error) { errEl.textContent = '폴더 생성에 실패했어요.'; return; }
+      allFolders.push(data);
+      input.value = '';
+      renderFolderList();
+      renderFolderChips();
+    }
+
+    function startEditFolder(id) {
+      const folder = allFolders.find(f => f.id === id);
+      if (!folder) return;
+      const item = document.getElementById(`fi_${id}`);
+      item.innerHTML = `
+        <input id="fedit_${id}" class="folder-add-input" value="${escAttr(folder.name)}" maxlength="20"
+          style="flex:1;min-width:0;padding:6px 10px;font-size:13px;"
+          onkeydown="if(event.key==='Enter')confirmEditFolder(${id});if(event.key==='Escape')renderFolderList();">
+        <button class="folder-list-edit" onclick="confirmEditFolder(${id})">저장</button>
+        <button class="folder-list-del"  onclick="renderFolderList()">취소</button>
+      `;
+      document.getElementById(`fedit_${id}`)?.focus();
+    }
+
+    async function confirmEditFolder(id) {
+      const input = document.getElementById(`fedit_${id}`);
+      const name  = input?.value.trim();
+      const errEl = document.getElementById('folderModalError');
+      errEl.textContent = '';
+      if (!name) { errEl.textContent = '폴더 이름을 입력해주세요.'; return; }
+      if (allFolders.some(f => f.name === name && f.id !== id)) { errEl.textContent = '같은 이름의 폴더가 이미 있어요.'; return; }
+      const { error } = await sb.from('character_folders').update({ name }).eq('id', id);
+      if (error) { errEl.textContent = '수정에 실패했어요.'; return; }
+      const folder = allFolders.find(f => f.id === id);
+      if (folder) folder.name = name;
+      renderFolderList();
+      renderFolderChips();
+      filterCards();
+    }
+
+    async function deleteFolder(id) {
+      const folder = allFolders.find(f => f.id === id);
+      const cnt    = allChars.filter(c => c.folder_id === id).length;
+      const msg    = cnt > 0
+        ? `"${folder.name}" 폴더를 삭제할까요?\n폴더 안의 개체 ${cnt}개는 미분류로 이동됩니다.`
+        : `"${folder.name}" 폴더를 삭제할까요?`;
+      if (!confirm(msg)) return;
+      const { error } = await sb.from('character_folders').delete().eq('id', id);
+      if (error) { alert('삭제에 실패했어요.'); return; }
+      allFolders = allFolders.filter(f => f.id !== id);
+      allChars.forEach(c => { if (c.folder_id === id) c.folder_id = null; });
+      if (activeFolder === id) activeFolder = 'all';
+      renderFolderList();
+      renderFolderChips();
+      filterCards();
+    }
+
+    // ── 유틸 ─────────────────────────────────────────
+    function revealSensitive(overlayEl, e) {
+      e.stopPropagation(); e.preventDefault();
+      overlayEl.parentElement.querySelectorAll('.blurred').forEach(el => el.classList.remove('blurred'));
+      overlayEl.remove();
+    }
+
+    function escAttr(str) { return String(str).replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+    function escHtml(str) { return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
     initPage();
   </script>
 </body>
 </html>
-
