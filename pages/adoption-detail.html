@@ -46,6 +46,8 @@
       border:none; background:none; color:var(--sky-deep);
       cursor:pointer; font-size:15px; line-height:1; padding:0;
     }
+    .detail-link { color:inherit; text-decoration:none; cursor:pointer; }
+    .detail-link:hover { color:var(--sky-deep); text-decoration:underline; }
     .comment-reply-btn { border:none; background:none; font-size:12px; color:var(--sky-deep); cursor:pointer; padding:4px 0 0; }
     .replies { margin-top:10px; padding-left:16px; border-left:2px solid var(--border); display:flex; flex-direction:column; gap:8px; }
     .reply-item { padding:10px 12px; background:var(--sky-pale); border-radius:8px; }
@@ -402,9 +404,24 @@
         a.status === '확인 대기중' ? ' adoption-status--pending' :
         a.status === '즉분 대기중' ? ' adoption-status--pending' : ''}`;
 
-      document.getElementById('detailCharName').textContent = a.character_name || '—';
-      document.getElementById('detailSpecies').textContent  = a.species_name   || '—';
-      document.getElementById('detailAuthor').textContent   = (a.user_id && idToNick[a.user_id]) || a.author || '익명';
+      const charName = a.character_name || '—';
+      document.getElementById('detailCharName').innerHTML = a.character_id
+        ? `<a href="character.html?id=${a.character_id}" class="detail-link">${charName}</a>`
+        : charName;
+
+      const speciesName = a.species_name || '—';
+      if (a.species_name) {
+        const { data: sp } = await sb.from('species').select('id').eq('name', a.species_name).maybeSingle();
+        document.getElementById('detailSpecies').innerHTML = sp?.id
+          ? `<a href="species.html?id=${sp.id}" class="detail-link">${speciesName}</a>`
+          : speciesName;
+      } else {
+        document.getElementById('detailSpecies').textContent = speciesName;
+      }
+
+      const authorNick = (a.user_id && idToNick[a.user_id]) || a.author || '익명';
+      document.getElementById('detailAuthor').innerHTML =
+        `<a href="profile.html?user=${encodeURIComponent(authorNick)}" class="detail-link">${authorNick}</a>`;
 
       const date = new Date(a.created_at).toLocaleDateString('ko-KR', {
         year: 'numeric', month: '2-digit', day: '2-digit'
@@ -685,6 +702,7 @@
 
       if (updateErr) { alert('오류가 발생했어요.'); return; }
 
+      // 당첨자 + 분양자 기존 알림
       await sb.from('notifications').insert([
         {
           user_nickname: winner,
@@ -699,6 +717,22 @@
           link:          `adoption-detail.html?id=${adoptionId}`,
         },
       ]);
+
+      // 낙첨자 알림 (당첨자·분양자 제외, 중복 제거)
+      const losers = [...new Set(
+        apps.map(ap => ap.applicant_nickname)
+            .filter(nick => nick !== winner && nick !== currentAdoption.author)
+      )];
+      if (losers.length > 0) {
+        await sb.from('notifications').insert(
+          losers.map(nick => ({
+            user_nickname: nick,
+            type:          'raffle_lose',
+            message:       `🎲 참여한 "${currentAdoption.character_name}" 추첨이 완료됐어요. 이번엔 아쉽지만 다음 기회에!`,
+            link:          `adoption-detail.html?id=${adoptionId}`,
+          }))
+        );
+      }
 
       alert('추첨 완료!');
       location.reload();
@@ -1020,12 +1054,31 @@
 
       if (error) { alert('오류가 발생했어요.'); return; }
 
+      // 낙찰자 기존 알림
       await sb.from('notifications').insert({
         user_nickname: name,
         type:          'auction_win',
         message:       `🏆 "${currentAdoption.character_name}" 경매에서 낙찰됐어요! 분양자가 확정을 처리할 예정이에요.`,
         link:          `adoption-detail.html?id=${adoptionId}`,
       });
+
+      // 낙찰 안 된 입찰자 알림 (낙찰자·분양자 제외, 중복 제거)
+      const { data: allBids } = await sb.from('auction_bids')
+        .select('bidder_name').eq('adoption_id', adoptionId);
+      const awardLosers = [...new Set(
+        (allBids || []).map(b => b.bidder_name)
+                       .filter(nick => nick !== name && nick !== currentAdoption.author)
+      )];
+      if (awardLosers.length > 0) {
+        await sb.from('notifications').insert(
+          awardLosers.map(nick => ({
+            user_nickname: nick,
+            type:          'auction_lose',
+            message:       `🏆 참여한 "${currentAdoption.character_name}" 경매가 종료됐어요. 이번엔 아쉽지만 다음 기회에!`,
+            link:          `adoption-detail.html?id=${adoptionId}`,
+          }))
+        );
+      }
 
       location.reload();
     }
@@ -1108,6 +1161,25 @@
     async function closeAuction() {
       if (!confirm('낙찰자 없이 경매를 마감할까요?')) return;
       await sb.from('adoptions').update({ status: '완료' }).eq('id', adoptionId);
+
+      // 모든 입찰자에게 마감 알림 (분양자 제외, 중복 제거)
+      const { data: allBids } = await sb.from('auction_bids')
+        .select('bidder_name').eq('adoption_id', adoptionId);
+      const closeBidders = [...new Set(
+        (allBids || []).map(b => b.bidder_name)
+                       .filter(nick => nick !== currentAdoption.author)
+      )];
+      if (closeBidders.length > 0) {
+        await sb.from('notifications').insert(
+          closeBidders.map(nick => ({
+            user_nickname: nick,
+            type:          'auction_close',
+            message:       `📢 참여한 "${currentAdoption.character_name}" 경매가 낙찰자 없이 마감됐어요.`,
+            link:          `adoption-detail.html?id=${adoptionId}`,
+          }))
+        );
+      }
+
       location.reload();
     }
 
