@@ -36,6 +36,8 @@
         <div class="profile-tabs">
           <button class="profile-tab active" data-tab="Notices">공지 관리</button>
           <button class="profile-tab" data-tab="Guides">가이드 관리</button>
+          <button class="profile-tab" data-tab="UpdateNotes">업데이트노트</button>
+          <button class="profile-tab" data-tab="DevLogs">개발일지</button>
           <button class="profile-tab" data-tab="Users">유저 관리</button>
           <button class="profile-tab" data-tab="Species">종족 관리</button>
           <button class="profile-tab" data-tab="Characters">개체 관리</button>
@@ -102,6 +104,32 @@
             <div id="pgGuides"></div>
           </section>
 
+        </div>
+
+        <!-- 업데이트노트 관리 탭 -->
+        <div id="tabUpdateNotes" class="tab-content" style="display:none;">
+          <section class="section">
+            <div class="section-header">
+              <h2 class="settings-section-title" style="margin-bottom:0;">업데이트노트 목록</h2>
+              <a href="update-note-write.html" class="btn-secondary">+ 새 글 작성</a>
+            </div>
+            <div class="admin-card-list" id="updateNoteTableBody"></div>
+            <p id="updateNoteEmpty" class="empty-state" style="display:none;">등록된 업데이트노트가 없어요.</p>
+            <div id="pgUpdateNotes"></div>
+          </section>
+        </div>
+
+        <!-- 개발일지 관리 탭 -->
+        <div id="tabDevLogs" class="tab-content" style="display:none;">
+          <section class="section">
+            <div class="section-header">
+              <h2 class="settings-section-title" style="margin-bottom:0;">개발일지 목록</h2>
+              <a href="dev-log-write.html" class="btn-secondary">+ 새 글 작성</a>
+            </div>
+            <div class="admin-card-list" id="devLogTableBody"></div>
+            <p id="devLogEmpty" class="empty-state" style="display:none;">등록된 개발일지가 없어요.</p>
+            <div id="pgDevLogs"></div>
+          </section>
         </div>
 
         <!-- 유저 관리 탭 -->
@@ -191,9 +219,11 @@
   <script>
     let adminUser = null;
 
-    const noticePager   = createPager(renderNoticeRows,   'pgNotices');
-    const guidePager    = createPager(renderGuideRows,    'pgGuides');
-    const userPager     = createPager(renderUserRows,     'pgUsers');
+    const noticePager      = createPager(renderNoticeRows,      'pgNotices');
+    const guidePager       = createPager(renderGuideRows,       'pgGuides');
+    const updateNotePager  = createPager(renderUpdateNoteRows,  'pgUpdateNotes');
+    const devLogPager      = createPager(renderDevLogRows,      'pgDevLogs');
+    const userPager        = createPager(renderUserRows,        'pgUsers');
     const speciesPager  = createPager(renderSpeciesRows,  'pgSpecies');
     const charPager     = createPager(renderCharRows,     'pgChars');
     const adoptionPager = createPager(renderAdoptionRows, 'pgAdoptions');
@@ -232,6 +262,12 @@
         document.getElementById('tab' + btn.dataset.tab).style.display = 'block';
         if (btn.dataset.tab === 'Guides' && !tabLoaded.Guides) {
           tabLoaded.Guides = true; loadGuides();
+        }
+        if (btn.dataset.tab === 'UpdateNotes' && !tabLoaded.UpdateNotes) {
+          tabLoaded.UpdateNotes = true; loadUpdateNotes();
+        }
+        if (btn.dataset.tab === 'DevLogs' && !tabLoaded.DevLogs) {
+          tabLoaded.DevLogs = true; loadDevLogs();
         }
         if (btn.dataset.tab === 'Species' && !tabLoaded.Species) {
           tabLoaded.Species = true; loadAdminSpecies();
@@ -379,6 +415,92 @@
       if (!confirm('정말 삭제할까요?')) return;
       await sb.from('guides').delete().eq('id', id);
       loadGuides();
+    }
+
+    // ── 업데이트노트 관리 ────────────────────────────
+    function renderUpdateNoteRows(slice) {
+      document.getElementById('updateNoteTableBody').innerHTML = slice.map(n => {
+        const date = new Date(n.created_at).toLocaleDateString('ko-KR', {
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        }).replace(/\. /g, '.').replace(/\.$/, '');
+        return `
+          <div class="admin-card-row">
+            <div class="admin-card-left">
+              ${n.is_pinned ? '<span class="notice-pin" style="flex-shrink:0;">고정</span>' : ''}
+              <a href="update-note-detail.html?id=${n.id}" class="admin-card-name">${n.title}</a>
+            </div>
+            <div class="admin-card-right">
+              <span class="admin-card-date">${date}</span>
+              <button class="admin-btn-edit" onclick="location.href='update-note-write.html?edit=${n.id}'">수정</button>
+              <button class="admin-btn-delete" onclick="deleteUpdateNote('${n.id}')">삭제</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function loadUpdateNotes() {
+      const { data, error } = await sb
+        .from('update_notes')
+        .select('id, title, is_pinned, created_at')
+        .order('is_pinned', { ascending: false })
+        .order('created_at', { ascending: false });
+      const empty = document.getElementById('updateNoteEmpty');
+      if (error || !data || data.length === 0) {
+        document.getElementById('updateNoteTableBody').innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      updateNotePager.load(data);
+    }
+
+    async function deleteUpdateNote(id) {
+      if (!confirm('정말 삭제할까요?')) return;
+      await sb.from('update_notes').delete().eq('id', id);
+      loadUpdateNotes();
+    }
+
+    // ── 개발일지 관리 ────────────────────────────
+    function renderDevLogRows(slice) {
+      document.getElementById('devLogTableBody').innerHTML = slice.map(n => {
+        const date = new Date(n.created_at).toLocaleDateString('ko-KR', {
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        }).replace(/\. /g, '.').replace(/\.$/, '');
+        return `
+          <div class="admin-card-row">
+            <div class="admin-card-left">
+              ${n.is_pinned ? '<span class="notice-pin" style="flex-shrink:0;">고정</span>' : ''}
+              <a href="dev-log-detail.html?id=${n.id}" class="admin-card-name">${n.title}</a>
+            </div>
+            <div class="admin-card-right">
+              <span class="admin-card-date">${date}</span>
+              <button class="admin-btn-edit" onclick="location.href='dev-log-write.html?edit=${n.id}'">수정</button>
+              <button class="admin-btn-delete" onclick="deleteDevLog('${n.id}')">삭제</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function loadDevLogs() {
+      const { data, error } = await sb
+        .from('dev_logs')
+        .select('id, title, is_pinned, created_at')
+        .order('is_pinned', { ascending: false })
+        .order('created_at', { ascending: false });
+      const empty = document.getElementById('devLogEmpty');
+      if (error || !data || data.length === 0) {
+        document.getElementById('devLogTableBody').innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      devLogPager.load(data);
+    }
+
+    async function deleteDevLog(id) {
+      if (!confirm('정말 삭제할까요?')) return;
+      await sb.from('dev_logs').delete().eq('id', id);
+      loadDevLogs();
     }
 
     // ── 유저 관리 ────────────────────────────
