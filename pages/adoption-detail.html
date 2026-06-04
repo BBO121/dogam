@@ -980,6 +980,17 @@
         return;
       }
 
+      // 현재 최고 입찰가 체크 (DB 재조회 — 동시 입찰 대응)
+      const { data: existingBids } = await sb.from('auction_bids')
+        .select('bid_amount').eq('adoption_id', adoptionId);
+      const currentMax = existingBids && existingBids.length > 0
+        ? Math.max(...existingBids.map(b => Number(String(b.bid_amount).replace(/,/g, ''))))
+        : 0;
+      if (currentMax > 0 && bidNum <= currentMax) {
+        errorEl.textContent = `현재 최고 입찰가(${currentMax.toLocaleString('ko-KR')}원)보다 높은 금액으로 입찰해주세요.`;
+        return;
+      }
+
       const { error } = await sb.from('auction_bids').insert({
         adoption_id:  adoptionId,
         bidder_id:    currentUser.id,
