@@ -290,6 +290,8 @@
     const charId = new URLSearchParams(window.location.search).get('id');
 
     let currentUser          = null;
+    let editRole             = null; // 'admin' | 'owner' | 'species_owner'
+    let originalCharData     = null;
     let ownerType            = 'site';
     let selectedNick         = null;
     let designerType         = 'site';
@@ -539,6 +541,71 @@
       return sections;
     }
 
+    function applyFieldPermissions(role) {
+      if (role === 'admin') return;
+
+      const mute = el => {
+        if (!el) return;
+        el.disabled  = true;
+        el.readOnly  = true;
+        el.style.background = '#f8fafc';
+        el.style.color      = 'var(--text-mute)';
+      };
+      const muteById  = id => mute(document.getElementById(id));
+      const muteRadio = name => document.querySelectorAll(`input[name="${name}"]`).forEach(r => r.disabled = true);
+
+      // 역할 안내 배너
+      const notice = document.createElement('p');
+      notice.style.cssText = 'font-size:13px; color:var(--sky-deep); background:var(--sky-pale); border:1px solid #BAE6FD; border-radius:8px; padding:10px 14px; margin-top:8px; line-height:1.5;';
+      document.getElementById('editSubtitle').insertAdjacentElement('afterend', notice);
+
+      if (role === 'species_owner') {
+        notice.textContent = '종족주 권한으로 수정 중입니다. 개체 이름·개인 설명·분류는 소유주만 수정할 수 있어요.';
+        // 개체 이름 (소유주 전용)
+        muteById('charName');
+        // 개인 설명
+        muteById('charDesc');
+        // 분류 (추가 버튼 숨김, 기존 칩 삭제 버튼 숨김은 renderAddedCategories에서 처리)
+        document.querySelector('[onclick="showCategoryInput()"]')?.setAttribute('disabled', 'disabled');
+        document.querySelector('[onclick="showCategoryInput()"]')?.style && (document.querySelector('[onclick="showCategoryInput()"]').style.opacity = '0.4');
+        // custom 섹션 추가 버튼 숨김
+        document.getElementById('btnAddCustom')?.setAttribute('disabled', 'disabled');
+        document.getElementById('btnAddCustom') && (document.getElementById('btnAddCustom').style.opacity = '0.4');
+
+      } else if (role === 'owner') {
+        notice.textContent = '개체 이름·개인 설명·분류 영역만 수정할 수 있어요. 종족 설정 정보는 종족주가 관리합니다.';
+        // 개체번호 (종족주 전용)
+        muteById('charNumber');
+        // 이미지 업로드 비활성화
+        const uploadBox = document.getElementById('uploadBox');
+        if (uploadBox) { uploadBox.onclick = null; uploadBox.style.cursor = 'default'; uploadBox.style.opacity = '0.6'; }
+        document.querySelector('[onclick*="extraImageInput"]')?.setAttribute('disabled','disabled');
+        document.querySelector('[onclick*="extraImageInput"]') && (document.querySelector('[onclick*="extraImageInput"]').style.opacity = '0.4');
+        // 디자이너
+        ['btnDesignerSite','btnDesignerExternal','designerSearch','designerExternalName','designerExternalContact'].forEach(muteById);
+        // 소유주
+        ['btnSiteUser','btnExternal','ownerSearch','ownerExternalName','ownerExternalContact'].forEach(muteById);
+        // 커스텀 필드 (비동기 로드되므로 MutationObserver로 처리)
+        const cfSection = document.getElementById('customFieldsSection');
+        if (cfSection) {
+          cfSection.querySelectorAll('.custom-field-input').forEach(mute);
+          new MutationObserver(() => {
+            cfSection.querySelectorAll('.custom-field-input').forEach(mute);
+          }).observe(cfSection, { childList: true, subtree: true });
+        }
+        // 민감한 요소
+        muteById('isSensitive');
+        muteById('sensitiveNote');
+        // 분양 규칙
+        ['allowResale','allowFreeAdoption','allowPaidAdoption','allowOtherAdoption'].forEach(muteRadio);
+        // settings/relation 섹션 추가 버튼 숨김
+        ['btnAddSettings','btnAddRelation'].forEach(id => {
+          document.getElementById(id)?.setAttribute('disabled','disabled');
+          document.getElementById(id) && (document.getElementById(id).style.opacity = '0.4');
+        });
+      }
+    }
+
     function renderExistingSections(sectionsData) {
       const list = document.getElementById('sectionList');
       sectionsData.forEach(s => {
@@ -574,11 +641,13 @@
         isSpeciesOwner = !!(user.id && sp?.owner_user_id && user.id === sp.owner_user_id);
       }
 
-      if (!isOwner && !isAdminEd && !(isSpeciesOwner && c.owner_is_offsite)) {
+      if (!isOwner && !isAdminEd && !isSpeciesOwner) {
         window.location.href = `character.html?id=${charId}`; return;
       }
 
-      currentUser = user;
+      editRole         = isAdminEd ? 'admin' : isOwner ? 'owner' : 'species_owner';
+      originalCharData = c;
+      currentUser      = user;
 
       // 브레드크럼
       document.getElementById('breadcrumbChar').textContent = c.name;
@@ -640,6 +709,7 @@
       await Promise.all([loadUsers(c.owner_nickname, c.owner_contact, c.designer_nickname, c.designer_contact, c.owner_is_offsite), loadCustomFields(c.species_name, c.custom_field_values), loadExistingCategories(c.species_name)]);
 
       renderExistingSections(c.char_sections || []);
+      applyFieldPermissions(editRole);
     }
 
     const PRESET_COLORS = [
@@ -1021,14 +1091,49 @@
     // 저장
     document.getElementById('editForm').addEventListener('submit', async (e) => {
       e.preventDefault();
+      const errorEl = document.getElementById('editError');
+      const btn     = document.getElementById('submitBtn');
+      errorEl.textContent = '';
 
+      // 소유주 전용 저장 (개인 설명·분류·custom 섹션만)
+      if (editRole === 'owner') {
+        const ownerName = document.getElementById('charName').value.trim();
+        if (!ownerName) { errorEl.textContent = '이름을 입력해주세요.'; return; }
+
+        btn.textContent = '저장 중...';
+        btn.disabled = true;
+        try {
+          const allSections       = collectSections();
+          const existingNonCustom = (originalCharData.char_sections || []).filter(s => s.type !== 'custom');
+          const newCustom         = allSections.filter(s => s.type === 'custom');
+          const mergedSections    = [...existingNonCustom, ...newCustom];
+
+          const { error } = await sb.from('characters').update({
+            name:            ownerName,
+            description:     document.getElementById('charDesc').value.trim() || null,
+            char_categories: addedCategories.length ? addedCategories : null,
+            char_sections:   mergedSections.length ? mergedSections : null,
+          }).eq('id', charId);
+
+          if (error) throw new Error(`저장에 실패했어요: ${error.message}`);
+
+          // 이름 변경 시 분양글 동기화
+          await sb.from('adoptions').update({ character_name: ownerName }).eq('character_id', charId);
+
+          window.location.href = `character.html?id=${charId}`;
+        } catch (err) {
+          errorEl.textContent = err.message;
+          btn.textContent = '저장하기';
+          btn.disabled = false;
+        }
+        return;
+      }
+
+      // 종족주 / 관리자 저장 (종족 설정 영역)
       const name    = document.getElementById('charName').value.trim();
       const desc    = document.getElementById('charDesc').value.trim();
       const file    = document.getElementById('imageFile').files[0];
-      const errorEl = document.getElementById('editError');
-      const btn     = document.getElementById('submitBtn');
 
-      errorEl.textContent = '';
       if (!name) { errorEl.textContent = '이름을 입력해주세요.'; return; }
       if (!currentImageUrl && !file) { errorEl.textContent = '대표 이미지를 등록해주세요.'; return; }
 
@@ -1111,10 +1216,15 @@
           return v === 'true' ? true : v === 'false' ? false : null;
         }
 
-        const sections = collectSections();
+        const allSections = collectSections();
+        // 종족주: custom 섹션은 기존 데이터 유지, 관리자: 전체 반영
+        const finalSections = editRole === 'species_owner'
+          ? [...allSections.filter(s => s.type !== 'custom'),
+             ...(originalCharData.char_sections || []).filter(s => s.type === 'custom')]
+          : allSections;
 
         const { error } = await sb.from('characters').update({
-          name,
+          ...(editRole !== 'species_owner' && { name }),
           char_number:         document.getElementById('charNumber').value.trim() || null,
           designer_nickname:   designer,
           designer_contact:    designer_contact,
@@ -1134,7 +1244,7 @@
           allow_resale:         getTristate('allowResale'),
           allow_paid_adoption:  getTristate('allowPaidAdoption'),
           allow_other_adoption: getTristate('allowOtherAdoption'),
-          char_sections:       sections.length ? sections : null,
+          char_sections:       finalSections.length ? finalSections : null,
         }).eq('id', charId);
 
         if (error) throw new Error(`저장에 실패했어요: ${error.message}`);

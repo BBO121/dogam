@@ -220,7 +220,7 @@
       console.log('[DEBUG] c.owner_user_id:', c.owner_user_id);
       console.log('[DEBUG] c.species_name:', c.species_name);
       if (c.species_name) {
-        const { data: spData } = await sb.from('species').select('id, owner_nickname, owner_user_id, allow_free_adoption, allow_resale, allow_paid_adoption, allow_other_adoption').eq('name', c.species_name).single();
+        const { data: spData } = await sb.from('species').select('id, owner_nickname, owner_user_id, allow_free_adoption, allow_resale, allow_paid_adoption, allow_other_adoption, custom_fields').eq('name', c.species_name).single();
         sp = spData;
         console.log('[DEBUG] sp:', sp);
         if (sp) {
@@ -352,16 +352,22 @@
             <div class="char-info-divider"></div>
             <p class="char-info-desc">${c.description}</p>` : ''}
 
-            ${c.custom_field_values && Object.keys(c.custom_field_values).length ? `
-            <div class="char-info-divider"></div>
-            ${Object.entries(c.custom_field_values).map(([k, v]) => `
-              <div class="char-info-row">
-                <span class="char-info-label">${k}</span>
-                <span class="char-info-value">${v}</span>
-              </div>
-            `).join('')}` : ''}
+            ${(() => {
+              if (!c.custom_field_values) return '';
+              const validKeys = Array.isArray(sp?.custom_fields) && sp.custom_fields.length
+                ? sp.custom_fields
+                : Object.keys(c.custom_field_values);
+              const rows = validKeys
+                .filter(k => c.custom_field_values[k])
+                .map(k => `
+                  <div class="char-info-row">
+                    <span class="char-info-label">${k}</span>
+                    <span class="char-info-value">${c.custom_field_values[k]}</span>
+                  </div>`).join('');
+              return rows ? `<div class="char-info-divider"></div>${rows}` : '';
+            })()}
 
-            ${isOwner || (isSpeciesOwner && c.owner_is_offsite) ? `
+            ${isOwner || isSpeciesOwner ? `
             <div class="char-info-divider"></div>
             <div style="display:flex; justify-content:${isOwner ? 'space-between' : 'flex-end'}; align-items:center;">
               ${isOwner ? `<button onclick="deleteCharacter()" style="padding:8px 16px; border:1px solid #fca5a5; border-radius:8px; background:#fff; color:#ef4444; font-size:13px; cursor:pointer; font-family:inherit;">개체 삭제</button>` : ''}
