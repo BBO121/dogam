@@ -4070,6 +4070,7 @@ a {
   /* 종족 상세 */
   .species-detail-top { flex-direction: column; align-items: flex-start; gap: 20px; }
   .species-detail-img { flex: none; width: 180px; height: 180px; }
+  .species-detail-info { width: 100%; }
   .species-detail-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
