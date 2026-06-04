@@ -1635,17 +1635,28 @@ a {
 
 .species-detail-top {
   display: flex;
+  align-items: flex-start;
   gap: 36px;
   margin-bottom: 32px;
 }
 
 .species-detail-img {
-  width: 240px;
-  flex-shrink: 0;
-  aspect-ratio: 1;
+  flex: 0 0 200px;
+  width: 200px;
+  height: 200px;
+  aspect-ratio: 1 / 1;
   background: #F8FAFC;
   border-radius: 16px;
   box-shadow: var(--shadow-md);
+  align-self: flex-start;
+}
+
+.species-desc-full {
+  margin-bottom: 28px;
+  padding: 20px 24px;
+  background: #fafbfc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
 }
 
 .species-detail-info {
@@ -3622,7 +3633,8 @@ a {
 
 .guide-tab-panel {
   display: none;
-  padding: 20px;
+  padding: 24px;
+  background: #fafbfc;
 }
 
 .guide-tab-panel.active {
@@ -4056,8 +4068,8 @@ a {
   .char-info-panel { padding: 20px 4px; }
 
   /* 종족 상세 */
-  .species-detail-top { flex-direction: column; gap: 20px; }
-  .species-detail-img { width: 100%; max-width: 180px; }
+  .species-detail-top { flex-direction: column; align-items: flex-start; gap: 20px; }
+  .species-detail-img { flex: none; width: 180px; height: 180px; }
   .species-detail-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;

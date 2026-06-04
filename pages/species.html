@@ -162,10 +162,10 @@
         <div class="species-detail-top">
           ${s.is_sensitive && s.image_url ? `
           <div style="position:relative; overflow:hidden; border-radius:var(--radius);">
-            <div class="species-detail-img blurred" style="background-image:url('${s.image_url}'); background-size:cover; background-position:center;"></div>
+            <div class="species-detail-img blurred" style="background-image:url('${s.image_url}'); background-size:contain; background-position:center; background-repeat:no-repeat;"></div>
             <div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span>${s.sensitive_note ? '<span class="sensitive-overlay-note">' + s.sensitive_note + '</span>' : ''}<span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div>
           </div>` : `
-          <div class="species-detail-img" ${s.image_url ? `style="background-image:url('${s.image_url}'); background-size:cover; background-position:center;"` : ''}></div>`}
+          <div class="species-detail-img" ${s.image_url ? `style="background-image:url('${s.image_url}'); background-size:contain; background-position:center; background-repeat:no-repeat;"` : ''}></div>`}
           <div class="species-detail-info">
             <div class="breadcrumb">
               <a href="index.html">홈</a>
@@ -203,15 +203,6 @@
                 <span class="meta-value">${s.design_rights}</span>
               </div>` : ''}
             </div>
-            <div style="margin-top:16px; padding:14px 16px; background:var(--sky-pale); border-radius:10px; border:1px solid var(--sky-light);">
-              <p style="font-size:13px; font-weight:700; color:var(--text); margin-bottom:8px;">📜 분양 규칙</p>
-              <div style="display:flex; flex-direction:column; gap:6px;">
-                ${[['재분양', s.allow_resale], ['무료분양', s.allow_free_adoption], ['유료/경매', s.allow_paid_adoption], ['기타분양', s.allow_other_adoption]].map(([label, val]) =>
-                  `<div style="display:flex; gap:8px; align-items:center; font-size:13px;"><span style="color:var(--text-sub); width:64px; flex-shrink:0;">${label}</span><span style="font-weight:600; color:${val !== false ? 'var(--sky-deep)' : '#ef4444'};">${val !== false ? '가능' : '불가능'}</span></div>`
-                ).join('')}
-              </div>
-            </div>
-            ${s.description ? `<div class="species-detail-desc ql-display">${typeof DOMPurify!=='undefined' ? DOMPurify.sanitize(s.description) : s.description}</div>` : ''}
             ${isOwner ? `
             <div class="species-detail-actions">
               <a href="character-register.html?species_id=${speciesId}&species=${encodeURIComponent(s.name)}" class="btn-secondary">개체 등록</a>
@@ -221,6 +212,21 @@
             </div>` : ''}
           </div>
         </div>
+
+        <div style="margin-bottom:28px; padding:14px 16px; background:var(--sky-pale); border-radius:10px; border:1px solid var(--sky-light);">
+          <p style="font-size:13px; font-weight:700; color:var(--text); margin:0 0 8px;">📜 분양 규칙</p>
+          <div style="display:flex; flex-direction:column; gap:6px;">
+            ${[['재분양', s.allow_resale], ['무료분양', s.allow_free_adoption], ['유료/경매', s.allow_paid_adoption], ['기타분양', s.allow_other_adoption]].map(([label, val]) =>
+              `<div style="display:flex; gap:8px; align-items:center; font-size:13px;"><span style="color:var(--text-sub); width:64px; flex-shrink:0;">${label}</span><span style="font-weight:600; color:${val !== false ? 'var(--sky-deep)' : '#ef4444'};">${val !== false ? '가능' : '불가능'}</span></div>`
+            ).join('')}
+          </div>
+        </div>
+
+        ${s.description ? `
+        <div class="species-desc-full">
+          <div class="species-detail-desc ql-display">${typeof DOMPurify!=='undefined' ? DOMPurify.sanitize(s.description) : s.description}</div>
+        </div>` : ''}
+
         ${fields ? `
         <div class="species-fields">
           <h3 class="species-fields-title">개체 항목</h3>
@@ -556,8 +562,15 @@
     }
 
     function switchGuideTab(idx) {
-      document.querySelectorAll('.guide-tab-btn').forEach((btn, i) => btn.classList.toggle('active', i === idx));
-      document.querySelectorAll('.guide-tab-panel').forEach((panel, i) => panel.classList.toggle('active', i === idx));
+      const btns   = document.querySelectorAll('.guide-tab-btn');
+      const panels = document.querySelectorAll('.guide-tab-panel');
+      const isOpen = btns[idx]?.classList.contains('active');
+      btns.forEach(b   => b.classList.remove('active'));
+      panels.forEach(p => p.classList.remove('active'));
+      if (!isOpen) {
+        btns[idx]?.classList.add('active');
+        panels[idx]?.classList.add('active');
+      }
     }
 
     async function deleteSpecies() {
