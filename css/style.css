@@ -1052,6 +1052,8 @@ a {
 }
 
 .form-textarea {
+  width: 100%;
+  box-sizing: border-box;
   border: 1.5px solid var(--border);
   border-radius: 9px;
   padding: 11px 14px;
