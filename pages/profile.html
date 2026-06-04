@@ -422,11 +422,11 @@
       // 더보기 링크 → 해당 유저 필터
       const speciesMoreEl = document.getElementById('speciesMoreLink');
       const charMoreEl    = document.getElementById('charMoreLink');
-      if (speciesMoreEl) speciesMoreEl.href = found?.id
-        ? `my-species.html?owner_id=${found.id}`
+      if (speciesMoreEl) speciesMoreEl.href = found?.login_id
+        ? `my-species.html?owner_id=${encodeURIComponent(found.login_id)}`
         : `my-species.html?owner=${encodeURIComponent(displayName)}`;
-      if (charMoreEl)    charMoreEl.href    = found?.id
-        ? `character-list.html?owner_id=${found.id}`
+      if (charMoreEl)    charMoreEl.href    = found?.login_id
+        ? `character-list.html?owner_id=${encodeURIComponent(found.login_id)}`
         : `character-list.html?owner=${encodeURIComponent(displayName)}`;
 
       document.getElementById('profileLoading').style.display = 'none';

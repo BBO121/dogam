@@ -90,9 +90,12 @@
       if (userList) userList.forEach(u => { if (u.id && u.nickname) idToNick[u.id] = u.nickname; });
 
       if (ownerIdParam) {
-        // UUID 기준 직접 조회 (프로필 더보기 전용)
-        ownerParamId = ownerIdParam;
-        const displayLabel = idToNick[ownerIdParam] || ownerIdParam;
+        // login_id → UUID 조회 (URL에 UUID 비노출)
+        const foundUser = (userList || []).find(u =>
+          u.login_id?.toLowerCase() === ownerIdParam.toLowerCase()
+        );
+        ownerParamId = foundUser?.id || null;
+        const displayLabel = foundUser?.nickname || ownerIdParam;
         document.querySelector('.list-page-title').textContent = `${displayLabel}의 개체`;
       } else if (ownerParam && userList) {
         const found = userList.find(u => u.nickname === ownerParam);
