@@ -1,15 +1,27 @@
 /* ── 페이지네이션 유틸 ─────────────────────── */
 const PER_PAGE = 30;
 
-function createPager(renderFn, wrapId = 'paginationWrap') {
+function createPager(renderFn, wrapId = 'paginationWrap', pageParam = 'page') {
   let page = 1;
   let data = [];
 
   const pager = {
     load(arr) { data = arr; page = 1; pager._draw(); },
+    // 초기 로드 시 URL의 ?page= 값으로 복원
+    init(arr) {
+      data = arr;
+      const p     = parseInt(new URLSearchParams(location.search).get(pageParam));
+      const total = Math.ceil(arr.length / PER_PAGE);
+      page = (p >= 1 && p <= (total || 1)) ? p : 1;
+      pager._draw();
+    },
     go(p) {
       const total = Math.ceil(data.length / PER_PAGE);
       page = Math.max(1, Math.min(p, total || 1));
+      const url = new URL(location.href);
+      if (page === 1) url.searchParams.delete(pageParam);
+      else            url.searchParams.set(pageParam, page);
+      history.replaceState(null, '', url);
       pager._draw();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },

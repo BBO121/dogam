@@ -217,6 +217,8 @@
     let currentUser = null;
 
     async function init() {
+      const { error: refreshError } = await sb.auth.refreshSession();
+      if (refreshError) { console.error('세션 갱신 실패:', refreshError); }
       currentUser = await getUser();
       if (!currentUser) { window.location.href = 'login.html'; return; }
       const role = currentUser.user_metadata?.role;

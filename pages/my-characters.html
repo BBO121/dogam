@@ -255,6 +255,7 @@
     let dragSrcId           = null;
     let touchDragSrcId      = null;
     let touchDragSrcEl      = null;
+    let isInitialLoad       = true;
     const pager = createPager(renderCards);
 
     // ── 초기화 ─────────────────────────────────────────
@@ -287,8 +288,10 @@
         sel.appendChild(opt);
       });
 
+      restoreFilterState();
       renderFolderChips();
-      pager.load(chars);
+      isInitialLoad = true;
+      filterCards();
     }
 
     // ── 폴더 칩 ───────────────────────────────────────
@@ -482,7 +485,37 @@
         document.getElementById('noResult').style.display = 'block';
         return;
       }
-      pager.load(filtered);
+      if (isInitialLoad) {
+        isInitialLoad = false;
+        pager.init(filtered);
+      } else {
+        saveFilterState();
+        pager.load(filtered);
+      }
+    }
+
+    function restoreFilterState() {
+      const p = new URLSearchParams(location.search);
+      const q       = p.get('q');
+      const species = p.get('species');
+      const folder  = p.get('folder');
+      if (q)      document.getElementById('filterInput').value   = q;
+      if (species) document.getElementById('speciesFilter').value = species;
+      if (folder === 'none') activeFolder = 'none';
+      else if (folder) { const fid = parseInt(folder); if (!isNaN(fid)) activeFolder = fid; }
+    }
+
+    function saveFilterState() {
+      const url     = new URL(location.href);
+      const q       = document.getElementById('filterInput').value.trim();
+      const species = document.getElementById('speciesFilter').value;
+      if (q)       url.searchParams.set('q', q);       else url.searchParams.delete('q');
+      if (species) url.searchParams.set('species', species); else url.searchParams.delete('species');
+      if (activeFolder === 'none')             url.searchParams.set('folder', 'none');
+      else if (typeof activeFolder === 'number') url.searchParams.set('folder', String(activeFolder));
+      else                                     url.searchParams.delete('folder');
+      url.searchParams.delete('page');
+      history.replaceState(null, '', url);
     }
 
     // ── 개체 추가 모달 ───────────────────────────────

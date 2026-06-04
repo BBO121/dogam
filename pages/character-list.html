@@ -65,8 +65,9 @@
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
   <script>
-    let allChars = [];
-    let idToNick = {};
+    let allChars      = [];
+    let idToNick      = {};
+    let isInitialLoad = true;
     let ownerParamId = null;
     const ownerParam = new URLSearchParams(window.location.search).get('owner');
     const pager = createPager(render);
@@ -96,8 +97,13 @@
         document.querySelector('.list-page-title').textContent = `${ownerParam}의 개체`;
       }
 
-      const urlQ = new URLSearchParams(window.location.search).get('q');
-      if (urlQ) document.getElementById('searchInput').value = urlQ;
+      if (isInitialLoad) {
+        const p    = new URLSearchParams(location.search);
+        const urlQ = p.get('q'); const sp = p.get('species'); const sort = p.get('sort');
+        if (urlQ) document.getElementById('searchInput').value  = urlQ;
+        if (sp)   document.getElementById('speciesFilter').value = sp;
+        if (sort) document.getElementById('sortSelect').value    = sort;
+      }
 
       // 종족 필터 옵션 생성
       const species = [...new Set(data.map(c => c.species_name).filter(Boolean))].sort((a,b) => a.localeCompare(b,'ko'));
@@ -135,7 +141,21 @@
         return;
       }
 
-      pager.load(list);
+      if (isInitialLoad) {
+        isInitialLoad = false;
+        pager.init(list);
+      } else {
+        const url  = new URL(location.href);
+        const q    = document.getElementById('searchInput').value.trim();
+        const sp   = document.getElementById('speciesFilter').value;
+        const sort = document.getElementById('sortSelect').value;
+        if (q)    url.searchParams.set('q', q);           else url.searchParams.delete('q');
+        if (sp)   url.searchParams.set('species', sp);    else url.searchParams.delete('species');
+        if (sort) url.searchParams.set('sort', sort);     else url.searchParams.delete('sort');
+        url.searchParams.delete('page');
+        history.replaceState(null, '', url);
+        pager.load(list);
+      }
     }
 
     function render(data) {

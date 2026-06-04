@@ -281,6 +281,8 @@
     async function init() {
       if (!speciesId) { window.location.href = 'species-list.html'; return; }
 
+      const { error: refreshError } = await sb.auth.refreshSession();
+      if (refreshError) { console.error('세션 갱신 실패:', refreshError); }
       const user = await getUser();
       if (!user) { window.location.href = 'login.html'; return; }
 

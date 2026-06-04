@@ -59,7 +59,8 @@
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
   <script>
-    let allSpecies = [];
+    let allSpecies    = [];
+    let isInitialLoad = true;
     const pager = createPager(render);
 
     async function loadSpecies() {
@@ -74,6 +75,12 @@
       }
 
       allSpecies = data;
+      if (isInitialLoad) {
+        const p = new URLSearchParams(location.search);
+        const q = p.get('q'); const sort = p.get('sort');
+        if (q)    document.getElementById('searchInput').value = q;
+        if (sort) document.getElementById('sortSelect').value  = sort;
+      }
       applyFilter();
     }
 
@@ -98,7 +105,19 @@
         return;
       }
 
-      pager.load(list);
+      if (isInitialLoad) {
+        isInitialLoad = false;
+        pager.init(list);
+      } else {
+        const url = new URL(location.href);
+        const q    = document.getElementById('searchInput').value.trim();
+        const sort = document.getElementById('sortSelect').value;
+        if (q)    url.searchParams.set('q', q);       else url.searchParams.delete('q');
+        if (sort) url.searchParams.set('sort', sort); else url.searchParams.delete('sort');
+        url.searchParams.delete('page');
+        history.replaceState(null, '', url);
+        pager.load(list);
+      }
     }
 
     function render(data) {
