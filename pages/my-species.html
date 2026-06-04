@@ -56,7 +56,10 @@
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
   <script>
-    const ownerParam = new URLSearchParams(window.location.search).get('owner');
+    const _qs            = new URLSearchParams(window.location.search);
+    const ownerParam     = _qs.get('owner');
+    const ownerIdParam   = _qs.get('owner_id');   // UUID 기준 (프로필 더보기 전용)
+    const ownerNameParam = _qs.get('owner_name'); // 화면 표시용
 
     async function initPage() {
       const user = await getUser();
@@ -64,8 +67,22 @@
 
       let targetUserId = user.id;
 
-      if (ownerParam) {
-        // 타인 종족 목록 — owner 닉네임으로 user_id 조회
+      if (ownerIdParam) {
+        // UUID 직접 지정 — 닉네임 변경에도 안전
+        targetUserId = ownerIdParam;
+        document.getElementById('registerBtn').style.display = 'none';
+
+        // 표시명: owner_name 파라미터 우선, 없으면 get_all_users에서 조회
+        let displayLabel = ownerNameParam;
+        if (!displayLabel) {
+          const { data: userList } = await sb.rpc('get_all_users');
+          const found = (userList || []).find(u => u.id === ownerIdParam);
+          displayLabel = found?.nickname || ownerIdParam;
+        }
+        document.querySelector('.list-page-title').textContent = `${displayLabel}님의 종족`;
+
+      } else if (ownerParam) {
+        // 닉네임 기준 (기존 호환용)
         document.querySelector('.list-page-title').textContent = `${ownerParam}님의 종족`;
         document.getElementById('registerBtn').style.display = 'none';
 

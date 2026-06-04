@@ -69,7 +69,10 @@
     let idToNick      = {};
     let isInitialLoad = true;
     let ownerParamId = null;
-    const ownerParam = new URLSearchParams(window.location.search).get('owner');
+    const _qs        = new URLSearchParams(window.location.search);
+    const ownerParam = _qs.get('owner');
+    const ownerIdParam  = _qs.get('owner_id');   // UUID 기준 조회
+    const ownerNameParam = _qs.get('owner_name'); // 화면 표시용 이름
     const pager = createPager(render);
 
     async function loadCharacters() {
@@ -86,14 +89,20 @@
       }
 
       if (userList) userList.forEach(u => { if (u.id && u.nickname) idToNick[u.id] = u.nickname; });
-      if (ownerParam && userList) {
+
+      if (ownerIdParam) {
+        // UUID 기준 직접 조회 (프로필 더보기 전용)
+        ownerParamId = ownerIdParam;
+        const displayLabel = ownerNameParam || idToNick[ownerIdParam] || ownerIdParam;
+        document.querySelector('.list-page-title').textContent = `${displayLabel}의 개체`;
+      } else if (ownerParam && userList) {
         const found = userList.find(u => u.nickname === ownerParam);
         ownerParamId = found?.id || null;
       }
 
       allChars = data;
 
-      if (ownerParam) {
+      if (!ownerIdParam && ownerParam) {
         document.querySelector('.list-page-title').textContent = `${ownerParam}의 개체`;
       }
 
@@ -127,7 +136,7 @@
       let list = allChars.filter(c =>
         (!q          || c.name.toLowerCase().includes(qLow)) &&
         (!sp         || c.species_name === sp) &&
-        (!ownerParam || (ownerParamId ? c.owner_user_id === ownerParamId : c.owner_nickname === ownerParam))
+        (!(ownerParam || ownerIdParam) || (ownerParamId ? c.owner_user_id === ownerParamId : c.owner_nickname === ownerParam))
       );
 
       if (sort === 'name') list = [...list].sort((a,b) => a.name.localeCompare(b.name,'ko'));
