@@ -174,7 +174,11 @@
               <span>/</span>
               <span>${s.name}</span>
             </div>
-            <h1 class="species-detail-name">${s.name}</h1>
+            <h1 class="species-detail-name">
+              ${s.name}
+              ${s.open_type === 'open'   ? '<span class="species-type-badge species-type-badge--open">열린종족</span>'   : ''}
+              ${s.open_type === 'closed' ? '<span class="species-type-badge species-type-badge--closed">닫힌종족</span>' : ''}
+            </h1>
             <div class="species-detail-meta">
               <div class="meta-item">
                 <span class="meta-label">종족주</span>

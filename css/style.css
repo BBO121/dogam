@@ -260,7 +260,7 @@ a {
   z-index: 200;
   width: 220px;
   max-height: calc(100vh - 120px);
-  overflow-y: auto;
+  overflow: hidden;
   padding: 0;
   flex-direction: column;
 }
@@ -294,7 +294,7 @@ a {
   border-radius: 16px 16px 0 0;
   z-index: 401;
   max-height: 75vh;
-  overflow-y: auto;
+  overflow: hidden;
   padding-bottom: env(safe-area-inset-bottom, 0px);
   transition: bottom 0.28s cubic-bezier(.4,0,.2,1);
   display: flex;
@@ -318,6 +318,43 @@ a {
   #bodySpecies { display: none !important; }
 }
 
+.flyout-search-wrap {
+  flex-shrink: 0;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--white);
+}
+
+.flyout-search-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 10px;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.flyout-search-input:focus {
+  border-color: var(--sky-dark);
+}
+
+.flyout-scroll-body {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+.flyout-empty {
+  padding: 16px;
+  font-size: 13px;
+  color: var(--text-mute);
+  text-align: center;
+}
+
 .flyout-all-link {
   display: block;
   padding: 9px 16px;
@@ -335,9 +372,9 @@ a {
 
 .flyout-group-label {
   padding: 8px 16px 3px;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 700;
-  color: var(--text-mute);
+  color: var(--sky-deep);
   letter-spacing: 0.5px;
   flex-shrink: 0;
 }
@@ -1332,6 +1369,34 @@ a {
   line-height: 1.6;
 }
 
+.profile-tos-inner {
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.profile-tos-wrap {
+  position: relative;
+}
+
+.profile-tos-wrap.collapsed::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 52px;
+  background: linear-gradient(to bottom, transparent, var(--white));
+  pointer-events: none;
+}
+
+button.btn-more {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+}
+
 .profile-tos {
   margin-top: 4px;
   padding: 14px 16px;
@@ -1670,6 +1735,32 @@ a {
   font-size: 28px;
   font-weight: 800;
   letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.species-type-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.species-type-badge--open {
+  background: #EAF4EE;
+  color: #2E8A6C;
+}
+
+.species-type-badge--closed {
+  background: #EEEDFB;
+  color: #6655BB;
 }
 
 .species-detail-meta {
@@ -4024,6 +4115,9 @@ a {
   .character-grid             { grid-template-columns: repeat(2, 1fr); gap: 12px; }
   .adoption-grid              { grid-template-columns: repeat(2, 1fr); gap: 12px; }
 
+  /* 홈 종족 섹션: 12개(2×6)만 표시, 전체보기 페이지는 제외 */
+  .species-grid:not(.species-grid--large) .species-card:nth-child(n+13) { display: none; }
+
   /* 더 좁은 화면 (< 400px) — 종족 2열 */
 }
 
@@ -4047,8 +4141,8 @@ a {
   .list-page-title  { font-size: 18px; }
 
   /* 검색 + 필터 컨트롤 — 검색창 1줄, 드롭다운 2개 나란히 */
-  .list-controls { flex-wrap: wrap; }
-  .list-controls .list-search { flex: 1 0 100%; }
+  .list-controls { flex-wrap: wrap; gap: 8px; }
+  .list-controls .list-search { flex: 1 0 100%; max-width: calc(100% - 8px); margin: 0 auto; }
   .list-controls .list-sort   { flex: 1; }
 
   /* 등록 폼 */
@@ -4058,6 +4152,7 @@ a {
   /* 검색 */
   .search-wrap    { padding: 14px 0 4px; }
   .search-input   { font-size: 14px; }
+  .search-box     { max-width: calc(100% - 20px); margin: 0 auto; }
 
   /* 개체 상세 */
   .character-detail-top { flex-direction: column; gap: 20px; }

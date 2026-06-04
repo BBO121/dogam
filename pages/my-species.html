@@ -56,19 +56,40 @@
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
   <script>
+    const ownerParam = new URLSearchParams(window.location.search).get('owner');
+
     async function initPage() {
       const user = await getUser();
       if (!user) { window.location.href = 'login.html'; return; }
 
-      const role = user.user_metadata?.role;
+      let targetUserId = user.id;
 
-      if (role === 'species_owner' || isAdminOrStaff(role)) {
-        document.getElementById('registerBtn').style.display = 'inline-flex';
+      if (ownerParam) {
+        // 타인 종족 목록 — owner 닉네임으로 user_id 조회
+        document.querySelector('.list-page-title').textContent = `${ownerParam}님의 종족`;
+        document.getElementById('registerBtn').style.display = 'none';
+
+        const { data: userList } = await sb.rpc('get_all_users');
+        const found = (userList || []).find(u => u.nickname === ownerParam);
+        targetUserId = found?.id || null;
+
+        if (!targetUserId) {
+          document.getElementById('pageLoading').style.display = 'none';
+          document.getElementById('pageContent').style.display = 'block';
+          document.getElementById('emptyState').style.display = 'flex';
+          return;
+        }
+      } else {
+        // 내 종족 목록
+        const role = user.user_metadata?.role;
+        if (role === 'species_owner' || isAdminOrStaff(role)) {
+          document.getElementById('registerBtn').style.display = 'inline-flex';
+        }
       }
 
       const { data, error } = await sb
         .from('species').select('id, name, image_url, is_sensitive, sensitive_note')
-        .eq('owner_user_id', user.id).order('name');
+        .eq('owner_user_id', targetUserId).order('name');
 
       document.getElementById('pageLoading').style.display = 'none';
       document.getElementById('pageContent').style.display = 'block';

@@ -152,6 +152,25 @@
             </div>
           </div>
 
+          <!-- 종족 공개 타입 -->
+          <div class="form-group">
+            <label class="form-label">종족 공개 타입</label>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px; color:var(--text);">
+                <input type="radio" name="openType" value="" checked style="width:16px; height:16px; cursor:pointer; accent-color:var(--sky); flex-shrink:0;">
+                표시안함
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px; color:var(--text);">
+                <input type="radio" name="openType" value="open" style="width:16px; height:16px; cursor:pointer; accent-color:var(--sky); flex-shrink:0;">
+                열린종족
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px; color:var(--text);">
+                <input type="radio" name="openType" value="closed" style="width:16px; height:16px; cursor:pointer; accent-color:var(--sky); flex-shrink:0;">
+                닫힌종족
+              </label>
+            </div>
+          </div>
+
           <!-- 민감한 요소 -->
           <div class="form-group">
             <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
@@ -419,6 +438,7 @@
         const nickname     = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname || '';
         const isSensitive  = document.getElementById('isSensitive').checked;
         const sensitiveNote = document.getElementById('sensitiveNote').value.trim();
+        const openTypeVal  = document.querySelector('input[name="openType"]:checked')?.value || null;
 
         const { data, error } = await sb.from('species').insert({
           name,
@@ -432,6 +452,7 @@
           guide:          guide.length ? guide : null,
           is_sensitive:        isSensitive,
           sensitive_note:      isSensitive ? (sensitiveNote || null) : null,
+          open_type:           openTypeVal || null,
           allow_free_adoption:  document.getElementById('allowFreeAdoption').checked,
           allow_resale:         document.getElementById('allowResale').checked,
           allow_paid_adoption:  document.getElementById('allowPaidAdoption').checked,

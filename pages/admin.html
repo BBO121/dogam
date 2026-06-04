@@ -117,9 +117,13 @@
         <!-- 종족 관리 탭 -->
         <div id="tabSpecies" class="tab-content" style="display:none;">
           <section class="section">
-            <h2 class="settings-section-title">종족 목록</h2>
+            <div class="section-header" style="margin-bottom:12px;">
+              <h2 class="settings-section-title" style="margin-bottom:0;">종족 목록</h2>
+              <input type="text" class="list-search" id="speciesAdminSearch" placeholder="종족 검색..." style="width:200px;" oninput="filterAdminSpecies(this.value)">
+            </div>
             <div class="admin-card-list" id="speciesTableBody"></div>
             <p id="speciesAdminEmpty" class="empty-state" style="display:none;">등록된 종족이 없어요.</p>
+            <p id="speciesAdminNoResult" class="empty-state" style="display:none;">검색 결과가 없습니다.</p>
             <div id="pgSpecies"></div>
           </section>
         </div>
@@ -495,6 +499,23 @@
       }).join('');
     }
 
+    let allAdminSpecies = [];
+
+    function filterAdminSpecies(q) {
+      const qLow = q.toLowerCase();
+      const noResult = document.getElementById('speciesAdminNoResult');
+      const filtered = q
+        ? allAdminSpecies.filter(s => s.name.toLowerCase().includes(qLow))
+        : allAdminSpecies;
+      if (q && filtered.length === 0) {
+        speciesPager.load([]);
+        noResult.style.display = 'block';
+      } else {
+        noResult.style.display = 'none';
+        speciesPager.load(filtered);
+      }
+    }
+
     async function loadAdminSpecies() {
       const { data, error } = await sb
         .from('species')
@@ -509,8 +530,11 @@
         return;
       }
 
+      allAdminSpecies = data;
       empty.style.display = 'none';
-      speciesPager.load(data);
+
+      const q = document.getElementById('speciesAdminSearch')?.value || '';
+      if (q) { filterAdminSpecies(q); } else { speciesPager.load(data); }
     }
 
     async function deleteSpecies(id, name) {

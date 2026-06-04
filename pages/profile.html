@@ -71,51 +71,41 @@
           </div>
         </section>
 
-        <!-- 탭 -->
-        <div class="profile-tabs">
-          <button class="profile-tab active" data-tab="activity">활동</button>
-          <button class="profile-tab" data-tab="tos">개인공지</button>
-        </div>
+        <!-- 메인 컨텐츠 (설정 열리면 숨김) -->
+        <div id="profileMain">
 
-        <!-- 내 활동 탭 -->
-        <div id="tabActivity" class="tab-content">
-          <section class="section">
-            <!-- 서브탭 -->
-            <div class="activity-subtabs">
-              <button class="activity-subtab active" onclick="switchSubtab(this,'species')">종족</button>
-              <span class="activity-subtab-divider">|</span>
-              <button class="activity-subtab" onclick="switchSubtab(this,'characters')">캐릭터</button>
+          <!-- 개인공지 -->
+          <section class="section" id="sectionTos">
+            <div class="section-header">
+              <h2>개인공지</h2>
+              <button id="tosToggleBtn" class="btn-more profile-tos-toggle-btn" onclick="toggleTos()" style="display:none;">더보기</button>
             </div>
-
-            <!-- 종족 -->
-            <div id="subtabSpecies">
-              <div class="section-header">
-                <h2>종족 <span class="count-badge" id="mySpeciesCount">0</span></h2>
-                <a href="my-species.html" class="btn-more">전체보기</a>
-              </div>
-              <div id="mySpeciesPreview" class="species-grid"></div>
-              <p id="mySpeciesEmpty" class="empty-state" style="display:none;">아직 등록된 종족이 없어요.</p>
+            <div class="profile-tos-wrap collapsed" id="profileTosWrap">
+              <div id="profileTos" class="ql-display profile-tos-inner" style="font-size:14px; line-height:1.8; color:var(--text-sub);"></div>
             </div>
-
-            <!-- 보유 캐릭터 -->
-            <div id="subtabCharacters" style="display:none;">
-              <div class="section-header">
-                <h2>보유 캐릭터 <span class="count-badge" id="myCharCount">0</span></h2>
-                <a href="my-characters.html" class="btn-more">전체보기</a>
-              </div>
-              <div id="myCharPreview" class="character-grid"></div>
-              <p id="myCharEmpty" class="empty-state" style="display:none;">아직 등록된 개체가 없어요.</p>
-            </div>
-
-          </section>
-        </div>
-
-        <!-- 개인공지 탭 -->
-        <div id="tabTos" class="tab-content" style="display:none;">
-          <section class="section">
-            <div id="profileTos" class="ql-display" style="font-size:14px; line-height:1.8; color:var(--text-sub);"></div>
             <p id="profileTosEmpty" class="empty-state" style="display:none;">등록된 개인공지가 없어요.</p>
           </section>
+
+          <!-- 종족 -->
+          <section class="section">
+            <div class="section-header">
+              <h2>종족 <span class="count-badge" id="mySpeciesCount"></span></h2>
+              <a href="my-species.html" class="btn-more" id="speciesMoreLink">더보기</a>
+            </div>
+            <div id="mySpeciesPreview" class="species-grid"></div>
+            <p id="mySpeciesEmpty" class="empty-state" style="display:none;">아직 등록된 종족이 없어요.</p>
+          </section>
+
+          <!-- 캐릭터 -->
+          <section class="section">
+            <div class="section-header">
+              <h2>캐릭터 <span class="count-badge" id="myCharCount"></span></h2>
+              <a href="my-characters.html" class="btn-more" id="charMoreLink">더보기</a>
+            </div>
+            <div id="myCharPreview" class="character-grid"></div>
+            <p id="myCharEmpty" class="empty-state" style="display:none;">아직 등록된 개체가 없어요.</p>
+          </section>
+
         </div>
 
         <!-- 설정 탭 -->
@@ -270,6 +260,40 @@
       updateCharCount(tosQuill, 'tosCharCount', TOS_MAX);
     });
 
+    function autolinkTos(html) {
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      const URL_RE = /(https?:\/\/[^\s<>"'\]）】]+)/g;
+      function walk(node) {
+        if (node.nodeType === 3) {
+          const text = node.textContent;
+          if (!URL_RE.test(text)) return;
+          URL_RE.lastIndex = 0;
+          const parts = text.split(URL_RE);
+          if (parts.length <= 1) return;
+          const frag = document.createDocumentFragment();
+          parts.forEach((part, i) => {
+            if (i % 2 === 0) {
+              if (part) frag.appendChild(document.createTextNode(part));
+            } else {
+              const a = document.createElement('a');
+              a.href = part;
+              a.textContent = part;
+              a.target = '_blank';
+              a.rel = 'noopener noreferrer';
+              a.style.wordBreak = 'break-all';
+              frag.appendChild(a);
+            }
+          });
+          node.parentNode.replaceChild(frag, node);
+        } else if (node.nodeType === 1 && node.tagName !== 'A') {
+          [...node.childNodes].forEach(walk);
+        }
+      }
+      [...div.childNodes].forEach(walk);
+      return div.innerHTML;
+    }
+
     function revealSensitive(overlayEl, e) {
       e.stopPropagation(); e.preventDefault();
       const wrap = overlayEl.parentElement;
@@ -337,7 +361,6 @@
       document.getElementById('avatarInput').style.display = 'none';
       document.getElementById('profileAvatar').style.cursor = 'default';
       document.getElementById('profileAvatar').onclick = null;
-      document.querySelector('.profile-tab[data-tab="tos"]').textContent = '개인공지';
 
       // get_all_users + user_profiles 병렬 조회
       const [{ data: userList }, { data: profile }] = await Promise.all([
@@ -384,9 +407,10 @@
       document.getElementById('profileJoinDate').textContent = joinDate;
       if (bio) document.getElementById('profileBio').innerHTML = DOMPurify.sanitize(bio);
       if (tos) {
-        document.getElementById('profileTos').innerHTML = DOMPurify.sanitize(tos);
+        document.getElementById('profileTos').innerHTML = autolinkTos(DOMPurify.sanitize(tos));
+        setTimeout(initTosToggle, 0);
       } else {
-        document.getElementById('profileTosEmpty').style.display = 'block';
+        document.getElementById('sectionTos').style.display = 'none';
       }
       if (avatarUrl) {
         const el = document.getElementById('profileAvatar');
@@ -395,9 +419,9 @@
         el.style.backgroundPosition = 'center';
       }
 
-      // 전체보기 링크 → 해당 유저 필터
-      const speciesMoreEl = document.querySelector('#subtabSpecies .btn-more');
-      const charMoreEl    = document.querySelector('#subtabCharacters .btn-more');
+      // 더보기 링크 → 해당 유저 필터
+      const speciesMoreEl = document.getElementById('speciesMoreLink');
+      const charMoreEl    = document.getElementById('charMoreLink');
       if (speciesMoreEl) speciesMoreEl.href = `my-species.html?owner=${encodeURIComponent(displayName)}`;
       if (charMoreEl)    charMoreEl.href    = `character-list.html?owner=${encodeURIComponent(displayName)}`;
 
@@ -457,9 +481,10 @@
       document.getElementById('profileJoinDate').textContent = joinDate;
       if (bio) document.getElementById('profileBio').innerHTML = DOMPurify.sanitize(bio);
       if (tos) {
-        document.getElementById('profileTos').innerHTML = DOMPurify.sanitize(tos);
+        document.getElementById('profileTos').innerHTML = autolinkTos(DOMPurify.sanitize(tos));
+        setTimeout(initTosToggle, 0);
       } else {
-        document.getElementById('profileTosEmpty').style.display = 'block';
+        document.getElementById('sectionTos').style.display = 'none';
       }
 
       document.getElementById('editId').value          = nickname;
@@ -504,7 +529,7 @@
         return;
       }
 
-      countEl.textContent = data.length;
+      if (data.length > 0) countEl.textContent = data.length;
       const preview = data.slice(0, 6);
       gridEl.innerHTML = preview.map(s => `
         <a href="species.html?id=${s.id}" class="species-card">
@@ -549,9 +574,10 @@
         return;
       }
 
-      countEl.textContent = data.length;
+      if (data.length > 0) countEl.textContent = data.length;
+      const charPreview = data.slice(0, 8);
 
-      gridEl.innerHTML = data.map(c => `
+      gridEl.innerHTML = charPreview.map(c => `
         <a href="character.html?id=${c.id}" class="character-card">
           ${c.is_sensitive && c.image_url ? `
           <div style="position:relative; overflow:hidden; border-radius:var(--radius);">
@@ -567,41 +593,58 @@
       `).join('');
     }
 
-    // 메인 탭 전환
-    document.querySelectorAll('.profile-tab').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.profile-tab').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-        document.getElementById('gearBtn').classList.remove('active');
-        const tabId = 'tab' + btn.dataset.tab[0].toUpperCase() + btn.dataset.tab.slice(1);
-        document.getElementById(tabId).style.display = 'block';
-      });
-    });
-
     function toggleSettings() {
       const settingsEl = document.getElementById('tabSettings');
+      const mainEl     = document.getElementById('profileMain');
       const gearBtn    = document.getElementById('gearBtn');
       const isOpen     = settingsEl.style.display !== 'none';
 
       if (isOpen) {
         settingsEl.style.display = 'none';
+        mainEl.style.display     = 'block';
         gearBtn.classList.remove('active');
-        document.getElementById('tabActivity').style.display = 'block';
-        document.querySelector('.profile-tab[data-tab="activity"]').classList.add('active');
       } else {
-        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-        document.querySelectorAll('.profile-tab').forEach(b => b.classList.remove('active'));
         settingsEl.style.display = 'block';
+        mainEl.style.display     = 'none';
         gearBtn.classList.add('active');
       }
     }
 
-    function switchSubtab(el, t) {
-      document.querySelectorAll('.activity-subtab').forEach(b => b.classList.remove('active'));
-      el.classList.add('active');
-      document.getElementById('subtabSpecies').style.display    = t === 'species'    ? 'block' : 'none';
-      document.getElementById('subtabCharacters').style.display = t === 'characters' ? 'block' : 'none';
+    function toggleTos() {
+      const inner = document.getElementById('profileTos');
+      const wrap  = document.getElementById('profileTosWrap');
+      const btn   = document.getElementById('tosToggleBtn');
+      const isExpanded = inner.dataset.expanded === 'true';
+      if (isExpanded) {
+        inner.style.maxHeight = '130px';
+        inner.dataset.expanded = 'false';
+        btn.textContent = '더보기';
+        wrap.classList.add('collapsed');
+      } else {
+        inner.style.maxHeight = inner.scrollHeight + 'px';
+        inner.dataset.expanded = 'true';
+        btn.textContent = '접기';
+        wrap.classList.remove('collapsed');
+      }
+    }
+
+    function initTosToggle() {
+      const inner = document.getElementById('profileTos');
+      const wrap  = document.getElementById('profileTosWrap');
+      const btn   = document.getElementById('tosToggleBtn');
+      if (!inner || !btn) return;
+      const collapseH = 130;
+      inner.style.maxHeight = 'none';
+      const fullH = inner.scrollHeight;
+      if (fullH <= collapseH) {
+        inner.style.maxHeight = '';
+        wrap.classList.remove('collapsed');
+        return;
+      }
+      inner.style.maxHeight = collapseH + 'px';
+      inner.dataset.expanded = 'false';
+      wrap.classList.add('collapsed');
+      btn.style.display = 'flex';
     }
 
     // 프로필 저장
@@ -656,8 +699,19 @@
         await sb.from('user_profiles').upsert(_profileUpsert, { onConflict: 'nickname' });
         successEl.textContent = '저장됐어요!';
         document.getElementById('profileBio').innerHTML = DOMPurify.sanitize(bio);
-        document.getElementById('profileTos').innerHTML = DOMPurify.sanitize(tos);
-        document.getElementById('profileTosEmpty').style.display = tos ? 'none' : 'block';
+        const tosSectionEl = document.getElementById('sectionTos');
+        const tosEl = document.getElementById('profileTos');
+        tosEl.innerHTML = autolinkTos(DOMPurify.sanitize(tos));
+        if (tos) {
+          tosSectionEl.style.display = '';
+          tosEl.style.maxHeight = '';
+          tosEl.dataset.expanded = '';
+          document.getElementById('profileTosWrap').classList.add('collapsed');
+          document.getElementById('tosToggleBtn').style.display = 'none';
+          setTimeout(initTosToggle, 0);
+        } else {
+          tosSectionEl.style.display = 'none';
+        }
         setTimeout(() => successEl.textContent = '', 3000);
       }
 

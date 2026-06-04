@@ -239,9 +239,16 @@ async function loadSpeciesSidebar() {
     });
   }
 
+  const searchHtml = `<div class="flyout-search-wrap"><input type="text" class="flyout-search-input" placeholder="종족 검색..."></div>`;
+  const scrollWrapOpen  = '<div class="flyout-scroll-body">';
+  const scrollWrapClose = '</div>';
+
   // 플라이아웃 (PC)
   if (flyout) {
-    flyout.innerHTML = groupedHtml;
+    flyout.innerHTML = searchHtml + scrollWrapOpen + groupedHtml + scrollWrapClose;
+    const input = flyout.querySelector('.flyout-search-input');
+    const scrollBody = flyout.querySelector('.flyout-scroll-body');
+    input.addEventListener('input', () => filterFlyout(scrollBody, input.value));
     flyout.querySelectorAll('a').forEach(el => {
       el.addEventListener('click', () => { if (window.innerWidth >= 768) closeFlyout(); });
     });
@@ -249,7 +256,10 @@ async function loadSpeciesSidebar() {
 
   // 바텀시트 (모바일)
   if (sheetPanel) {
-    sheetPanel.innerHTML = '<div class="species-sheet-handle"></div>' + groupedHtml;
+    sheetPanel.innerHTML = '<div class="species-sheet-handle"></div>' + searchHtml + scrollWrapOpen + groupedHtml + scrollWrapClose;
+    const input = sheetPanel.querySelector('.flyout-search-input');
+    const scrollBody = sheetPanel.querySelector('.flyout-scroll-body');
+    input.addEventListener('input', () => filterFlyout(scrollBody, input.value));
     sheetPanel.querySelectorAll('a').forEach(el => {
       el.addEventListener('click', closeSpeciesSheet);
     });
@@ -310,10 +320,20 @@ function onSpeciesClick(btn) {
   }
 }
 
+function resetFlyoutSearch(container) {
+  const input = container?.querySelector('.flyout-search-input');
+  if (input && input.value) {
+    input.value = '';
+    const scrollBody = container.querySelector('.flyout-scroll-body');
+    if (scrollBody) filterFlyout(scrollBody, '');
+  }
+}
+
 function openFlyout(btn) {
   const flyout = document.getElementById('flyoutSpecies');
   if (!flyout) return;
 
+  resetFlyoutSearch(flyout);
   const rect = btn.getBoundingClientRect();
   flyout.style.top  = rect.top + 'px';
   flyout.style.left = (rect.right + 6) + 'px';
@@ -341,7 +361,12 @@ function openSpeciesSheet() {
   const overlay = document.getElementById('speciesSheetOverlay');
   const panel   = document.getElementById('speciesSheetPanel');
   if (overlay) overlay.classList.add('show');
-  if (panel)   { panel.classList.add('open'); panel.scrollTop = 0; }
+  if (panel) {
+    resetFlyoutSearch(panel);
+    panel.classList.add('open');
+    const scrollBody = panel.querySelector('.flyout-scroll-body');
+    if (scrollBody) scrollBody.scrollTop = 0;
+  }
   document.body.style.overflow = 'hidden';
 }
 
@@ -356,6 +381,54 @@ function closeSpeciesSheet() {
 function dismissSpeciesSheet() {
   closeSpeciesSheet();
   toggleSidebar();
+}
+
+function filterFlyout(scrollBody, query) {
+  const q = query.trim().toLowerCase();
+  const items  = scrollBody.querySelectorAll('.sidebar-subitem');
+  const labels = scrollBody.querySelectorAll('.flyout-group-label');
+
+  if (!q) {
+    items.forEach(el => el.style.display = '');
+    labels.forEach(el => el.style.display = '');
+    const empty = scrollBody.querySelector('.flyout-empty');
+    if (empty) empty.remove();
+    return;
+  }
+
+  items.forEach(el => {
+    if (el.classList.contains('sidebar-subitem--all') || el.classList.contains('flyout-all-link')) {
+      el.style.display = '';
+    } else {
+      el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+    }
+  });
+
+  labels.forEach(label => {
+    let next = label.nextElementSibling;
+    let hasVisible = false;
+    while (next && !next.classList.contains('flyout-group-label')) {
+      if (next.tagName === 'A' && next.style.display !== 'none') { hasVisible = true; break; }
+      next = next.nextElementSibling;
+    }
+    label.style.display = hasVisible ? '' : 'none';
+  });
+
+  const allHidden = [...items].filter(el =>
+    !el.classList.contains('sidebar-subitem--all') && !el.classList.contains('flyout-all-link')
+  ).every(el => el.style.display === 'none');
+
+  let empty = scrollBody.querySelector('.flyout-empty');
+  if (allHidden) {
+    if (!empty) {
+      empty = document.createElement('p');
+      empty.className = 'flyout-empty';
+      empty.textContent = '검색 결과가 없어요.';
+      scrollBody.appendChild(empty);
+    }
+  } else {
+    if (empty) empty.remove();
+  }
 }
 
 function onFlyoutOutsideClick(e) {
