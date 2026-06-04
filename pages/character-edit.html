@@ -645,7 +645,9 @@
         window.location.href = `character.html?id=${charId}`; return;
       }
 
-      editRole         = isAdminEd ? 'admin' : isOwner ? 'owner' : 'species_owner';
+      editRole         = (isAdminEd || (isOwner && isSpeciesOwner)) ? 'admin'
+                       : isOwner ? 'owner'
+                       : 'species_owner';
       originalCharData = c;
       currentUser      = user;
 
