@@ -127,6 +127,21 @@
     .add-char-card-info { padding:5px 7px 7px; }
     .add-char-card-name    { font-size:12px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .add-char-card-species { font-size:11px; color:var(--text-mute); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+    /* 개체 추가 모달 폴더 탭 */
+    .add-char-folder-tabs { display:flex; flex-wrap:wrap; gap:5px; flex-shrink:0; }
+    .add-char-folder-tab {
+      padding:5px 10px; border:1.5px solid var(--border); border-radius:7px;
+      background:#fff; font-size:12px; font-weight:600; color:var(--text-sub);
+      cursor:pointer; font-family:inherit; transition:all 0.15s; white-space:nowrap;
+    }
+    .add-char-folder-tab:hover  { border-color:var(--sky-dark); color:var(--sky-dark); }
+    .add-char-folder-tab.active { background:var(--sky-dark); border-color:var(--sky-dark); color:#fff; }
+
+    /* 폴더 드래그 순서 변경 */
+    .folder-list-drag { color:var(--text-mute); cursor:grab; font-size:14px; flex-shrink:0; user-select:none; touch-action:none; }
+    .folder-list-drag:active { cursor:grabbing; }
+    .folder-list-item.drag-over { border-color:var(--sky-dark); background:var(--sky-pale); }
   </style>
 </head>
 <body>
@@ -217,6 +232,7 @@
         <h3 class="modal-title" id="addCharModalTitle">개체 추가</h3>
         <button onclick="closeAddCharModal()" style="border:none;background:none;font-size:20px;cursor:pointer;color:var(--text-mute);">✕</button>
       </div>
+      <div class="add-char-folder-tabs" id="addCharFolderTabs"></div>
       <input type="text" id="addCharSearch" class="add-char-search" placeholder="개체명 또는 종족명 검색..."
         oninput="renderAddCharGrid()">
       <div class="add-char-grid" id="addCharGrid"></div>
@@ -229,12 +245,16 @@
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
   <script>
-    let allChars       = [];
-    let allFolders     = [];
-    let activeFolder   = 'all';
-    let currentUser    = null;
-    let openMenuId     = null;
-    let menuTargetChar = null;
+    let allChars            = [];
+    let allFolders          = [];
+    let activeFolder        = 'all';
+    let currentUser         = null;
+    let openMenuId          = null;
+    let menuTargetChar      = null;
+    let addCharFolderFilter = 'all';
+    let dragSrcId           = null;
+    let touchDragSrcId      = null;
+    let touchDragSrcEl      = null;
     const pager = createPager(renderCards);
 
     // ── 초기화 ─────────────────────────────────────────
@@ -254,7 +274,7 @@
       if (error || !chars) { document.getElementById('emptyState').style.display = 'flex'; return; }
 
       allChars   = chars;
-      allFolders = folders || [];
+      allFolders = applySavedFolderOrder(folders || []);
       document.getElementById('charCount').textContent = chars.length;
 
       if (chars.length === 0) { document.getElementById('emptyState').style.display = 'flex'; return; }
@@ -467,10 +487,12 @@
 
     // ── 개체 추가 모달 ───────────────────────────────
     function openAddCharModal() {
+      addCharFolderFilter = 'all';
       const folder = allFolders.find(f => f.id === activeFolder);
       document.getElementById('addCharModalTitle').textContent =
         folder ? `"${folder.name}" 에 개체 추가` : '개체 추가';
       document.getElementById('addCharSearch').value = '';
+      renderAddCharFolderTabs();
       renderAddCharGrid();
       document.getElementById('addCharModal').style.display = 'flex';
     }
@@ -487,11 +509,13 @@
       const q = document.getElementById('addCharSearch').value.trim().toLowerCase();
       const candidates = allChars.filter(c => {
         if (typeof activeFolder === 'number' && c.folder_id === activeFolder) return false;
+        if (addCharFolderFilter === 'none' && c.folder_id) return false;
+        if (typeof addCharFolderFilter === 'number' && c.folder_id !== addCharFolderFilter) return false;
         return !q || c.name.toLowerCase().includes(q) || (c.species_name || '').toLowerCase().includes(q);
       });
       const grid = document.getElementById('addCharGrid');
       if (!candidates.length) {
-        grid.innerHTML = '<p style="font-size:14px;color:var(--text-mute);padding:12px 0;">추가할 개체가 없어요.</p>';
+        grid.innerHTML = '<p style="grid-column:1/-1;text-align:center;font-size:14px;color:var(--text-mute);padding:28px 0;">추가 가능한 개체가 없습니다.</p>';
         return;
       }
       grid.innerHTML = candidates.map(c => {
@@ -549,7 +573,12 @@
       el.innerHTML = allFolders.map(f => {
         const cnt = allChars.filter(c => c.folder_id === f.id).length;
         return `
-          <div class="folder-list-item" id="fi_${f.id}">
+          <div class="folder-list-item" id="fi_${f.id}" draggable="true"
+            ondragstart="folderDragStart(event,${f.id})"
+            ondragover="folderDragOver(event)"
+            ondragleave="folderDragLeave(event)"
+            ondrop="folderDrop(event,${f.id})">
+            <span class="folder-list-drag" ontouchstart="folderTouchStart(event,${f.id})">⠿</span>
             <span class="folder-list-name">${escHtml(f.name)}</span>
             <span class="folder-list-count">${cnt}개</span>
             <button class="folder-list-edit" onclick="startEditFolder(${f.id})">수정</button>
@@ -569,6 +598,7 @@
         .insert({ user_id: currentUser.id, name }).select().single();
       if (error) { errEl.textContent = '폴더 생성에 실패했어요.'; return; }
       allFolders.push(data);
+      saveFolderOrder();
       input.value = '';
       renderFolderList();
       renderFolderChips();
@@ -614,11 +644,122 @@
       const { error } = await sb.from('character_folders').delete().eq('id', id);
       if (error) { alert('삭제에 실패했어요.'); return; }
       allFolders = allFolders.filter(f => f.id !== id);
+      saveFolderOrder();
       allChars.forEach(c => { if (c.folder_id === id) c.folder_id = null; });
       if (activeFolder === id) activeFolder = 'all';
       renderFolderList();
       renderFolderChips();
       filterCards();
+    }
+
+    // ── 개체 추가 모달 폴더 탭 ────────────────────────
+    function renderAddCharFolderTabs() {
+      const tabs = [
+        { key: 'all',  label: '전체' },
+        { key: 'none', label: '미분류' },
+        ...allFolders.filter(f => f.id !== activeFolder).map(f => ({ key: f.id, label: f.name })),
+      ];
+      document.getElementById('addCharFolderTabs').innerHTML = tabs.map(t => {
+        const expr = typeof t.key === 'number' ? t.key : `'${t.key}'`;
+        return `<button class="add-char-folder-tab ${addCharFolderFilter === t.key ? 'active' : ''}"
+          onclick="setAddCharFolderFilter(${expr})">${escHtml(t.label)}</button>`;
+      }).join('');
+    }
+
+    function setAddCharFolderFilter(val) {
+      addCharFolderFilter = val;
+      renderAddCharFolderTabs();
+      renderAddCharGrid();
+    }
+
+    // ── 폴더 순서 저장·복원 ──────────────────────────
+    function saveFolderOrder() {
+      localStorage.setItem(`folder_order_${currentUser.id}`, JSON.stringify(allFolders.map(f => f.id)));
+    }
+
+    function applySavedFolderOrder(folders) {
+      try {
+        const saved = localStorage.getItem(`folder_order_${currentUser.id}`);
+        if (!saved) return folders;
+        const order = JSON.parse(saved);
+        const idx = Object.fromEntries(order.map((id, i) => [id, i]));
+        return [...folders].sort((a, b) => (idx[a.id] ?? 999) - (idx[b.id] ?? 999));
+      } catch { return folders; }
+    }
+
+    // ── 폴더 드래그 앤 드롭 ──────────────────────────
+    function folderDragStart(e, id) {
+      dragSrcId = id;
+      e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function folderDragOver(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      e.currentTarget.classList.add('drag-over');
+    }
+
+    function folderDragLeave(e) {
+      // 자식 요소로 이동할 때는 drag-over 해제하지 않음
+      if (!e.currentTarget.contains(e.relatedTarget)) {
+        e.currentTarget.classList.remove('drag-over');
+      }
+    }
+
+    function folderDrop(e, targetId) {
+      e.preventDefault();
+      e.currentTarget.classList.remove('drag-over');
+      folderReorder(dragSrcId, targetId);
+    }
+
+    function folderReorder(srcId, targetId) {
+      if (srcId === targetId) return;
+      const si = allFolders.findIndex(f => f.id === srcId);
+      const ti = allFolders.findIndex(f => f.id === targetId);
+      if (si < 0 || ti < 0) return;
+      const arr = [...allFolders];
+      arr.splice(ti, 0, arr.splice(si, 1)[0]);
+      allFolders = arr;
+      saveFolderOrder();
+      renderFolderList();
+      renderFolderChips();
+    }
+
+    // ── 터치 드래그 (모바일/태블릿) ─────────────────────
+    function folderTouchStart(e, id) {
+      e.preventDefault();
+      touchDragSrcId = id;
+      touchDragSrcEl = document.getElementById(`fi_${id}`);
+      touchDragSrcEl.style.opacity = '0.45';
+      document.addEventListener('touchmove', onFolderTouchMove, { passive: false });
+      document.addEventListener('touchend',  onFolderTouchEnd,  { once: true });
+    }
+
+    function onFolderTouchMove(e) {
+      e.preventDefault();
+      const touch = e.touches[0];
+      // 드래그 중인 요소를 숨겨 아래 요소를 감지
+      touchDragSrcEl.style.visibility = 'hidden';
+      const below = document.elementFromPoint(touch.clientX, touch.clientY);
+      touchDragSrcEl.style.visibility = '';
+
+      document.querySelectorAll('.folder-list-item').forEach(el => el.classList.remove('drag-over'));
+      const target = below?.closest('.folder-list-item');
+      if (target && target !== touchDragSrcEl) target.classList.add('drag-over');
+    }
+
+    function onFolderTouchEnd() {
+      document.removeEventListener('touchmove', onFolderTouchMove);
+      if (touchDragSrcEl) touchDragSrcEl.style.opacity = '';
+
+      const target = document.querySelector('.folder-list-item.drag-over');
+      if (target) {
+        target.classList.remove('drag-over');
+        const targetId = parseInt(target.id.replace('fi_', ''));
+        folderReorder(touchDragSrcId, targetId);
+      }
+      touchDragSrcId = null;
+      touchDragSrcEl = null;
     }
 
     // ── 유틸 ─────────────────────────────────────────
