@@ -560,20 +560,25 @@
       document.getElementById('editSubtitle').insertAdjacentElement('afterend', notice);
 
       if (role === 'species_owner') {
-        notice.textContent = '종족주 권한으로 수정 중입니다. 개체 이름·개인 설명·분류는 소유주만 수정할 수 있어요.';
-        // 개체 이름 (소유주 전용)
+        notice.textContent = '종족주 권한으로 수정 중입니다. 개체 이름과 개인 설명은 소유주만 수정할 수 있어요.';
+        // 개체 이름·개인 설명은 소유주 전용
         muteById('charName');
-        // 개인 설명
         muteById('charDesc');
-        // 분류 (추가 버튼 숨김, 기존 칩 삭제 버튼 숨김은 renderAddedCategories에서 처리)
-        document.querySelector('[onclick="showCategoryInput()"]')?.setAttribute('disabled', 'disabled');
-        document.querySelector('[onclick="showCategoryInput()"]')?.style && (document.querySelector('[onclick="showCategoryInput()"]').style.opacity = '0.4');
-        // custom 섹션 추가 버튼 숨김
-        document.getElementById('btnAddCustom')?.setAttribute('disabled', 'disabled');
-        document.getElementById('btnAddCustom') && (document.getElementById('btnAddCustom').style.opacity = '0.4');
+        // custom 섹션 추가 불가 (소유주 전용)
+        const btnCustom = document.getElementById('btnAddCustom');
+        if (btnCustom) { btnCustom.setAttribute('disabled', 'disabled'); btnCustom.style.opacity = '0.4'; }
+        // 기존 custom 섹션 수정·삭제 불가
+        document.querySelectorAll('#sectionList .section-card[data-type="custom"]').forEach(card => {
+          const removeBtn = card.querySelector('button[onclick*="removeSection"]');
+          if (removeBtn) { removeBtn.disabled = true; removeBtn.style.opacity = '0.4'; }
+          const titleInput = card.querySelector('.section-title-input');
+          if (titleInput) mute(titleInput);
+          const quill = quillInstances.get(card.dataset.id);
+          if (quill) quill.disable();
+        });
 
       } else if (role === 'owner') {
-        notice.textContent = '개체 이름·개인 설명·분류 영역만 수정할 수 있어요. 종족 설정 정보는 종족주가 관리합니다.';
+        notice.textContent = '개체 이름·개인 설명 영역만 수정할 수 있어요. 분류·종족 설정 정보는 종족주가 관리합니다.';
         // 개체번호 (종족주 전용)
         muteById('charNumber');
         // 이미지 업로드 비활성화
@@ -598,10 +603,27 @@
         muteById('sensitiveNote');
         // 분양 규칙
         ['allowResale','allowFreeAdoption','allowPaidAdoption','allowOtherAdoption'].forEach(muteRadio);
-        // settings/relation 섹션 추가 버튼 숨김
+        // 분류 비활성화 (소유주는 분류 수정 불가)
+        const addCategoryBtn = document.querySelector('[onclick="showCategoryInput()"]');
+        if (addCategoryBtn) { addCategoryBtn.setAttribute('disabled', 'disabled'); addCategoryBtn.style.opacity = '0.4'; }
+        document.querySelectorAll('#addedCategories button').forEach(btn => { btn.disabled = true; btn.style.display = 'none'; });
+        // settings/relation 섹션 추가 불가
         ['btnAddSettings','btnAddRelation'].forEach(id => {
-          document.getElementById(id)?.setAttribute('disabled','disabled');
-          document.getElementById(id) && (document.getElementById(id).style.opacity = '0.4');
+          const el = document.getElementById(id);
+          if (el) { el.setAttribute('disabled','disabled'); el.style.opacity = '0.4'; }
+        });
+        // 기존 섹션 삭제·수정 불가 (새 custom 섹션 추가는 허용)
+        document.querySelectorAll('#sectionList .section-card').forEach(card => {
+          const removeBtn = card.querySelector('button[onclick*="removeSection"]');
+          if (removeBtn) { removeBtn.disabled = true; removeBtn.style.opacity = '0.4'; }
+          card.querySelectorAll('input, select').forEach(mute);
+          const quill = quillInstances.get(card.dataset.id);
+          if (quill) quill.disable();
+          // relation 카드 내부 quill 개별 비활성화
+          card.querySelectorAll('.ql-container').forEach(container => {
+            const q = Quill.find(container);
+            if (q) q.disable();
+          });
         });
       }
     }
@@ -1097,7 +1119,7 @@
       const btn     = document.getElementById('submitBtn');
       errorEl.textContent = '';
 
-      // 소유주 전용 저장 (개인 설명·분류·custom 섹션만)
+      // 소유주 전용 저장 (개체명·개인 설명만)
       if (editRole === 'owner') {
         const ownerName = document.getElementById('charName').value.trim();
         if (!ownerName) { errorEl.textContent = '이름을 입력해주세요.'; return; }
@@ -1105,16 +1127,17 @@
         btn.textContent = '저장 중...';
         btn.disabled = true;
         try {
-          const allSections       = collectSections();
-          const existingNonCustom = (originalCharData.char_sections || []).filter(s => s.type !== 'custom');
-          const newCustom         = allSections.filter(s => s.type === 'custom');
-          const mergedSections    = [...existingNonCustom, ...newCustom];
+          // 기존 섹션 전체를 원본 그대로 유지, 새로 추가된 custom 섹션만 병합
+          const originalSections = originalCharData.char_sections || [];
+          const existingIds      = new Set(originalSections.map(s => s.id));
+          const newCustomOnly    = collectSections().filter(s => s.type === 'custom' && !existingIds.has(s.id));
+          const mergedSections   = [...originalSections, ...newCustomOnly];
 
           const { error } = await sb.from('characters').update({
-            name:            ownerName,
-            description:     document.getElementById('charDesc').value.trim() || null,
-            char_categories: addedCategories.length ? addedCategories : null,
-            char_sections:   mergedSections.length ? mergedSections : null,
+            name:          ownerName,
+            description:   document.getElementById('charDesc').value.trim() || null,
+            // char_categories: 소유주는 분류 수정 불가 — 저장 payload에서 제외
+            char_sections: mergedSections.length ? mergedSections : null,
           }).eq('id', charId);
 
           if (error) throw new Error(`저장에 실패했어요: ${error.message}`);
@@ -1234,7 +1257,7 @@
           owner_is_offsite:    ownerType !== 'site',
           owner_user_id:       ownerType === 'site' ? originalOwnerUserId : null,
           owner_contact:       externalContact || null,
-          description:         desc || null,
+          ...(editRole !== 'species_owner' && { description: desc || null }),
           image_url,
           thumbnail_url,
           additional_images:   additional_images.length ? additional_images : null,
