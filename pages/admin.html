@@ -135,9 +135,13 @@
         <!-- 유저 관리 탭 -->
         <div id="tabUsers" class="tab-content" style="display:none;">
           <section class="section">
-            <h2 class="settings-section-title">유저 목록</h2>
+            <div class="section-header" style="margin-bottom:12px;">
+              <h2 class="settings-section-title" style="margin-bottom:0;">유저 목록</h2>
+              <input type="text" class="list-search" id="userAdminSearch" placeholder="닉네임 / 이메일 / UUID 검색" style="width:240px;" oninput="filterAdminUsers(this.value)">
+            </div>
             <div class="admin-card-list" id="userTableBody"></div>
             <p id="userEmpty" class="empty-state" style="display:none;">유저가 없어요.</p>
+            <p id="userAdminNoResult" class="empty-state" style="display:none;">검색 결과가 없습니다.</p>
             <div id="pgUsers"></div>
           </section>
         </div>
@@ -505,6 +509,7 @@
 
     // ── 유저 관리 ────────────────────────────
     const TESTERS = ['Moulow', 'moulow', 'Sawol'];
+    let allAdminUsers = [];
 
     function adminUserPriority(u) {
       if (u.login_id === 'admin')          return 0;
@@ -563,8 +568,28 @@
       }
 
       empty.style.display = 'none';
-      console.log('[get_all_users 첫번째 row]', data[0]);
-      userPager.load(sortAdminUsers(data));
+      allAdminUsers = sortAdminUsers(data);
+      const q = document.getElementById('userAdminSearch')?.value || '';
+      if (q) { filterAdminUsers(q); } else { userPager.load(allAdminUsers); }
+    }
+
+    function filterAdminUsers(q) {
+      const qLow = q.toLowerCase();
+      const noResult = document.getElementById('userAdminNoResult');
+      const filtered = q
+        ? allAdminUsers.filter(u =>
+            (u.nickname  || '').toLowerCase().includes(qLow) ||
+            (u.login_id  || '').toLowerCase().includes(qLow) ||
+            (u.email     || '').toLowerCase().includes(qLow) ||
+            (u.id        || '').toLowerCase().includes(qLow))
+        : allAdminUsers;
+      if (q && filtered.length === 0) {
+        userPager.load([]);
+        noResult.style.display = 'block';
+      } else {
+        noResult.style.display = 'none';
+        userPager.load(filtered);
+      }
     }
 
     async function setRole(userId, role) {
