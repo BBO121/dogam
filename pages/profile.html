@@ -7,6 +7,24 @@
   <link rel="stylesheet" href="../css/style.css">
   <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
   <style>
+    /* ── 업적 통계 (인라인 보장 — CSS 캐시 우회) ── */
+    .achievement-stats { margin-bottom: 12px; }
+    .achievement-stats-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
+    .achievement-stats-count { font-size: 14px; font-weight: 700; color: #1E293B; }
+    .achievement-stats-pct { font-size: 13px; font-weight: 700; color: #0284C7; }
+    .achievement-progress-bar { height: 8px; background: #E2E8F0; border-radius: 999px; overflow: hidden; }
+    .achievement-progress-fill { height: 100%; background: linear-gradient(90deg, #6ec1ff, #8fd3ff, #b7e4ff); border-radius: 999px; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+    .achievement-progress-fill.complete { background: linear-gradient(90deg, #f9c74f, #f8961e, #f3722c); }
+    /* ── 대표 업적 쇼케이스 ── */
+    .ach-showcase-label { font-size: 11px; font-weight: 700; color: #94A3B8; margin: 14px 0 10px; letter-spacing: 0.3px; }
+    .ach-showcase-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
+    @media (min-width: 600px) { .ach-showcase-grid { grid-template-columns: repeat(2, 1fr); } }
+    /* ── 대표 업적 선택 모달 ── */
+    .featured-ach-option { display:flex; align-items:center; gap:10px; padding:10px 12px; border:1.5px solid #E2E8F0; border-radius:8px; cursor:pointer; transition:border-color 0.12s, background 0.12s; }
+    .featured-ach-option.selected { border-color:#0EA5E9; background:#F0F9FF; }
+    .featured-ach-check { width:20px; height:20px; border-radius:4px; border:1.5px solid #CBD5E1; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; color:#fff; }
+    .featured-ach-option.selected .featured-ach-check { background:#0EA5E9; border-color:#0EA5E9; }
+
     .quill-wrap .ql-toolbar { border-radius:9px 9px 0 0; border:1.5px solid var(--border); border-bottom:none; font-family:inherit; }
     .quill-wrap .ql-container { border-radius:0 0 9px 9px; border:1.5px solid var(--border); min-height:90px; font-size:14px; font-family:inherit; line-height:1.7; }
     .quill-wrap:focus-within .ql-toolbar,
@@ -104,6 +122,27 @@
             </div>
             <div id="myCharPreview" class="character-grid"></div>
             <p id="myCharEmpty" class="empty-state" style="display:none;">아직 등록된 개체가 없어요.</p>
+          </section>
+
+          <!-- 업적 요약 -->
+          <section class="section" id="sectionAchievements">
+            <div class="section-header">
+              <h2>업적</h2>
+  <a href="achievements.html" class="btn-more" id="achievementsLink">전체 보기</a>
+            </div>
+            <div class="achievement-stats" id="achievementStats" style="display:none;">
+              <div class="achievement-stats-row">
+                <span class="achievement-stats-count" id="achievementStatsText"></span>
+                <span class="achievement-stats-pct" id="achievementPct"></span>
+              </div>
+              <div class="achievement-progress-bar">
+                <div class="achievement-progress-fill" id="achievementProgressFill" style="width:0%"></div>
+              </div>
+            </div>
+            <div id="achShowcase" style="display:none;">
+              <p class="ach-showcase-label">대표 업적</p>
+              <div class="ach-showcase-grid" id="achShowcaseGrid"></div>
+            </div>
           </section>
 
         </div>
@@ -213,6 +252,7 @@
   <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
   <script src="../js/auth.js"></script>
+  <script src="../js/achievements.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
@@ -436,6 +476,7 @@
       console.log('[initOtherProfile] profileOwnerId:', profileOwnerId, '/ displayName:', displayName);
       loadMySpecies(profileOwnerId, displayName);
       loadMyCharacters(profileOwnerId, displayName);
+      loadAchievements(profileOwnerId, displayName);
     }
 
     async function initMyProfile(user) {
@@ -520,6 +561,7 @@
       console.log('[initMyProfile] user.id:', user.id, '/ displayName:', displayName);
       loadMySpecies(user.id, displayName);
       loadMyCharacters(user.id, displayName);
+      loadAchievements(user.id, null);
     }
 
     async function loadMySpecies(userId, nickname) {
@@ -595,6 +637,86 @@
           </div>
         </a>
       `).join('');
+    }
+
+    async function loadAchievements(userId, viewNickname) {
+      if (!userId) {
+        document.getElementById('sectionAchievements').style.display = 'none';
+        return;
+      }
+      try {
+        const profileNickname = viewNickname ||
+          (currentUser?.user_metadata?.display_name || currentUser?.user_metadata?.nickname);
+
+        const [{ data: allAch }, { data: myAch }, { data: profileData }] = await Promise.all([
+          sb.from('achievements').select('id'),
+          sb.from('user_achievements')
+            .select('achievement_code, unlocked_at')
+            .eq('user_id', userId)
+            .order('unlocked_at', { ascending: false }),
+          sb.from('user_profiles')
+            .select('featured_achievements')
+            .eq('nickname', profileNickname)
+            .single(),
+        ]);
+
+        if (!allAch) { document.getElementById('sectionAchievements').style.display = 'none'; return; }
+
+        const earnedCount = myAch?.length || 0;
+        const totalCount  = allAch.length;
+        const pct         = totalCount > 0 ? Math.floor((earnedCount / totalCount) * 100) : 0;
+
+        document.getElementById('achievementStats').style.display = 'block';
+        document.getElementById('achievementStatsText').textContent = `${earnedCount} / ${totalCount} 달성`;
+        document.getElementById('achievementPct').textContent = `${pct}%`;
+        const fillEl = document.getElementById('achievementProgressFill');
+        fillEl.style.width = `${pct}%`;
+        if (pct === 100) fillEl.classList.add('complete');
+
+        const achLink = document.getElementById('achievementsLink');
+        if (viewNickname) achLink.href = `achievements.html?user=${encodeURIComponent(viewNickname)}`;
+
+        // 대표 업적: featured_achievements 우선, 없으면 최근 4개 fallback
+        const earnedCodes   = new Set((myAch || []).map(a => a.achievement_code));
+        const dateMap       = Object.fromEntries((myAch || []).map(a => [a.achievement_code, a.unlocked_at]));
+        const featuredRaw   = (profileData?.featured_achievements || []).filter(c => earnedCodes.has(c));
+        const showcaseCodes = featuredRaw.length > 0
+          ? featuredRaw.slice(0, 4)
+          : (myAch || []).slice(0, 4).map(a => a.achievement_code);
+
+        if (showcaseCodes.length > 0) {
+          const { data: details } = await sb.from('achievements')
+            .select('code, name, description')
+            .in('code', showcaseCodes);
+
+          if (details?.length) {
+            const achMap = Object.fromEntries(details.map(a => [a.code, a]));
+            document.getElementById('achShowcaseGrid').innerHTML = showcaseCodes
+              .filter(code => achMap[code])
+              .map(code => {
+                const a    = achMap[code];
+                const date = new Date(dateMap[code]).toLocaleDateString('ko-KR', {
+                  year: 'numeric', month: '2-digit', day: '2-digit'
+                }).replace(/\. /g, '.').replace(/\.$/, '');
+                return `
+                  <div class="achievement-item earned">
+                    <div class="ach-icon-wrap transparent">
+                      <img src="../images/achievement-badge.png" class="ach-icon" alt="업적">
+                    </div>
+                    <div class="achievement-item-body">
+                      <p class="achievement-item-name">${a.name}</p>
+                      <p class="achievement-item-desc">${a.description || ''}</p>
+                    </div>
+                    <span class="achievement-item-date">${date}</span>
+                  </div>`;
+              })
+              .join('');
+            document.getElementById('achShowcase').style.display = 'block';
+          }
+        }
+      } catch (e) {
+        console.error('[업적] profile loadAchievements 오류:', e);
+      }
     }
 
     function toggleSettings() {
@@ -697,11 +819,13 @@
           currentUser.user_metadata.display_name = newDisplayName;
           document.getElementById('profileName').textContent = newDisplayName;
           document.getElementById('breadcrumbName').textContent = newDisplayName;
+          window.awardAchievement?.('nickname_set');
         }
         const _profileUpsert = { nickname: newDisplayName, bio, tos, joined_at: currentUser.created_at };
         if (currentUser.user_metadata?.avatar_url) _profileUpsert.avatar_url = currentUser.user_metadata.avatar_url;
         await sb.from('user_profiles').upsert(_profileUpsert, { onConflict: 'nickname' });
         successEl.textContent = '저장됐어요!';
+        window.awardAchievement?.('profile_setup');
         document.getElementById('profileBio').innerHTML = DOMPurify.sanitize(bio);
         const tosSectionEl = document.getElementById('sectionTos');
         const tosEl = document.getElementById('profileTos');

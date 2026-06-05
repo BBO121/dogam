@@ -73,6 +73,7 @@
   <script src="../js/auth.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
+  <script src="../js/achievements.js"></script>
   <script src="../js/main.js"></script>
   <script>
     async function initPage() {
@@ -117,6 +118,8 @@
 
       document.getElementById('pageLoading').style.display = 'none';
       document.getElementById('pageContent').style.display = 'block';
+
+      window.awardAchievement?.('first_guide');
     }
 
     initPage();

@@ -1,0 +1,108 @@
+// 업적 지급 공통 함수
+// 실패해도 원래 기능을 차단하지 않음 — 에러는 console.error로만 처리
+
+// DB 카운터 증가 후 새 count 반환 (실패 시 0 반환, 기능 차단 없음)
+window.incrementAchCounter = async function(counterKey) {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return 0;
+    const { data, error } = await sb.rpc('increment_achievement_counter', {
+      p_counter_key: counterKey,
+    });
+    if (error) { console.warn('[업적] 카운터 증가 실패:', counterKey, error); return 0; }
+    return data || 0;
+  } catch (e) {
+    console.warn('[업적] 카운터 증가 예외:', counterKey, e);
+    return 0;
+  }
+};
+
+// pending: true  → redirect 직전 페이지, 다음 페이지에서 토스트 표시
+// pending: false → 현재 페이지에서 즉시 토스트 표시 (기본값)
+window.awardAchievement = async function(code, { pending = false } = {}) {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    const user = session?.user;
+    if (!user) return;
+
+    const { error } = await sb.from('user_achievements').insert({
+      user_id: user.id,
+      achievement_code: code,
+    });
+
+    if (error) {
+      if (error.code === '23505') return; // 이미 획득한 업적 — 무시
+      console.error('[업적] 지급 실패:', code, error);
+      return;
+    }
+
+    // 업적 정보 조회
+    const { data: ach } = await sb.from('achievements')
+      .select('name, description')
+      .eq('code', code)
+      .single();
+
+    if (!ach) return;
+
+    if (pending) {
+      // redirect 후 다음 페이지에서 표시
+      const p = JSON.parse(sessionStorage.getItem('_ach_pending') || '[]');
+      p.push({ name: ach.name, desc: ach.description || '' });
+      sessionStorage.setItem('_ach_pending', JSON.stringify(p));
+    } else {
+      // 현재 페이지에서 즉시 표시
+      _showAchievementToast(ach.name, ach.description || '');
+    }
+
+    // 알림 테이블 기록 — 실패해도 업적 지급 결과에 영향 없음
+    try {
+      const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname;
+      if (nickname) {
+        await sb.from('notifications').insert({
+          user_nickname: nickname,
+          type:          'achievement',
+          message:       `[${ach.name}] 업적을 달성했습니다.`,
+          link:          'achievements.html',
+        });
+      }
+    } catch (notifErr) {
+      console.warn('[업적] 알림 생성 실패:', code, notifErr);
+    }
+  } catch (e) {
+    console.error('[업적] 예외 발생:', code, e);
+  }
+};
+
+// 페이지 로드 시 pending 토스트 처리
+document.addEventListener('DOMContentLoaded', () => {
+  const pending = JSON.parse(sessionStorage.getItem('_ach_pending') || '[]');
+  if (!pending.length) return;
+  sessionStorage.removeItem('_ach_pending');
+  pending.forEach((ach, i) => {
+    setTimeout(() => _showAchievementToast(ach.name, ach.desc), i * 900);
+  });
+});
+
+function _showAchievementToast(name, desc) {
+  const toast = document.createElement('div');
+  toast.className = 'achievement-toast';
+  toast.innerHTML = `
+    <img class="achievement-toast-icon" src="../images/achievement-badge.png" alt="업적">
+    <div class="achievement-toast-body">
+      <p class="achievement-toast-label">업적 달성!</p>
+      <p class="achievement-toast-name">${_escapeAch(name)}</p>
+      ${desc ? `<p class="achievement-toast-desc">${_escapeAch(desc)}</p>` : ''}
+    </div>
+  `;
+  document.body.appendChild(toast);
+  requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add('show')));
+  setTimeout(() => {
+    toast.classList.remove('show');
+    setTimeout(() => toast.remove(), 400);
+  }, 3800);
+}
+
+function _escapeAch(str) {
+  return String(str)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}

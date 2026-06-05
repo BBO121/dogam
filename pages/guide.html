@@ -53,6 +53,7 @@
   <script src="../js/auth.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
+  <script src="../js/achievements.js"></script>
   <script src="../js/main.js"></script>
   <script>
     let _guideData = null;
@@ -78,6 +79,7 @@
       document.getElementById('guideCount').textContent = `총 ${data.length}개`;
       document.getElementById('toggleBtn').style.display = 'inline';
       _guideData = data;
+      await window.awardAchievement?.('first_guide');
       pager.load(data);
     }
 
@@ -109,7 +111,7 @@
           const date = new Date(n.created_at).toLocaleDateString('ko-KR', {
             year: 'numeric', month: '2-digit', day: '2-digit'
           }).replace(/\. /g, '.').replace(/\.$/, '');
-          const content = n.content.replace(/\n/g, '<br>');
+          const content = (n.content || '').replace(/\n/g, '<br>');
           return `
             ${i > 0 ? '<div class="notice-full-divider"></div>' : ''}
             <div class="notice-full-item">

@@ -82,6 +82,7 @@
   <script src="../js/auth.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
+  <script src="../js/achievements.js"></script>
   <script src="../js/main.js"></script>
   <script>
     const params = new URLSearchParams(window.location.search);
@@ -129,6 +130,8 @@
 
       document.getElementById('pageLoading').style.display = 'none';
       document.getElementById('pageContent').style.display = 'block';
+
+      window.awardAchievement?.('first_dev_log');
     }
 
     async function deleteNote() {

@@ -232,6 +232,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
   <script src="../js/auth.js"></script>
+  <script src="../js/achievements.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
@@ -731,6 +732,24 @@
 
         if (error) throw new Error(`등록에 실패했어요: ${error.message}`);
 
+        await window.awardAchievement?.('first_character', { pending: true });
+        if (ownerType === 'site' && selectedNickId === currentUser?.id) {
+          await window.awardAchievement?.('first_owned_character', { pending: true });
+        }
+        if (currentUser?.id) {
+          const { data: _mySpecies } = await sb.from('species')
+            .select('name').eq('owner_user_id', currentUser.id);
+          const _mySpeciesNames = (_mySpecies || []).map(s => s.name);
+          if (_mySpeciesNames.length > 0) {
+            const { count: _chCount } = await sb.from('characters')
+              .select('*', { count: 'exact', head: true }).in('species_name', _mySpeciesNames);
+            const _cc = _chCount || 0;
+            if (_cc >= 10)  await window.awardAchievement?.('chars_10', { pending: true });
+            if (_cc >= 30)  await window.awardAchievement?.('chars_30', { pending: true });
+            if (_cc >= 50)  await window.awardAchievement?.('chars_50', { pending: true });
+            if (_cc >= 100) await window.awardAchievement?.('chars_100', { pending: true });
+          }
+        }
         window.location.href = speciesId ? `species.html?id=${speciesId}` : 'my-characters.html';
       } catch (err) {
         errorEl.textContent = err.message;

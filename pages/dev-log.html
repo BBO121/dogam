@@ -53,6 +53,7 @@
   <script src="../js/auth.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
+  <script src="../js/achievements.js"></script>
   <script src="../js/main.js"></script>
   <script>
     let _noteData = null;
@@ -79,6 +80,7 @@
       document.getElementById('toggleBtn').style.display = 'inline';
       _noteData = data;
       pager.load(data);
+      await window.awardAchievement?.('first_dev_log');
     }
 
     function renderNotices(list) {

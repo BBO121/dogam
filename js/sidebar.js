@@ -58,7 +58,7 @@ async function initSidebar() {
           내 정보<span class="sidebar-accordion-arrow" id="arrMyInfo"></span>
         </button>
         <div class="sidebar-accordion-body" id="bodyMyInfo">
-          <a href="profile.html"           class="sidebar-subitem ${path === 'profile.html'           ? 'active' : ''}">프로필 설정</a>
+          <a href="profile.html"           class="sidebar-subitem ${path === 'profile.html'           ? 'active' : ''}">내 프로필</a>
           <a href="transfer-history.html" class="sidebar-subitem ${path === 'transfer-history.html' ? 'active' : ''}">캐릭터 이전 내역</a>
         </div>
       </div>

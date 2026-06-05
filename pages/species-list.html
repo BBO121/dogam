@@ -57,6 +57,7 @@
   <script src="../js/auth.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
+  <script src="../js/achievements.js"></script>
   <script src="../js/main.js"></script>
   <script>
     let allSpecies    = [];
@@ -102,6 +103,7 @@
       if (!list.length) {
         grid.innerHTML = '<p class="page-loading">검색 결과가 없어요</p>';
         document.getElementById('paginationWrap').innerHTML = '';
+        if (q) window.awardAchievement?.('no_species_search');
         return;
       }
 
