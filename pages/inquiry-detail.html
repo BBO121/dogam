@@ -17,6 +17,12 @@
     .inquiry-input-area { margin-top:16px; border:1px solid var(--border); border-radius:var(--radius); background:#fff; padding:14px 16px; display:flex; flex-direction:column; gap:8px; }
     .inquiry-textarea { width:100%; border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-size:14px; resize:vertical; outline:none; font-family:inherit; box-sizing:border-box; }
     .inquiry-textarea:focus { border-color:var(--sky); }
+    .thread-actions { margin-left:auto; display:flex; gap:4px; flex-shrink:0; }
+    .thread-action-btn { background:none; border:none; font-size:12px; color:var(--text-mute); cursor:pointer; padding:2px 6px; border-radius:4px; line-height:1.6; }
+    .thread-action-btn:hover { color:var(--text); background:var(--border); }
+    .thread-action-btn--delete:hover { color:#ef4444; background:#fee2e2; }
+    .thread-edit-area { margin-top:6px; display:flex; flex-direction:column; gap:6px; }
+    .thread-edit-btns { display:flex; justify-content:flex-end; gap:6px; }
   </style>
 </head>
 <body>
@@ -143,8 +149,9 @@
 
     function renderComments(data, authorNick) {
       const allComments = [];
+      const hasComments = Array.isArray(data.comments) && data.comments.length > 0;
 
-      if (data.answer) {
+      if (!hasComments && data.answer) {
         allComments.push({
           author: data.answered_by || '관리자',
           is_admin: true,
@@ -152,7 +159,7 @@
           created_at: data.answered_at,
         });
       }
-      if (data.user_reply) {
+      if (!hasComments && data.user_reply) {
         allComments.push({
           author: data.user_replied_by || authorNick,
           is_admin: false,
@@ -160,21 +167,42 @@
           created_at: data.user_replied_at,
         });
       }
-      if (Array.isArray(data.comments)) allComments.push(...data.comments);
+      if (Array.isArray(data.comments)) {
+        data.comments.forEach((c, idx) => allComments.push({ ...c, _comments_idx: idx }));
+      }
 
       if (allComments.length === 0) {
         document.getElementById('commentList').innerHTML = '<p style="font-size:14px;color:var(--text-mute);padding:4px 0;">아직 댓글이 없어요.</p>';
         return;
       }
 
-      document.getElementById('commentList').innerHTML = allComments.map(c => `
-        <div class="thread-item${c.is_admin ? ' thread-item--admin' : ''}">
+      const myId = currentUser?.id;
+      const myNick = currentUser?.user_metadata?.display_name || currentUser?.user_metadata?.nickname;
+      document.getElementById('commentList').innerHTML = allComments.map(c => {
+        const hasIdx = c._comments_idx !== undefined;
+        const canEdit = hasIdx && !!c.author_user_id && c.author_user_id === myId;
+        const canDeleteLegacy = hasIdx && !c.author_user_id && myNick && (c.author === myNick || c.nickname === myNick);
+        const editedMark = c.updated_at ? ' <span style="font-size:11px;color:var(--text-mute);font-weight:400;">(수정됨)</span>' : '';
+        const actionsBtns = canEdit
+          ? `<div class="thread-actions">
+               <button class="thread-action-btn" onclick="editComment(${c._comments_idx})">수정</button>
+               <button class="thread-action-btn thread-action-btn--delete" onclick="deleteComment(${c._comments_idx})">삭제</button>
+             </div>`
+          : canDeleteLegacy
+            ? `<div class="thread-actions">
+                 <button class="thread-action-btn thread-action-btn--delete" onclick="deleteComment(${c._comments_idx})">삭제</button>
+               </div>`
+            : '';
+        return `
+        <div class="thread-item${c.is_admin ? ' thread-item--admin' : ''}" data-comment-idx="${c._comments_idx ?? ''}">
           <div class="thread-header">
             <span class="thread-author">${escHtml(c.author)}${roleBadge(c)}</span>
-            <span class="thread-date">${fmtDate(c.created_at)}</span>
+            <span class="thread-date">${fmtDate(c.created_at)}${editedMark}</span>
+            ${actionsBtns}
           </div>
           <p class="thread-content">${escHtml(c.content)}</p>
-        </div>`).join('');
+        </div>`;
+      }).join('');
     }
 
     async function initPage() {
@@ -328,6 +356,58 @@
           ).catch(() => {});
         }
       }
+    }
+
+    function editComment(idx) {
+      const item = document.querySelector(`.thread-item[data-comment-idx="${idx}"]`);
+      if (!item) return;
+      const contentEl = item.querySelector('.thread-content');
+      const original = currentData.comments[idx].content;
+
+      const editArea = document.createElement('div');
+      editArea.className = 'thread-edit-area';
+      editArea.innerHTML = `
+        <textarea class="inquiry-textarea" rows="3" id="editTextarea_${idx}">${escHtml(original)}</textarea>
+        <div class="thread-edit-btns">
+          <button class="btn-ghost" style="font-size:13px;padding:4px 12px;" onclick="cancelEditComment()">취소</button>
+          <button class="btn-secondary" style="font-size:13px;padding:4px 12px;" onclick="saveEditComment(${idx})">저장</button>
+        </div>`;
+      contentEl.replaceWith(editArea);
+
+      const actionsEl = item.querySelector('.thread-actions');
+      if (actionsEl) actionsEl.style.display = 'none';
+
+      document.getElementById(`editTextarea_${idx}`).focus();
+    }
+
+    function cancelEditComment() {
+      renderComments(currentData, pageAuthorNick);
+    }
+
+    async function saveEditComment(idx) {
+      const textarea = document.getElementById(`editTextarea_${idx}`);
+      if (!textarea) return;
+      const newContent = textarea.value.trim();
+      if (!newContent) { alert('내용을 입력해주세요.'); return; }
+
+      currentData.comments[idx].content = newContent;
+      currentData.comments[idx].updated_at = new Date().toISOString();
+
+      const { error } = await sb.from('inquiries').update({ comments: currentData.comments }).eq('id', currentId);
+      if (error) { alert('수정에 실패했어요.'); return; }
+
+      renderComments(currentData, pageAuthorNick);
+    }
+
+    async function deleteComment(idx) {
+      if (!confirm('댓글을 삭제할까요?')) return;
+
+      currentData.comments = currentData.comments.filter((_, i) => i !== idx);
+
+      const { error } = await sb.from('inquiries').update({ comments: currentData.comments }).eq('id', currentId);
+      if (error) { alert('삭제에 실패했어요.'); return; }
+
+      renderComments(currentData, pageAuthorNick);
     }
 
     async function deleteInquiry() {

@@ -567,7 +567,9 @@
       }
 
       // 댓글 섹션 안내문
-      if (a.adoption_type === 'paid' || a.adoption_type === 'etc') {
+      const isCommentConfirmable = a.adoption_type === 'paid' || a.adoption_type === 'etc' ||
+        (a.adoption_type === 'free' && (!a.free_type || a.free_type === 'normal'));
+      if (isCommentConfirmable) {
         const notice = document.getElementById('commentNotice');
         notice.innerHTML = '💬 댓글 또는 다른 연락수단으로 소통 후 분양받는 분이 정해지면, 해당 댓글의 <strong>분양확정</strong> 버튼을 눌러 주세요. 분양확정 버튼을 눌러야 분양이 닫힙니다.';
         notice.style.display = 'block';
@@ -1332,8 +1334,11 @@
         currentUser.id === currentAdoption?.user_id || myNick === currentAdoption?.author
       );
       const isOpen   = currentAdoption?.status === '분양중';
-      const canConfirm = isAuthor && isOpen &&
-        (currentAdoption?.adoption_type === 'paid' || currentAdoption?.adoption_type === 'etc');
+      const canConfirm = isAuthor && isOpen && (
+        currentAdoption?.adoption_type === 'paid' ||
+        currentAdoption?.adoption_type === 'etc'  ||
+        (currentAdoption?.adoption_type === 'free' && (!currentAdoption?.free_type || currentAdoption?.free_type === 'normal'))
+      );
 
       const topLevel = comments.filter(c => !c.parent_id);
       const replies  = comments.filter(c =>  c.parent_id);
