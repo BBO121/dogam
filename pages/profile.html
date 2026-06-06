@@ -19,6 +19,10 @@
     .ach-showcase-label { font-size: 11px; font-weight: 700; color: #94A3B8; margin: 14px 0 10px; letter-spacing: 0.3px; }
     .ach-showcase-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
     @media (min-width: 600px) { .ach-showcase-grid { grid-template-columns: repeat(2, 1fr); } }
+    /* ── 카테고리별 달성 현황 ── */
+    #achCategoryStats { margin-top: 16px; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    @media (max-width: 600px) { #achCategoryStats { grid-template-columns: repeat(2, 1fr); } }
+    .ach-cat-widget { display: flex; justify-content: center; }
     /* ── 대표 업적 선택 모달 ── */
     .featured-ach-option { display:flex; align-items:center; gap:10px; padding:10px 12px; border:1.5px solid #E2E8F0; border-radius:8px; cursor:pointer; transition:border-color 0.12s, background 0.12s; }
     .featured-ach-option.selected { border-color:#0EA5E9; background:#F0F9FF; }
@@ -139,7 +143,8 @@
                 <div class="achievement-progress-fill" id="achievementProgressFill" style="width:0%"></div>
               </div>
             </div>
-            <div id="achShowcase" style="display:none;">
+            <div id="achCategoryStats" style="display:none;"></div>
+            <div id="achShowcase" style="display:none; margin-top:20px;">
               <p class="ach-showcase-label">대표 업적</p>
               <div class="ach-showcase-grid" id="achShowcaseGrid"></div>
             </div>
@@ -260,6 +265,43 @@
   <script>
     const viewNick = new URLSearchParams(window.location.search).get('user');
     let currentUser = null;
+
+    // ── 업적 카테고리 상수 ────────────────────────
+    const ACH_CATEGORY_MAP = {
+      first_login:           '연구원 업적',
+      profile_setup:         '연구원 업적',
+      nickname_set:          '연구원 업적',
+      first_guide:           '연구원 업적',
+      open_beta:             '연구원 업적',
+      first_species:         '종족 연구 업적',
+      species_3:             '종족 연구 업적',
+      first_character:       '개체 연구 업적',
+      first_owned_character: '개체 연구 업적',
+      chars_10:              '개체 연구 업적',
+      chars_30:              '개체 연구 업적',
+      chars_50:              '개체 연구 업적',
+      chars_100:             '개체 연구 업적',
+      first_adoption:        '분양 업적',
+      adoption_10:           '분양 업적',
+      adoption_20:           '분양 업적',
+      adoption_30:           '분양 업적',
+      first_inquiry:         '문의 & 버그 업적',
+      first_bug_report:      '문의 & 버그 업적',
+      bug_report_3:          '문의 & 버그 업적',
+      bug_report_10:         '문의 & 버그 업적',
+      first_update_note:     '탐험 업적',
+      first_dev_log:         '탐험 업적',
+      first_notice:          '탐험 업적',
+      notice_5:              '탐험 업적',
+      no_species_search:     '탐험 업적',
+      no_char_search:        '탐험 업적',
+      first_terms:           '탐험 업적',
+      terms_5:               '탐험 업적',
+      terms_20:              '탐험 업적',
+    };
+    const ACH_GONG_O_CODES   = new Set(['gong_o_visit_1','gong_o_visit_5','gong_o_visit_20','gong_o_visit_100']);
+    const ACH_CATEGORY_ORDER = ['연구원 업적','종족 연구 업적','개체 연구 업적','분양 업적','문의 & 버그 업적','탐험 업적','공오 업적'];
+    // ─────────────────────────────────────────────
 
     // ── Quill 초기화 ──────────────────────────
     const SizeStyle = Quill.import('attributors/style/size');
@@ -640,6 +682,7 @@
     }
 
     async function loadAchievements(userId, viewNickname) {
+      const isOwnProfile = !viewNickname;
       if (!userId) {
         document.getElementById('sectionAchievements').style.display = 'none';
         return;
@@ -649,7 +692,7 @@
           (currentUser?.user_metadata?.display_name || currentUser?.user_metadata?.nickname);
 
         const [{ data: allAch }, { data: myAch }, { data: profileData }] = await Promise.all([
-          sb.from('achievements').select('id'),
+          sb.from('achievements').select('id, code'),
           sb.from('user_achievements')
             .select('achievement_code, unlocked_at')
             .eq('user_id', userId)
@@ -673,20 +716,82 @@
         fillEl.style.width = `${pct}%`;
         if (pct === 100) fillEl.classList.add('complete');
 
+        // 전체 보기 링크: 본인만 표시
         const achLink = document.getElementById('achievementsLink');
-        if (viewNickname) achLink.href = `achievements.html?user=${encodeURIComponent(viewNickname)}`;
+        if (!isOwnProfile) {
+          achLink.style.display = 'none';
+        }
 
-        // 대표 업적: featured_achievements 우선, 없으면 최근 4개 fallback
-        const earnedCodes   = new Set((myAch || []).map(a => a.achievement_code));
+        // ── 카테고리별 달성 현황 ──────────────────
+        const earnedSet = new Set((myAch || []).map(a => a.achievement_code));
+        const hasGongO  = [...earnedSet].some(code => ACH_GONG_O_CODES.has(code));
+
+        const catStats = {};
+        ACH_CATEGORY_ORDER.forEach(c => { catStats[c] = { earned: 0, total: 0 }; });
+        (allAch || []).forEach(a => {
+          const cat = ACH_GONG_O_CODES.has(a.code) ? '공오 업적' : (ACH_CATEGORY_MAP[a.code] || '탐험 업적');
+          if (!catStats[cat]) catStats[cat] = { earned: 0, total: 0 };
+          catStats[cat].total++;
+          if (earnedSet.has(a.code)) catStats[cat].earned++;
+        });
+
+        const ACH_CAT_SHORT = {
+          '연구원 업적':      '연구원',
+          '종족 연구 업적':   '종족 연구',
+          '개체 연구 업적':   '개체 연구',
+          '분양 업적':        '분양',
+          '문의 & 버그 업적': '문의',
+          '탐험 업적':        '탐험',
+          '공오 업적':        '공오',
+        };
+        const CIRC = 201.06; // 2π × r32
+        function catWidgetSvg(shortName, earned, total) {
+          const pct        = total > 0 ? earned / total : 0;
+          const offset     = (CIRC * (1 - pct)).toFixed(1);
+          const isComplete = total > 0 && earned === total;
+          const ringColor  = isComplete ? '#f59e0b' : '#0EA5E9';
+          const numColor   = isComplete ? '#f59e0b' : '#1E293B';
+          const ring       = pct > 0
+            ? `<circle cx="40" cy="40" r="32" fill="none" stroke="${ringColor}" stroke-width="6"
+                stroke-dasharray="${CIRC}" stroke-dashoffset="${offset}"
+                stroke-linecap="round" transform="rotate(-90 40 40)"/>`
+            : '';
+          return `<svg viewBox="0 0 80 80" width="76" height="76" aria-hidden="true">
+            <circle cx="40" cy="40" r="32" fill="none" stroke="#E2E8F0" stroke-width="6"/>
+            ${ring}
+            <text x="40" y="36" text-anchor="middle" dominant-baseline="middle"
+              font-size="14" font-weight="700" fill="${numColor}">${earned}/${total}</text>
+            <text x="40" y="52" text-anchor="middle" dominant-baseline="middle"
+              font-size="10" fill="#64748B">${shortName}</text>
+          </svg>`;
+        }
+        const catHtml = ACH_CATEGORY_ORDER
+          .filter(cat => (catStats[cat]?.total || 0) > 0)
+          .map(cat => {
+            const displayCat = (cat === '공오 업적' && !hasGongO) ? '??? 업적' : cat;
+            const shortName  = (cat === '공오 업적' && !hasGongO) ? '???' : (ACH_CAT_SHORT[cat] || cat);
+            const s = catStats[cat] || { earned: 0, total: 0 };
+            return `<div class="ach-cat-widget" title="${displayCat}">
+              ${catWidgetSvg(shortName, s.earned, s.total)}
+            </div>`;
+          }).join('');
+
+        const catStatsEl = document.getElementById('achCategoryStats');
+        if (catStatsEl && catHtml) {
+          catStatsEl.innerHTML     = catHtml;
+          catStatsEl.style.display = 'grid';
+        }
+
+        // ── 대표 업적 쇼케이스 (이름 + 획득일만 표시) ──
         const dateMap       = Object.fromEntries((myAch || []).map(a => [a.achievement_code, a.unlocked_at]));
-        const featuredRaw   = (profileData?.featured_achievements || []).filter(c => earnedCodes.has(c));
+        const featuredRaw   = (profileData?.featured_achievements || []).filter(c => earnedSet.has(c));
         const showcaseCodes = featuredRaw.length > 0
           ? featuredRaw.slice(0, 4)
           : (myAch || []).slice(0, 4).map(a => a.achievement_code);
 
         if (showcaseCodes.length > 0) {
           const { data: details } = await sb.from('achievements')
-            .select('code, name, description')
+            .select('code, name')
             .in('code', showcaseCodes);
 
           if (details?.length) {
@@ -705,7 +810,6 @@
                     </div>
                     <div class="achievement-item-body">
                       <p class="achievement-item-name">${a.name}</p>
-                      <p class="achievement-item-desc">${a.description || ''}</p>
                     </div>
                     <span class="achievement-item-date">${date}</span>
                   </div>`;
