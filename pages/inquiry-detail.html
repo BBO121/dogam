@@ -332,28 +332,20 @@
 
       if (isAdminUser) {
         const skipSelf = currentData.user_id != null && currentData.user_id === currentUser.id;
-        const targetNick = postOwner ? (postOwner.display_name || postOwner.nickname) : reportNickname;
+        // reportNickname = 글 작성 시 저장된 display_name||nickname → myNick과 동일 형식
+        const targetNick = reportNickname || (postOwner ? (postOwner.display_name || postOwner.nickname) : null);
         if (targetNick && !skipSelf) {
-          sb.from('notifications').insert({
-            user_nickname: targetNick,
-            type:    'inquiry_answer',
-            message: '내 문의에 새 댓글이 달렸어요.',
-            link, is_read: false,
-          }).catch(() => {});
+          sb.rpc('notify_user', { p_user_nickname: targetNick, p_type: 'inquiry_answer', p_message: '내 문의에 새 댓글이 달렸어요.', p_link: link })
+            .catch(e => console.error('[알림 오류] inquiry_answer:', e));
         }
       } else {
         const targets = allUserList.filter(u =>
           (u.role === 'admin' || u.role === 'staff') && u.id !== currentUser.id && u.nickname
         );
         if (targets.length > 0) {
-          sb.from('notifications').insert(
-            targets.map(u => ({
-              user_nickname: u.nickname,
-              type:    'inquiry_reply',
-              message: `"${nickname}"님이 문의에 새 댓글을 달았어요.`,
-              link, is_read: false,
-            }))
-          ).catch(() => {});
+          Promise.all(targets.map(u =>
+            sb.rpc('notify_user', { p_user_nickname: u.display_name || u.nickname, p_type: 'inquiry_reply', p_message: `"${nickname}"님이 문의에 새 댓글을 달았어요.`, p_link: link })
+          )).catch(e => console.error('[알림 오류] inquiry_reply:', e));
         }
       }
     }

@@ -120,7 +120,7 @@ async function loadNotifList(myNick) {
 async function markRead(id) {
   await sb.from('notifications').update({ is_read: true }).eq('id', id);
   const user = await getUser();
-  const myNick = user?.user_metadata?.nickname;
+  const myNick = user?.user_metadata?.display_name || user?.user_metadata?.nickname;
   if (myNick) refreshNotifCount(myNick);
 }
 

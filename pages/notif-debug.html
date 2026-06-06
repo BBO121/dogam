@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>알림 진단 v2 — 종족연구소</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .debug-section { background:#f8fafc; border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:20px; }
+    .debug-title { font-size:15px; font-weight:700; margin-bottom:12px; color:var(--sky-deep); }
+    .debug-row { font-size:13px; padding:6px 0; border-bottom:1px solid var(--border); word-break:break-all; }
+    .debug-row:last-child { border-bottom:none; }
+    .tag-ok   { background:#dcfce7; color:#166534; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:700; }
+    .tag-err  { background:#fee2e2; color:#991b1b; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:700; }
+    .tag-warn { background:#fef9c3; color:#854d0e; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:700; }
+    table { width:100%; border-collapse:collapse; font-size:12px; }
+    th, td { padding:6px 8px; border:1px solid var(--border); text-align:left; word-break:break-all; }
+    th { background:var(--sky-pale); font-weight:700; }
+    pre { font-size:11px; background:#1e293b; color:#e2e8f0; padding:12px; border-radius:8px; overflow-x:auto; white-space:pre-wrap; word-break:break-all; margin:8px 0 0; }
+    .copy-btn { font-size:11px; padding:2px 10px; background:var(--sky); color:#fff; border:none; border-radius:4px; cursor:pointer; font-family:inherit; margin-left:8px; }
+  </style>
+</head>
+<body>
+  <div class="layout" style="max-width:700px; margin:0 auto; padding:20px 16px;">
+    <h2 style="font-size:18px; font-weight:700; margin-bottom:20px;">🔍 알림 시스템 진단 v2</h2>
+    <div id="output">불러오는 중...</div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+  <script src="../js/auth.js"></script>
+  <script>
+    async function run() {
+      const out = document.getElementById('output');
+      let html = '';
+
+      // ① 세션 및 역할 확인
+      const { data: sessionData } = await sb.auth.getSession();
+      const session = sessionData?.session;
+      const user    = session?.user;
+
+      if (!session || !user) {
+        out.innerHTML = '<p style="color:red;">로그인 세션이 없습니다. 로그인 후 다시 접속해주세요.</p>';
+        return;
+      }
+
+      const myDisplayName = user.user_metadata?.display_name;
+      const myNickname    = user.user_metadata?.nickname;
+      const myNick        = myDisplayName || myNickname;
+      const myRole        = user.user_metadata?.role;
+      const myId          = user.id;
+
+      // JWT에서 role 파싱
+      let jwtRole = '(파싱 불가)';
+      try {
+        const payload = JSON.parse(atob(session.access_token.split('.')[1]));
+        jwtRole = payload.role || '(없음)';
+      } catch(e) {}
+
+      const tokenAge = session.access_token
+        ? Math.floor((Date.now() / 1000) - JSON.parse(atob(session.access_token.split('.')[1])).iat) + '초 전 발급'
+        : '(없음)';
+
+      html += `<div class="debug-section">
+        <div class="debug-title">① 세션 / JWT 역할 확인</div>
+        <div class="debug-row">user_id: ${myId}</div>
+        <div class="debug-row">user_metadata.nickname: <b>${myNickname || '(없음)'}</b></div>
+        <div class="debug-row">user_metadata.display_name: <b>${myDisplayName || '(없음)'}</b></div>
+        <div class="debug-row">🔑 myNick (알림 수신 키): <b style="color:var(--sky-deep);">${myNick}</b></div>
+        <div class="debug-row">app role: ${myRole || '(없음)'}</div>
+        <div class="debug-row">JWT role (DB 실행 역할): <b>${jwtRole === 'authenticated' ? '<span class="tag-ok">authenticated ✓</span>' : `<span class="tag-err">${jwtRole} — anon이면 RLS 차단됨</span>`}</b></div>
+        <div class="debug-row">토큰 발급: ${tokenAge}</div>
+        <div class="debug-row">access_token: ${session.access_token ? '존재 ✓' : '<span style="color:red;">없음 — 세션 오류</span>'}</div>
+      </div>`;
+
+      // ② INSERT 테스트 (단순)
+      html += `<div class="debug-section" style="background:#fffbeb; border-color:#f59e0b;">
+        <div class="debug-title">② INSERT 직접 테스트</div>
+        <div id="insertOwn" class="debug-row" style="color:var(--text-mute);">대기 중...</div>
+        <div id="insertOther" class="debug-row" style="color:var(--text-mute);">대기 중...</div>
+        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+          <button onclick="testInsert('${myNick}', 'insertOwn')" style="padding:8px 14px; background:var(--sky); color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:13px; font-family:inherit;">내 알림(${myNick}) INSERT</button>
+          <button onclick="testInsert('other_test_nick_999', 'insertOther')" style="padding:8px 14px; background:#f59e0b; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:13px; font-family:inherit;">타인 직접 INSERT (RLS 체크)</button>
+          <button onclick="testRpc('other_test_nick_999')" style="padding:8px 14px; background:#8b5cf6; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:13px; font-family:inherit;">타인 RPC notify_user (함수 체크)</button>
+        </div>
+        <div id="rpcTestResult" class="debug-row" style="color:var(--text-mute);">RPC 테스트 대기 중...</div>
+      </div>`;
+
+      // ③ Supabase SQL 에디터 확인용 쿼리
+      const sqlPolicies = `-- notifications 테이블 전체 정책 목록 (RESTRICTIVE 포함)
+SELECT policyname, permissive, roles, cmd, qual, with_check
+FROM pg_policies
+WHERE tablename = 'notifications'
+ORDER BY cmd, permissive DESC;`;
+
+      const sqlTriggers = `-- notifications 테이블 트리거 목록
+SELECT trigger_name, event_manipulation, action_timing,
+       action_statement, action_orientation
+FROM information_schema.triggers
+WHERE event_object_table = 'notifications';`;
+
+      const sqlColumns = `-- notifications 테이블 컬럼 및 제약
+SELECT column_name, data_type, is_nullable, column_default
+FROM information_schema.columns
+WHERE table_name = 'notifications'
+ORDER BY ordinal_position;`;
+
+      const sqlCleanupDebug = `-- 진단용 테스트 알림 삭제
+DELETE FROM notifications WHERE type = 'debug_test';`;
+
+      const sqlFixRls = `-- ① 기존 INSERT 정책 전체 삭제 후 새로 추가
+-- (아래 SELECT로 실제 policyname 확인 후 DROP)
+SELECT policyname FROM pg_policies WHERE tablename = 'notifications' AND cmd = 'INSERT';
+
+-- 예시 (실제 이름으로 교체):
+-- DROP POLICY "Users can insert own notifications" ON public.notifications;
+
+-- 새 정책: 인증된 유저라면 누구든 INSERT 허용
+CREATE POLICY "allow_authenticated_insert_notifications"
+ON public.notifications
+FOR INSERT
+TO authenticated
+WITH CHECK (true);`;
+
+      function sqlBox(label, sql) {
+        const id = 'sql_' + Math.random().toString(36).slice(2);
+        return `<div style="margin-top:10px;">
+          <div style="font-size:12px; font-weight:700; color:var(--text-sub); margin-bottom:4px;">${label}</div>
+          <pre id="${id}">${sql}</pre>
+          <button class="copy-btn" onclick="copySQL('${id}')">복사</button>
+        </div>`;
+      }
+
+      html += `<div class="debug-section">
+        <div class="debug-title">③ Supabase SQL 에디터에서 실행할 진단 쿼리</div>
+        <div class="debug-row">아래 쿼리를 Supabase → SQL Editor에서 순서대로 실행하고 결과를 알려주세요</div>
+        ${sqlBox('A. 정책 목록 (RESTRICTIVE 포함)', sqlPolicies)}
+        ${sqlBox('B. INSERT 트리거 목록', sqlTriggers)}
+        ${sqlBox('C. 컬럼/제약 확인', sqlColumns)}
+        ${sqlBox('D. 테스트 알림 삭제', sqlCleanupDebug)}
+        ${sqlBox('E. RLS 수정 (원인 파악 후 적용)', sqlFixRls)}
+      </div>`;
+
+      out.innerHTML = html;
+    }
+
+    async function testInsert(targetNick, elId) {
+      const el = document.getElementById(elId);
+      el.textContent = `INSERT 시도 중 → user_nickname: "${targetNick}"`;
+      el.style.color = 'var(--text-mute)';
+
+      const { data, error } = await sb.from('notifications').insert({
+        user_nickname: targetNick,
+        type:    'debug_test',
+        message: `[진단] ${targetNick} 알림 테스트 ${new Date().toLocaleTimeString()}`,
+        link:    'notif-debug.html',
+        is_read: false,
+      }).select();
+
+      if (error) {
+        el.innerHTML = `<span style="color:red;">❌ INSERT 실패<br>
+          code: <b>${error.code}</b><br>
+          message: ${error.message}<br>
+          details: ${error.details || '(없음)'}<br>
+          hint: ${error.hint || '(없음)'}</span>`;
+      } else {
+        el.innerHTML = `<span style="color:green;">✅ INSERT 성공 — id: ${data?.[0]?.id || '?'}</span>`;
+      }
+    }
+
+    async function testRpc(targetNick) {
+      const el = document.getElementById('rpcTestResult');
+      el.textContent = `notify_user RPC 호출 중 → user_nickname: "${targetNick}"`;
+      el.style.color = 'var(--text-mute)';
+
+      const { data, error } = await sb.rpc('notify_user', {
+        p_user_nickname: targetNick,
+        p_type:    'debug_rpc_test',
+        p_message: `[진단 RPC] ${targetNick} 알림 테스트 ${new Date().toLocaleTimeString()}`,
+        p_link:    'notif-debug.html',
+      });
+
+      if (error) {
+        el.innerHTML = `<span style="color:red;">❌ RPC 실패<br>code: <b>${error.code}</b><br>message: ${error.message}<br>hint: ${error.hint || '(없음)'}</span>`;
+      } else {
+        el.innerHTML = `<span style="color:green;">✅ RPC 성공 — notify_user 함수가 정상 작동합니다. 코드 변경 후 댓글 알림이 동작할 예정입니다.</span>`;
+      }
+    }
+
+    function copySQL(id) {
+      const text = document.getElementById(id)?.textContent || '';
+      navigator.clipboard?.writeText(text).catch(() => {});
+    }
+
+    run();
+  </script>
+</body>
+</html>
