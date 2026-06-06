@@ -20,13 +20,14 @@
     .ach-showcase-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
     @media (min-width: 600px) { .ach-showcase-grid { grid-template-columns: repeat(2, 1fr); } }
     /* ── 카테고리별 달성 현황 (진행도 바 시안) ── */
-    #achCategoryStats { margin-top: 16px; flex-direction: column; gap: 10px; }
-    .ach-cat-bar-item { display: flex; flex-direction: column; gap: 5px; }
-    .ach-cat-bar-header { display: flex; justify-content: space-between; align-items: baseline; }
-    .ach-cat-bar-name { font-size: 13px; font-weight: 600; color: var(--text); }
-    .ach-cat-bar-count { font-size: 12px; font-weight: 700; color: var(--sky-dark); }
-    .ach-cat-bar-track { height: 7px; background: var(--border); border-radius: 999px; overflow: hidden; }
-    .ach-cat-bar-fill { height: 100%; border-radius: 999px; transition: width 0.6s cubic-bezier(0.4,0,0.2,1); background: linear-gradient(90deg, #6ec1ff, #38BDF8); }
+    #achCategoryStats { margin-top: 14px; grid-template-columns: repeat(4, 1fr); gap: 8px 10px; }
+    @media (min-width: 560px) { #achCategoryStats { grid-template-columns: repeat(7, 1fr); } }
+    .ach-cat-bar-item { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+    .ach-cat-bar-row { display: flex; justify-content: space-between; align-items: baseline; gap: 2px; }
+    .ach-cat-bar-name { font-size: 11px; color: var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ach-cat-bar-count { font-size: 11px; font-weight: 700; color: var(--sky-dark); white-space: nowrap; }
+    .ach-cat-bar-track { height: 5px; background: var(--border); border-radius: 999px; overflow: hidden; }
+    .ach-cat-bar-fill { height: 100%; border-radius: 999px; background: linear-gradient(90deg, #6ec1ff, #38BDF8); }
     .ach-cat-bar-fill.complete { background: linear-gradient(90deg, #f9c74f, #f8961e); }
     /* ── 대표 업적 선택 모달 ── */
     .featured-ach-option { display:flex; align-items:center; gap:10px; padding:10px 12px; border:1.5px solid #E2E8F0; border-radius:8px; cursor:pointer; transition:border-color 0.12s, background 0.12s; }
@@ -749,17 +750,27 @@
           '탐험 업적':        '탐험',
           '공오 업적':        '공오',
         };
+        const ACH_CAT_SHORT = {
+          '연구원 업적':      '연구원',
+          '종족 연구 업적':   '종족 연구',
+          '개체 연구 업적':   '개체 연구',
+          '분양 업적':        '분양',
+          '문의 & 버그 업적': '문의',
+          '탐험 업적':        '탐험',
+          '공오 업적':        '공오',
+        };
         const catHtml = ACH_CATEGORY_ORDER
           .filter(cat => (catStats[cat]?.total || 0) > 0)
           .map(cat => {
-            const displayCat = (cat === '공오 업적' && !hasGongO) ? '??? 업적' : cat;
+            const isHidden   = cat === '공오 업적' && !hasGongO;
+            const shortName  = isHidden ? '???' : (ACH_CAT_SHORT[cat] || cat);
             const s          = catStats[cat] || { earned: 0, total: 0 };
             const pct        = s.total > 0 ? Math.round((s.earned / s.total) * 100) : 0;
             const isComplete = s.total > 0 && s.earned === s.total;
             return `<div class="ach-cat-bar-item">
-              <div class="ach-cat-bar-header">
-                <span class="ach-cat-bar-name">${displayCat}</span>
-                <span class="ach-cat-bar-count">${s.earned} / ${s.total}</span>
+              <div class="ach-cat-bar-row">
+                <span class="ach-cat-bar-name">${shortName}</span>
+                <span class="ach-cat-bar-count">${s.earned}/${s.total}</span>
               </div>
               <div class="ach-cat-bar-track">
                 <div class="ach-cat-bar-fill${isComplete ? ' complete' : ''}" style="width:${pct}%"></div>
@@ -770,7 +781,7 @@
         const catStatsEl = document.getElementById('achCategoryStats');
         if (catStatsEl && catHtml) {
           catStatsEl.innerHTML     = catHtml;
-          catStatsEl.style.display = 'flex';
+          catStatsEl.style.display = 'grid';
         }
 
         // ── 대표 업적 쇼케이스 (이름 + 획득일만 표시) ──
