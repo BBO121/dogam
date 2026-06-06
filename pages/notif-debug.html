@@ -72,20 +72,71 @@
         <div class="debug-row">access_token: ${session.access_token ? '존재 ✓' : '<span style="color:red;">없음 — 세션 오류</span>'}</div>
       </div>`;
 
-      // ② INSERT 테스트 (단순)
+      // ② SELECT 테스트 (핵심)
+      html += `<div class="debug-section" style="background:#f0fdf4; border-color:#22c55e;">
+        <div class="debug-title">② notifications SELECT 테스트 (핵심)</div>
+        <div class="debug-row" style="color:var(--text-mute);">
+          현재 로그인 계정(<b>${myNick}</b>)으로 알림을 실제로 조회합니다.<br>
+          DB에 row가 있어도 RLS·myNick 불일치 시 0건이 됩니다.
+        </div>
+        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+          <button onclick="testSelect()" style="padding:8px 18px; background:#22c55e; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-family:inherit; font-weight:700;">📋 알림 SELECT 실행</button>
+        </div>
+        <div id="selectResult" style="margin-top:10px;"></div>
+      </div>`;
+
+      // ③ Realtime 구독 테스트
+      html += `<div class="debug-section" style="background:#eff6ff; border-color:#3b82f6;">
+        <div class="debug-title">③ Realtime 실시간 수신 테스트</div>
+        <div class="debug-row" style="color:var(--text-mute);">
+          아래 버튼으로 구독을 시작하고, INSERT 버튼을 눌러 이벤트가 도착하는지 확인합니다.<br>
+          이벤트가 안 오면 → notifications 테이블이 Realtime publication에 없는 것
+        </div>
+        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+          <button onclick="startRealtime()" style="padding:8px 14px; background:#3b82f6; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:13px; font-family:inherit;">📡 Realtime 구독 시작</button>
+          <button onclick="testInsertRealtime()" style="padding:8px 14px; background:#6366f1; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:13px; font-family:inherit;">⚡ INSERT → 이벤트 확인</button>
+          <button onclick="stopRealtime()" style="padding:8px 14px; background:#6b7280; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:13px; font-family:inherit;">구독 해제</button>
+        </div>
+        <div id="realtimeStatus" class="debug-row" style="margin-top:8px; color:var(--text-mute);">구독 시작 전</div>
+        <div id="realtimeLog" style="margin-top:6px; font-size:12px; max-height:120px; overflow-y:auto;"></div>
+      </div>`;
+
+      // ④ bug_report_answer 전체 흐름 테스트
+      html += `<div class="debug-section" style="background:#fdf4ff; border-color:#a855f7; border-width:2px;">
+        <div class="debug-title" style="color:#7c3aed;">④ bug_report_answer 전체 흐름 테스트</div>
+        <div class="debug-row" style="color:var(--text-mute); margin-bottom:12px;">
+          순서대로 버튼을 눌러 각 단계를 확인하세요.<br>
+          <b>STEP 1</b> INSERT → <b>STEP 2</b> is_read·뱃지 확인 → <b>STEP 3</b> 읽음 처리 → <b>STEP 4</b> 처리 후 뱃지 재확인
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px;">
+          <button onclick="flowStep1()" style="padding:10px 18px; background:#7c3aed; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-family:inherit; font-weight:700;">STEP 1: INSERT</button>
+          <button id="step2Btn" onclick="flowStep2()" disabled style="padding:10px 18px; background:#6b7280; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-family:inherit; font-weight:700;">STEP 2: is_read·뱃지</button>
+          <button id="step3Btn" onclick="flowStep3()" disabled style="padding:10px 18px; background:#6b7280; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-family:inherit; font-weight:700;">STEP 3: 읽음 처리</button>
+          <button id="step4Btn" onclick="flowStep4()" disabled style="padding:10px 18px; background:#6b7280; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:14px; font-family:inherit; font-weight:700;">STEP 4: 뱃지 재확인</button>
+        </div>
+        <div id="flowLog" style="font-size:13px;"></div>
+        <div style="margin-top:10px; font-size:12px; color:var(--text-mute);">
+          목록 직접 확인: <a href="notifications.html" target="_blank" style="color:var(--sky-deep);">notifications.html 열기</a>
+          (STEP 1 후 "[테스트] 내 버그리포트..." 항목이 보이면 목록 표시 정상)
+        </div>
+      </div>`;
+
+      // ⑤ INSERT 테스트 (기타)
       html += `<div class="debug-section" style="background:#fffbeb; border-color:#f59e0b;">
-        <div class="debug-title">② INSERT 직접 테스트</div>
+        <div class="debug-title">⑤ INSERT 직접 테스트</div>
         <div id="insertOwn" class="debug-row" style="color:var(--text-mute);">대기 중...</div>
         <div id="insertOther" class="debug-row" style="color:var(--text-mute);">대기 중...</div>
         <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
           <button onclick="testInsert('${myNick}', 'insertOwn')" style="padding:8px 14px; background:var(--sky); color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:13px; font-family:inherit;">내 알림(${myNick}) INSERT</button>
           <button onclick="testInsert('other_test_nick_999', 'insertOther')" style="padding:8px 14px; background:#f59e0b; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:13px; font-family:inherit;">타인 직접 INSERT (RLS 체크)</button>
           <button onclick="testRpc('other_test_nick_999')" style="padding:8px 14px; background:#8b5cf6; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:13px; font-family:inherit;">타인 RPC notify_user (함수 체크)</button>
+          <button onclick="testRpcById('5746afcf-7667-4e48-9f59-cc1d8c428170')" style="padding:8px 14px; background:#dc2626; color:#fff; border:none; border-radius:8px; cursor:pointer; font-size:13px; font-family:inherit;">🔑 notify_user_by_id (테스트찡 UUID)</button>
         </div>
         <div id="rpcTestResult" class="debug-row" style="color:var(--text-mute);">RPC 테스트 대기 중...</div>
+        <div id="rpcByIdResult" class="debug-row" style="color:var(--text-mute);">notify_user_by_id 대기 중...</div>
       </div>`;
 
-      // ③ Supabase SQL 에디터 확인용 쿼리
+      // ⑥ Supabase SQL 에디터 확인용 쿼리
       const sqlPolicies = `-- notifications 테이블 전체 정책 목록 (RESTRICTIVE 포함)
 SELECT policyname, permissive, roles, cmd, qual, with_check
 FROM pg_policies
@@ -130,9 +181,16 @@ WITH CHECK (true);`;
         </div>`;
       }
 
+      const sqlPublication = `-- notifications 테이블이 Realtime publication에 등록됐는지 확인
+SELECT tablename FROM pg_publication_tables
+WHERE pubname = 'supabase_realtime'
+  AND tablename = 'notifications';
+-- 결과 없으면 → Realtime이 비활성화된 것 (대시보드에서 활성화 필요)`;
+
       html += `<div class="debug-section">
-        <div class="debug-title">③ Supabase SQL 에디터에서 실행할 진단 쿼리</div>
+        <div class="debug-title">⑥ Supabase SQL 에디터에서 실행할 진단 쿼리</div>
         <div class="debug-row">아래 쿼리를 Supabase → SQL Editor에서 순서대로 실행하고 결과를 알려주세요</div>
+        ${sqlBox('F. Realtime publication 등록 여부 (핵심)', sqlPublication)}
         ${sqlBox('A. 정책 목록 (RESTRICTIVE 포함)', sqlPolicies)}
         ${sqlBox('B. INSERT 트리거 목록', sqlTriggers)}
         ${sqlBox('C. 컬럼/제약 확인', sqlColumns)}
@@ -141,6 +199,200 @@ WITH CHECK (true);`;
       </div>`;
 
       out.innerHTML = html;
+
+      // 페이지 로드 시 자동으로 SELECT 실행
+      setTimeout(() => testSelect(), 100);
+    }
+
+    async function testSelect() {
+      const el = document.getElementById('selectResult');
+      el.innerHTML = '<span style="color:var(--text-mute);">SELECT 실행 중...</span>';
+
+      const { data: { user } } = await sb.auth.getUser();
+      const myNick = user?.user_metadata?.display_name || user?.user_metadata?.nickname;
+
+      if (!myNick) {
+        el.innerHTML = '<span style="color:red;">❌ myNick을 가져올 수 없습니다. 로그인 상태를 확인하세요.</span>';
+        return;
+      }
+
+      const { data, error } = await sb.from('notifications')
+        .select('id, type, message, is_read, created_at, link')
+        .eq('user_nickname', myNick)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) {
+        el.innerHTML = `<span style="color:red;">❌ SELECT 실패<br>
+          code: <b>${error.code}</b><br>
+          message: ${error.message}<br>
+          hint: ${error.hint || '(없음)'}</span>`;
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        el.innerHTML = `<div style="color:#dc2626; font-weight:700;">⚠️ 결과 0건 — DB에 row가 있어도 0이면 RLS가 클라이언트를 차단 중</div>
+          <div style="font-size:12px; color:var(--text-mute); margin-top:4px;">사용된 myNick: <b>${myNick}</b></div>`;
+        return;
+      }
+
+      const TARGET_TYPES = ['bug_report_answer', 'inquiry_answer'];
+      const targetRows = data.filter(n => TARGET_TYPES.includes(n.type));
+      const hasTarget  = targetRows.length > 0;
+
+      const verdict = hasTarget
+        ? `<div style="background:#dcfce7; border:1px solid #22c55e; border-radius:8px; padding:10px 14px; margin-bottom:10px;">
+            ✅ <b>bug_report_answer / inquiry_answer 포함됨 (${targetRows.length}건)</b><br>
+            <span style="font-size:12px; color:#166534;">→ SELECT 자체는 정상. 렌더링 또는 JS 오류 확인 필요</span>
+           </div>`
+        : `<div style="background:#fee2e2; border:1px solid #ef4444; border-radius:8px; padding:10px 14px; margin-bottom:10px;">
+            ❌ <b>bug_report_answer / inquiry_answer 없음</b><br>
+            <span style="font-size:12px; color:#991b1b;">→ SELECT 결과에서 누락됨. RLS SELECT 정책 또는 user_nickname 불일치 의심</span>
+           </div>`;
+
+      const rows = data.map(n => {
+        const isTarget = TARGET_TYPES.includes(n.type);
+        const rowStyle = isTarget ? 'background:#fffbeb; font-weight:700;' : '';
+        const typeCell = isTarget ? `<b style="color:#b45309;">${n.type} ★</b>` : n.type;
+        return `<tr style="${rowStyle}">
+          <td>${typeCell}</td>
+          <td>${n.is_read ? '✓읽음' : '<b style="color:#dc2626;">●미읽</b>'}</td>
+          <td>${n.message?.slice(0, 30) || ''}</td>
+          <td style="white-space:nowrap;">${new Date(n.created_at).toLocaleString('ko-KR')}</td>
+          <td style="font-size:11px;">${n.link || '(없음)'}</td>
+        </tr>`;
+      }).join('');
+
+      // bug_report_answer / inquiry_answer raw 값 + 렌더링 시뮬레이션
+      let renderSimHtml = '';
+      if (hasTarget) {
+        const simRows = targetRows.map(n => {
+          // notifications.html의 renderItems와 동일한 로직
+          let simResult = '';
+          let simError  = '';
+          try {
+            const fakeId   = String(n.id   || '');
+            const fakeLink = String(n.link  || '');
+            const fakeMsg  = String(n.message || '');
+            // onclick 속성에 작은따옴표 포함 여부 확인
+            const linkHasSingleQuote = fakeLink.includes("'");
+            const idHasSingleQuote   = fakeId.includes("'");
+            simResult = `
+              <div style="margin:6px 0; font-size:12px;">
+                <b>id</b>: <code>${fakeId}</code>
+                ${idHasSingleQuote ? '<span class="tag-err">⚠️ 작은따옴표 포함 → onclick 파괴</span>' : '<span class="tag-ok">OK</span>'}<br>
+                <b>link</b>: <code>${fakeLink || '(없음)'}</code>
+                ${linkHasSingleQuote ? '<span class="tag-err">⚠️ 작은따옴표 포함 → onclick 파괴</span>' : '<span class="tag-ok">OK</span>'}<br>
+                <b>is_read</b>: ${n.is_read
+                  ? '<span class="tag-warn">true → 뱃지 카운트 제외 (is_read=false만 카운트)</span>'
+                  : '<span class="tag-ok">false → 뱃지 카운트 포함</span>'}<br>
+                <b>message</b>: ${fakeMsg}
+              </div>`;
+          } catch (e) {
+            simError = `<span class="tag-err">렌더링 중 오류: ${e.message}</span>`;
+          }
+          return `<div style="background:#fff; border:1px solid #fbbf24; border-radius:6px; padding:10px; margin:8px 0;">
+            <div style="font-weight:700; color:#b45309; margin-bottom:4px;">${n.type}</div>
+            ${simError || simResult}
+          </div>`;
+        }).join('');
+
+        renderSimHtml = `
+          <div style="margin-top:14px; border-top:1px solid var(--border); padding-top:12px;">
+            <div style="font-weight:700; font-size:13px; margin-bottom:6px; color:#b45309;">★ bug_report_answer / inquiry_answer row 상세 진단</div>
+            ${simRows}
+            <div style="font-size:12px; color:var(--text-mute); margin-top:8px;">
+              ※ is_read=true 알림은 <b>뱃지(종 아이콘)에 카운트되지 않지만</b> 알림 페이지 목록에는 표시됩니다.
+            </div>
+          </div>`;
+      }
+
+      el.innerHTML = `
+        <div style="color:#16a34a; font-weight:700; margin-bottom:8px;">✅ ${data.length}건 조회 (myNick: <b>${myNick}</b>)</div>
+        ${verdict}
+        <table>
+          <thead><tr><th>type</th><th>읽음</th><th>메시지</th><th>생성일</th><th>link</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+        ${renderSimHtml}`;
+    }
+
+    let realtimeChannel = null;
+    let realtimeNick = null;
+
+    async function startRealtime() {
+      const statusEl = document.getElementById('realtimeStatus');
+      const logEl    = document.getElementById('realtimeLog');
+
+      const { data: { user } } = await sb.auth.getUser();
+      realtimeNick = user?.user_metadata?.display_name || user?.user_metadata?.nickname;
+
+      if (!realtimeNick) {
+        statusEl.innerHTML = '<span style="color:red;">❌ myNick 없음 — 로그인 확인 필요</span>';
+        return;
+      }
+
+      if (realtimeChannel) {
+        await sb.removeChannel(realtimeChannel);
+        realtimeChannel = null;
+      }
+
+      statusEl.innerHTML = `<span style="color:#3b82f6;">⏳ 구독 연결 중... (nick: ${realtimeNick})</span>`;
+      logEl.innerHTML = '';
+
+      realtimeChannel = sb.channel(`debug_notif_${realtimeNick.replace(/\W/g, '_')}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_nickname=eq.${realtimeNick}`
+        }, (payload) => {
+          const now = new Date().toLocaleTimeString('ko-KR');
+          logEl.innerHTML = `<div style="color:#16a34a; padding:4px 0; border-bottom:1px solid #dcfce7;">
+            ✅ [${now}] 이벤트 수신! type: <b>${payload.new?.type}</b>, id: ${payload.new?.id?.slice(0,8)}...</div>` + logEl.innerHTML;
+          statusEl.innerHTML = `<span style="color:#16a34a; font-weight:700;">✅ Realtime 정상 — 이벤트 수신 중</span>`;
+        })
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            statusEl.innerHTML = `<span style="color:#16a34a;">✅ 구독 완료 (${realtimeNick}) — 이제 INSERT 버튼을 눌러보세요</span>`;
+          } else if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+            statusEl.innerHTML = `<span style="color:red;">❌ 구독 실패 (${status})</span>`;
+          }
+        });
+    }
+
+    async function testInsertRealtime() {
+      if (!realtimeNick) {
+        alert('먼저 "Realtime 구독 시작" 버튼을 눌러주세요.');
+        return;
+      }
+      const logEl = document.getElementById('realtimeLog');
+      const now   = new Date().toLocaleTimeString('ko-KR');
+      logEl.innerHTML = `<div style="color:#6b7280; padding:4px 0; border-bottom:1px solid #e5e7eb;">
+        [${now}] INSERT 시도 중...</div>` + logEl.innerHTML;
+
+      const { data, error } = await sb.from('notifications').insert({
+        user_nickname: realtimeNick,
+        type: 'debug_realtime',
+        message: `[Realtime 테스트] ${now}`,
+        link: 'notif-debug.html',
+        is_read: false,
+      }).select();
+
+      if (error) {
+        logEl.innerHTML = `<div style="color:red; padding:4px 0;">❌ INSERT 실패: ${error.message}</div>` + logEl.innerHTML;
+      } else {
+        logEl.innerHTML = `<div style="color:#6366f1; padding:4px 0; border-bottom:1px solid #e0e7ff;">
+          ⚡ INSERT 성공 (id: ${data?.[0]?.id?.slice(0,8)}...) — 5초 안에 이벤트 수신 없으면 Realtime 비활성화</div>` + logEl.innerHTML;
+      }
+    }
+
+    async function stopRealtime() {
+      if (realtimeChannel) {
+        await sb.removeChannel(realtimeChannel);
+        realtimeChannel = null;
+      }
+      document.getElementById('realtimeStatus').innerHTML = '<span style="color:#6b7280;">구독 해제됨</span>';
     }
 
     async function testInsert(targetNick, elId) {
@@ -184,6 +436,144 @@ WITH CHECK (true);`;
       } else {
         el.innerHTML = `<span style="color:green;">✅ RPC 성공 — notify_user 함수가 정상 작동합니다. 코드 변경 후 댓글 알림이 동작할 예정입니다.</span>`;
       }
+    }
+
+    async function testRpcById(userId) {
+      const el = document.getElementById('rpcByIdResult');
+      el.textContent = `notify_user_by_id 호출 중 → user_id: "${userId}"`;
+      el.style.color = 'var(--text-mute)';
+
+      const { data, error } = await sb.rpc('notify_user_by_id', {
+        p_user_id: userId,
+        p_type:    'debug_rpc_by_id',
+        p_message: `[진단 by_id] ${new Date().toLocaleTimeString()}`,
+        p_link:    'notif-debug.html',
+      });
+
+      if (error) {
+        el.innerHTML = `<span style="color:red;">❌ notify_user_by_id 실패<br>
+          code: <b>${error.code}</b><br>
+          message: ${error.message}<br>
+          hint: ${error.hint || '(없음)'}</span>`;
+      } else {
+        el.innerHTML = `<span style="color:green;">✅ RPC 호출 자체는 성공<br>
+          → DB에서 notifications 테이블에 debug_rpc_by_id row가 생겼는지 확인:<br>
+          <code style="background:#f0fdf4;padding:2px 6px;">SELECT user_nickname, type, created_at FROM notifications WHERE type='debug_rpc_by_id' ORDER BY created_at DESC LIMIT 1;</code></span>`;
+      }
+    }
+
+    let flowNick = null;
+    let flowInsertedId = null;
+
+    async function flowStep1() {
+      const logEl = document.getElementById('flowLog');
+      const { data: { user } } = await sb.auth.getUser();
+      flowNick = user?.user_metadata?.display_name || user?.user_metadata?.nickname;
+      logEl.innerHTML = '<div style="color:var(--text-mute);">INSERT 중...</div>';
+
+      const { data, error } = await sb.from('notifications').insert({
+        user_nickname: flowNick,
+        type:    'bug_report_answer',
+        message: '[테스트] 내 버그리포트에 새 댓글이 달렸어요.',
+        link:    'bug-report.html',
+        is_read: false,
+      }).select();
+
+      if (error) {
+        logEl.innerHTML = `<div style="color:red;">❌ INSERT 실패: ${error.message}</div>`;
+        return;
+      }
+      flowInsertedId = data?.[0]?.id;
+      const insertedIsRead = data?.[0]?.is_read;
+
+      logEl.innerHTML = `
+        <div style="background:#f0fdf4; border:1px solid #22c55e; border-radius:6px; padding:10px; margin-bottom:6px;">
+          ✅ <b>STEP 1 완료 — INSERT 성공</b><br>
+          id: <code style="font-size:11px;">${flowInsertedId}</code><br>
+          INSERT 직후 is_read:
+          ${insertedIsRead === false
+            ? '<b style="color:#16a34a;">false ✓ 정상</b>'
+            : '<b style="color:#dc2626;">true ← 생성 시점에 이미 읽힘! 버그</b>'}
+        </div>
+        <div style="font-size:12px; color:var(--text-mute);">→ 지금 종 아이콘 뱃지에 숫자가 올라갔는지 확인 후 STEP 2 누르세요</div>`;
+
+      document.getElementById('step2Btn').disabled = false;
+      document.getElementById('step2Btn').style.background = '#0284c7';
+    }
+
+    async function flowStep2() {
+      const logEl = document.getElementById('flowLog');
+
+      const { data: row } = await sb.from('notifications')
+        .select('id, is_read')
+        .eq('id', flowInsertedId)
+        .single();
+
+      const { count } = await sb.from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_nickname', flowNick)
+        .eq('is_read', false);
+
+      const isReadNow  = row?.is_read;
+      const unreadCnt  = count || 0;
+
+      logEl.innerHTML += `
+        <div style="background:#eff6ff; border:1px solid #3b82f6; border-radius:6px; padding:10px; margin-top:8px; margin-bottom:6px;">
+          <b>STEP 2 — is_read · 뱃지 확인</b><br>
+          SELECT 후 is_read:
+          ${isReadNow === false
+            ? '<b style="color:#16a34a;">false ✓</b>'
+            : '<b style="color:#dc2626;">true ← SELECT 전에 이미 읽힘!</b>'}<br>
+          미읽 알림 수 (뱃지 기준): <b>${unreadCnt}개</b>
+          ${unreadCnt > 0
+            ? '<span style="color:#16a34a;"> → 뱃지가 올라가 있어야 정상</span>'
+            : '<span style="color:#dc2626;"> → 뱃지 0 (is_read=false인데 0이면 뱃지 갱신 문제)</span>'}
+        </div>
+        <div style="font-size:12px; color:var(--text-mute);">
+          → <a href="notifications.html" target="_blank" style="color:var(--sky-deep);">notifications.html</a>에서 "[테스트] 내 버그리포트..." 항목이 목록에 보이면 목록 표시 정상<br>
+          → 확인 후 STEP 3 누르세요
+        </div>`;
+
+      document.getElementById('step3Btn').disabled = false;
+      document.getElementById('step3Btn').style.background = '#dc2626';
+    }
+
+    async function flowStep3() {
+      const logEl = document.getElementById('flowLog');
+      await sb.from('notifications').update({ is_read: true }).eq('id', flowInsertedId);
+
+      logEl.innerHTML += `
+        <div style="background:#fef3c7; border:1px solid #f59e0b; border-radius:6px; padding:10px; margin-top:8px; margin-bottom:6px;">
+          <b>STEP 3 — 읽음 처리 완료</b> (is_read=true로 업데이트)<br>
+          → 종 아이콘 뱃지 숫자가 줄었는지 확인 후 STEP 4 누르세요
+        </div>`;
+
+      document.getElementById('step4Btn').disabled = false;
+      document.getElementById('step4Btn').style.background = '#16a34a';
+    }
+
+    async function flowStep4() {
+      const logEl = document.getElementById('flowLog');
+
+      const { count } = await sb.from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_nickname', flowNick)
+        .eq('is_read', false);
+
+      const unreadCnt = count || 0;
+
+      logEl.innerHTML += `
+        <div style="background:#f0fdf4; border:1px solid #22c55e; border-radius:6px; padding:10px; margin-top:8px; margin-bottom:6px;">
+          <b>STEP 4 — 읽음 처리 후 뱃지 재확인</b><br>
+          미읽 알림 수: <b>${unreadCnt}개</b><br><br>
+          <b>판정:</b><br>
+          · STEP 1 is_read=false + 뱃지 올라감 + STEP 4 줄어듦 → 알림 시스템 완전 정상<br>
+          · STEP 1 is_read=true → 생성 시점 읽음 처리 버그<br>
+          · STEP 2 뱃지 0 (is_read=false인데도) → Realtime/뱃지 갱신 문제
+        </div>`;
+
+      await sb.from('notifications').delete().eq('id', flowInsertedId);
+      logEl.innerHTML += `<div style="font-size:12px; color:var(--text-mute);">테스트 알림 삭제 완료</div>`;
     }
 
     function copySQL(id) {

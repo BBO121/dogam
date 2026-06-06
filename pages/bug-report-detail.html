@@ -20,6 +20,7 @@
     .thread-actions { margin-left:auto; display:flex; gap:4px; flex-shrink:0; }
     .thread-action-btn { background:none; border:none; font-size:12px; color:var(--text-mute); cursor:pointer; padding:2px 6px; border-radius:4px; line-height:1.6; }
     .thread-action-btn:hover { color:var(--text); background:var(--border); }
+    .mention { color:var(--sky-deep); font-weight:600; }
     .thread-action-btn--delete:hover { color:#ef4444; background:#fee2e2; }
     .thread-edit-area { margin-top:6px; display:flex; flex-direction:column; gap:6px; }
     .thread-edit-btns { display:flex; justify-content:flex-end; gap:6px; }
@@ -130,6 +131,7 @@
     let isAdminUser = false;
     let pageAuthorNick = null;
     let allUserList = [];
+    let allNicknames = [];
 
     function fmtDate(iso) {
       if (!iso) return '';
@@ -276,7 +278,8 @@
         sb.rpc('get_all_users'),
       ]);
       allUserList = userList || [];
-      const idToNick = Object.fromEntries(allUserList.filter(u => u.id && u.nickname).map(u => [u.id, u.nickname]));
+      allNicknames = allUserList.map(u => u.display_name || u.nickname).filter(Boolean);
+      const idToNick = Object.fromEntries(allUserList.filter(u => u.id).map(u => [u.id, u.display_name || u.nickname]).filter(([, n]) => n));
 
       if (error || !data) { window.location.href = 'bug-report.html'; return; }
 
@@ -305,6 +308,12 @@
         if (isAdminUser) {
           document.getElementById('adminStatusWrap').style.display = 'block';
           document.getElementById('statusSelect').value = data.status || '접수됨';
+          // 글 작성자가 본인이 아닐 때 @닉네임 자동 프리필
+          const myNick = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
+          if (pageAuthorNick && pageAuthorNick !== myNick) {
+            const inputEl = document.getElementById('commentInput');
+            if (inputEl && !inputEl.value) inputEl.value = `@${pageAuthorNick} `;
+          }
         }
       }
 
@@ -380,22 +389,20 @@
 
       const link = `bug-report-detail.html?id=${currentId}`;
 
-      const postOwner = allUserList.find(u => u.id === currentData.user_id);
-
       if (isAdminUser) {
-        const skipSelf = currentData.user_id != null && currentData.user_id === currentUser.id;
-        if (!skipSelf) {
-          if (currentData.user_id) {
-            // user_id → auth.users에서 현재 닉네임 직접 조회 (stale 닉네임 문제 원천 차단)
-            sb.rpc('notify_user_by_id', { p_user_id: currentData.user_id, p_type: 'bug_report_answer', p_message: '내 버그리포트에 새 댓글이 달렸어요.', p_link: link })
-              .catch(e => console.error('[알림 오류] bug_report_answer:', e));
-          } else if (reportNickname) {
-            // 구형 레코드 폴백 (user_id 없는 경우)
-            sb.rpc('notify_user', { p_user_nickname: reportNickname, p_type: 'bug_report_answer', p_message: '내 버그리포트에 새 댓글이 달렸어요.', p_link: link })
-              .catch(e => console.error('[알림 오류] bug_report_answer (fallback):', e));
-          }
+        // 관리자 → 글 작성자 자동 알림 (content와 무관, 본인 글 제외)
+        if (pageAuthorNick && pageAuthorNick !== nickname) {
+          sb.from('notifications').insert({
+            user_nickname: pageAuthorNick,
+            type:          'mention',
+            message:       `💬 내 버그리포트에 ${nickname}님이 댓글을 달았어요.`,
+            link,
+            is_read:       false,
+          }).catch(e => console.error('[알림 오류] auto-mention:', e));
         }
       } else {
+        // 일반 유저 → 관리자/스태프 알림 (기존 방식 유지)
+        _dbg(`일반유저 분기 진입`);
         const targets = allUserList.filter(u =>
           (u.role === 'admin' || u.role === 'staff') && u.id !== currentUser.id && u.nickname
         );
@@ -405,6 +412,22 @@
           )).catch(e => console.error('[알림 오류] bug_reply:', e));
         }
       }
+    }
+
+    async function sendMentionNotifications(content, link, senderNick) {
+      const matches  = [...content.matchAll(/@([^\s@]+)/g)].map(m => m[1]);
+      const unique   = [...new Set(matches)];
+      const toNotify = unique.filter(nick => nick !== senderNick && allNicknames.includes(nick));
+      if (!toNotify.length) return;
+      await sb.from('notifications').insert(
+        toNotify.map(nick => ({
+          user_nickname: nick,
+          type:          'mention',
+          message:       `💬 버그리포트 댓글에서 ${senderNick}님이 언급했어요.`,
+          link,
+          is_read:       false,
+        }))
+      ).catch(e => console.error('[알림 오류] mention:', e));
     }
 
     async function deleteBugReport() {
