@@ -19,14 +19,13 @@
     .ach-showcase-label { font-size: 11px; font-weight: 700; color: #94A3B8; margin: 14px 0 10px; letter-spacing: 0.3px; }
     .ach-showcase-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
     @media (min-width: 600px) { .ach-showcase-grid { grid-template-columns: repeat(2, 1fr); } }
-    /* ── 카테고리별 달성 현황 ── */
-    #achCategoryStats { margin-top: 12px; flex-wrap: wrap; align-items: center; gap: 4px 0; }
-    .ach-cat-text-item { display: inline-flex; align-items: baseline; gap: 4px; white-space: nowrap; font-size: 13px; }
-    .ach-cat-text-name { font-weight: 400; color: var(--text-sub); }
-    .ach-cat-text-count { font-weight: 700; color: var(--text); }
-    .ach-cat-text-item.complete .ach-cat-text-name,
-    .ach-cat-text-item.complete .ach-cat-text-count { color: #1D4ED8; }
-    .ach-cat-sep { color: var(--text-mute); margin: 0 7px; font-size: 12px; user-select: none; }
+    /* ── 카테고리별 달성 현황 (뱃지 시안) ── */
+    #achCategoryStats { margin-top: 12px; flex-wrap: wrap; gap: 6px; }
+    .ach-cat-badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; white-space: nowrap; border: 1.5px solid transparent; gap: 5px; }
+    .ach-cat-badge-name { font-weight: 400; }
+    .ach-cat-badge.none { background: #F1F5F9; color: var(--text-mute); }
+    .ach-cat-badge.progress { background: var(--sky-pale); color: var(--sky-dark); }
+    .ach-cat-badge.complete { background: var(--sky-light); color: #0369A1; border-color: #FDE68A; }
     /* ── 대표 업적 선택 모달 ── */
     .featured-ach-option { display:flex; align-items:center; gap:10px; padding:10px 12px; border:1.5px solid #E2E8F0; border-radius:8px; cursor:pointer; transition:border-color 0.12s, background 0.12s; }
     .featured-ach-option.selected { border-color:#0EA5E9; background:#F0F9FF; }
@@ -749,16 +748,17 @@
           '공오 업적':        '공오',
         };
         const visibleCats = ACH_CATEGORY_ORDER.filter(cat => (catStats[cat]?.total || 0) > 0);
-        const catHtml = visibleCats.map((cat, idx) => {
+        const catHtml = visibleCats.map(cat => {
             const isHidden   = cat === '공오 업적' && !hasGongO;
             const shortName  = isHidden ? '???' : (ACH_CAT_SHORT[cat] || cat);
             const s          = catStats[cat] || { earned: 0, total: 0 };
             const isComplete = s.total > 0 && s.earned === s.total;
-            const isLast     = idx === visibleCats.length - 1;
-            return `<span class="ach-cat-text-item${isComplete ? ' complete' : ''}">
-              <span class="ach-cat-text-name">${shortName}</span>
-              <span class="ach-cat-text-count">${s.earned}/${s.total}</span>
-            </span>${isLast ? '' : '<span class="ach-cat-sep" aria-hidden="true">·</span>'}`;
+            const isNone     = s.earned === 0;
+            const state      = isComplete ? 'complete' : isNone ? 'none' : 'progress';
+            return `<span class="ach-cat-badge ${state}">
+              <span class="ach-cat-badge-name">${shortName}</span>
+              <span>${s.earned}/${s.total}</span>
+            </span>`;
           }).join('');
 
         const catStatsEl = document.getElementById('achCategoryStats');
