@@ -332,12 +332,16 @@
 
       if (isAdminUser) {
         const skipSelf = currentData.user_id != null && currentData.user_id === currentUser.id;
-        // reportNickname = 글 작성 시 저장된 display_name||nickname → myNick과 동일 형식
-        const targetNick = reportNickname || (postOwner ? (postOwner.display_name || postOwner.nickname) : null);
-
-        if (targetNick && !skipSelf) {
-          sb.rpc('notify_user', { p_user_nickname: targetNick, p_type: 'inquiry_answer', p_message: '내 문의에 새 댓글이 달렸어요.', p_link: link })
-            .catch(e => console.error('[알림 오류] inquiry_answer:', e));
+        if (!skipSelf) {
+          if (currentData.user_id) {
+            // user_id → auth.users에서 현재 닉네임 직접 조회 (stale 닉네임 문제 원천 차단)
+            sb.rpc('notify_user_by_id', { p_user_id: currentData.user_id, p_type: 'inquiry_answer', p_message: '내 문의에 새 댓글이 달렸어요.', p_link: link })
+              .catch(e => console.error('[알림 오류] inquiry_answer:', e));
+          } else if (reportNickname) {
+            // 구형 레코드 폴백 (user_id 없는 경우)
+            sb.rpc('notify_user', { p_user_nickname: reportNickname, p_type: 'inquiry_answer', p_message: '내 문의에 새 댓글이 달렸어요.', p_link: link })
+              .catch(e => console.error('[알림 오류] inquiry_answer (fallback):', e));
+          }
         }
       } else {
         const targets = allUserList.filter(u =>
