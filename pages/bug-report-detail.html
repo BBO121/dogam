@@ -387,21 +387,9 @@
         // reportNickname = 글 작성 시 저장된 display_name||nickname → myNick과 동일 형식
         const targetNick = reportNickname || (postOwner ? (postOwner.display_name || postOwner.nickname) : null);
 
-        showNotifDebug({
-          분기: 'isAdminUser=true (관리자→작성자)',
-          isAdminUser, skipSelf, targetNick,
-          reportNickname,
-          'currentData.user_id': currentData.user_id,
-          'currentUser.id': currentUser.id,
-          postOwner이름: postOwner?.nickname || '(not found)',
-          RPC실행: !!(targetNick && !skipSelf),
-        });
-
         if (targetNick && !skipSelf) {
           sb.rpc('notify_user', { p_user_nickname: targetNick, p_type: 'bug_report_answer', p_message: '내 버그리포트에 새 댓글이 달렸어요.', p_link: link })
-            .then(({ error }) => {
-              updateNotifDebug(error ? `❌ RPC 실패: ${error.message}` : '✅ RPC 성공');
-            });
+            .catch(e => console.error('[알림 오류] bug_report_answer:', e));
         }
       } else {
         const targets = allUserList.filter(u =>
@@ -424,25 +412,6 @@
 
     initPage();
 
-    function showNotifDebug(info) {
-      let el = document.getElementById('_notifDebugPanel');
-      if (!el) {
-        el = document.createElement('div');
-        el.id = '_notifDebugPanel';
-        el.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:9999;background:#1e293b;color:#e2e8f0;font-size:12px;padding:14px 16px;border-radius:10px;max-width:360px;width:90%;box-shadow:0 4px 20px rgba(0,0,0,0.4);line-height:1.7;';
-        document.body.appendChild(el);
-        setTimeout(() => el.remove(), 15000);
-      }
-      const rows = Object.entries(info).map(([k, v]) =>
-        `<div><span style="color:#94a3b8">${k}:</span> <b style="color:${v === false || v === null || v === '(not found)' || v === 'false' ? '#f87171' : '#4ade80'}">${JSON.stringify(v)}</b></div>`
-      ).join('');
-      el.innerHTML = `<div style="font-weight:700;margin-bottom:6px;color:#7dd3fc">📋 알림 진단 (15초 후 사라짐)</div>${rows}<div id="_notifDebugRpc" style="margin-top:6px;color:#fbbf24">⏳ RPC 실행 중...</div>`;
-    }
-
-    function updateNotifDebug(msg) {
-      const el = document.getElementById('_notifDebugRpc');
-      if (el) el.textContent = msg;
-    }
   </script>
 </body>
 </html>
