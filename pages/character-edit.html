@@ -297,6 +297,7 @@
     let designerType         = 'site';
     let selectedDesignerNick = null;
     let allUsers             = [];
+    let selectedNickId       = null;
     let originalOwnerUserId  = null;
     let currentImageUrl      = null;
     let addedCategories      = [];
@@ -560,10 +561,15 @@
       document.getElementById('editSubtitle').insertAdjacentElement('afterend', notice);
 
       if (role === 'species_owner') {
-        notice.textContent = '종족주 권한으로 수정 중입니다. 개체 이름과 개인 설명은 소유주만 수정할 수 있어요.';
-        // 개체 이름·개인 설명은 소유주 전용
-        muteById('charName');
-        muteById('charDesc');
+        const isOffsite = originalCharData?.owner_is_offsite === true;
+        notice.textContent = isOffsite
+          ? '종족주 권한으로 수정 중입니다. 사이트오프 소유주 개체로, 개체 이름과 설명도 수정할 수 있어요.'
+          : '종족주 권한으로 수정 중입니다. 개체 이름과 개인 설명은 소유주만 수정할 수 있어요.';
+        // 개체 이름·개인 설명은 소유주 전용 (사이트오프 개체는 예외)
+        if (!isOffsite) {
+          muteById('charName');
+          muteById('charDesc');
+        }
         // custom 섹션 추가 불가 (소유주 전용)
         const btnCustom = document.getElementById('btnAddCustom');
         if (btnCustom) { btnCustom.setAttribute('disabled', 'disabled'); btnCustom.style.opacity = '0.4'; }
@@ -590,6 +596,10 @@
         ['btnDesignerSite','btnDesignerExternal','designerSearch','designerExternalName','designerExternalContact'].forEach(muteById);
         // 소유주
         ['btnSiteUser','btnExternal','ownerSearch','ownerExternalName','ownerExternalContact'].forEach(muteById);
+        ['btnSiteUser','btnExternal'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.style.cursor = 'not-allowed'; el.style.pointerEvents = 'none'; }
+        });
         // 커스텀 필드 (비동기 로드되므로 MutationObserver로 처리)
         const cfSection = document.getElementById('customFieldsSection');
         if (cfSection) {
@@ -853,7 +863,7 @@
     async function loadUsers(currentOwner, currentContact, currentDesigner, currentDesignerContact, currentOwnerIsOffsite) {
       const { data } = await sb.rpc('get_all_users');
       allUsers = (data || [])
-        .map(u => ({ nickname: u.nickname || '', loginId: u.login_id || u.nickname || '' }))
+        .map(u => ({ nickname: u.nickname || '', loginId: u.login_id || u.nickname || '', id: u.id || '' }))
         .filter(u => u.nickname)
         .sort((a, b) => a.nickname.localeCompare(b.nickname, 'ko'));
 
@@ -902,7 +912,8 @@
     }
 
     function selectUser(nick) {
-      selectedNick = nick;
+      selectedNick   = nick;
+      selectedNickId = allUsers.find(u => u.nickname === nick)?.id || null;
       document.querySelectorAll('#ownerUserList > div').forEach(el => {
         el.style.background = el.id === `userItem_${nick}` ? 'var(--sky-light)' : '';
         el.style.fontWeight  = el.id === `userItem_${nick}` ? '600' : '';
@@ -1249,15 +1260,15 @@
           : allSections;
 
         const { error } = await sb.from('characters').update({
-          ...(editRole !== 'species_owner' && { name }),
+          ...((editRole !== 'species_owner' || originalCharData.owner_is_offsite) && { name }),
           char_number:         document.getElementById('charNumber').value.trim() || null,
           designer_nickname:   designer,
           designer_contact:    designer_contact,
           owner_nickname:      owner,
           owner_is_offsite:    ownerType !== 'site',
-          owner_user_id:       ownerType === 'site' ? originalOwnerUserId : null,
+          owner_user_id:       ownerType === 'site' ? (selectedNickId || originalOwnerUserId) : null,
           owner_contact:       externalContact || null,
-          ...(editRole !== 'species_owner' && { description: desc || null }),
+          ...((editRole !== 'species_owner' || originalCharData.owner_is_offsite) && { description: desc || null }),
           image_url,
           thumbnail_url,
           additional_images:   additional_images.length ? additional_images : null,
