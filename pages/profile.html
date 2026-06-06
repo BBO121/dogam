@@ -21,11 +21,11 @@
     @media (min-width: 600px) { .ach-showcase-grid { grid-template-columns: repeat(2, 1fr); } }
     /* ── 카테고리별 달성 현황 (뱃지 시안) ── */
     #achCategoryStats { margin-top: 12px; flex-wrap: wrap; gap: 6px; }
-    .ach-cat-badge { display: inline-flex; align-items: center; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; white-space: nowrap; border: 1.5px solid transparent; gap: 5px; }
-    .ach-cat-badge-name { font-weight: 400; }
-    .ach-cat-badge.none { background: #F1F5F9; color: var(--text-mute); }
-    .ach-cat-badge.progress { background: var(--sky-pale); color: var(--sky-dark); }
-    .ach-cat-badge.complete { background: var(--sky-light); color: #0369A1; border-color: #FDE68A; }
+    .ach-cat-badge { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; gap: 5px; }
+    .ach-cat-badge-name { font-weight: 500; }
+    .ach-cat-badge.none     { border: 1.5px solid #DDE3EA; color: var(--text-mute); background: rgba(148,163,184,0.10); }
+    .ach-cat-badge.progress { border: 1.5px solid #BAE6FD; color: var(--sky-dark); background: rgba(56,189,248,0.08); }
+    .ach-cat-badge.complete { border: 1.5px solid transparent; background: linear-gradient(#FFFBEB, #FFFBEB) padding-box, linear-gradient(to right, #F59E0B, #FDE68A) border-box; color: #B45309; }
     /* ── 대표 업적 선택 모달 ── */
     .featured-ach-option { display:flex; align-items:center; gap:10px; padding:10px 12px; border:1.5px solid #E2E8F0; border-radius:8px; cursor:pointer; transition:border-color 0.12s, background 0.12s; }
     .featured-ach-option.selected { border-color:#0EA5E9; background:#F0F9FF; }
