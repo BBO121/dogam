@@ -723,15 +723,13 @@
         alert('신청자가 없어요. 추첨을 진행할 수 없어요. 분양을 마감합니다.');
         await sb.from('adoptions').update({ status: '완료' }).eq('id', adoptionId);
         try {
-          const _uid = currentAdoption?.user_id || currentUser?.id;
-          if (_uid) {
-            const { count: _ac } = await sb.from('adoptions')
-              .select('*', { count: 'exact', head: true }).eq('user_id', _uid).eq('status', '완료');
-            if ((_ac || 0) >= 10) window.awardAchievement?.('adoption_10', { pending: true });
-            if ((_ac || 0) >= 20) window.awardAchievement?.('adoption_20', { pending: true });
-            if ((_ac || 0) >= 30) window.awardAchievement?.('adoption_30', { pending: true });
-          }
-        } catch (e) { console.warn('[업적] 분양 완료 카운트 오류', e); }
+          if (!window.incrementAchCounter) throw new Error('incrementAchCounter 없음');
+          const _ac = await window.incrementAchCounter('adoption_complete');
+          console.log('[업적] adoption_complete 카운터 결과 (추첨/신청자없음):', _ac);
+          if (_ac >= 10) window.awardAchievement?.('adoption_10', { pending: true });
+          if (_ac >= 20) window.awardAchievement?.('adoption_20', { pending: true });
+          if (_ac >= 30) window.awardAchievement?.('adoption_30', { pending: true });
+        } catch (e) { console.error('[업적] 분양 완료 카운트 오류', e); }
         location.reload();
         return;
       }
@@ -1216,15 +1214,13 @@
       if (!confirm('낙찰자 없이 경매를 마감할까요?')) return;
       await sb.from('adoptions').update({ status: '완료' }).eq('id', adoptionId);
       try {
-        const _uid = currentAdoption?.user_id || currentUser?.id;
-        if (_uid) {
-          const { count: _ac } = await sb.from('adoptions')
-            .select('*', { count: 'exact', head: true }).eq('user_id', _uid).eq('status', '완료');
-          if ((_ac || 0) >= 10) window.awardAchievement?.('adoption_10', { pending: true });
-          if ((_ac || 0) >= 20) window.awardAchievement?.('adoption_20', { pending: true });
-          if ((_ac || 0) >= 30) window.awardAchievement?.('adoption_30', { pending: true });
-        }
-      } catch (e) { console.warn('[업적] 분양 완료 카운트 오류', e); }
+        if (!window.incrementAchCounter) throw new Error('incrementAchCounter 없음');
+        const _ac = await window.incrementAchCounter('adoption_complete');
+        console.log('[업적] adoption_complete 카운터 결과 (경매마감):', _ac);
+        if (_ac >= 10) window.awardAchievement?.('adoption_10', { pending: true });
+        if (_ac >= 20) window.awardAchievement?.('adoption_20', { pending: true });
+        if (_ac >= 30) window.awardAchievement?.('adoption_30', { pending: true });
+      } catch (e) { console.error('[업적] 분양 완료 카운트 오류', e); }
 
       // 모든 입찰자에게 마감 알림 (분양자 제외, 중복 제거)
       const { data: allBids } = await sb.from('auction_bids')
@@ -1332,15 +1328,13 @@
       }
 
       try {
-        const _uid = currentAdoption?.user_id || currentUser?.id;
-        if (_uid) {
-          const { count: _ac } = await sb.from('adoptions')
-            .select('*', { count: 'exact', head: true }).eq('user_id', _uid).eq('status', '완료');
-          if ((_ac || 0) >= 10) window.awardAchievement?.('adoption_10', { pending: true });
-          if ((_ac || 0) >= 20) window.awardAchievement?.('adoption_20', { pending: true });
-          if ((_ac || 0) >= 30) window.awardAchievement?.('adoption_30', { pending: true });
-        }
-      } catch (e) { console.warn('[업적] 분양 완료 카운트 오류', e); }
+        if (!window.incrementAchCounter) throw new Error('incrementAchCounter 없음');
+        const _ac = await window.incrementAchCounter('adoption_complete');
+        console.log('[업적] adoption_complete 카운터 결과 (분양확정):', _ac);
+        if (_ac >= 10) window.awardAchievement?.('adoption_10', { pending: true });
+        if (_ac >= 20) window.awardAchievement?.('adoption_20', { pending: true });
+        if (_ac >= 30) window.awardAchievement?.('adoption_30', { pending: true });
+      } catch (e) { console.error('[업적] 분양 완료 카운트 오류', e); }
 
       closeCompleteModal();
       location.reload();
