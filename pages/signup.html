@@ -58,6 +58,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/auth.js"></script>
+  <script src="../js/achievements.js"></script>
   <script>
     document.getElementById('signupForm').addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -87,6 +88,12 @@
         btn.textContent = '회원가입';
         btn.disabled = false;
       } else {
+        try {
+          await window.awardAchievement?.('first_login', { pending: true });
+          await window.awardAchievement?.('open_beta',   { pending: true });
+        } catch (e) {
+          console.error('[업적] 가입 업적 지급 오류:', e);
+        }
         window.location.href = 'index.html';
       }
     });
