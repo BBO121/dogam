@@ -443,10 +443,10 @@
 
       if (charId === '30') {
         const _v = await window.incrementAchCounter?.('gong_o_visit') || 0;
-        if (_v === 1)   window.awardAchievement?.('gong_o_visit_1');
-        if (_v === 5)   window.awardAchievement?.('gong_o_visit_5');
-        if (_v === 20)  window.awardAchievement?.('gong_o_visit_20');
-        if (_v === 100) window.awardAchievement?.('gong_o_visit_100');
+        if (_v >= 1)   window.awardAchievement?.('gong_o_visit_1');
+        if (_v >= 5)   window.awardAchievement?.('gong_o_visit_5');
+        if (_v >= 20)  window.awardAchievement?.('gong_o_visit_20');
+        if (_v >= 100) window.awardAchievement?.('gong_o_visit_100');
       }
     }
   </script>
