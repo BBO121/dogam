@@ -116,9 +116,7 @@ const errorEl = document.getElementById('formError');
       }
 
       await window.awardAchievement?.('first_bug_report', { pending: true });
-      const { count: _bugCount } = await sb.from('bug_reports')
-        .select('*', { count: 'exact', head: true }).eq('user_id', user.id);
-      const _bc = _bugCount || 0;
+      const _bc = await window.incrementAchCounter?.('bug_report') || 0;
       if (_bc >= 3)  await window.awardAchievement?.('bug_report_3', { pending: true });
       if (_bc >= 10) await window.awardAchievement?.('bug_report_10', { pending: true });
       window.location.href = 'bug-report.html';
