@@ -4512,3 +4512,300 @@ button.btn-more {
 .achievement-item-desc { font-size: 11px; color: var(--text-mute); margin: 0; line-height: 1.4; }
 .achievement-item-date { font-size: 11px; font-weight: 600; color: var(--sky-deep); white-space: nowrap; flex-shrink: 0; }
 .achievement-item-status { font-size: 11px; color: var(--text-mute); white-space: nowrap; flex-shrink: 0; }
+
+/* ═══════════════════════════════════════
+   가이드 투어 (Guide Tour)
+═══════════════════════════════════════ */
+
+/* ── 오버레이 ── */
+.tour-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9980;
+  pointer-events: none;
+}
+.tour-overlay--active {
+  display: block;
+  pointer-events: auto;
+}
+
+/* ── 스포트라이트 ── */
+.tour-spotlight {
+  position: fixed;
+  border-radius: 10px;
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.72);
+  z-index: 9981;
+  pointer-events: none;
+  opacity: 0;
+  transition: top 0.3s ease, left 0.3s ease, width 0.3s ease, height 0.3s ease, opacity 0.25s;
+  outline: 2px dashed rgba(255, 255, 255, 0.45);
+  outline-offset: 3px;
+}
+
+/* ── 툴팁 말풍선 ── */
+.tour-tooltip {
+  display: none;
+  position: fixed;
+  width: 284px;
+  background: #fff;
+  border-radius: 14px;
+  padding: 16px 16px 14px;
+  z-index: 9982;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.28);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.tour-tt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.tour-tt-cat {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--sky-deep);
+  background: var(--sky-pale);
+  padding: 3px 9px;
+  border-radius: 99px;
+  line-height: 1.5;
+}
+
+.tour-tt-close {
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--text-mute);
+  font-size: 14px;
+  padding: 2px 4px;
+  line-height: 1;
+  border-radius: 4px;
+}
+.tour-tt-close:hover { background: var(--border); }
+
+.tour-tt-step-label {
+  font-size: 11px;
+  color: var(--text-mute);
+  margin-bottom: 5px;
+}
+
+.tour-tt-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 7px;
+  line-height: 1.4;
+}
+
+.tour-tt-desc {
+  font-size: 13px;
+  color: var(--text-sub);
+  line-height: 1.65;
+  margin-bottom: 14px;
+}
+
+.tour-tt-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* ── Step dots ── */
+.tour-dots {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.tour-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: width 0.2s, background 0.2s;
+  flex-shrink: 0;
+}
+
+.tour-dot--on {
+  width: 18px;
+  border-radius: 4px;
+  background: var(--sky-dark);
+}
+
+/* ── 버튼 ── */
+.tour-tt-btns {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.tour-btn {
+  padding: 7px 15px;
+  border: none;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1.4;
+  transition: background 0.15s;
+}
+
+.tour-btn--next, .tour-btn--done {
+  background: var(--sky-dark);
+  color: #fff;
+}
+.tour-btn--next:hover, .tour-btn--done:hover { background: var(--sky-deep); }
+
+.tour-btn--prev {
+  background: #f1f5f9;
+  color: var(--text-sub);
+}
+.tour-btn--prev:hover { background: var(--border); }
+
+/* ── 카테고리 선택 모달 ── */
+.tour-modal-wrap {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.tour-modal-wrap--open { display: flex; }
+
+.tour-modal {
+  background: #fff;
+  border-radius: 18px;
+  padding: 22px 20px 20px;
+  width: 100%;
+  max-width: 460px;
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.2);
+}
+
+.tour-modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.tour-modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.tour-modal-close-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 18px;
+  color: var(--text-mute);
+  padding: 2px 6px;
+  border-radius: 6px;
+  line-height: 1;
+}
+.tour-modal-close-btn:hover { background: var(--border); }
+
+.tour-modal-sub {
+  font-size: 13px;
+  color: var(--text-sub);
+  margin-bottom: 18px;
+}
+
+.tour-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.tour-cat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 14px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+  cursor: pointer;
+  text-align: left;
+  font-family: inherit;
+  transition: border-color 0.15s, background 0.15s, transform 0.12s;
+}
+.tour-cat-card:hover {
+  border-color: var(--sky-dark);
+  background: var(--sky-pale);
+  transform: translateY(-1px);
+}
+.tour-cat-card--done {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.tour-cat-icon  { font-size: 22px; line-height: 1; margin-bottom: 2px; }
+.tour-cat-title { font-size: 14px; font-weight: 700; color: var(--text); }
+.tour-cat-desc  { font-size: 11px; color: var(--text-sub); line-height: 1.45; }
+
+.tour-cat-badge-done {
+  font-size: 10px;
+  font-weight: 700;
+  color: #166534;
+  background: #dcfce7;
+  padding: 2px 8px;
+  border-radius: 99px;
+  margin-top: 5px;
+}
+
+/* ── 완료 토스트 ── */
+.tour-toast {
+  position: fixed;
+  bottom: 72px;
+  left: 50%;
+  transform: translateX(-50%) translateY(16px);
+  background: #1e293b;
+  color: #fff;
+  padding: 11px 22px;
+  border-radius: 99px;
+  font-size: 13px;
+  font-weight: 600;
+  z-index: 10010;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
+  white-space: nowrap;
+}
+.tour-toast--show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ── 사이드바 가이드맵 버튼 ── */
+.sidebar-guidemap-btn {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+  color: inherit;
+}
+
+/* ── 가이드 활성 시 모바일 사이드바 최상위 표시 ── */
+body.tour-sidebar-step .sidebar {
+  z-index: 9983;
+}
+
+/* ── 태블릿 이상 툴팁 폭 넓히기 ── */
+@media (min-width: 600px) {
+  .tour-tooltip { width: 320px; }
+}

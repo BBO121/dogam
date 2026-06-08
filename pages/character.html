@@ -353,6 +353,10 @@
             <div class="char-info-divider"></div>
             <p class="char-info-desc">${c.description}</p>` : ''}
 
+            ${c.owner_description ? `
+            <div class="char-info-divider"></div>
+            <p class="char-info-desc">${c.owner_description}</p>` : ''}
+
             ${(() => {
               if (!c.custom_field_values) return '';
               const validKeys = Array.isArray(sp?.custom_fields) && sp.custom_fields.length
