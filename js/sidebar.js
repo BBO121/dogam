@@ -24,7 +24,6 @@ async function initSidebar() {
 
     <nav class="sidebar-menu">
       <a href="guide.html" class="sidebar-item ${path === 'guide.html' || path === 'guide-detail.html' ? 'active' : ''}">가이드</a>
-      <button class="sidebar-item sidebar-guidemap-btn" onclick="openGuideTour()">🗺️ 가이드맵</button>
     </nav>
 
     <div class="sidebar-divider"></div>
