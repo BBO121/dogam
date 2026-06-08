@@ -9,10 +9,10 @@ window.incrementAchCounter = async function(counterKey) {
     const { data, error } = await sb.rpc('increment_achievement_counter', {
       p_counter_key: counterKey,
     });
-    if (error) { console.warn('[업적] 카운터 증가 실패:', counterKey, error); return 0; }
+    if (error) { console.error('[업적] 카운터 증가 실패:', counterKey, error); return 0; }
     return data || 0;
   } catch (e) {
-    console.warn('[업적] 카운터 증가 예외:', counterKey, e);
+    console.error('[업적] 카운터 증가 예외:', counterKey, e);
     return 0;
   }
 };
