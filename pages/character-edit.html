@@ -79,185 +79,241 @@
 
         <form class="register-form" id="editForm">
 
-          <!-- 메인 이미지 -->
-          <div class="form-group">
-            <label class="form-label">메인 이미지</label>
-            <p class="form-hint">업로드 후 썸네일을 편집할 수 있습니다. 원본 이미지는 상세페이지에 사용됩니다.</p>
-            <input type="file" id="imageFile" accept="image/*" style="display:none;">
-            <div class="img-upload-box img-upload-box--portrait" id="uploadBox" onclick="document.getElementById('imageFile').click()">
-              <img id="imagePreview" style="display:none; width:100%; height:100%; object-fit:cover; border-radius: var(--radius);">
-              <div id="uploadPlaceholder">
-                <p class="img-upload-text">클릭하여 이미지 업로드</p>
-              </div>
-            </div>
-            <p class="img-upload-ratio">권장 비율 3:4</p>
-            <p class="img-upload-meta">PNG · GIF · JPG · WebP &nbsp;·&nbsp; 최대 2MB · 2000×2000px 이하</p>
-          </div>
-
-          <!-- 추가 이미지 -->
-          <div class="form-group">
-            <label class="form-label">추가 이미지 <span class="form-hint" style="display:inline; margin:0 0 0 6px;">선택사항</span></label>
-            <div id="extraImageList" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px;"></div>
-            <input type="file" id="extraImageInput" accept="image/*" style="display:none;" multiple onchange="addExtraImages(this)">
-            <button type="button" class="btn-field-add" onclick="document.getElementById('extraImageInput').click()">+ 이미지 추가</button>
-          </div>
-
-          <!-- 이름 -->
+          <!-- 개체명 (공통) -->
           <div class="form-group">
             <label class="form-label">이름 <span class="required">*</span></label>
             <input type="text" id="charName" class="form-input" placeholder="개체 이름을 입력하세요">
           </div>
 
-          <!-- 디자이너 -->
-          <div class="form-group">
-            <label class="form-label">디자이너 <span class="required">*</span></label>
+          <!-- 종족주 영역 구분선 -->
+          <div style="margin:28px 0 20px; display:flex; align-items:center; gap:10px;">
+            <div style="flex:1; height:1px; background:var(--border);"></div>
+            <span style="font-size:12px; font-weight:600; color:var(--text-mute); white-space:nowrap; letter-spacing:0.05em; padding:4px 10px; border:1px solid var(--border); border-radius:20px;">종족주 영역</span>
+            <div style="flex:1; height:1px; background:var(--border);"></div>
+          </div>
+          <div id="speciesOwnerArea" style="display:flex; flex-direction:column; gap:28px;">
 
-            <div style="display:flex; gap:8px; margin-bottom:12px;">
-              <button type="button" id="btnDesignerSite" onclick="setDesignerType('site')"
-                style="flex:1; padding:8px; border-radius:8px; border:2px solid var(--sky); background:var(--sky); color:#fff; font-size:13px; cursor:pointer;">
-                사이트 유저
-              </button>
-              <button type="button" id="btnDesignerExternal" onclick="setDesignerType('external')"
-                style="flex:1; padding:8px; border-radius:8px; border:2px solid var(--border); background:#fff; color:var(--text-sub); font-size:13px; cursor:pointer;">
-                사이트 밖 유저
-              </button>
-            </div>
-
-            <div id="designerSiteSection">
-              <input type="text" id="designerSearch" class="form-input" placeholder="닉네임 또는 아이디로 검색..." oninput="filterDesigners(this.value)" style="margin-bottom:8px;">
-              <div id="designerUserList" style="border:1px solid var(--border); border-radius:10px; max-height:200px; overflow-y:auto; background:#fff;">
-                <p style="padding:12px; color:var(--text-mute); font-size:13px;">불러오는 중...</p>
+            <!-- 메인 이미지 -->
+            <div class="form-group">
+              <label class="form-label">메인 이미지</label>
+              <p class="form-hint">업로드 후 썸네일을 편집할 수 있습니다. 원본 이미지는 상세페이지에 사용됩니다.</p>
+              <input type="file" id="imageFile" accept="image/*" style="display:none;">
+              <div class="img-upload-box img-upload-box--portrait" id="uploadBox" onclick="document.getElementById('imageFile').click()">
+                <img id="imagePreview" style="display:none; width:100%; height:100%; object-fit:cover; border-radius: var(--radius);">
+                <div id="uploadPlaceholder">
+                  <p class="img-upload-text">클릭하여 이미지 업로드</p>
+                </div>
               </div>
-              <p id="designerSelectedDisplay" style="margin-top:8px; font-size:13px; color:var(--sky-deep); display:none;"></p>
+              <p class="img-upload-ratio">권장 비율 3:4</p>
+              <p class="img-upload-meta">PNG · GIF · JPG · WebP &nbsp;·&nbsp; 최대 2MB · 2000×2000px 이하</p>
             </div>
 
-            <div id="designerExternalSection" style="display:none;">
-              <input type="text" id="designerExternalName" class="form-input" placeholder="이름 입력" style="margin-bottom:8px;">
-              <input type="text" id="designerExternalContact" class="form-input" placeholder="연락처 (트위터, 디스코드 등) — 선택사항">
-            </div>
-          </div>
-
-          <!-- 소유주 -->
-          <div class="form-group">
-            <label class="form-label">소유주</label>
-
-            <div style="display:flex; gap:8px; margin-bottom:12px;">
-              <button type="button" id="btnSiteUser" onclick="setOwnerType('site')"
-                style="flex:1; padding:8px; border-radius:8px; border:2px solid var(--sky); background:var(--sky); color:#fff; font-size:13px; cursor:pointer;">
-                사이트 유저
-              </button>
-              <button type="button" id="btnExternal" onclick="setOwnerType('external')"
-                style="flex:1; padding:8px; border-radius:8px; border:2px solid var(--border); background:#fff; color:var(--text-sub); font-size:13px; cursor:pointer;">
-                사이트 밖 유저
-              </button>
+            <!-- 추가 이미지 -->
+            <div class="form-group">
+              <label class="form-label">추가 이미지 <span class="form-hint" style="display:inline; margin:0 0 0 6px;">선택사항</span></label>
+              <div id="extraImageList" style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:10px;"></div>
+              <input type="file" id="extraImageInput" accept="image/*" style="display:none;" multiple onchange="addExtraImages(this)">
+              <button type="button" class="btn-field-add" onclick="document.getElementById('extraImageInput').click()">+ 이미지 추가</button>
             </div>
 
-            <div id="ownerSiteSection">
-              <input type="text" id="ownerSearch" class="form-input" placeholder="닉네임 또는 아이디로 검색..." oninput="filterUsers(this.value)" style="margin-bottom:8px;">
-              <div id="ownerUserList" style="border:1px solid var(--border); border-radius:10px; max-height:200px; overflow-y:auto; background:#fff;">
-                <p style="padding:12px; color:var(--text-mute); font-size:13px;">불러오는 중...</p>
+            <!-- 디자이너 -->
+            <div class="form-group">
+              <label class="form-label">디자이너 <span class="required">*</span></label>
+
+              <div style="display:flex; gap:8px; margin-bottom:12px;">
+                <button type="button" id="btnDesignerSite" onclick="setDesignerType('site')"
+                  style="flex:1; padding:8px; border-radius:8px; border:2px solid var(--sky); background:var(--sky); color:#fff; font-size:13px; cursor:pointer;">
+                  사이트 유저
+                </button>
+                <button type="button" id="btnDesignerExternal" onclick="setDesignerType('external')"
+                  style="flex:1; padding:8px; border-radius:8px; border:2px solid var(--border); background:#fff; color:var(--text-sub); font-size:13px; cursor:pointer;">
+                  사이트 밖 유저
+                </button>
               </div>
-              <p id="ownerSelectedDisplay" style="margin-top:8px; font-size:13px; color:var(--sky-deep); display:none;"></p>
-            </div>
 
-            <div id="ownerExternalSection" style="display:none;">
-              <input type="text" id="ownerExternalName" class="form-input" placeholder="이름 입력" style="margin-bottom:8px;">
-              <input type="text" id="ownerExternalContact" class="form-input" placeholder="연락처 (트위터, 디스코드 등) — 선택사항">
-            </div>
-          </div>
-
-          <!-- 개체번호 -->
-          <div class="form-group">
-            <label class="form-label">개체번호 <span class="form-hint" style="display:inline; margin:0 0 0 6px;">선택사항</span></label>
-            <input type="text" id="charNumber" class="form-input" placeholder="예) NO.001">
-          </div>
-
-          <!-- 설명 -->
-          <div class="form-group">
-            <label class="form-label">설명</label>
-            <textarea id="charDesc" class="form-textarea" placeholder="이 개체에 대한 설명을 입력하세요" rows="4"></textarea>
-          </div>
-
-          <!-- 종족 커스텀 필드 -->
-          <div id="customFieldsSection" style="display:none;">
-            <div class="char-info-divider" style="margin:8px 0 20px;"></div>
-            <p class="form-label" style="margin-bottom:14px;">개체 항목</p>
-            <div id="customFieldInputs"></div>
-          </div>
-
-          <!-- 분류 -->
-          <div class="form-group">
-            <label class="form-label">분류 <span class="form-hint-inline">선택사항 · 여러 개 추가 가능</span></label>
-            <div id="addedCategories" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;"></div>
-            <div id="categoryInputArea" style="display:none; padding:12px; border:1px solid var(--border); border-radius:10px; margin-bottom:10px;">
-              <div id="colorSwatches" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;"></div>
-              <input type="hidden" id="categoryColor" value="">
-              <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
-                <input type="text" id="categoryLabel" class="form-input" placeholder="분류 이름 (예: 희귀종, NPC)" style="flex:1;">
-                <button type="button" onclick="confirmAddCategory()"
-                  style="flex-shrink:0; padding:0 14px; height:38px; border:none; border-radius:8px; background:var(--sky); color:#fff; cursor:pointer; font-size:13px;">추가</button>
-                <button type="button" onclick="cancelAddCategory()"
-                  style="flex-shrink:0; padding:0 12px; height:38px; border:1px solid var(--border); border-radius:8px; background:#fff; color:var(--text-mute); cursor:pointer; font-size:12px;">취소</button>
+              <div id="designerSiteSection">
+                <input type="text" id="designerSearch" class="form-input" placeholder="닉네임 또는 아이디로 검색..." oninput="filterDesigners(this.value)" style="margin-bottom:8px;">
+                <div id="designerUserList" style="border:1px solid var(--border); border-radius:10px; max-height:200px; overflow-y:auto; background:#fff;">
+                  <p style="padding:12px; color:var(--text-mute); font-size:13px;">불러오는 중...</p>
+                </div>
+                <p id="designerSelectedDisplay" style="margin-top:8px; font-size:13px; color:var(--sky-deep); display:none;"></p>
               </div>
-              <div id="existingCategoryChips" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
-            </div>
-            <button type="button" class="btn-field-add" onclick="showCategoryInput()">+ 분류 추가</button>
-          </div>
 
-          <!-- 민감한 요소 -->
-          <div class="form-group">
-            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-              <label style="display:flex; align-items:center; gap:6px; cursor:pointer; white-space:nowrap; font-size:14px; font-weight:500; color:var(--text);">
-                <input type="checkbox" id="isSensitive" style="width:16px; height:16px; cursor:pointer; accent-color:var(--sky); flex-shrink:0;">
-                민감한 요소 포함
-              </label>
-              <input type="text" id="sensitiveNote" class="form-input" placeholder="시선공포, 쨍한색 등" style="flex:1; min-width:160px;">
-            </div>
-          </div>
-
-          <!-- 분양 규칙 개별 설정 -->
-          <div class="form-group">
-            <label class="form-label">분양 규칙 개별 설정</label>
-            <p class="form-hint" style="margin-bottom:10px;">종족 따름이면 해당 종족의 기본 설정을 따릅니다.</p>
-            <div style="display:flex; flex-direction:column; gap:10px;">
-              <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-                <span style="font-size:13px; color:var(--text); width:60px; flex-shrink:0;">재분양</span>
-                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowResale" value="null" checked style="accent-color:var(--sky);"> 종족 따름</label>
-                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowResale" value="true" style="accent-color:var(--sky);"> 허용</label>
-                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowResale" value="false" style="accent-color:var(--sky);"> 불가</label>
-              </div>
-              <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-                <span style="font-size:13px; color:var(--text); width:60px; flex-shrink:0;">무료분양</span>
-                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowFreeAdoption" value="null" checked style="accent-color:var(--sky);"> 종족 따름</label>
-                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowFreeAdoption" value="true" style="accent-color:var(--sky);"> 허용</label>
-                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowFreeAdoption" value="false" style="accent-color:var(--sky);"> 불가</label>
-              </div>
-              <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-                <span style="font-size:13px; color:var(--text); width:60px; flex-shrink:0;">유료/경매</span>
-                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowPaidAdoption" value="null" checked style="accent-color:var(--sky);"> 종족 따름</label>
-                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowPaidAdoption" value="true" style="accent-color:var(--sky);"> 허용</label>
-                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowPaidAdoption" value="false" style="accent-color:var(--sky);"> 불가</label>
-              </div>
-              <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
-                <span style="font-size:13px; color:var(--text); width:60px; flex-shrink:0;">기타분양</span>
-                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowOtherAdoption" value="null" checked style="accent-color:var(--sky);"> 종족 따름</label>
-                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowOtherAdoption" value="true" style="accent-color:var(--sky);"> 허용</label>
-                <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowOtherAdoption" value="false" style="accent-color:var(--sky);"> 불가</label>
+              <div id="designerExternalSection" style="display:none;">
+                <input type="text" id="designerExternalName" class="form-input" placeholder="이름 입력" style="margin-bottom:8px;">
+                <input type="text" id="designerExternalContact" class="form-input" placeholder="연락처 (트위터, 디스코드 등) — 선택사항">
               </div>
             </div>
-          </div>
 
-          <!-- 섹션 (설정/관계/직접입력) -->
-          <div class="form-group">
-            <label class="form-label">섹션 <span class="form-hint-inline">탭으로 표시돼요 · 드래그로 순서 변경</span></label>
-            <div id="sectionList"></div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
-              <button type="button" id="btnAddSettings" class="btn-field-add" onclick="addSection('settings')">+ 설정</button>
-              <button type="button" id="btnAddRelation" class="btn-field-add" onclick="addSection('relation')">+ 관계</button>
-              <button type="button" id="btnAddCustom" class="btn-field-add" onclick="addSection('custom')">+ 직접입력</button>
+            <!-- 소유주 -->
+            <div class="form-group">
+              <label class="form-label">소유주</label>
+
+              <div style="display:flex; gap:8px; margin-bottom:12px;">
+                <button type="button" id="btnSiteUser" onclick="setOwnerType('site')"
+                  style="flex:1; padding:8px; border-radius:8px; border:2px solid var(--sky); background:var(--sky); color:#fff; font-size:13px; cursor:pointer;">
+                  사이트 유저
+                </button>
+                <button type="button" id="btnExternal" onclick="setOwnerType('external')"
+                  style="flex:1; padding:8px; border-radius:8px; border:2px solid var(--border); background:#fff; color:var(--text-sub); font-size:13px; cursor:pointer;">
+                  사이트 밖 유저
+                </button>
+              </div>
+
+              <div id="ownerSiteSection">
+                <input type="text" id="ownerSearch" class="form-input" placeholder="닉네임 또는 아이디로 검색..." oninput="filterUsers(this.value)" style="margin-bottom:8px;">
+                <div id="ownerUserList" style="border:1px solid var(--border); border-radius:10px; max-height:200px; overflow-y:auto; background:#fff;">
+                  <p style="padding:12px; color:var(--text-mute); font-size:13px;">불러오는 중...</p>
+                </div>
+                <p id="ownerSelectedDisplay" style="margin-top:8px; font-size:13px; color:var(--sky-deep); display:none;"></p>
+              </div>
+
+              <div id="ownerExternalSection" style="display:none;">
+                <input type="text" id="ownerExternalName" class="form-input" placeholder="이름 입력" style="margin-bottom:8px;">
+                <input type="text" id="ownerExternalContact" class="form-input" placeholder="연락처 (트위터, 디스코드 등) — 선택사항">
+              </div>
             </div>
-            <p id="customCountNote" style="font-size:12px; color:var(--text-mute); margin-top:6px; display:none;"></p>
+
+            <!-- 개체번호 -->
+            <div class="form-group">
+              <label class="form-label">개체번호 <span class="form-hint" style="display:inline; margin:0 0 0 6px;">선택사항</span></label>
+              <input type="text" id="charNumber" class="form-input" placeholder="예) NO.001">
+            </div>
+
+            <!-- 종족주 설명 -->
+            <div class="form-group">
+              <label class="form-label">종족주 설명</label>
+              <textarea id="charDesc" class="form-textarea" placeholder="종족주가 작성하는 개체 설명을 입력하세요" rows="4"></textarea>
+            </div>
+
+            <!-- 개체 설정 소구분선 -->
+            <div style="display:flex; align-items:center; gap:10px; margin-top:4px;">
+              <span style="font-size:11px; font-weight:700; color:var(--text-mute); letter-spacing:0.08em; white-space:nowrap;">개체 설정</span>
+              <div style="flex:1; height:1px; background:var(--border);"></div>
+            </div>
+
+            <!-- 종족 커스텀 필드 -->
+            <div id="customFieldsSection" style="display:none;">
+              <div class="char-info-divider" style="margin:8px 0 20px;"></div>
+              <p class="form-label" style="margin-bottom:14px;">개체 항목</p>
+              <div id="customFieldInputs"></div>
+            </div>
+
+            <!-- 분류 -->
+            <div class="form-group">
+              <label class="form-label">분류 <span class="form-hint-inline">선택사항 · 여러 개 추가 가능</span></label>
+              <div id="addedCategories" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;"></div>
+              <div id="categoryInputArea" style="display:none; padding:12px; border:1px solid var(--border); border-radius:10px; margin-bottom:10px;">
+                <div id="colorSwatches" style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:10px;"></div>
+                <input type="hidden" id="categoryColor" value="">
+                <div style="display:flex; gap:8px; align-items:center; margin-bottom:10px;">
+                  <input type="text" id="categoryLabel" class="form-input" placeholder="분류 이름 (예: 희귀종, NPC)" style="flex:1;">
+                  <button type="button" onclick="confirmAddCategory()"
+                    style="flex-shrink:0; padding:0 14px; height:38px; border:none; border-radius:8px; background:var(--sky); color:#fff; cursor:pointer; font-size:13px;">추가</button>
+                  <button type="button" onclick="cancelAddCategory()"
+                    style="flex-shrink:0; padding:0 12px; height:38px; border:1px solid var(--border); border-radius:8px; background:#fff; color:var(--text-mute); cursor:pointer; font-size:12px;">취소</button>
+                </div>
+                <div id="existingCategoryChips" style="display:flex; flex-wrap:wrap; gap:8px;"></div>
+              </div>
+              <button type="button" class="btn-field-add" onclick="showCategoryInput()">+ 분류 추가</button>
+            </div>
+
+            <!-- 민감한 요소 -->
+            <div class="form-group">
+              <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+                <label style="display:flex; align-items:center; gap:6px; cursor:pointer; white-space:nowrap; font-size:14px; font-weight:500; color:var(--text);">
+                  <input type="checkbox" id="isSensitive" style="width:16px; height:16px; cursor:pointer; accent-color:var(--sky); flex-shrink:0;">
+                  민감한 요소 포함
+                </label>
+                <input type="text" id="sensitiveNote" class="form-input" placeholder="시선공포, 쨍한색 등" style="flex:1; min-width:160px;">
+              </div>
+            </div>
+
+            <!-- 분양 규칙 개별 설정 -->
+            <div class="form-group">
+              <label class="form-label">분양 규칙 개별 설정</label>
+              <p class="form-hint" style="margin-bottom:10px;">종족 따름이면 해당 종족의 기본 설정을 따릅니다.</p>
+              <div style="display:flex; flex-direction:column; gap:10px;">
+                <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                  <span style="font-size:13px; color:var(--text); width:60px; flex-shrink:0;">재분양</span>
+                  <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowResale" value="null" checked style="accent-color:var(--sky);"> 종족 따름</label>
+                  <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowResale" value="true" style="accent-color:var(--sky);"> 허용</label>
+                  <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowResale" value="false" style="accent-color:var(--sky);"> 불가</label>
+                </div>
+                <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                  <span style="font-size:13px; color:var(--text); width:60px; flex-shrink:0;">무료분양</span>
+                  <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowFreeAdoption" value="null" checked style="accent-color:var(--sky);"> 종족 따름</label>
+                  <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowFreeAdoption" value="true" style="accent-color:var(--sky);"> 허용</label>
+                  <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowFreeAdoption" value="false" style="accent-color:var(--sky);"> 불가</label>
+                </div>
+                <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                  <span style="font-size:13px; color:var(--text); width:60px; flex-shrink:0;">유료/경매</span>
+                  <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowPaidAdoption" value="null" checked style="accent-color:var(--sky);"> 종족 따름</label>
+                  <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowPaidAdoption" value="true" style="accent-color:var(--sky);"> 허용</label>
+                  <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowPaidAdoption" value="false" style="accent-color:var(--sky);"> 불가</label>
+                </div>
+                <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                  <span style="font-size:13px; color:var(--text); width:60px; flex-shrink:0;">기타분양</span>
+                  <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowOtherAdoption" value="null" checked style="accent-color:var(--sky);"> 종족 따름</label>
+                  <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowOtherAdoption" value="true" style="accent-color:var(--sky);"> 허용</label>
+                  <label style="display:flex; align-items:center; gap:4px; font-size:13px; cursor:pointer; color:var(--text);"><input type="radio" name="allowOtherAdoption" value="false" style="accent-color:var(--sky);"> 불가</label>
+                </div>
+              </div>
+            </div>
+
+            <!-- 추가 섹션 소구분선 -->
+            <div style="display:flex; align-items:center; gap:10px; margin-top:4px;">
+              <span style="font-size:11px; font-weight:700; color:var(--text-mute); letter-spacing:0.08em; white-space:nowrap;">추가 섹션</span>
+              <div style="flex:1; height:1px; background:var(--border);"></div>
+            </div>
+
+            <!-- 종족주 섹션 -->
+            <div class="form-group">
+              <label class="form-label">종족주 섹션 <span class="form-hint-inline">탭으로 표시돼요 · 드래그로 순서 변경</span></label>
+              <div id="sectionList"></div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+                <button type="button" id="btnAddSettings" class="btn-field-add" onclick="addSection('settings','species')">+ 설정</button>
+                <button type="button" id="btnAddRelation" class="btn-field-add" onclick="addSection('relation','species')">+ 관계</button>
+                <button type="button" id="btnAddCustom" class="btn-field-add" onclick="addSection('custom','species')">+ 직접입력</button>
+              </div>
+              <p id="customCountNote" style="font-size:12px; color:var(--text-mute); margin-top:6px; display:none;"></p>
+            </div>
+
+          </div><!-- /speciesOwnerArea -->
+
+          <!-- 소유주 영역 구분선 -->
+          <div style="margin:28px 0 20px; display:flex; align-items:center; gap:10px;">
+            <div style="flex:1; height:1px; background:var(--border);"></div>
+            <span style="font-size:12px; font-weight:600; color:var(--text-mute); white-space:nowrap; letter-spacing:0.05em; padding:4px 10px; border:1px solid var(--border); border-radius:20px;">소유주 영역</span>
+            <div style="flex:1; height:1px; background:var(--border);"></div>
           </div>
+          <div id="ownerArea" style="display:flex; flex-direction:column; gap:28px;">
+
+            <!-- 소유주 설명 -->
+            <div class="form-group">
+              <label class="form-label">소유주 설명</label>
+              <textarea id="ownerDesc" class="form-textarea" placeholder="소유주가 작성하는 개체 설명을 입력하세요" rows="4"></textarea>
+            </div>
+
+            <!-- 추가 섹션 소구분선 -->
+            <div style="display:flex; align-items:center; gap:10px; margin-top:4px;">
+              <span style="font-size:11px; font-weight:700; color:var(--text-mute); letter-spacing:0.08em; white-space:nowrap;">추가 섹션</span>
+              <div style="flex:1; height:1px; background:var(--border);"></div>
+            </div>
+
+            <!-- 소유주 섹션 -->
+            <div class="form-group">
+              <label class="form-label">소유주 섹션 <span class="form-hint-inline">탭으로 표시돼요 · 드래그로 순서 변경</span></label>
+              <div id="ownerSectionList"></div>
+              <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+                <button type="button" id="btnOwnerAddSettings" class="btn-field-add" onclick="addSection('settings','owner')">+ 설정</button>
+                <button type="button" id="btnOwnerAddRelation" class="btn-field-add" onclick="addSection('relation','owner')">+ 관계</button>
+                <button type="button" id="btnOwnerAddCustom" class="btn-field-add" onclick="addSection('custom','owner')">+ 직접입력</button>
+              </div>
+              <p id="ownerCustomCountNote" style="font-size:12px; color:var(--text-mute); margin-top:6px; display:none;"></p>
+            </div>
+
+          </div><!-- /ownerArea -->
 
           <!-- 에러 -->
           <p class="auth-error" id="editError"></p>
@@ -329,15 +385,30 @@
     // ── 섹션 관리 ──────────────────────────────
     function updateSectionAddButtons() {
       const cards = [...document.querySelectorAll('#sectionList .section-card')];
-      const hasSettings   = cards.some(c => c.dataset.type === 'settings');
-      const hasRelation   = cards.some(c => c.dataset.type === 'relation');
-      const customCount   = cards.filter(c => c.dataset.type === 'custom').length;
+      const hasSettings = cards.some(c => c.dataset.type === 'settings');
+      const hasRelation = cards.some(c => c.dataset.type === 'relation');
+      const customCount = cards.filter(c => c.dataset.type === 'custom').length;
 
       document.getElementById('btnAddSettings').style.display = hasSettings ? 'none' : '';
       document.getElementById('btnAddRelation').style.display = hasRelation ? 'none' : '';
       document.getElementById('btnAddCustom').style.display   = customCount >= 6 ? 'none' : '';
 
       const note = document.getElementById('customCountNote');
+      note.style.display  = customCount > 0 ? '' : 'none';
+      note.textContent    = `직접입력 ${customCount}/6`;
+    }
+
+    function updateOwnerSectionAddButtons() {
+      const cards = [...document.querySelectorAll('#ownerSectionList .section-card')];
+      const hasSettings = cards.some(c => c.dataset.type === 'settings');
+      const hasRelation = cards.some(c => c.dataset.type === 'relation');
+      const customCount = cards.filter(c => c.dataset.type === 'custom').length;
+
+      document.getElementById('btnOwnerAddSettings').style.display = hasSettings ? 'none' : '';
+      document.getElementById('btnOwnerAddRelation').style.display = hasRelation ? 'none' : '';
+      document.getElementById('btnOwnerAddCustom').style.display   = customCount >= 6 ? 'none' : '';
+
+      const note = document.getElementById('ownerCustomCountNote');
       note.style.display  = customCount > 0 ? '' : 'none';
       note.textContent    = `직접입력 ${customCount}/6`;
     }
@@ -442,8 +513,10 @@
       quillInstances.set(id, quill);
     }
 
-    function addSection(type) {
-      const cards = [...document.querySelectorAll('#sectionList .section-card')];
+    function addSection(type, zone = 'species') {
+      const listId     = zone === 'owner' ? 'ownerSectionList' : 'sectionList';
+      const authorRole = zone === 'owner' ? 'owner' : 'species_owner';
+      const cards = [...document.querySelectorAll(`#${listId} .section-card`)];
       if (type === 'settings' && cards.some(c => c.dataset.type === 'settings')) return;
       if (type === 'relation' && cards.some(c => c.dataset.type === 'relation')) return;
       if (type === 'custom' && cards.filter(c => c.dataset.type === 'custom').length >= 6) return;
@@ -451,16 +524,20 @@
       const card = type === 'settings' ? makeSettingsCard()
                  : type === 'relation' ? makeRelationCard()
                  : makeCustomCard();
-      document.getElementById('sectionList').appendChild(card);
+      card.dataset.authorRole = authorRole;
+      document.getElementById(listId).appendChild(card);
       initCardQuill(card);
-      updateSectionAddButtons();
+      if (zone === 'owner') updateOwnerSectionAddButtons();
+      else updateSectionAddButtons();
     }
 
     function removeSection(btn) {
       const card = btn.closest('.section-card');
+      const isOwnerSection = !!card.closest('#ownerSectionList');
       quillInstances.delete(card.dataset.id);
       card.remove();
-      updateSectionAddButtons();
+      if (isOwnerSection) updateOwnerSectionAddButtons();
+      else updateSectionAddButtons();
     }
 
     function addRelationItem(listEl, data = null) {
@@ -508,14 +585,19 @@
 
     function collectSections() {
       const sections = [];
-      document.querySelectorAll('#sectionList .section-card').forEach(card => {
-        const type = card.dataset.type;
-        const id   = card.dataset.id;
+      const allCards = [
+        ...document.querySelectorAll('#sectionList .section-card'),
+        ...document.querySelectorAll('#ownerSectionList .section-card'),
+      ];
+      allCards.forEach(card => {
+        const type       = card.dataset.type;
+        const id         = card.dataset.id;
+        const authorRole = card.dataset.authorRole || 'species_owner';
         if (type === 'settings') {
           const quill = quillInstances.get(id);
           const content = quill ? quill.root.innerHTML : '';
           const hasContent = quill && quill.getLength() > 1;
-          if (hasContent) sections.push({ id, type, content });
+          if (hasContent) sections.push({ id, type, content, author_role: authorRole });
         } else if (type === 'relation') {
           const relations = [];
           card.querySelectorAll('.relation-item').forEach(item => {
@@ -530,13 +612,13 @@
               description: (() => { const c = item.querySelector('.ql-container'); const q = c && Quill.find(c); return q && q.getLength() > 1 ? q.root.innerHTML : ''; })(),
             });
           });
-          if (relations.length) sections.push({ id, type, relations });
+          if (relations.length) sections.push({ id, type, relations, author_role: authorRole });
         } else if (type === 'custom') {
           const title = card.querySelector('.section-title-input').value.trim();
           const quill = quillInstances.get(id);
           const content = quill ? quill.root.innerHTML : '';
           const hasContent = quill && quill.getLength() > 1;
-          if (title || hasContent) sections.push({ id, type, title, content });
+          if (title || hasContent) sections.push({ id, type, title, content, author_role: authorRole });
         }
       });
       return sections;
@@ -555,52 +637,57 @@
       const muteById  = id => mute(document.getElementById(id));
       const muteRadio = name => document.querySelectorAll(`input[name="${name}"]`).forEach(r => r.disabled = true);
 
+      const isOffsite = originalCharData?.owner_is_offsite === true;
+
       // 역할 안내 배너
       const notice = document.createElement('p');
       notice.style.cssText = 'font-size:13px; color:var(--sky-deep); background:var(--sky-pale); border:1px solid #BAE6FD; border-radius:8px; padding:10px 14px; margin-top:8px; line-height:1.5;';
       document.getElementById('editSubtitle').insertAdjacentElement('afterend', notice);
 
       if (role === 'species_owner') {
-        const isOffsite = originalCharData?.owner_is_offsite === true;
-        notice.textContent = isOffsite
-          ? '종족주 권한으로 수정 중입니다. 사이트오프 소유주 개체로, 개체 이름과 설명도 수정할 수 있어요.'
-          : '종족주 권한으로 수정 중입니다. 개체 이름과 개인 설명은 소유주만 수정할 수 있어요.';
-        // 개체 이름·개인 설명은 소유주 전용 (사이트오프 개체는 예외)
-        if (!isOffsite) {
-          muteById('charName');
-          muteById('charDesc');
+        if (isOffsite) {
+          notice.textContent = '종족주 권한으로 수정 중입니다. 오프사이트 개체로, 소유주 영역도 수정할 수 있어요.';
+          // 오프사이트: 모든 제한 없음
+        } else {
+          notice.textContent = '종족주 권한으로 수정 중입니다. 소유주 영역은 소유주만 수정할 수 있어요.';
+          // 소유주 영역 잠금
+          muteById('ownerDesc');
+          document.querySelectorAll('#ownerSectionList .section-card').forEach(card => {
+            const removeBtn = card.querySelector('button[onclick*="removeSection"]');
+            if (removeBtn) { removeBtn.disabled = true; removeBtn.style.opacity = '0.4'; }
+            card.querySelectorAll('input, select').forEach(mute);
+            const quill = quillInstances.get(card.dataset.id);
+            if (quill) quill.disable();
+            card.querySelectorAll('.ql-container').forEach(container => {
+              const q = Quill.find(container);
+              if (q) q.disable();
+            });
+          });
+          ['btnOwnerAddSettings','btnOwnerAddRelation','btnOwnerAddCustom'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) { el.setAttribute('disabled','disabled'); el.style.opacity = '0.4'; }
+          });
         }
-        // custom 섹션 추가 불가 (소유주 전용)
-        const btnCustom = document.getElementById('btnAddCustom');
-        if (btnCustom) { btnCustom.setAttribute('disabled', 'disabled'); btnCustom.style.opacity = '0.4'; }
-        // 기존 custom 섹션 수정·삭제 불가
-        document.querySelectorAll('#sectionList .section-card[data-type="custom"]').forEach(card => {
-          const removeBtn = card.querySelector('button[onclick*="removeSection"]');
-          if (removeBtn) { removeBtn.disabled = true; removeBtn.style.opacity = '0.4'; }
-          const titleInput = card.querySelector('.section-title-input');
-          if (titleInput) mute(titleInput);
-          const quill = quillInstances.get(card.dataset.id);
-          if (quill) quill.disable();
-        });
 
       } else if (role === 'owner') {
-        notice.textContent = '개체 이름·개인 설명 영역만 수정할 수 있어요. 분류·종족 설정 정보는 종족주가 관리합니다.';
-        // 개체번호 (종족주 전용)
-        muteById('charNumber');
-        // 이미지 업로드 비활성화
+        notice.textContent = '소유주 권한으로 수정 중입니다. 개체명과 소유주 영역만 수정할 수 있어요.';
+        // 종족주 영역 전체 잠금
+        muteById('charDesc');
         const uploadBox = document.getElementById('uploadBox');
         if (uploadBox) { uploadBox.onclick = null; uploadBox.style.cursor = 'default'; uploadBox.style.opacity = '0.6'; }
-        document.querySelector('[onclick*="extraImageInput"]')?.setAttribute('disabled','disabled');
-        document.querySelector('[onclick*="extraImageInput"]') && (document.querySelector('[onclick*="extraImageInput"]').style.opacity = '0.4');
-        // 디자이너
+        const extraBtn = document.querySelector('[onclick*="extraImageInput"]');
+        if (extraBtn) { extraBtn.setAttribute('disabled','disabled'); extraBtn.style.opacity = '0.4'; }
         ['btnDesignerSite','btnDesignerExternal','designerSearch','designerExternalName','designerExternalContact'].forEach(muteById);
-        // 소유주
+        ['btnDesignerSite','btnDesignerExternal'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) { el.style.cursor = 'not-allowed'; el.style.pointerEvents = 'none'; }
+        });
         ['btnSiteUser','btnExternal','ownerSearch','ownerExternalName','ownerExternalContact'].forEach(muteById);
         ['btnSiteUser','btnExternal'].forEach(id => {
           const el = document.getElementById(id);
           if (el) { el.style.cursor = 'not-allowed'; el.style.pointerEvents = 'none'; }
         });
-        // 커스텀 필드 (비동기 로드되므로 MutationObserver로 처리)
+        muteById('charNumber');
         const cfSection = document.getElementById('customFieldsSection');
         if (cfSection) {
           cfSection.querySelectorAll('.custom-field-input').forEach(mute);
@@ -608,28 +695,22 @@
             cfSection.querySelectorAll('.custom-field-input').forEach(mute);
           }).observe(cfSection, { childList: true, subtree: true });
         }
-        // 민감한 요소
         muteById('isSensitive');
         muteById('sensitiveNote');
-        // 분양 규칙
         ['allowResale','allowFreeAdoption','allowPaidAdoption','allowOtherAdoption'].forEach(muteRadio);
-        // 분류 비활성화 (소유주는 분류 수정 불가)
         const addCategoryBtn = document.querySelector('[onclick="showCategoryInput()"]');
-        if (addCategoryBtn) { addCategoryBtn.setAttribute('disabled', 'disabled'); addCategoryBtn.style.opacity = '0.4'; }
+        if (addCategoryBtn) { addCategoryBtn.setAttribute('disabled','disabled'); addCategoryBtn.style.opacity = '0.4'; }
         document.querySelectorAll('#addedCategories button').forEach(btn => { btn.disabled = true; btn.style.display = 'none'; });
-        // settings/relation 섹션 추가 불가
-        ['btnAddSettings','btnAddRelation'].forEach(id => {
+        ['btnAddSettings','btnAddRelation','btnAddCustom'].forEach(id => {
           const el = document.getElementById(id);
           if (el) { el.setAttribute('disabled','disabled'); el.style.opacity = '0.4'; }
         });
-        // 기존 섹션 삭제·수정 불가 (새 custom 섹션 추가는 허용)
         document.querySelectorAll('#sectionList .section-card').forEach(card => {
           const removeBtn = card.querySelector('button[onclick*="removeSection"]');
           if (removeBtn) { removeBtn.disabled = true; removeBtn.style.opacity = '0.4'; }
           card.querySelectorAll('input, select').forEach(mute);
           const quill = quillInstances.get(card.dataset.id);
           if (quill) quill.disable();
-          // relation 카드 내부 quill 개별 비활성화
           card.querySelectorAll('.ql-container').forEach(container => {
             const q = Quill.find(container);
             if (q) q.disable();
@@ -639,15 +720,20 @@
     }
 
     function renderExistingSections(sectionsData) {
-      const list = document.getElementById('sectionList');
+      const speciesList = document.getElementById('sectionList');
+      const ownerList   = document.getElementById('ownerSectionList');
       sectionsData.forEach(s => {
+        const authorRole = s.author_role || 'species_owner';
+        const target     = authorRole === 'owner' ? ownerList : speciesList;
         const card = s.type === 'settings' ? makeSettingsCard(s)
                    : s.type === 'relation' ? makeRelationCard(s)
                    : makeCustomCard(s);
-        list.appendChild(card);
+        card.dataset.authorRole = authorRole;
+        target.appendChild(card);
         initCardQuill(card, s.content || '');
       });
       updateSectionAddButtons();
+      updateOwnerSectionAddButtons();
     }
     // ────────────────────────────────────────
 
@@ -678,6 +764,7 @@
       }
 
       editRole         = (isAdminEd || (isOwner && isSpeciesOwner)) ? 'admin'
+                       : isSpeciesOwner ? 'species_owner'
                        : isOwner ? 'owner'
                        : 'species_owner';
       originalCharData = c;
@@ -697,6 +784,7 @@
       document.getElementById('charName').value   = c.name;
       document.getElementById('charNumber').value = c.char_number || '';
       document.getElementById('charDesc').value   = c.description || '';
+      document.getElementById('ownerDesc').value  = c.owner_description || '';
 
       if (c.image_url || c.thumbnail_url) {
         currentImageUrl     = c.image_url;
@@ -1130,7 +1218,7 @@
       const btn     = document.getElementById('submitBtn');
       errorEl.textContent = '';
 
-      // 소유주 전용 저장 (개체명·개인 설명만)
+      // 소유주 전용 저장 (개체명·소유주 영역만)
       if (editRole === 'owner') {
         const ownerName = document.getElementById('charName').value.trim();
         if (!ownerName) { errorEl.textContent = '이름을 입력해주세요.'; return; }
@@ -1138,22 +1226,20 @@
         btn.textContent = '저장 중...';
         btn.disabled = true;
         try {
-          // 기존 섹션 전체를 원본 그대로 유지, 새로 추가된 custom 섹션만 병합
-          const originalSections = originalCharData.char_sections || [];
-          const existingIds      = new Set(originalSections.map(s => s.id));
-          const newCustomOnly    = collectSections().filter(s => s.type === 'custom' && !existingIds.has(s.id));
-          const mergedSections   = [...originalSections, ...newCustomOnly];
+          // 소유주 섹션만 form에서 수집, 종족주 섹션은 원본 유지
+          const allCollected    = collectSections();
+          const ownerSections   = allCollected.filter(s => s.author_role === 'owner');
+          const speciesSections = (originalCharData.char_sections || []).filter(s => (s.author_role || 'species_owner') === 'species_owner');
+          const mergedSections  = [...speciesSections, ...ownerSections];
 
           const { error } = await sb.from('characters').update({
-            name:          ownerName,
-            description:   document.getElementById('charDesc').value.trim() || null,
-            // char_categories: 소유주는 분류 수정 불가 — 저장 payload에서 제외
-            char_sections: mergedSections.length ? mergedSections : null,
+            name:              ownerName,
+            owner_description: document.getElementById('ownerDesc').value.trim() || null,
+            char_sections:     mergedSections.length ? mergedSections : null,
           }).eq('id', charId);
 
           if (error) throw new Error(`저장에 실패했어요: ${error.message}`);
 
-          // 이름 변경 시 분양글 동기화
           await sb.from('adoptions').update({ character_name: ownerName }).eq('character_id', charId);
 
           window.location.href = `character.html?id=${charId}`;
@@ -1166,9 +1252,10 @@
       }
 
       // 종족주 / 관리자 저장 (종족 설정 영역)
-      const name    = document.getElementById('charName').value.trim();
-      const desc    = document.getElementById('charDesc').value.trim();
-      const file    = document.getElementById('imageFile').files[0];
+      const name      = document.getElementById('charName').value.trim();
+      const desc      = document.getElementById('charDesc').value.trim();
+      const ownerDesc = document.getElementById('ownerDesc').value.trim();
+      const file      = document.getElementById('imageFile').files[0];
 
       if (!name) { errorEl.textContent = '이름을 입력해주세요.'; return; }
       if (!currentImageUrl && !file) { errorEl.textContent = '대표 이미지를 등록해주세요.'; return; }
@@ -1253,14 +1340,17 @@
         }
 
         const allSections = collectSections();
-        // 종족주: custom 섹션은 기존 데이터 유지, 관리자: 전체 반영
-        const finalSections = editRole === 'species_owner'
-          ? [...allSections.filter(s => s.type !== 'custom'),
-             ...(originalCharData.char_sections || []).filter(s => s.type === 'custom')]
+        const isOffsiteChar = originalCharData?.owner_is_offsite === true;
+        // 종족주 + 사이트 소유주: 소유주 섹션은 원본 유지 / 오프사이트 or admin: 전체 반영
+        const finalSections = (editRole === 'species_owner' && !isOffsiteChar)
+          ? [
+              ...allSections.filter(s => (s.author_role || 'species_owner') === 'species_owner'),
+              ...(originalCharData.char_sections || []).filter(s => (s.author_role || 'species_owner') === 'owner'),
+            ]
           : allSections;
 
         const { error } = await sb.from('characters').update({
-          ...((editRole !== 'species_owner' || originalCharData.owner_is_offsite) && { name }),
+          name,
           char_number:         document.getElementById('charNumber').value.trim() || null,
           designer_nickname:   designer,
           designer_contact:    designer_contact,
@@ -1268,7 +1358,8 @@
           owner_is_offsite:    ownerType !== 'site',
           owner_user_id:       ownerType === 'site' ? (selectedNickId || originalOwnerUserId) : null,
           owner_contact:       externalContact || null,
-          ...((editRole !== 'species_owner' || originalCharData.owner_is_offsite) && { description: desc || null }),
+          description:         desc || null,
+          ...((editRole !== 'species_owner' || isOffsiteChar) && { owner_description: ownerDesc || null }),
           image_url,
           thumbnail_url,
           additional_images:   additional_images.length ? additional_images : null,

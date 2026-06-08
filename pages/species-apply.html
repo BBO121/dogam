@@ -68,8 +68,17 @@
     let idToNick = {};
 
     async function initPage() {
+      const isGuideMode = new URLSearchParams(window.location.search).has('guide');
       const user = await getUser();
-      if (!user) { window.location.href = 'login.html'; return; }
+
+      if (!user) {
+        if (!isGuideMode) { window.location.href = 'login.html'; return; }
+        // 가이드 모드: 비로그인이어도 페이지 표시 (더미 데이터로 진행)
+        document.getElementById('pageLoading').style.display = 'none';
+        document.getElementById('pageContent').style.display = 'block';
+        document.getElementById('emptyState').style.display = 'flex';
+        return;
+      }
 
       isAdminUser = isAdminOrStaff(user.user_metadata?.role);
 
@@ -77,6 +86,12 @@
       const isSpeciesOwner = user.user_metadata?.role === 'species_owner';
       if (isSpeciesOwner || isAdminUser) {
         document.getElementById('writeBtn').style.display = 'none';
+      }
+
+      // 가이드 모드: 데이터 로드 전에 pageContent 먼저 표시 (guide가 요소를 찾을 수 있도록)
+      if (isGuideMode) {
+        document.getElementById('pageLoading').style.display = 'none';
+        document.getElementById('pageContent').style.display = 'block';
       }
 
       let query = sb.from('species_applications').select('*').order('created_at', { ascending: false });

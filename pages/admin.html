@@ -42,6 +42,7 @@
           <button class="profile-tab" data-tab="Species">종족 관리</button>
           <button class="profile-tab" data-tab="Characters">개체 관리</button>
           <button class="profile-tab" data-tab="Adoptions">분양 관리</button>
+          <button class="profile-tab" data-tab="AdminLogs">관리자 로그</button>
         </div>
 
         <!-- 공지 관리 탭 -->
@@ -173,6 +174,18 @@
           </section>
         </div>
 
+        <!-- 관리자 로그 탭 -->
+        <div id="tabAdminLogs" class="tab-content" style="display:none;">
+          <section class="section">
+            <div class="section-header" style="margin-bottom:12px;">
+              <h2 class="settings-section-title" style="margin-bottom:0;">관리자 로그</h2>
+            </div>
+            <div class="admin-card-list" id="adminLogTableBody"></div>
+            <p id="adminLogEmpty" class="empty-state" style="display:none;">로그가 없어요.</p>
+            <div id="pgAdminLogs"></div>
+          </section>
+        </div>
+
         <!-- 분양 관리 탭 -->
         <div id="tabAdoptions" class="tab-content" style="display:none;">
           <section class="section">
@@ -188,6 +201,43 @@
 
       </div>
     </main>
+  </div>
+
+  <!-- 비밀번호 초기화 확인 모달 -->
+  <div id="pwResetConfirmModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:500; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:#fff; border-radius:16px; padding:24px; width:min(100%,380px); display:flex; flex-direction:column; gap:16px; box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+      <h3 style="margin:0; font-size:16px; font-weight:700;">비밀번호 초기화</h3>
+      <p id="pwResetConfirmText" style="margin:0; font-size:14px; color:var(--text-sub); line-height:1.6;"></p>
+      <p style="margin:0; font-size:12px; color:#dc2626; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:10px 12px; line-height:1.5;">
+        새 임시 비밀번호가 즉시 적용됩니다. 기존 비밀번호는 복구할 수 없어요.
+      </p>
+      <p class="auth-error" id="pwResetError"></p>
+      <div style="display:flex; gap:8px; justify-content:flex-end;">
+        <button class="btn-ghost" onclick="closePwResetConfirmModal()">취소</button>
+        <button id="pwResetConfirmBtn" style="padding:9px 18px; border:none; border-radius:9px; background:#dc2626; color:#fff; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit;" onclick="executePasswordReset()">초기화하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 비밀번호 초기화 결과 모달 -->
+  <div id="pwResetResultModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:500; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:#fff; border-radius:16px; padding:24px; width:min(100%,380px); display:flex; flex-direction:column; gap:16px; box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+      <h3 style="margin:0; font-size:16px; font-weight:700;">초기화 완료</h3>
+      <p id="pwResetResultName" style="margin:0; font-size:13px; color:var(--text-sub);"></p>
+      <div>
+        <p style="font-size:12px; font-weight:600; color:var(--text-mute); margin-bottom:6px;">임시 비밀번호</p>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <code id="pwResetResultPw" style="flex:1; font-size:16px; font-weight:700; letter-spacing:0.08em; background:#f8fafc; border:1.5px solid var(--border); border-radius:9px; padding:10px 14px; font-family:monospace;"></code>
+          <button onclick="copyTempPassword()" style="flex-shrink:0; padding:10px 14px; border:1.5px solid var(--border); border-radius:9px; background:#fff; font-size:13px; cursor:pointer; font-family:inherit;" id="pwCopyBtn">복사</button>
+        </div>
+      </div>
+      <p style="margin:0; font-size:12px; color:var(--text-mute); line-height:1.5;">
+        이 비밀번호를 유저에게 직접 전달해주세요.<br>창을 닫으면 다시 확인할 수 없습니다.
+      </p>
+      <div style="display:flex; justify-content:flex-end;">
+        <button class="btn-secondary" onclick="closePwResetResultModal()">확인</button>
+      </div>
+    </div>
   </div>
 
   <!-- 관리자 개체 이전 모달 -->
@@ -228,9 +278,28 @@
     const updateNotePager  = createPager(renderUpdateNoteRows,  'pgUpdateNotes');
     const devLogPager      = createPager(renderDevLogRows,      'pgDevLogs');
     const userPager        = createPager(renderUserRows,        'pgUsers');
-    const speciesPager  = createPager(renderSpeciesRows,  'pgSpecies');
-    const charPager     = createPager(renderCharRows,     'pgChars');
-    const adoptionPager = createPager(renderAdoptionRows, 'pgAdoptions');
+    const speciesPager     = createPager(renderSpeciesRows,     'pgSpecies');
+    const charPager        = createPager(renderCharRows,        'pgChars');
+    const adoptionPager    = createPager(renderAdoptionRows,    'pgAdoptions');
+    const adminLogPager    = createPager(renderLogRows,         'pgAdminLogs');
+
+    // ── 관리자 로그 헬퍼 ──────────────────────
+    async function logAdminAction(actionType, targetType, targetId, targetName, details = {}) {
+      if (!adminUser) return;
+      try {
+        await sb.from('admin_logs').insert({
+          admin_id:       adminUser.id,
+          admin_nickname: adminUser.user_metadata?.nickname || '',
+          action_type:    actionType,
+          target_type:    targetType || null,
+          target_id:      targetId ? String(targetId) : null,
+          target_name:    targetName || null,
+          details,
+        });
+      } catch (e) {
+        console.warn('[logAdminAction] 로그 기록 실패:', e);
+      }
+    }
 
     async function initPage() {
       const user = await getUser();
@@ -281,6 +350,9 @@
         }
         if (btn.dataset.tab === 'Adoptions' && !tabLoaded.Adoptions) {
           tabLoaded.Adoptions = true; loadAdminAdoptions();
+        }
+        if (btn.dataset.tab === 'AdminLogs' && !tabLoaded.AdminLogs) {
+          tabLoaded.AdminLogs = true; loadAdminLogs();
         }
       });
     });
@@ -541,6 +613,7 @@
             ${u.role === 'species_owner'
               ? `<button class="admin-btn-revoke" onclick="setRole('${u.id}', '')">권한 회수</button>`
               : `<button class="admin-btn-grant" onclick="setRole('${u.id}', 'species_owner')">종족주 임명</button>`}
+            <button class="admin-btn-edit" onclick="openPwResetConfirmModal('${u.id}', '${safeNick}')">비밀번호 초기화</button>
             <button class="admin-btn-delete" onclick="deleteUser('${u.id}', '${safeNick}')">삭제</button>
           </div>`;
         return `
@@ -606,6 +679,9 @@
         console.error('[setRole error]', error);
         return;
       }
+      const actionType = role === 'species_owner' ? 'role_grant' : 'role_revoke';
+      const actionDetails = role === 'species_owner' ? { granted_role: 'species_owner' } : { revoked_role: 'species_owner' };
+      await logAdminAction(actionType, 'user', userId, null, actionDetails);
       loadUsers();
     }
 
@@ -622,6 +698,7 @@
 
       const { error } = await sb.rpc('delete_user', { target_id: userId });
       if (error) { alert('계정 삭제에 실패했어요.'); return; }
+      await logAdminAction('user_delete', 'user', userId, nickname);
       loadUsers();
     }
 
@@ -688,6 +765,7 @@
       if (!confirm(`"${name}" 종족을 삭제할까요?\n소속 개체도 함께 삭제돼요.`)) return;
       const { error } = await sb.rpc('admin_delete_species', { species_id: id, p_species_name: name });
       if (error) { alert('삭제에 실패했어요: ' + error.message); return; }
+      await logAdminAction('species_delete', 'species', id, name);
       loadAdminSpecies();
     }
 
@@ -751,6 +829,7 @@
       if (!confirm(`"${name}" 개체를 삭제할까요?`)) return;
       const { error } = await sb.from('characters').delete().eq('id', id);
       if (error) { alert('삭제에 실패했어요.'); return; }
+      await logAdminAction('character_delete', 'character', id, name);
       allAdminChars = allAdminChars.filter(c => String(c.id) !== String(id));
       charPager.load(allAdminChars);
     }
@@ -839,6 +918,7 @@
       const char = allAdminChars.find(c => String(c.id) === String(_adminTransferCharId));
       if (char) { char.owner_nickname = _adminTransferToNick; char.owner_user_id = _adminTransferToId; }
 
+      await logAdminAction('character_transfer', 'character', _adminTransferCharId, _adminTransferCharName, { to_nickname: _adminTransferToNick });
       closeAdminTransferModal();
       charPager.load(allAdminChars);
     }
@@ -903,8 +983,136 @@
       const { data: deleted, error } = await sb.from('adoptions').delete().eq('id', id).select('id');
       if (error) { alert('삭제에 실패했어요: ' + error.message); return; }
       if (!deleted?.length) { alert('삭제 권한이 없어요.\nSupabase에서 관리자 DELETE 정책을 추가해주세요.'); return; }
+      await logAdminAction('adoption_delete', 'adoption', id, name);
       allAdminAdoptions = allAdminAdoptions.filter(a => String(a.id) !== String(id));
       adoptionPager.load(allAdminAdoptions);
+    }
+
+    // ── 비밀번호 초기화 ──────────────────────
+    const EDGE_FN_URL = `${SUPABASE_URL}/functions/v1/reset-user-password`;
+    let _pwResetUserId   = null;
+    let _pwResetNickname = null;
+
+    function openPwResetConfirmModal(userId, nickname) {
+      _pwResetUserId   = userId;
+      _pwResetNickname = nickname;
+      document.getElementById('pwResetConfirmText').textContent = `"${nickname}" 유저의 비밀번호를 새 임시 비밀번호로 초기화할까요?`;
+      document.getElementById('pwResetError').textContent = '';
+      document.getElementById('pwResetConfirmBtn').textContent = '초기화하기';
+      document.getElementById('pwResetConfirmBtn').disabled = false;
+      document.getElementById('pwResetConfirmModal').style.display = 'flex';
+    }
+
+    function closePwResetConfirmModal() {
+      document.getElementById('pwResetConfirmModal').style.display = 'none';
+      _pwResetUserId = null; _pwResetNickname = null;
+    }
+
+    function closePwResetResultModal() {
+      document.getElementById('pwResetResultModal').style.display = 'none';
+    }
+
+    function copyTempPassword() {
+      const pw = document.getElementById('pwResetResultPw').textContent;
+      navigator.clipboard.writeText(pw).then(() => {
+        const btn = document.getElementById('pwCopyBtn');
+        btn.textContent = '복사됨';
+        setTimeout(() => { btn.textContent = '복사'; }, 1500);
+      });
+    }
+
+    async function executePasswordReset() {
+      const btn     = document.getElementById('pwResetConfirmBtn');
+      const errorEl = document.getElementById('pwResetError');
+      errorEl.textContent = '';
+      btn.textContent = '초기화 중...';
+      btn.disabled = true;
+
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) throw new Error('로그인이 필요해요.');
+
+        // 프론트는 userId, targetNickname만 전달 — 비밀번호는 서버에서 생성
+        const res = await fetch(EDGE_FN_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            userId:         _pwResetUserId,
+            targetNickname: _pwResetNickname,
+          }),
+        });
+
+        const json = await res.json();
+        if (!res.ok || json.error) throw new Error(json.error || '초기화에 실패했어요.');
+
+        // 서버에서 받은 임시 비밀번호를 1회 표시
+        document.getElementById('pwResetConfirmModal').style.display = 'none';
+        document.getElementById('pwResetResultName').textContent = `${_pwResetNickname} 유저의 임시 비밀번호`;
+        document.getElementById('pwResetResultPw').textContent   = json.tempPassword;
+        document.getElementById('pwCopyBtn').textContent         = '복사';
+        document.getElementById('pwResetResultModal').style.display = 'flex';
+
+        _pwResetUserId = null; _pwResetNickname = null;
+      } catch (err) {
+        errorEl.textContent = err.message;
+        btn.textContent = '초기화하기';
+        btn.disabled = false;
+      }
+    }
+
+    // ── 관리자 로그 ──────────────────────────
+    const LOG_ACTION_LABELS = {
+      password_reset:     ['비밀번호 초기화', '#7c3aed', '#f5f3ff'],
+      role_grant:         ['권한 임명',       '#0284c7', '#e0f2fe'],
+      role_revoke:        ['권한 회수',       '#64748b', '#f1f5f9'],
+      user_delete:        ['유저 삭제',       '#dc2626', '#fef2f2'],
+      species_delete:     ['종족 삭제',       '#dc2626', '#fef2f2'],
+      character_delete:   ['개체 삭제',       '#dc2626', '#fef2f2'],
+      character_transfer: ['개체 이전',       '#0284c7', '#e0f2fe'],
+      adoption_delete:    ['분양글 삭제',     '#dc2626', '#fef2f2'],
+    };
+
+    function renderLogRows(slice) {
+      document.getElementById('adminLogTableBody').innerHTML = slice.map(log => {
+        const [label, color, bg] = LOG_ACTION_LABELS[log.action_type] || [log.action_type, '#64748b', '#f1f5f9'];
+        const dt = new Date(log.created_at);
+        const dateStr = dt.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '');
+        const timeStr = dt.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+        const details = log.details && Object.keys(log.details).length
+          ? Object.entries(log.details).map(([k, v]) => `${k}: ${v}`).join(' · ')
+          : '';
+        return `
+          <div class="admin-card-row">
+            <div class="admin-card-left">
+              <span style="flex-shrink:0; font-size:11px; font-weight:700; padding:3px 8px; border-radius:6px; background:${bg}; color:${color};">${label}</span>
+              <span class="admin-card-name">${log.target_name || log.target_id || '—'}</span>
+              <span class="admin-card-meta">작업자: ${log.admin_nickname}${details ? ' · ' + details : ''}</span>
+            </div>
+            <div class="admin-card-right" style="flex-shrink:0;">
+              <span class="admin-card-date">${dateStr} ${timeStr}</span>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function loadAdminLogs() {
+      const empty = document.getElementById('adminLogEmpty');
+      const { data, error } = await sb
+        .from('admin_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(200);
+
+      if (error || !data || data.length === 0) {
+        document.getElementById('adminLogTableBody').innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      adminLogPager.load(data);
     }
 
     initPage();

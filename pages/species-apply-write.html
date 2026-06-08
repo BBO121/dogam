@@ -96,20 +96,22 @@
       const user = await getUser();
       if (!user) { window.location.href = 'login.html'; return; }
 
-      // 이미 종족주거나 관리자면 신청 불필요
+      const isGuideMode = new URLSearchParams(window.location.search).has('guide');
+
+      // 이미 종족주거나 관리자면 신청 불필요 (가이드 모드 예외)
       const role = user.user_metadata?.role;
       if (role === 'species_owner' || isAdminOrStaff(role)) {
-        window.location.href = 'species-apply.html';
+        if (!isGuideMode) window.location.href = 'species-apply.html';
         return;
       }
 
-      // 이미 접수된 신청이 있으면 중복 방지
+      // 이미 접수된 신청이 있으면 중복 방지 (가이드 모드 예외)
       const { data } = await sb.from('species_applications')
         .select('id, status')
         .eq('user_id', user.id)
         .in('status', ['접수됨', '검토중'])
         .limit(1);
-      if (data && data.length > 0) {
+      if (data && data.length > 0 && !isGuideMode) {
         alert('이미 검토 중인 신청이 있어요.');
         window.location.href = 'species-apply.html';
       }
