@@ -397,18 +397,16 @@
       const isSensitive   = a.characters?.is_sensitive === true;
       const sensitiveNote = a.characters?.sensitive_note || null;
 
-      // 메인 이미지
-      const mainImg = document.getElementById('mainImg');
-      if (a.image_url) {
-        mainImg.style.cursor = 'pointer';
-        mainImg.title = '클릭하면 원본 이미지를 볼 수 있어요';
-        mainImg.addEventListener('click', () => openImgModal(a.image_url));
+      // 메인 이미지 — thumbnail_url 우선, 없으면 image_url fallback
+      const mainImg  = document.getElementById('mainImg');
+      const dispUrl  = a.thumbnail_url || a.image_url;
+      if (dispUrl) {
         if (isSensitive) {
           mainImg.style.position = 'relative';
           mainImg.style.overflow = 'hidden';
-          mainImg.innerHTML = `<div style="position:absolute;inset:0;background-image:url('${a.image_url}');background-size:cover;background-position:center;" class="blurred"></div>${buildSensitiveOverlay(sensitiveNote)}`;
+          mainImg.innerHTML = `<div style="position:absolute;inset:0;background-image:url('${dispUrl}');background-size:cover;background-position:center;" class="blurred"></div>${buildSensitiveOverlay(sensitiveNote)}`;
         } else {
-          mainImg.style.backgroundImage    = `url('${a.image_url}')`;
+          mainImg.style.backgroundImage    = `url('${dispUrl}')`;
           mainImg.style.backgroundSize     = 'cover';
           mainImg.style.backgroundPosition = 'center';
         }

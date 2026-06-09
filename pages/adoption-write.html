@@ -295,7 +295,7 @@
       const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname;
 
       const [{ data: chars }, { data: activeAdoptions }, { data: allSpecies }] = await Promise.all([
-        sb.from('characters').select('id, name, species_name, image_url, allow_free_adoption, allow_resale, allow_paid_adoption, allow_other_adoption')
+        sb.from('characters').select('id, name, species_name, image_url, thumbnail_url, allow_free_adoption, allow_resale, allow_paid_adoption, allow_other_adoption')
           .eq('owner_user_id', user.id).neq('owner_is_offsite', true).order('name'),
         sb.from('adoptions').select('character_id').in('status', ['분양중', '확인 대기중']),
         sb.from('species').select('name, allow_free_adoption, allow_resale, allow_paid_adoption, allow_other_adoption'),
@@ -401,6 +401,7 @@
         character_name: char.name,
         species_name:   char.species_name,
         image_url:      char.image_url || null,
+        thumbnail_url:  char.thumbnail_url || null,
         adoption_type:  selectedType,
         free_type:      freeType,
         raffle_at:      raffleAt,

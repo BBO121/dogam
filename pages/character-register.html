@@ -981,19 +981,26 @@
           thumbnail_url = sb.storage.from('images').getPublicUrl(thumbName).data.publicUrl;
         }
 
-        // 추가 이미지 업로드 (워터마크 적용)
-        const additional_images = [];
+        // 추가 이미지 업로드 (원본 + 워터마크 적용본)
+        const additional_images          = [];
+        const original_additional_images = [];
         const validExtras = extraFiles.filter(f => f !== null);
         for (const f of validExtras) {
-          const blob     = await compressImage(f);
+          const ts   = Date.now();
+          const blob = await compressImage(f);
+
+          // 원본 저장
+          const origName = `${ts}_extra_orig_${Math.random().toString(36).slice(2)}.jpg`;
+          const { error: origErr } = await sb.storage.from('images').upload(origName, blob, { contentType: 'image/jpeg' });
+          if (origErr) throw new Error(`추가 이미지 원본 업로드에 실패했어요. (${f.name}: ${origErr.message})`);
+          original_additional_images.push(sb.storage.from('images').getPublicUrl(origName).data.publicUrl);
+
+          // 워터마크 적용본 저장
           const wmBlob   = await applyWatermark(blob, wmSrc);
-          const fileName = `${Date.now()}_extra_${Math.random().toString(36).slice(2)}.jpg`;
-          const { error: uploadError } = await sb.storage.from('images').upload(fileName, wmBlob, {
-            contentType: 'image/jpeg',
-          });
+          const fileName = `${ts}_extra_${Math.random().toString(36).slice(2)}.jpg`;
+          const { error: uploadError } = await sb.storage.from('images').upload(fileName, wmBlob, { contentType: 'image/jpeg' });
           if (uploadError) throw new Error(`추가 이미지 업로드에 실패했어요. (${f.name}: ${uploadError.message})`);
-          const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);
-          additional_images.push(urlData.publicUrl);
+          additional_images.push(sb.storage.from('images').getPublicUrl(fileName).data.publicUrl);
         }
 
         // 커스텀 필드 값 수집
@@ -1028,7 +1035,8 @@
           image_url,
           thumbnail_url,
           original_image_url,
-          additional_images:   additional_images.length ? additional_images : null,
+          additional_images:            additional_images.length ? additional_images : null,
+          original_additional_images:   original_additional_images.length ? original_additional_images : null,
           custom_field_values: Object.keys(customFieldValues).length ? customFieldValues : null,
           char_categories:     addedCategories.length ? addedCategories : null,
           is_sensitive:        isSensitive,

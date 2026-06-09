@@ -63,9 +63,10 @@
     let afterDeleteHref = 'species-list.html';
 
     // 원본 이미지 토글 상태
-    let _showingOriginal = false;
-    let _origImgUrl      = null;
-    let _wmImgUrl        = null;
+    let _showingOriginal        = false;
+    let _origImgUrl             = null;
+    let _wmImgUrl               = null;
+    let _origAdditionalUrls     = null;  // original_additional_images (on-demand 로드)
 
     async function toggleOriginalImage() {
       const btn   = document.getElementById('imgToggleBtn');
@@ -78,24 +79,43 @@
           btn.textContent = '불러오는 중...';
           btn.disabled    = true;
           const { data, error } = await sb.from('characters')
-            .select('original_image_url').eq('id', charId).single();
+            .select('original_image_url, original_additional_images').eq('id', charId).single();
           if (error || !data?.original_image_url) {
             btn.textContent = '원본 이미지 없음';
             return;
           }
-          _origImgUrl = data.original_image_url;
+          _origImgUrl         = data.original_image_url;
+          _origAdditionalUrls = data.original_additional_images || null;
         }
-        _wmImgUrl       = imgEl.src;
-        imgEl.src       = _origImgUrl;
+        _wmImgUrl         = imgEl.src;
+        imgEl.src         = _origImgUrl;
         label.textContent = '원본 이미지를 보고 있습니다.';
         btn.textContent   = '워터마크 이미지 보기';
         btn.disabled      = false;
         _showingOriginal  = true;
+
+        // 추가 이미지도 원본으로 전환 (original이 있는 인덱스만)
+        document.querySelectorAll('[data-extra-idx]').forEach(el => {
+          const idx     = parseInt(el.dataset.extraIdx);
+          const origUrl = _origAdditionalUrls?.[idx];
+          if (origUrl) {
+            el.dataset.wmSrc = el.src;
+            el.src = origUrl;
+          }
+        });
       } else {
         imgEl.src         = _wmImgUrl;
         label.textContent = '워터마크 이미지를 보고 있습니다.';
         btn.textContent   = '원본 이미지 보기';
         _showingOriginal  = false;
+
+        // 추가 이미지도 워터마크본으로 복원
+        document.querySelectorAll('[data-extra-idx]').forEach(el => {
+          if (el.dataset.wmSrc) {
+            el.src = el.dataset.wmSrc;
+            delete el.dataset.wmSrc;
+          }
+        });
       }
     }
 
@@ -300,9 +320,9 @@
         year: 'numeric', month: '2-digit', day: '2-digit'
       }).replace(/\. /g, '.').replace(/\.$/, '');
 
-      const additionalImgs = (c.additional_images || []).map(url => `
+      const additionalImgs = (c.additional_images || []).map((url, idx) => `
         <div style="width:100%; border-radius:var(--radius); overflow:hidden; margin-top:10px; ${c.is_sensitive ? 'position:relative;' : ''}">
-          <img src="${url}" class="${c.is_sensitive ? 'blurred' : ''}" style="width:100%; display:block; object-fit:cover;">
+          <img src="${url}" data-extra-idx="${idx}" class="${c.is_sensitive ? 'blurred' : ''}" style="width:100%; display:block; object-fit:cover;">
           ${c.is_sensitive ? `<div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span>${c.sensitive_note ? '<span class="sensitive-overlay-note">' + c.sensitive_note + '</span>' : ''}<span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div>` : ''}
         </div>
       `).join('');

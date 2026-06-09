@@ -161,11 +161,13 @@
         const typeClass = TYPE_CLASS[a.adoption_type] || '';
         const closed    = a.status === '완료';
 
+        // 카드 썸네일: thumbnail_url 우선, 없으면 image_url fallback
+        const cardThumb = a.thumbnail_url || a.image_url;
         let cardImgHtml;
-        if (isSensitive && a.image_url) {
-          cardImgHtml = `<div class="adoption-card-img" style="position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background-image:url('${a.image_url}');background-size:cover;background-position:center;" class="blurred"></div>${buildSensitiveOverlay(sensitiveNote)}</div>`;
+        if (isSensitive && cardThumb) {
+          cardImgHtml = `<div class="adoption-card-img" style="position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background-image:url('${cardThumb}');background-size:cover;background-position:center;" class="blurred"></div>${buildSensitiveOverlay(sensitiveNote)}</div>`;
         } else {
-          const imgStyle = a.image_url ? `background-image:url('${a.image_url}');background-size:cover;background-position:center;` : '';
+          const imgStyle = cardThumb ? `background-image:url('${cardThumb}');background-size:cover;background-position:center;` : '';
           cardImgHtml = `<div class="adoption-card-img" style="${imgStyle}"></div>`;
         }
 

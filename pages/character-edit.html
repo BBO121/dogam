@@ -359,9 +359,10 @@
     let originalOwnerUserId  = null;
     let currentImageUrl      = null;
     let addedCategories      = [];
-    let existingExtraImages  = [];
-    let removedExtraImages   = [];
-    let newExtraFiles        = [];
+    let existingExtraImages         = [];
+    let existingOriginalExtraImages = [];
+    let removedExtraImages          = [];
+    let newExtraFiles               = [];
     let allSpecies           = [];
     let sectionDragSrc       = null;
     let currentThumbnailUrl  = null;
@@ -798,8 +799,9 @@
         document.getElementById('uploadPlaceholder').style.display = 'none';
       }
 
-      // 기존 추가 이미지
-      existingExtraImages = c.additional_images || [];
+      // 기존 추가 이미지 (워터마크본 + 원본 배열 — 인덱스 동기화)
+      existingExtraImages         = c.additional_images || [];
+      existingOriginalExtraImages = c.original_additional_images || [];
       existingExtraImages.forEach((url, idx) => {
         const box = document.createElement('div');
         box.style.cssText = 'position:relative; width:90px; height:90px; border-radius:8px; overflow:hidden; border:1px solid var(--border);';
@@ -1328,21 +1330,42 @@
           thumbnail_url = sb.storage.from('images').getPublicUrl(thumbName).data.publicUrl;
         }
 
-        // 추가 이미지: 기존 중 삭제 안 된 것 + 새로 업로드한 것 (워터마크 적용)
-        const keptImages  = existingExtraImages.filter(url => !removedExtraImages.includes(url));
-        const uploadedNew = [];
+        // 추가 이미지: 기존 중 삭제 안 된 것 (원본 배열과 인덱스 동기화)
+        const keptImages         = [];
+        const keptOriginalImages = [];
+        existingExtraImages.forEach((url, idx) => {
+          if (!removedExtraImages.includes(url)) {
+            keptImages.push(url);
+            // 원본이 없는 기존 이미지는 null 유지 (이중 워터마크 방지)
+            keptOriginalImages.push(existingOriginalExtraImages[idx] ?? null);
+          }
+        });
+
+        // 새로 추가하는 이미지 (원본 + 워터마크 적용본)
+        const uploadedNew         = [];
+        const uploadedNewOriginal = [];
         for (const f of newExtraFiles.filter(f => f !== null)) {
-          const blob     = await compressImage(f);
+          const ts   = Date.now();
+          const blob = await compressImage(f);
+
+          // 원본 저장
+          const origName = `${ts}_extra_orig_${Math.random().toString(36).slice(2)}.jpg`;
+          const { error: origErr } = await sb.storage.from('images').upload(origName, blob, { contentType: 'image/jpeg' });
+          if (origErr) throw new Error(`추가 이미지 원본 업로드에 실패했어요. (${f.name}: ${origErr.message})`);
+          uploadedNewOriginal.push(sb.storage.from('images').getPublicUrl(origName).data.publicUrl);
+
+          // 워터마크 적용본 저장
           const wmBlob   = await applyWatermark(blob, wmSrc);
-          const fileName = `${Date.now()}_extra_${Math.random().toString(36).slice(2)}.jpg`;
-          const { error: uploadError } = await sb.storage.from('images').upload(fileName, wmBlob, {
-            contentType: 'image/jpeg',
-          });
+          const fileName = `${ts}_extra_${Math.random().toString(36).slice(2)}.jpg`;
+          const { error: uploadError } = await sb.storage.from('images').upload(fileName, wmBlob, { contentType: 'image/jpeg' });
           if (uploadError) throw new Error(`추가 이미지 업로드에 실패했어요. (${f.name}: ${uploadError.message})`);
-          const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);
-          uploadedNew.push(urlData.publicUrl);
+          uploadedNew.push(sb.storage.from('images').getPublicUrl(fileName).data.publicUrl);
         }
-        const additional_images = [...keptImages, ...uploadedNew];
+
+        const additional_images          = [...keptImages, ...uploadedNew];
+        const allOriginalAdditional      = [...keptOriginalImages, ...uploadedNewOriginal];
+        // 하나라도 실제 URL이 있으면 배열로 저장
+        const original_additional_images = allOriginalAdditional.some(Boolean) ? allOriginalAdditional : null;
 
         // 커스텀 필드 값 수집
         const customFieldValues = {};
@@ -1383,7 +1406,8 @@
           image_url,
           thumbnail_url,
           ...(newOriginalUrl && { original_image_url: newOriginalUrl }),
-          additional_images:   additional_images.length ? additional_images : null,
+          additional_images:            additional_images.length ? additional_images : null,
+          original_additional_images:   original_additional_images,
           custom_field_values: Object.keys(customFieldValues).length ? customFieldValues : null,
           char_categories:     addedCategories.length ? addedCategories : null,
           is_sensitive:        isSensitive,
