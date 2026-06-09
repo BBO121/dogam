@@ -304,6 +304,23 @@
         return;
       }
 
+      // 사이트 유저에게 이전하는 경우만 알림 전송
+      if (_transferType === 'site' && _selectedTransferUid) {
+        const recipientNick = _idToNick[_selectedTransferUid];
+        if (recipientNick) {
+          const senderNick = _currentSlot?.owner_user_id
+            ? (_idToNick[_currentSlot.owner_user_id] || '종족주')
+            : '종족주';
+          await sb.from('notifications').insert({
+            user_nickname: recipientNick,
+            type:          'slot_transfer',
+            message:       `${senderNick}님이 디자인권 "${_currentSlot?.name}"을 보냈어요.`,
+            link:          `slot.html?id=${slotId}`,
+            is_read:       false,
+          });
+        }
+      }
+
       closeTransferModal();
       window.location.reload();
     }
