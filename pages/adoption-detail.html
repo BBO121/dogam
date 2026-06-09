@@ -1164,7 +1164,49 @@
 
       const a = currentAdoption;
 
-      // characters 이전 + adoptions 완료를 서버사이드에서 원자적으로 처리
+      // ── 디자인권 분양 (character_id = null, slot_id 있음) ──────────────
+      if (a.slot_id && !a.character_id) {
+        console.log('[confirmAdoption] 디자인권 분양 직접 처리, slot_id:', a.slot_id);
+
+        // 1. adoptions 완료 처리
+        const { error: adoptionErr } = await sb.from('adoptions')
+          .update({ status: '완료' })
+          .eq('id', adoptionId);
+
+        if (adoptionErr) {
+          console.error('[confirmAdoption] adoptions 업데이트 오류:', adoptionErr);
+          alert(`분양 완료 처리에 실패했어요.\n${adoptionErr.message}`);
+          if (btn) { btn.disabled = false; btn.textContent = '확인하기'; }
+          return;
+        }
+
+        // 2. slots 소유권 이전 (UUID 기준)
+        const { error: slotErr } = await sb.from('slots').update({
+          owner_user_id: currentUser.id,
+          owner_name:    null,
+        }).eq('id', a.slot_id);
+
+        if (slotErr) {
+          console.error('[confirmAdoption] slots 소유권 이전 오류:', slotErr);
+        }
+
+        // 3. 후처리 (알림)
+        try {
+          await sb.from('notifications').insert({
+            user_nickname: a.author,
+            type:          'adoption_complete',
+            message:       `✅ "${a.character_name}" 분양이 완료됐어요! (${myNick}님 확인)`,
+            link:          `adoption-detail.html?id=${adoptionId}`,
+          });
+        } catch (e) {
+          console.error('[confirmAdoption 후처리 오류]', e);
+        }
+
+        location.reload();
+        return;
+      }
+
+      // ── 캐릭터 분양 (기존 RPC 방식) ───────────────────────────────────
       console.log('[confirmAdoption RPC args]', {
         adoptionId,
         currentUserId:       currentUser.id,
@@ -1185,14 +1227,6 @@
         alert(`소유권 이전에 실패했어요.\n${error.message}`);
         if (btn) { btn.disabled = false; btn.textContent = '확인하기'; }
         return;
-      }
-
-      // 디자인권 분양인 경우 slots 소유권도 이전
-      if (a.slot_id) {
-        await sb.from('slots').update({
-          owner_user_id: currentUser.id,
-          owner_name:    null,
-        }).eq('id', a.slot_id);
       }
 
       // 소유권 이전 성공 후에만 알림 + 이전 기록
