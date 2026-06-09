@@ -62,6 +62,43 @@
     const charId = new URLSearchParams(window.location.search).get('id');
     let afterDeleteHref = 'species-list.html';
 
+    // 원본 이미지 토글 상태
+    let _showingOriginal = false;
+    let _origImgUrl      = null;
+    let _wmImgUrl        = null;
+
+    async function toggleOriginalImage() {
+      const btn   = document.getElementById('imgToggleBtn');
+      const label = document.getElementById('imgStateLabel');
+      const imgEl = document.getElementById('charMainImg');
+      if (!imgEl) return;
+
+      if (!_showingOriginal) {
+        if (!_origImgUrl) {
+          btn.textContent = '불러오는 중...';
+          btn.disabled    = true;
+          const { data, error } = await sb.from('characters')
+            .select('original_image_url').eq('id', charId).single();
+          if (error || !data?.original_image_url) {
+            btn.textContent = '원본 이미지 없음';
+            return;
+          }
+          _origImgUrl = data.original_image_url;
+        }
+        _wmImgUrl       = imgEl.src;
+        imgEl.src       = _origImgUrl;
+        label.textContent = '원본 이미지를 보고 있습니다.';
+        btn.textContent   = '워터마크 이미지 보기';
+        btn.disabled      = false;
+        _showingOriginal  = true;
+      } else {
+        imgEl.src         = _wmImgUrl;
+        label.textContent = '워터마크 이미지를 보고 있습니다.';
+        btn.textContent   = '원본 이미지 보기';
+        _showingOriginal  = false;
+      }
+    }
+
     // 소유권 이전 모달 상태
     let _siteNicks      = new Set();
     let _nickToId       = {};
@@ -191,8 +228,10 @@
       const userNickname = user?.user_metadata?.display_name || user?.user_metadata?.nickname || null;
       const isAdminUser  = isAdminOrStaff(user?.user_metadata?.role);
 
+      // original_image_url 제외 — 권한자가 토글 시 on-demand 조회
+      const CHAR_SELECT = 'id,name,species_name,image_url,thumbnail_url,additional_images,owner_nickname,owner_user_id,owner_is_offsite,owner_contact,designer_nickname,designer_contact,char_number,description,owner_description,is_sensitive,sensitive_note,char_sections,custom_field_values,char_categories,allow_free_adoption,allow_resale,allow_paid_adoption,allow_other_adoption,pending_transfer';
       const [{ data: c, error }, { data: siteUserData }] = await Promise.all([
-        sb.from('characters').select('*').eq('id', charId).single(),
+        sb.from('characters').select(CHAR_SELECT).eq('id', charId).single(),
         sb.rpc('get_all_users'),
       ]);
 
@@ -254,6 +293,8 @@
         }
       }
 
+      const canViewOriginal = isOwner || isAdminUser || isSpeciesOwner;
+
       const registeredDate = new Date(c.created_at).toLocaleDateString('ko-KR', {
         year: 'numeric', month: '2-digit', day: '2-digit'
       }).replace(/\. /g, '.').replace(/\.$/, '');
@@ -298,10 +339,15 @@
             <div class="char-img-area">
               ${c.image_url
                 ? (c.is_sensitive
-                    ? `<div style="position:relative; overflow:hidden; border-radius:var(--radius);"><img src="${c.image_url}" alt="${c.name}" class="blurred" style="width:100%; height:auto; display:block;"><div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span>${c.sensitive_note ? '<span class="sensitive-overlay-note">' + c.sensitive_note + '</span>' : ''}<span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div></div>`
-                    : `<img src="${c.image_url}" alt="${c.name}" style="width:100%; height:auto; display:block;">`)
+                    ? `<div style="position:relative; overflow:hidden; border-radius:var(--radius);"><img id="charMainImg" src="${c.image_url}" alt="${c.name}" class="blurred" style="width:100%; height:auto; display:block;"><div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span>${c.sensitive_note ? '<span class="sensitive-overlay-note">' + c.sensitive_note + '</span>' : ''}<span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div></div>`
+                    : `<img id="charMainImg" src="${c.image_url}" alt="${c.name}" style="width:100%; height:auto; display:block;">`)
                 : ''}
             </div>
+            ${canViewOriginal ? `
+            <div style="margin-top:8px; text-align:center; font-size:12px; color:var(--text-mute);">
+              <span id="imgStateLabel">워터마크 이미지를 보고 있습니다.</span>
+              <button id="imgToggleBtn" onclick="toggleOriginalImage()" style="margin-left:6px; background:none; border:none; color:var(--sky-deep); font-size:12px; cursor:pointer; text-decoration:underline; font-family:inherit; padding:0;">원본 이미지 보기</button>
+            </div>` : ''}
             ${additionalImgs}
           </div>
 

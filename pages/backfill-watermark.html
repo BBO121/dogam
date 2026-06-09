@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>워터마크 백필 — 종족연구소 관리자</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .backfill-wrap { max-width: 640px; margin: 40px auto; padding: 0 20px; }
+    .backfill-log  { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; font-size: 12px; font-family: monospace; max-height: 400px; overflow-y: auto; line-height: 1.7; white-space: pre-wrap; word-break: break-all; }
+    .log-ok   { color: #16a34a; }
+    .log-skip { color: #64748b; }
+    .log-err  { color: #dc2626; }
+    .log-info { color: #0284c7; }
+    .progress-bar-wrap { background: #e2e8f0; border-radius: 6px; height: 8px; margin: 12px 0; overflow: hidden; }
+    .progress-bar      { background: var(--sky); height: 100%; transition: width 0.3s; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">종족연구소</a>
+    </div>
+  </header>
+
+  <div class="backfill-wrap">
+    <h1 class="register-title" style="margin-bottom:6px;">워터마크 백필</h1>
+    <p style="font-size:13px; color:var(--text-mute); margin-bottom:24px;">기존 개체 이미지에 기본 워터마크를 적용합니다. 관리자 전용 도구입니다.</p>
+
+    <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:14px 16px; font-size:13px; color:#92400e; margin-bottom:20px; line-height:1.6;">
+      <strong>주의사항</strong><br>
+      • original_image_url이 이미 있는 개체는 건너뜁니다.<br>
+      • 기존 image_url이 original_image_url로 이동되고, 워터마크 이미지가 image_url로 저장됩니다.<br>
+      • 테스트 모드: 뽀 계정 소유 개체만 처리합니다. 전체 적용 전 반드시 테스트를 먼저 실행하세요.
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+      <button id="btnTest"  class="btn-secondary" onclick="startBackfill(true)">테스트 실행 (뽀 계정만)</button>
+      <button id="btnAll"   class="btn-ghost"     onclick="startBackfill(false)" style="border-color:#fca5a5; color:#ef4444;">전체 적용</button>
+      <button id="btnStop"  class="btn-ghost"     onclick="stopBackfill()" style="display:none;">중단</button>
+    </div>
+
+    <div id="progressWrap" style="display:none;">
+      <p id="progressText" style="font-size:13px; color:var(--text-mute); margin-bottom:6px;">준비 중...</p>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+    </div>
+
+    <div id="logBox" class="backfill-log" style="display:none;"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/main.js"></script>
+  <script src="../js/utils.js?v=wm1"></script>
+  <script>
+    const WM_URL    = '../images/watermark.png';
+    const BO_NICK   = '뽀';  // 테스트 대상 계정 닉네임
+    let   _stop     = false;
+    let   _running  = false;
+
+    function log(msg, cls = '') {
+      const box = document.getElementById('logBox');
+      box.style.display = '';
+      const line = document.createElement('span');
+      if (cls) line.className = cls;
+      line.textContent = msg + '\n';
+      box.appendChild(line);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function setProgress(done, total) {
+      const pct = total ? Math.round(done / total * 100) : 0;
+      document.getElementById('progressBar').style.width = pct + '%';
+      document.getElementById('progressText').textContent = `처리 중: ${done} / ${total} (${pct}%)`;
+    }
+
+    function stopBackfill() { _stop = true; log('[중단 요청됨]', 'log-info'); }
+
+    async function startBackfill(testMode) {
+      if (_running) { alert('이미 실행 중이에요.'); return; }
+
+      if (!testMode && !confirm('전체 개체에 워터마크를 일괄 적용합니다.\n테스트를 먼저 실행했는지 확인하세요.\n계속할까요?')) return;
+
+      _stop    = false;
+      _running = true;
+      document.getElementById('btnTest').disabled = true;
+      document.getElementById('btnAll').disabled  = true;
+      document.getElementById('btnStop').style.display = '';
+      document.getElementById('progressWrap').style.display = '';
+      document.getElementById('logBox').innerHTML = '';
+      document.getElementById('logBox').style.display = '';
+
+      try {
+        const user = await getUser();
+        if (!user || (user.user_metadata?.role !== 'admin' && user.user_metadata?.role !== 'staff')) {
+          log('관리자/스태프만 사용할 수 있어요.', 'log-err');
+          return;
+        }
+
+        // 처리 대상 조회: original_image_url이 NULL인 개체만
+        log(`[${testMode ? '테스트 모드' : '전체 모드'}] 대상 조회 중...`, 'log-info');
+
+        let query = sb.from('characters')
+          .select('id, name, image_url, owner_nickname')
+          .is('original_image_url', null)
+          .not('image_url', 'is', null);
+
+        if (testMode) {
+          // 뽀 계정 소유 개체만
+          const { data: boUser } = await sb.rpc('get_all_users');
+          const boData = (boUser || []).find(u => u.nickname === BO_NICK);
+          if (!boData) { log(`'${BO_NICK}' 계정을 찾을 수 없어요.`, 'log-err'); return; }
+          const { data: boChars } = await sb.from('characters')
+            .select('id, name, image_url, owner_nickname')
+            .is('original_image_url', null)
+            .not('image_url', 'is', null)
+            .eq('owner_user_id', boData.id);
+          await processChars(boChars || [], testMode);
+          return;
+        }
+
+        const { data: allChars, error } = await query;
+        if (error) { log('조회 오류: ' + error.message, 'log-err'); return; }
+        await processChars(allChars || [], testMode);
+
+      } finally {
+        _running = false;
+        document.getElementById('btnTest').disabled = false;
+        document.getElementById('btnAll').disabled  = false;
+        document.getElementById('btnStop').style.display = 'none';
+      }
+    }
+
+    async function processChars(chars, testMode) {
+      const total = chars.length;
+      log(`대상 ${total}개${testMode ? ` (${BO_NICK} 계정)` : ''} 확인됨.`, 'log-info');
+      if (total === 0) { log('처리할 개체가 없어요.', 'log-skip'); return; }
+
+      let done = 0, skipped = 0, failed = 0;
+      setProgress(0, total);
+
+      for (const char of chars) {
+        if (_stop) { log('[중단됨]', 'log-info'); break; }
+
+        try {
+          // 1. 기존 이미지 다운로드
+          const res = await fetch(char.image_url);
+          if (!res.ok) throw new Error(`fetch 실패 (${res.status})`);
+          const origBlob = await res.blob();
+
+          // 2. 워터마크 합성
+          const wmBlob = await applyWatermark(origBlob, WM_URL);
+
+          // 3. 워터마크 이미지 업로드
+          const ts      = Date.now();
+          const wmName  = `${ts}_wm_${char.id.slice(0,8)}.jpg`;
+          const { error: upErr } = await sb.storage.from('images').upload(wmName, wmBlob, { contentType: 'image/jpeg' });
+          if (upErr) throw new Error(`업로드 실패: ${upErr.message}`);
+          const wmUrl = sb.storage.from('images').getPublicUrl(wmName).data.publicUrl;
+
+          // 4. DB 업데이트: 원본 보존 + 워터마크 이미지로 교체
+          const { error: dbErr } = await sb.from('characters').update({
+            original_image_url: char.image_url,
+            image_url:          wmUrl,
+          }).eq('id', char.id).is('original_image_url', null); // 중복 방지 조건
+
+          if (dbErr) throw new Error(`DB 업데이트 실패: ${dbErr.message}`);
+
+          done++;
+          log(`✓ [${done}/${total}] ${char.name} (${char.id.slice(0,8)})`, 'log-ok');
+        } catch (e) {
+          failed++;
+          log(`✗ ${char.name} (${char.id.slice(0,8)}): ${e.message}`, 'log-err');
+        }
+
+        setProgress(done + failed, total);
+        await new Promise(r => setTimeout(r, 300)); // 연속 요청 간격
+      }
+
+      log(`\n완료: 성공 ${done}개 / 실패 ${failed}개 / 건너뜀 ${skipped}개`, 'log-info');
+    }
+  </script>
+</body>
+</html>

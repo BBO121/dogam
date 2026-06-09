@@ -314,6 +314,7 @@
     let pendingThumbnailBlob = null;
     let cropperInstance      = null;
     let sectionDragSrc       = null;
+    let userWatermarkUrl     = null;
     const quillInstances     = new Map();
 
     const params      = new URLSearchParams(window.location.search);
@@ -562,6 +563,11 @@
       initColorSwatches();
       const { data: spList } = await sb.from('species').select('id, name').order('name');
       allSpecies = spList || [];
+      const myNick = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
+      if (myNick) {
+        const { data: profData } = await sb.from('user_profiles').select('watermark_url').eq('nickname', myNick).single();
+        userWatermarkUrl = profData?.watermark_url || null;
+      }
       await Promise.all([loadUsers(), loadCustomFields(), loadExistingCategories()]);
     }
 
@@ -944,33 +950,43 @@
 
       try {
         // 메인 이미지 + 썸네일 업로드
-        let image_url     = null;
-        let thumbnail_url = null;
+        let image_url          = null;
+        let thumbnail_url      = null;
+        let original_image_url = null;
+        const wmSrc = userWatermarkUrl || '../images/watermark.png';
         if (file) {
-          const blob     = await compressImage(file);
-          const mainName = `${Date.now()}.jpg`;
-          const { error: mainErr } = await sb.storage.from('images').upload(mainName, blob, {
-            contentType: 'image/jpeg',
-          });
+          const ts   = Date.now();
+          const blob = await compressImage(file);
+
+          // 원본 저장
+          const origName = `${ts}_orig.jpg`;
+          const { error: origErr } = await sb.storage.from('images').upload(origName, blob, { contentType: 'image/jpeg' });
+          if (origErr) throw new Error(`원본 이미지 업로드에 실패했어요. (${origErr.message})`);
+          original_image_url = sb.storage.from('images').getPublicUrl(origName).data.publicUrl;
+
+          // 워터마크 합성 후 저장
+          const wmBlob   = await applyWatermark(blob, wmSrc);
+          const mainName = `${ts}.jpg`;
+          const { error: mainErr } = await sb.storage.from('images').upload(mainName, wmBlob, { contentType: 'image/jpeg' });
           if (mainErr) throw new Error(`메인 이미지 업로드에 실패했어요. (${mainErr.message})`);
           image_url = sb.storage.from('images').getPublicUrl(mainName).data.publicUrl;
 
+          // 썸네일 (워터마크 없음 — 원본 blob 기준 크롭)
           const thumbBlob = pendingThumbnailBlob || await autoCenterCropToBlob(file, 3/4, 600, 0.85);
-          const thumbName = `${Date.now()}_thumb.jpg`;
-          const { error: thumbErr } = await sb.storage.from('images').upload(thumbName, thumbBlob, {
-            contentType: 'image/jpeg',
-          });
+          const thumbName = `${ts}_thumb.jpg`;
+          const { error: thumbErr } = await sb.storage.from('images').upload(thumbName, thumbBlob, { contentType: 'image/jpeg' });
           if (thumbErr) throw new Error(`썸네일 업로드에 실패했어요. (${thumbErr.message})`);
           thumbnail_url = sb.storage.from('images').getPublicUrl(thumbName).data.publicUrl;
         }
 
-        // 추가 이미지 업로드
+        // 추가 이미지 업로드 (워터마크 적용)
         const additional_images = [];
         const validExtras = extraFiles.filter(f => f !== null);
         for (const f of validExtras) {
           const blob     = await compressImage(f);
+          const wmBlob   = await applyWatermark(blob, wmSrc);
           const fileName = `${Date.now()}_extra_${Math.random().toString(36).slice(2)}.jpg`;
-          const { error: uploadError } = await sb.storage.from('images').upload(fileName, blob, {
+          const { error: uploadError } = await sb.storage.from('images').upload(fileName, wmBlob, {
             contentType: 'image/jpeg',
           });
           if (uploadError) throw new Error(`추가 이미지 업로드에 실패했어요. (${f.name}: ${uploadError.message})`);
@@ -1009,6 +1025,7 @@
           description:         desc || null,
           image_url,
           thumbnail_url,
+          original_image_url,
           additional_images:   additional_images.length ? additional_images : null,
           custom_field_values: Object.keys(customFieldValues).length ? customFieldValues : null,
           char_categories:     addedCategories.length ? addedCategories : null,

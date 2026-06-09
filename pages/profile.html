@@ -169,6 +169,26 @@
             </div>
           </section>
 
+          <!-- 개인 워터마크 -->
+          <section class="section">
+            <h2 class="settings-section-title">개인 워터마크</h2>
+            <div class="settings-form">
+              <p class="form-hint" style="margin-bottom:14px;">개체 이미지 업로드 시 적용할 워터마크예요. 등록하지 않으면 기본 워터마크가 사용됩니다.</p>
+              <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                <div id="wmPreview" style="width:80px; height:80px; border:1px solid var(--border); border-radius:8px; background:#f8fafc; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;">
+                  <span id="wmPreviewEmpty" style="font-size:12px; color:var(--text-mute);">없음</span>
+                  <img id="wmPreviewImg" style="display:none; width:100%; height:100%; object-fit:contain;" alt="워터마크 미리보기">
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                  <input type="file" id="wmFileInput" accept="image/png,image/gif,image/jpeg,image/webp" style="display:none;" onchange="uploadWatermark(this)">
+                  <button class="btn-secondary" type="button" onclick="document.getElementById('wmFileInput').click()">워터마크 등록</button>
+                  <button class="btn-ghost" type="button" id="wmDeleteBtn" onclick="deleteWatermark()" style="display:none; font-size:13px; color:#ef4444; border-color:#fca5a5;">워터마크 삭제</button>
+                </div>
+              </div>
+              <p id="wmMsg" style="font-size:13px; margin-top:10px; display:none;"></p>
+            </div>
+          </section>
+
           <!-- 프로필 편집 -->
           <section class="section">
             <h2 class="settings-section-title">프로필 편집</h2>
@@ -428,6 +448,69 @@
       input.value = '';
     }
 
+    function _setWmPreview(url) {
+      const img   = document.getElementById('wmPreviewImg');
+      const empty = document.getElementById('wmPreviewEmpty');
+      const delBtn = document.getElementById('wmDeleteBtn');
+      if (url) {
+        img.src          = url;
+        img.style.display = '';
+        empty.style.display = 'none';
+        delBtn.style.display = '';
+      } else {
+        img.style.display   = 'none';
+        empty.style.display  = '';
+        delBtn.style.display = 'none';
+      }
+    }
+
+    function _wmMsg(text, isError = false) {
+      const el = document.getElementById('wmMsg');
+      if (!el) return;
+      el.textContent   = text;
+      el.style.color   = isError ? '#ef4444' : 'var(--sky-deep)';
+      el.style.display = text ? '' : 'none';
+    }
+
+    async function uploadWatermark(input) {
+      const file = input.files[0];
+      if (!file) return;
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        _wmMsg('PNG, JPG, WebP, GIF 형식만 가능해요.', true); return;
+      }
+      _wmMsg('업로드 중...');
+      try {
+        const fileName = `watermark_${currentUser.id}.png`;
+        const { error: upErr } = await sb.storage.from('images').upload(fileName, file, {
+          contentType: file.type, upsert: true,
+        });
+        if (upErr) throw upErr;
+        const wmUrl = sb.storage.from('images').getPublicUrl(fileName).data.publicUrl + '?v=' + Date.now();
+        const displayName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
+        await sb.from('user_profiles').upsert({ nickname: displayName, watermark_url: wmUrl }, { onConflict: 'nickname' });
+        _setWmPreview(wmUrl);
+        _wmMsg('워터마크가 등록됐어요.');
+      } catch (e) {
+        console.error('[watermark upload]', e);
+        _wmMsg('업로드에 실패했어요: ' + e.message, true);
+      }
+      input.value = '';
+    }
+
+    async function deleteWatermark() {
+      if (!confirm('워터마크를 삭제할까요?')) return;
+      _wmMsg('삭제 중...');
+      try {
+        const displayName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
+        await sb.from('user_profiles').upsert({ nickname: displayName, watermark_url: null }, { onConflict: 'nickname' });
+        _setWmPreview(null);
+        _wmMsg('워터마크가 삭제됐어요.');
+      } catch (e) {
+        console.error('[watermark delete]', e);
+        _wmMsg('삭제에 실패했어요: ' + e.message, true);
+      }
+    }
+
     async function initProfile() {
       const user = await getUser();
       if (!user) { window.location.href = 'login.html'; return; }
@@ -533,8 +616,11 @@
 
       const [{ data: mySpById }, { data: myProfile }] = await Promise.all([
         sb.from('species').select('id').eq('owner_user_id', user.id).limit(1),
-        sb.from('user_profiles').select('bio, tos').eq('nickname', displayName).single(),
+        sb.from('user_profiles').select('bio, tos, watermark_url').eq('nickname', displayName).single(),
       ]);
+
+      // 워터마크 미리보기 초기화
+      _setWmPreview(myProfile?.watermark_url || null);
       const isSpeciesOwner = user.user_metadata?.role === 'species_owner' || !!mySpById?.length;
 
       // bio/tos: user_profiles 우선. user_metadata에 남은 데이터는 이관 후 제거
