@@ -3,6 +3,7 @@ async function initSidebar() {
   if (!sidebar) return;
 
   const path = window.location.pathname.split('/').pop();
+  const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
   sidebar.innerHTML = `
     <div class="sidebar-user-block" id="sidebarUserBlock"></div>
@@ -24,6 +25,7 @@ async function initSidebar() {
 
     <nav class="sidebar-menu">
       <a href="guide.html" class="sidebar-item ${path === 'guide.html' || path === 'guide-detail.html' ? 'active' : ''}">가이드</a>
+      ${isLocal ? `<button class="sidebar-item" onclick="openGuideTour()" style="background:none;border:none;width:100%;text-align:left;cursor:pointer;color:#f59e0b;">🗺️ 가이드맵 [DEV]</button>` : ''}
     </nav>
 
     <div class="sidebar-divider"></div>
