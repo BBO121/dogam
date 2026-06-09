@@ -1166,31 +1166,24 @@
 
       // ── 디자인권 분양 (character_id = null, slot_id 있음) ──────────────
       if (a.slot_id && !a.character_id) {
-        console.log('[confirmAdoption] 디자인권 분양 직접 처리, slot_id:', a.slot_id);
+        console.log('[confirmAdoption] 디자인권 분양 RPC 처리, slot_id:', a.slot_id, 'owner_id:', currentUser.id);
 
-        // 1. adoptions 완료 처리
-        const { error: adoptionErr } = await sb.from('adoptions')
-          .update({ status: '완료' })
-          .eq('id', adoptionId);
+        const { data: result, error: rpcErr } = await sb.rpc('confirm_slot_adoption_transfer', {
+          p_adoption_id:    Number(adoptionId),
+          p_new_owner_id:   currentUser.id,
+          p_new_owner_nick: myNick,
+        });
 
-        if (adoptionErr) {
-          console.error('[confirmAdoption] adoptions 업데이트 오류:', adoptionErr);
-          alert(`분양 완료 처리에 실패했어요.\n${adoptionErr.message}`);
+        console.log('[confirmAdoption slot RPC]', { result, rpcErr });
+
+        if (rpcErr || !result?.ok) {
+          const msg = rpcErr?.message || result?.error || '알 수 없는 오류';
+          alert(`소유권 이전에 실패했어요.\n${msg}`);
           if (btn) { btn.disabled = false; btn.textContent = '확인하기'; }
           return;
         }
 
-        // 2. slots 소유권 이전 (UUID 기준)
-        const { error: slotErr } = await sb.from('slots').update({
-          owner_user_id: currentUser.id,
-          owner_name:    null,
-        }).eq('id', a.slot_id);
-
-        if (slotErr) {
-          console.error('[confirmAdoption] slots 소유권 이전 오류:', slotErr);
-        }
-
-        // 3. 후처리 (알림)
+        // 후처리 (알림)
         try {
           await sb.from('notifications').insert({
             user_nickname: a.author,
