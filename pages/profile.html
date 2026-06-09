@@ -186,6 +186,13 @@
                 </div>
               </div>
               <p id="wmMsg" style="font-size:13px; margin-top:10px; display:none;"></p>
+              <!-- 자동 모드 개체 재적용 -->
+              <div id="wmReapplySection" style="display:none; margin-top:14px; padding:12px 14px; background:var(--sky-pale); border:1px solid var(--sky); border-radius:10px;">
+                <p style="font-size:13px; color:var(--sky-deep); margin-bottom:10px;">자동 모드 개체에 변경된 워터마크를 적용할 수 있어요.</p>
+                <button class="btn-secondary" type="button" onclick="reapplyAutoWatermarks()" id="wmReapplyBtn" style="font-size:13px;">자동 모드 개체에 워터마크 적용</button>
+                <p id="wmReapplyProgress" style="font-size:12px; color:var(--text-mute); margin-top:8px; display:none;"></p>
+                <div id="wmReapplyLog" style="margin-top:8px; background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-size:11px; font-family:monospace; max-height:160px; overflow-y:auto; white-space:pre-wrap; display:none;"></div>
+              </div>
             </div>
           </section>
 
@@ -472,6 +479,8 @@
       el.style.display = text ? '' : 'none';
     }
 
+    let _currentWmUrl = null; // 현재 적용된 워터마크 URL (재적용 시 사용)
+
     async function uploadWatermark(input) {
       const file = input.files[0];
       if (!file) return;
@@ -489,7 +498,9 @@
         const displayName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
         await sb.from('user_profiles').upsert({ nickname: displayName, watermark_url: wmUrl }, { onConflict: 'nickname' });
         _setWmPreview(wmUrl);
+        _currentWmUrl = wmUrl;
         _wmMsg('워터마크가 등록됐어요.');
+        document.getElementById('wmReapplySection').style.display = '';
       } catch (e) {
         console.error('[watermark upload]', e);
         _wmMsg('업로드에 실패했어요: ' + e.message, true);
@@ -504,11 +515,77 @@
         const displayName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
         await sb.from('user_profiles').upsert({ nickname: displayName, watermark_url: null }, { onConflict: 'nickname' });
         _setWmPreview(null);
+        _currentWmUrl = null;
         _wmMsg('워터마크가 삭제됐어요.');
+        document.getElementById('wmReapplySection').style.display = '';
       } catch (e) {
         console.error('[watermark delete]', e);
         _wmMsg('삭제에 실패했어요: ' + e.message, true);
       }
+    }
+
+    async function reapplyAutoWatermarks() {
+      const btn      = document.getElementById('wmReapplyBtn');
+      const progress = document.getElementById('wmReapplyProgress');
+      const logEl    = document.getElementById('wmReapplyLog');
+      btn.disabled   = true;
+      progress.style.display = '';
+      logEl.style.display    = '';
+      logEl.textContent      = '';
+
+      const wmSrc = _currentWmUrl || '../images/watermark_01.png';
+
+      function reLog(msg) {
+        logEl.textContent += msg + '\n';
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      try {
+        // 내 종족 조회
+        const { data: mySpecies } = await sb.from('species').select('id, name').eq('owner_user_id', currentUser.id);
+        if (!mySpecies?.length) { progress.textContent = '소유한 종족이 없어요.'; btn.disabled = false; return; }
+        const speciesNames = mySpecies.map(s => s.name);
+
+        // 자동 모드(watermark_type IS NULL) + original_image_url 있는 개체만
+        const { data: chars, error } = await sb.from('characters')
+          .select('id, name, original_image_url')
+          .in('species_name', speciesNames)
+          .is('watermark_type', null)
+          .not('original_image_url', 'is', null);
+        if (error) throw error;
+
+        const total = chars?.length || 0;
+        progress.textContent = `대상 ${total}개 확인됨.`;
+        if (!total) { progress.textContent = '처리할 개체가 없어요 (자동 모드 + 원본 있는 개체).'; btn.disabled = false; return; }
+
+        let done = 0, failed = 0;
+        for (const char of chars) {
+          try {
+            const res = await fetch(char.original_image_url);
+            if (!res.ok) throw new Error(`다운로드 실패 (${res.status})`);
+            const origBlob = await res.blob();
+            const wmBlob   = await applyWatermark(origBlob, wmSrc);
+            const newName  = `${Date.now()}_rewm_${String(char.id).slice(0,8)}.jpg`;
+            const { error: upErr } = await sb.storage.from('images').upload(newName, wmBlob, { contentType: 'image/jpeg' });
+            if (upErr) throw new Error(upErr.message);
+            const newUrl = sb.storage.from('images').getPublicUrl(newName).data.publicUrl;
+            const { error: dbErr } = await sb.from('characters').update({ image_url: newUrl }).eq('id', char.id);
+            if (dbErr) throw new Error(dbErr.message);
+            done++;
+            reLog(`✓ ${char.name}`);
+          } catch (e) {
+            failed++;
+            reLog(`✗ ${char.name}: ${e.message}`);
+          }
+          progress.textContent = `처리 중: ${done + failed} / ${total}`;
+          await new Promise(r => setTimeout(r, 400));
+        }
+        progress.textContent = `완료: 성공 ${done}개 / 실패 ${failed}개`;
+      } catch (e) {
+        progress.textContent = '오류: ' + e.message;
+        console.error('[reapplyAutoWatermarks]', e);
+      }
+      btn.disabled = false;
     }
 
     async function initProfile() {

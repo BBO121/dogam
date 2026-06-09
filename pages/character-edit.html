@@ -111,7 +111,11 @@
                 <p class="form-label" style="margin-bottom:8px;">워터마크 종류</p>
                 <div style="display:flex; flex-direction:column; gap:8px;">
                   <label style="display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer; color:var(--text);">
-                    <input type="radio" name="watermarkType" value="lab_black" checked style="accent-color:var(--sky); width:16px; height:16px;">
+                    <input type="radio" name="watermarkType" value="auto" checked style="accent-color:var(--sky); width:16px; height:16px;">
+                    <span>자동 <span style="font-size:12px; color:var(--text-mute);">(종족주 프로필 설정 따름)</span></span>
+                  </label>
+                  <label style="display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer; color:var(--text);">
+                    <input type="radio" name="watermarkType" value="lab_black" style="accent-color:var(--sky); width:16px; height:16px;">
                     연구소 워터마크 (검정)
                   </label>
                   <label style="display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer; color:var(--text);">
@@ -807,7 +811,7 @@
       document.getElementById('charDesc').value   = c.description || '';
       document.getElementById('ownerDesc').value  = c.owner_description || '';
 
-      const savedWmType = c.watermark_type || 'lab_black';
+      const savedWmType = c.watermark_type || 'auto'; // NULL → 자동 모드
       const wmRadio = document.querySelector(`input[name="watermarkType"][value="${savedWmType}"]`);
       if (wmRadio) wmRadio.checked = true;
 
@@ -1323,16 +1327,19 @@
         let image_url          = currentImageUrl;
         let thumbnail_url      = currentThumbnailUrl;
         let newOriginalUrl = null;
-        const wmType = document.querySelector('input[name="watermarkType"]:checked')?.value || 'lab_black';
+        const wmType = document.querySelector('input[name="watermarkType"]:checked')?.value || 'auto';
         if (wmType === 'personal' && !userWatermarkUrl) {
           errorEl.textContent = '개인 워터마크가 등록되어 있지 않습니다. 프로필 설정에서 개인 워터마크를 등록해주세요.';
           btn.textContent = '저장하기';
           btn.disabled = false;
           return;
         }
+        // DB 저장값: auto → NULL
+        const dbWmType = wmType === 'auto' ? null : wmType;
+        // 실제 합성에 사용할 워터마크 URL
         const wmSrc = wmType === 'lab_white' ? '../images/watermark_02.png'
-                    : wmType === 'personal'  ? userWatermarkUrl
-                    : '../images/watermark_01.png';
+                    : wmType === 'lab_black' ? '../images/watermark_01.png'
+                    : userWatermarkUrl || '../images/watermark_01.png'; // auto 또는 personal → 종족주 워터마크, 없으면 검정 폴백
         if (file) {
           const ts   = Date.now();
           const blob = await compressImage(file);
@@ -1360,7 +1367,7 @@
 
         // 새 파일 없어도 watermark_type이 변경된 경우 original_image_url 기준으로 재합성
         if (!file && originalCharData?.original_image_url) {
-          const prevWmType = originalCharData.watermark_type || 'lab_black';
+          const prevWmType = originalCharData.watermark_type || 'auto'; // NULL = 자동 모드
           if (wmType !== prevWmType) {
             btn.textContent = '워터마크 재생성 중...';
             const res = await fetch(originalCharData.original_image_url);
@@ -1429,7 +1436,7 @@
           image_url,
           thumbnail_url,
           ...(newOriginalUrl && { original_image_url: newOriginalUrl }),
-          watermark_type:      wmType,
+          watermark_type:      dbWmType,
           additional_images:   additional_images.length ? additional_images : null,
           custom_field_values: Object.keys(customFieldValues).length ? customFieldValues : null,
           char_categories:     addedCategories.length ? addedCategories : null,
