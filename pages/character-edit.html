@@ -107,6 +107,24 @@
               <p class="img-upload-ratio">권장 비율 3:4</p>
               <p class="img-upload-meta">PNG · GIF · JPG · WebP &nbsp;·&nbsp; 최대 2MB · 2000×2000px 이하</p>
               <p class="form-hint" style="margin-top:8px;">업로드된 상세 이미지는 워터마크가 적용되어 표시됩니다.<br>개인 워터마크는 <a href="profile.html" style="color:var(--sky-deep);">프로필 설정</a>에서 등록할 수 있습니다.</p>
+              <div style="margin-top:14px;">
+                <p class="form-label" style="margin-bottom:8px;">워터마크 종류</p>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                  <label style="display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer; color:var(--text);">
+                    <input type="radio" name="watermarkType" value="lab_black" checked style="accent-color:var(--sky); width:16px; height:16px;">
+                    연구소 워터마크 (검정)
+                  </label>
+                  <label style="display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer; color:var(--text);">
+                    <input type="radio" name="watermarkType" value="lab_white" style="accent-color:var(--sky); width:16px; height:16px;">
+                    연구소 워터마크 (흰색)
+                  </label>
+                  <label style="display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer; color:var(--text);">
+                    <input type="radio" name="watermarkType" value="personal" style="accent-color:var(--sky); width:16px; height:16px;">
+                    개인 워터마크
+                  </label>
+                </div>
+                <p id="personalWmWarning" style="display:none; font-size:13px; color:#ef4444; margin-top:8px;">개인 워터마크가 등록되어 있지 않습니다. 프로필 설정에서 개인 워터마크를 등록해주세요.</p>
+              </div>
             </div>
 
             <!-- 추가 이미지 -->
@@ -788,6 +806,10 @@
       document.getElementById('charDesc').value   = c.description || '';
       document.getElementById('ownerDesc').value  = c.owner_description || '';
 
+      const savedWmType = c.watermark_type || 'lab_black';
+      const wmRadio = document.querySelector(`input[name="watermarkType"][value="${savedWmType}"]`);
+      if (wmRadio) wmRadio.checked = true;
+
       if (c.image_url || c.thumbnail_url) {
         currentImageUrl     = c.image_url;
         currentThumbnailUrl = c.thumbnail_url || null;
@@ -1299,8 +1321,17 @@
         // 메인 이미지 + 썸네일 업로드
         let image_url          = currentImageUrl;
         let thumbnail_url      = currentThumbnailUrl;
-        let newOriginalUrl     = null;
-        const wmSrc = userWatermarkUrl || '../images/watermark_01.png';
+        let newOriginalUrl = null;
+        const wmType = document.querySelector('input[name="watermarkType"]:checked')?.value || 'lab_black';
+        if (wmType === 'personal' && !userWatermarkUrl) {
+          errorEl.textContent = '개인 워터마크가 등록되어 있지 않습니다. 프로필 설정에서 개인 워터마크를 등록해주세요.';
+          btn.textContent = '저장하기';
+          btn.disabled = false;
+          return;
+        }
+        const wmSrc = wmType === 'lab_white' ? '../images/watermark_02.png'
+                    : wmType === 'personal'  ? userWatermarkUrl
+                    : '../images/watermark_01.png';
         if (file) {
           const ts   = Date.now();
           const blob = await compressImage(file);
@@ -1381,6 +1412,7 @@
           image_url,
           thumbnail_url,
           ...(newOriginalUrl && { original_image_url: newOriginalUrl }),
+          watermark_type:      wmType,
           additional_images:   additional_images.length ? additional_images : null,
           custom_field_values: Object.keys(customFieldValues).length ? customFieldValues : null,
           char_categories:     addedCategories.length ? addedCategories : null,

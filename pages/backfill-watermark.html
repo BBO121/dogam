@@ -236,6 +236,7 @@
           const { error: dbErr } = await sb.from('characters').update({
             original_image_url: char.image_url,
             image_url:          wmUrl,
+            watermark_type:     'lab_black',
           }).eq('id', char.id).is('original_image_url', null);
           if (dbErr) throw new Error('DB 업데이트 실패: ' + dbErr.message);
           log(`  [4] DB 완료`, 'log-step');
