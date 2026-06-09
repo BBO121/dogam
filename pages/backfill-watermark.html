@@ -200,7 +200,7 @@
       for (const char of chars) {
         if (_stop) { log('[중단됨]', 'log-info'); break; }
 
-        log(`→ 처리 시작: ${char.name} (${char.id.slice(0,8)})`, 'log-step');
+        log(`→ 처리 시작: ${char.name} (${String(char.id).slice(0,8)})`, 'log-step');
 
         try {
           // 1. 소스 이미지 로드 (Image 요소 사용 — fetch CORS 우회)
@@ -225,7 +225,7 @@
 
           // 3. 워터마크 이미지 Storage 업로드
           log(`  [3] Storage 업로드 중...`, 'log-step');
-          const wmName = `${Date.now()}_wm_${char.id.slice(0,8)}.jpg`;
+          const wmName = `${Date.now()}_wm_${String(char.id).slice(0,8)}.jpg`;
           const { error: upErr } = await sb.storage.from('images').upload(wmName, wmBlob, { contentType: 'image/jpeg' });
           if (upErr) throw new Error('Storage 업로드 실패: ' + upErr.message);
           const wmUrl = sb.storage.from('images').getPublicUrl(wmName).data.publicUrl;
@@ -245,7 +245,7 @@
 
         } catch (e) {
           failed++;
-          log(`✗ ${char.name} (${char.id.slice(0,8)}): ${e.message}`, 'log-err');
+          log(`✗ ${char.name} (${String(char.id).slice(0,8)}): ${e.message}`, 'log-err');
           console.error('[backfill] 처리 실패:', char.name, e);
         }
 
