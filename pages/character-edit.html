@@ -718,6 +718,7 @@
         muteById('isSensitive');
         muteById('sensitiveNote');
         ['allowResale','allowFreeAdoption','allowPaidAdoption','allowOtherAdoption'].forEach(muteRadio);
+        document.querySelectorAll('input[name="watermarkType"]').forEach(r => { r.disabled = true; });
         const addCategoryBtn = document.querySelector('[onclick="showCategoryInput()"]');
         if (addCategoryBtn) { addCategoryBtn.setAttribute('disabled','disabled'); addCategoryBtn.style.opacity = '0.4'; }
         document.querySelectorAll('#addedCategories button').forEach(btn => { btn.disabled = true; btn.style.display = 'none'; });
@@ -1355,6 +1356,22 @@
           const { error: thumbErr } = await sb.storage.from('images').upload(thumbName, thumbBlob, { contentType: 'image/jpeg' });
           if (thumbErr) throw new Error(`썸네일 업로드에 실패했어요. (${thumbErr.message})`);
           thumbnail_url = sb.storage.from('images').getPublicUrl(thumbName).data.publicUrl;
+        }
+
+        // 새 파일 없어도 watermark_type이 변경된 경우 original_image_url 기준으로 재합성
+        if (!file && originalCharData?.original_image_url) {
+          const prevWmType = originalCharData.watermark_type || 'lab_black';
+          if (wmType !== prevWmType) {
+            btn.textContent = '워터마크 재생성 중...';
+            const res = await fetch(originalCharData.original_image_url);
+            if (!res.ok) throw new Error(`원본 이미지 다운로드 실패 (${res.status})`);
+            const origBlob = await res.blob();
+            const rewmBlob = await applyWatermark(origBlob, wmSrc);
+            const rewmName = `${Date.now()}_rewm.jpg`;
+            const { error: rewmErr } = await sb.storage.from('images').upload(rewmName, rewmBlob, { contentType: 'image/jpeg' });
+            if (rewmErr) throw new Error(`워터마크 이미지 업로드 실패: ${rewmErr.message}`);
+            image_url = sb.storage.from('images').getPublicUrl(rewmName).data.publicUrl;
+          }
         }
 
         // 추가 이미지: 기존 중 삭제 안 된 것 + 새로 업로드한 것 (워터마크 적용)
