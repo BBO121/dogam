@@ -300,11 +300,21 @@
     }
 
     async function loadCharacters(user) {
+      // 내 종족 id 목록 (디자인권 분양 권한은 종족주에게만)
+      const { data: mySpecies } = await sb.from('species')
+        .select('id').eq('owner_user_id', user.id);
+      const mySpeciesIds = (mySpecies || []).map(s => s.id);
+
+      const slotsQuery = mySpeciesIds.length > 0
+        ? sb.from('slots').select('id, name, slot_number, species_id, image_url, thumbnail_url, status')
+            .in('species_id', mySpeciesIds).eq('status', 'active')
+            .order('slot_number', { ascending: true, nullsFirst: false })
+        : { data: [] };
+
       const [{ data: chars }, { data: slots }, { data: activeAdoptions }, { data: allSpecies }] = await Promise.all([
         sb.from('characters').select('id, name, species_name, image_url, thumbnail_url, allow_free_adoption, allow_resale, allow_paid_adoption, allow_other_adoption')
           .eq('owner_user_id', user.id).neq('owner_is_offsite', true).order('name'),
-        sb.from('slots').select('id, name, slot_number, species_id, image_url, thumbnail_url, status')
-          .eq('owner_user_id', user.id).eq('status', 'active').order('slot_number', { ascending: true, nullsFirst: false }),
+        slotsQuery,
         sb.from('adoptions').select('character_id, slot_id').in('status', ['분양중', '확인 대기중']),
         sb.from('species').select('id, name, allow_free_adoption, allow_resale, allow_paid_adoption, allow_other_adoption'),
       ]);
