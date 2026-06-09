@@ -12,6 +12,7 @@
     .log-skip { color: #64748b; }
     .log-err  { color: #dc2626; }
     .log-info { color: #0284c7; }
+    .log-step { color: #9333ea; }
     .progress-bar-wrap { background: #e2e8f0; border-radius: 6px; height: 8px; margin: 12px 0; overflow: hidden; }
     .progress-bar      { background: var(--sky); height: 100%; transition: width 0.3s; }
   </style>
@@ -52,12 +53,11 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/main.js"></script>
-  <script src="../js/utils.js?v=wm1"></script>
   <script>
-    const WM_URL    = '../images/watermark.png';
-    const BO_NICK   = '뽀';  // 테스트 대상 계정 닉네임
-    let   _stop     = false;
-    let   _running  = false;
+    const WM_URL  = '../images/watermark.png';
+    const BO_NICK = '뽀';
+    let _stop    = false;
+    let _running = false;
 
     function log(msg, cls = '') {
       const box = document.getElementById('logBox');
@@ -67,6 +67,7 @@
       line.textContent = msg + '\n';
       box.appendChild(line);
       box.scrollTop = box.scrollHeight;
+      console.log(`[backfill${cls ? ':' + cls : ''}]`, msg);
     }
 
     function setProgress(done, total) {
@@ -77,9 +78,51 @@
 
     function stopBackfill() { _stop = true; log('[중단 요청됨]', 'log-info'); }
 
+    // 워터마크 사전 로드 확인
+    function preloadWatermark(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload  = () => resolve(img);
+        img.onerror = () => reject(new Error(`워터마크 이미지 로드 실패: ${url}`));
+        setTimeout(() => reject(new Error('워터마크 로드 시간 초과 (10초)')), 10000);
+        img.src = url;
+      });
+    }
+
+    // URL에서 직접 이미지 로드 (fetch CORS 우회)
+    function loadImageElement(url, timeoutMs = 15000) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const timer = setTimeout(() => reject(new Error(`이미지 로드 시간 초과: ${url.slice(0, 60)}...`)), timeoutMs);
+        img.crossOrigin = 'anonymous';
+        img.onload  = () => { clearTimeout(timer); resolve(img); };
+        img.onerror = () => { clearTimeout(timer); reject(new Error(`이미지 로드 실패: ${url.slice(0, 60)}...`)); };
+        img.src = url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
+      });
+    }
+
+    // 소스 이미지 + 워터마크 이미지 → 합성 Blob
+    function compositeImages(srcImg, wmImg, quality = 0.90) {
+      return new Promise((resolve, reject) => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width  = srcImg.naturalWidth;
+          canvas.height = srcImg.naturalHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(srcImg, 0, 0);
+          ctx.drawImage(wmImg, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(blob => {
+            if (!blob) { reject(new Error('canvas → Blob 변환 실패')); return; }
+            resolve(blob);
+          }, 'image/jpeg', quality);
+        } catch (e) {
+          reject(new Error('canvas 합성 오류: ' + e.message));
+        }
+      });
+    }
+
     async function startBackfill(testMode) {
       if (_running) { alert('이미 실행 중이에요.'); return; }
-
       if (!testMode && !confirm('전체 개체에 워터마크를 일괄 적용합니다.\n테스트를 먼저 실행했는지 확인하세요.\n계속할까요?')) return;
 
       _stop    = false;
@@ -94,36 +137,50 @@
       try {
         const user = await getUser();
         if (!user || (user.user_metadata?.role !== 'admin' && user.user_metadata?.role !== 'staff')) {
-          log('관리자/스태프만 사용할 수 있어요.', 'log-err');
+          log('관리자/스태프만 사용할 수 있어요.', 'log-err'); return;
+        }
+
+        // 워터마크 이미지 사전 로드
+        log('워터마크 이미지 로드 확인 중...', 'log-info');
+        let wmImg;
+        try {
+          wmImg = await preloadWatermark(WM_URL);
+          log(`워터마크 로드 성공 (${wmImg.naturalWidth}×${wmImg.naturalHeight})`, 'log-ok');
+        } catch (e) {
+          log(`워터마크 로드 실패: ${e.message}`, 'log-err');
+          log('→ /images/watermark.png 파일이 존재하는지 확인해주세요.', 'log-err');
           return;
         }
 
-        // 처리 대상 조회: original_image_url이 NULL인 개체만
         log(`[${testMode ? '테스트 모드' : '전체 모드'}] 대상 조회 중...`, 'log-info');
 
-        let query = sb.from('characters')
-          .select('id, name, image_url, owner_nickname')
-          .is('original_image_url', null)
-          .not('image_url', 'is', null);
-
+        let chars = [];
         if (testMode) {
-          // 뽀 계정 소유 개체만
           const { data: boUser } = await sb.rpc('get_all_users');
           const boData = (boUser || []).find(u => u.nickname === BO_NICK);
           if (!boData) { log(`'${BO_NICK}' 계정을 찾을 수 없어요.`, 'log-err'); return; }
-          const { data: boChars } = await sb.from('characters')
+          log(`'${BO_NICK}' 계정 ID: ${boData.id}`, 'log-info');
+          const { data, error } = await sb.from('characters')
             .select('id, name, image_url, owner_nickname')
             .is('original_image_url', null)
             .not('image_url', 'is', null)
             .eq('owner_user_id', boData.id);
-          await processChars(boChars || [], testMode);
-          return;
+          if (error) { log('조회 오류: ' + error.message, 'log-err'); return; }
+          chars = data || [];
+        } else {
+          const { data, error } = await sb.from('characters')
+            .select('id, name, image_url, owner_nickname')
+            .is('original_image_url', null)
+            .not('image_url', 'is', null);
+          if (error) { log('조회 오류: ' + error.message, 'log-err'); return; }
+          chars = data || [];
         }
 
-        const { data: allChars, error } = await query;
-        if (error) { log('조회 오류: ' + error.message, 'log-err'); return; }
-        await processChars(allChars || [], testMode);
+        await processChars(chars, wmImg, testMode);
 
+      } catch (e) {
+        log('예상치 못한 오류: ' + e.message, 'log-err');
+        console.error('[backfill] 예상치 못한 오류', e);
       } finally {
         _running = false;
         document.getElementById('btnTest').disabled = false;
@@ -132,53 +189,71 @@
       }
     }
 
-    async function processChars(chars, testMode) {
+    async function processChars(chars, wmImg, testMode) {
       const total = chars.length;
       log(`대상 ${total}개${testMode ? ` (${BO_NICK} 계정)` : ''} 확인됨.`, 'log-info');
       if (total === 0) { log('처리할 개체가 없어요.', 'log-skip'); return; }
 
-      let done = 0, skipped = 0, failed = 0;
+      let done = 0, failed = 0;
       setProgress(0, total);
 
       for (const char of chars) {
         if (_stop) { log('[중단됨]', 'log-info'); break; }
 
+        log(`→ 처리 시작: ${char.name} (${char.id.slice(0,8)})`, 'log-step');
+
         try {
-          // 1. 기존 이미지 다운로드
-          const res = await fetch(char.image_url);
-          if (!res.ok) throw new Error(`fetch 실패 (${res.status})`);
-          const origBlob = await res.blob();
+          // 1. 소스 이미지 로드 (Image 요소 사용 — fetch CORS 우회)
+          log(`  [1] 이미지 로드 중...`, 'log-step');
+          let srcImg;
+          try {
+            srcImg = await loadImageElement(char.image_url);
+            log(`  [1] 로드 완료 (${srcImg.naturalWidth}×${srcImg.naturalHeight})`, 'log-step');
+          } catch (e) {
+            throw new Error('이미지 로드 실패: ' + e.message);
+          }
 
           // 2. 워터마크 합성
-          const wmBlob = await applyWatermark(origBlob, WM_URL);
+          log(`  [2] 워터마크 합성 중...`, 'log-step');
+          let wmBlob;
+          try {
+            wmBlob = await compositeImages(srcImg, wmImg);
+            log(`  [2] 합성 완료 (${wmBlob.size} bytes)`, 'log-step');
+          } catch (e) {
+            throw new Error('워터마크 합성 실패: ' + e.message);
+          }
 
-          // 3. 워터마크 이미지 업로드
-          const ts      = Date.now();
-          const wmName  = `${ts}_wm_${char.id.slice(0,8)}.jpg`;
+          // 3. 워터마크 이미지 Storage 업로드
+          log(`  [3] Storage 업로드 중...`, 'log-step');
+          const wmName = `${Date.now()}_wm_${char.id.slice(0,8)}.jpg`;
           const { error: upErr } = await sb.storage.from('images').upload(wmName, wmBlob, { contentType: 'image/jpeg' });
-          if (upErr) throw new Error(`업로드 실패: ${upErr.message}`);
+          if (upErr) throw new Error('Storage 업로드 실패: ' + upErr.message);
           const wmUrl = sb.storage.from('images').getPublicUrl(wmName).data.publicUrl;
+          log(`  [3] 업로드 완료`, 'log-step');
 
-          // 4. DB 업데이트: 원본 보존 + 워터마크 이미지로 교체
+          // 4. DB 업데이트 (중복 방지 조건 포함)
+          log(`  [4] DB 업데이트 중...`, 'log-step');
           const { error: dbErr } = await sb.from('characters').update({
             original_image_url: char.image_url,
             image_url:          wmUrl,
-          }).eq('id', char.id).is('original_image_url', null); // 중복 방지 조건
-
-          if (dbErr) throw new Error(`DB 업데이트 실패: ${dbErr.message}`);
+          }).eq('id', char.id).is('original_image_url', null);
+          if (dbErr) throw new Error('DB 업데이트 실패: ' + dbErr.message);
+          log(`  [4] DB 완료`, 'log-step');
 
           done++;
-          log(`✓ [${done}/${total}] ${char.name} (${char.id.slice(0,8)})`, 'log-ok');
+          log(`✓ [${done}/${total}] ${char.name} 완료`, 'log-ok');
+
         } catch (e) {
           failed++;
           log(`✗ ${char.name} (${char.id.slice(0,8)}): ${e.message}`, 'log-err');
+          console.error('[backfill] 처리 실패:', char.name, e);
         }
 
         setProgress(done + failed, total);
-        await new Promise(r => setTimeout(r, 300)); // 연속 요청 간격
+        await new Promise(r => setTimeout(r, 500));
       }
 
-      log(`\n완료: 성공 ${done}개 / 실패 ${failed}개 / 건너뜀 ${skipped}개`, 'log-info');
+      log(`\n완료: 성공 ${done}개 / 실패 ${failed}개`, 'log-info');
     }
   </script>
 </body>
