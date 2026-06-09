@@ -293,8 +293,8 @@
         }
       }
 
-      const canViewOriginal  = isOwner || isAdminUser || isSpeciesOwner;
-      const autoShowOriginal = isOwner || isSpeciesOwner; // 본인 소유/종족이면 원본 기본 표시
+      const canViewOriginal  = isOwner || isSpeciesOwner; // 소유 관계만 토글 표시
+      const autoShowOriginal = isOwner || isSpeciesOwner;
 
       const registeredDate = new Date(c.created_at).toLocaleDateString('ko-KR', {
         year: 'numeric', month: '2-digit', day: '2-digit'
