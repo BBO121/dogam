@@ -118,19 +118,17 @@
             <input type="text" id="slotNumber" class="form-input" placeholder="예) SLOT-001">
           </div>
 
+          <!-- 항목 (자유 입력) -->
+          <div class="form-group">
+            <label class="form-label">항목 <span class="form-hint-inline">선택사항 · 자유롭게 추가</span></label>
+            <div id="traitList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:10px;"></div>
+            <button type="button" class="btn-field-add" onclick="addTrait()">+ 항목 추가</button>
+          </div>
+
           <!-- 설명 -->
           <div class="form-group">
             <label class="form-label">설명</label>
             <textarea id="slotDesc" class="form-textarea" placeholder="디자인권 설명을 입력하세요" rows="4"></textarea>
-          </div>
-
-          <!-- 종족별 개체 항목 -->
-          <div id="customFieldsSection" style="display:none;">
-            <div style="display:flex; align-items:center; gap:10px; margin-bottom:16px; margin-top:8px;">
-              <span style="font-size:11px; font-weight:700; color:var(--text-mute); letter-spacing:0.08em; white-space:nowrap;">종족 항목</span>
-              <div style="flex:1; height:1px; background:var(--border);"></div>
-            </div>
-            <div id="customFieldInputs"></div>
           </div>
 
           <p class="auth-error" id="editError"></p>
@@ -169,8 +167,6 @@
     let pendingThumbnailBlob = null;
     let cropperInstance      = null;
     let userWatermarkUrl     = null;
-    let speciesCustomFields  = null;
-
     const slotId = new URLSearchParams(window.location.search).get('id');
 
     async function initPage() {
@@ -204,8 +200,7 @@
         return;
       }
 
-      currentSlot         = slot;
-      speciesCustomFields = sp?.custom_fields || null;
+      currentSlot = slot;
 
       // 브레드크럼
       const backHref = `slot.html?id=${slotId}`;
@@ -275,20 +270,32 @@
         }
       }
 
-      // 커스텀 필드
-      loadCustomFields(slot.trait_values);
+      // 기존 항목값 복원
+      if (slot.trait_values && typeof slot.trait_values === 'object') {
+        Object.entries(slot.trait_values).forEach(([k, v]) => addTrait(k, v));
+      }
     }
 
-    function loadCustomFields(existingValues) {
-      if (!speciesCustomFields?.length) return;
-      document.getElementById('customFieldsSection').style.display = '';
-      document.getElementById('customFieldInputs').innerHTML = speciesCustomFields.map(field => `
-        <div class="form-group" style="margin-bottom:12px;">
-          <label class="form-label" style="font-size:13px; font-weight:500;">${field}</label>
-          <input type="text" class="form-input custom-field-input" data-field="${field}"
-            placeholder="${field} 입력" value="${existingValues?.[field] || ''}">
-        </div>
-      `).join('');
+    function addTrait(key = '', value = '') {
+      const row = document.createElement('div');
+      row.style.cssText = 'display:flex; gap:8px; align-items:center;';
+      row.innerHTML = `
+        <input type="text" class="form-input trait-key" placeholder="항목명" value="${key}" style="flex:1;">
+        <input type="text" class="form-input trait-val" placeholder="값" value="${value}" style="flex:1.5;">
+        <button type="button" onclick="this.closest('div').remove()"
+          style="padding:0 10px; height:38px; border:1px solid #fca5a5; border-radius:8px; background:#fff; color:#ef4444; font-size:16px; cursor:pointer; flex-shrink:0; font-family:inherit;">✕</button>
+      `;
+      document.getElementById('traitList').appendChild(row);
+    }
+
+    function collectTraitValues() {
+      const result = {};
+      document.querySelectorAll('#traitList > div').forEach(row => {
+        const key = row.querySelector('.trait-key').value.trim();
+        const val = row.querySelector('.trait-val').value.trim();
+        if (key) result[key] = val;
+      });
+      return Object.keys(result).length ? result : null;
     }
 
     function renderUserList(list) {
@@ -525,13 +532,7 @@
           updateData.thumbnail_url = sb.storage.from('images').getPublicUrl(thumbName).data.publicUrl;
         }
 
-        // 커스텀 필드 값 수집
-        const trait_values = {};
-        document.querySelectorAll('.custom-field-input').forEach(input => {
-          const val = input.value.trim();
-          if (val) trait_values[input.dataset.field] = val;
-        });
-        updateData.trait_values = Object.keys(trait_values).length ? trait_values : null;
+        updateData.trait_values = collectTraitValues();
 
         const { error } = await sb.from('slots').update(updateData).eq('id', slotId);
         if (error) throw new Error(`저장 실패: ${error.message}`);

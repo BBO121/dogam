@@ -433,10 +433,15 @@
         a.status === '확인 대기중' ? ' adoption-status--pending' :
         a.status === '즉분 대기중' ? ' adoption-status--pending' : ''}`;
 
-      const charName = a.character_name || '—';
-      document.getElementById('detailCharName').innerHTML = a.character_id
-        ? `<a href="character.html?id=${a.character_id}" class="detail-link">${charName}</a>`
-        : charName;
+      const charName   = a.character_name || '—';
+      const slotBadge  = a.slot_id ? `<span style="display:inline-block;font-size:11px;font-weight:700;color:var(--sky-deep);background:var(--sky-light);border:1px solid var(--sky);border-radius:6px;padding:1px 7px;margin-right:6px;vertical-align:middle;">디자인권</span>` : '';
+      if (a.slot_id) {
+        document.getElementById('detailCharName').innerHTML = `${slotBadge}<a href="slot.html?id=${a.slot_id}" class="detail-link">${charName}</a>`;
+      } else if (a.character_id) {
+        document.getElementById('detailCharName').innerHTML = `<a href="character.html?id=${a.character_id}" class="detail-link">${charName}</a>`;
+      } else {
+        document.getElementById('detailCharName').textContent = charName;
+      }
 
       const speciesName = a.species_name || '—';
       if (a.species_name) {
@@ -1182,6 +1187,14 @@
         return;
       }
 
+      // 디자인권 분양인 경우 slots 소유권도 이전
+      if (a.slot_id) {
+        await sb.from('slots').update({
+          owner_user_id: currentUser.id,
+          owner_name:    null,
+        }).eq('id', a.slot_id);
+      }
+
       // 소유권 이전 성공 후에만 알림 + 이전 기록
       try {
         await Promise.all([
@@ -1300,6 +1313,14 @@
         btn.textContent = '분양 완료';
         btn.disabled    = false;
         return;
+      }
+
+      // 디자인권 분양인 경우 slots 소유권도 이전
+      if (a.slot_id) {
+        await sb.from('slots').update({
+          owner_user_id: recipientUserId,
+          owner_name:    recipientUserId ? null : recipient,
+        }).eq('id', a.slot_id);
       }
 
       // 성공 후에만 이전 기록 + 알림

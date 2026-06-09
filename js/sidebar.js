@@ -51,6 +51,7 @@ async function initSidebar() {
       <a href="my-species.html"    class="sidebar-item sidebar-login ${path === 'my-species.html'    ? 'active' : ''}">내 종족</a>
       <a href="my-characters.html" class="sidebar-item sidebar-login ${path === 'my-characters.html' ? 'active' : ''}">내 캐릭터</a>
       <a href="my-designs.html"    class="sidebar-item sidebar-login ${path === 'my-designs.html'    ? 'active' : ''}">내 디자인</a>
+      <a href="my-slots.html"      class="sidebar-item sidebar-login ${path === 'my-slots.html'      ? 'active' : ''}">내 디자인권</a>
       <a href="my-adoptions.html" class="sidebar-item sidebar-login ${path === 'my-adoptions.html' ? 'active' : ''}">내 분양</a>
       <!-- 메시지: 추후 활성화 예정
       <a href="messages.html"      class="sidebar-item sidebar-login ${path === 'messages.html' || path === 'chat.html' ? 'active' : ''}">메시지</a>

@@ -201,6 +201,7 @@
     let selectedFreeType    = 'normal';
     let selectedCloseMethod = 'date';
     let myCharacters        = [];
+    let mySlots             = [];
     let speciesRulesMap     = {};
 
     function fmtNum(el) {
@@ -212,20 +213,27 @@
       return document.getElementById(id).value.replace(/,/g, '').trim() || null;
     }
 
-    function onCharSelect(id) {
-      const char    = myCharacters.find(c => String(c.id) === id);
+    function onCharSelect(val) {
       const preview = document.getElementById('charPreview');
       const img     = document.getElementById('charPreviewImg');
-      if (char?.image_url) {
-        img.src = char.image_url;
-        preview.style.display = 'block';
-      } else {
-        preview.style.display = 'none';
-      }
 
-      const sp = speciesRulesMap[char?.species_name] || {};
-      const finalAllowResale = char ? (char.allow_resale ?? sp.allow_resale ?? true) : true;
-      document.getElementById('resaleWarning').style.display = (char && !finalAllowResale) ? 'block' : 'none';
+      if (!val) { preview.style.display = 'none'; document.getElementById('resaleWarning').style.display = 'none'; return; }
+
+      const isSlot = val.startsWith('s:');
+      const rawId  = val.slice(2);
+
+      if (isSlot) {
+        const slot = mySlots.find(s => String(s.id) === rawId);
+        const imgUrl = slot?.thumbnail_url || slot?.image_url;
+        if (imgUrl) { img.src = imgUrl; preview.style.display = 'block'; } else { preview.style.display = 'none'; }
+        document.getElementById('resaleWarning').style.display = 'none';
+      } else {
+        const char = myCharacters.find(c => String(c.id) === rawId);
+        if (char?.image_url) { img.src = char.image_url; preview.style.display = 'block'; } else { preview.style.display = 'none'; }
+        const sp = speciesRulesMap[char?.species_name] || {};
+        const finalAllowResale = char ? (char.allow_resale ?? sp.allow_resale ?? true) : true;
+        document.getElementById('resaleWarning').style.display = (char && !finalAllowResale) ? 'block' : 'none';
+      }
     }
 
     function setType(type) {
@@ -292,35 +300,51 @@
     }
 
     async function loadCharacters(user) {
-      const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname;
-
-      const [{ data: chars }, { data: activeAdoptions }, { data: allSpecies }] = await Promise.all([
+      const [{ data: chars }, { data: slots }, { data: activeAdoptions }, { data: allSpecies }] = await Promise.all([
         sb.from('characters').select('id, name, species_name, image_url, thumbnail_url, allow_free_adoption, allow_resale, allow_paid_adoption, allow_other_adoption')
           .eq('owner_user_id', user.id).neq('owner_is_offsite', true).order('name'),
-        sb.from('adoptions').select('character_id').in('status', ['분양중', '확인 대기중']),
-        sb.from('species').select('name, allow_free_adoption, allow_resale, allow_paid_adoption, allow_other_adoption'),
+        sb.from('slots').select('id, name, slot_number, species_id, image_url, thumbnail_url, status')
+          .eq('owner_user_id', user.id).eq('status', 'active').order('slot_number', { ascending: true, nullsFirst: false }),
+        sb.from('adoptions').select('character_id, slot_id').in('status', ['분양중', '확인 대기중']),
+        sb.from('species').select('id, name, allow_free_adoption, allow_resale, allow_paid_adoption, allow_other_adoption'),
       ]);
 
       speciesRulesMap = Object.fromEntries((allSpecies || []).map(s => [s.name, s]));
 
-      if (!chars || chars.length === 0) {
-        showNoChars('분양 가능한 캐릭터가 없어요. 먼저 캐릭터를 등록해주세요.');
-        return;
-      }
+      // 슬롯에 종족명 붙이기
+      const speciesIdToName = Object.fromEntries((allSpecies || []).map(s => [s.id, s.name]));
+      const activeCharIds = new Set((activeAdoptions || []).map(a => a.character_id).filter(Boolean));
+      const activeSlotIds = new Set((activeAdoptions || []).map(a => a.slot_id).filter(Boolean));
 
-      const activeIds = new Set((activeAdoptions || []).map(a => a.character_id));
-      myCharacters = chars.filter(c => !activeIds.has(c.id));
+      myCharacters = (chars || []).filter(c => !activeCharIds.has(c.id));
+      mySlots      = (slots  || [])
+        .filter(s => !activeSlotIds.has(s.id))
+        .map(s => ({ ...s, speciesName: speciesIdToName[s.species_id] || '' }));
 
-      if (myCharacters.length === 0) {
-        showNoChars('모든 캐릭터가 이미 분양 중이에요.');
+      const hasItems = myCharacters.length > 0 || mySlots.length > 0;
+      if (!hasItems) {
+        showNoChars('분양 가능한 캐릭터 또는 디자인권이 없어요.');
         return;
       }
 
       const select = document.getElementById('characterSelect');
-      select.innerHTML = '<option value="">캐릭터를 선택하세요</option>' +
-        myCharacters.map(c =>
-          `<option value="${c.id}">${c.name}${c.species_name ? ` (${c.species_name})` : ''}</option>`
-        ).join('');
+      let html = '<option value="">선택하세요</option>';
+
+      if (myCharacters.length > 0) {
+        html += '<optgroup label="캐릭터">' +
+          myCharacters.map(c =>
+            `<option value="c:${c.id}">${c.name}${c.species_name ? ` (${c.species_name})` : ''}</option>`
+          ).join('') + '</optgroup>';
+      }
+
+      if (mySlots.length > 0) {
+        html += '<optgroup label="디자인권">' +
+          mySlots.map(s =>
+            `<option value="s:${s.id}">[디자인권${s.speciesName ? `-${s.speciesName}` : ''}] ${s.name}${s.slot_number ? ` (${s.slot_number})` : ''}</option>`
+          ).join('') + '</optgroup>';
+      }
+
+      select.innerHTML = html;
     }
 
     function showNoChars(msg) {
@@ -332,12 +356,16 @@
     document.getElementById('adoptionForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const charId  = document.getElementById('characterSelect').value;
-      const errorEl = document.getElementById('writeError');
-      const btn     = document.getElementById('submitBtn');
+      const selectedVal = document.getElementById('characterSelect').value;
+      const errorEl     = document.getElementById('writeError');
+      const btn         = document.getElementById('submitBtn');
       errorEl.textContent = '';
 
-      if (!charId) { errorEl.textContent = '캐릭터를 선택해주세요.'; return; }
+      if (!selectedVal) { errorEl.textContent = '캐릭터 또는 디자인권을 선택해주세요.'; return; }
+
+      const isSlot = selectedVal.startsWith('s:');
+      const rawId  = selectedVal.slice(2);
+      const charId = isSlot ? null : rawId;
 
       // 유료 필수 검증
       if (selectedType === 'paid' && !document.getElementById('price').value.trim()) {
@@ -362,17 +390,23 @@
         }
       }
 
-      // 분양 규칙 검증
-      const char = myCharacters.find(c => String(c.id) === charId);
-      const sp   = speciesRulesMap[char?.species_name] || {};
-      if (selectedType === 'free' && !(char.allow_free_adoption ?? sp.allow_free_adoption ?? true)) {
-        errorEl.textContent = '무료분양 불가능 개체입니다!'; return;
-      }
-      if ((selectedType === 'paid' || selectedType === 'auction') && !(char.allow_paid_adoption ?? sp.allow_paid_adoption ?? true)) {
-        errorEl.textContent = '유료분양 불가능 개체입니다!'; return;
-      }
-      if (selectedType === 'etc' && !(char.allow_other_adoption ?? sp.allow_other_adoption ?? true)) {
-        errorEl.textContent = '기타분양 불가능 개체입니다!'; return;
+      // 분양 규칙 검증 (캐릭터만 적용, 슬롯은 제외)
+      const char = isSlot ? null : myCharacters.find(c => String(c.id) === rawId);
+      const slot = isSlot ? mySlots.find(s => String(s.id) === rawId) : null;
+      const item = char || slot;
+      if (!item) { errorEl.textContent = '선택한 항목을 찾을 수 없어요.'; return; }
+
+      if (!isSlot) {
+        const sp = speciesRulesMap[char?.species_name] || {};
+        if (selectedType === 'free' && !(char.allow_free_adoption ?? sp.allow_free_adoption ?? true)) {
+          errorEl.textContent = '무료분양 불가능 개체입니다!'; return;
+        }
+        if ((selectedType === 'paid' || selectedType === 'auction') && !(char.allow_paid_adoption ?? sp.allow_paid_adoption ?? true)) {
+          errorEl.textContent = '유료분양 불가능 개체입니다!'; return;
+        }
+        if (selectedType === 'etc' && !(char.allow_other_adoption ?? sp.allow_other_adoption ?? true)) {
+          errorEl.textContent = '기타분양 불가능 개체입니다!'; return;
+        }
       }
 
       btn.textContent = '등록 중...';
@@ -397,11 +431,12 @@
       const raffleAt = raffleAtRaw ? new Date(raffleAtRaw).toISOString() : null;
 
       const { data: adoption, error } = await sb.from('adoptions').insert({
-        character_id:   char.id,
-        character_name: char.name,
-        species_name:   char.species_name,
-        image_url:      char.image_url || null,
-        thumbnail_url:  char.thumbnail_url || null,
+        character_id:   isSlot ? null        : item.id,
+        slot_id:        isSlot ? item.id     : null,
+        character_name: item.name,
+        species_name:   isSlot ? item.speciesName : item.species_name,
+        image_url:      item.image_url    || null,
+        thumbnail_url:  item.thumbnail_url || null,
         adoption_type:  selectedType,
         free_type:      freeType,
         raffle_at:      raffleAt,
