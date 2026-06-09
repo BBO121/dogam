@@ -91,27 +91,34 @@ function applyWatermark(imageBlob, watermarkUrl) {
 
     function tryCompose() {
       if (!imgReady || !wmReady) return;
-      const canvas = document.createElement('canvas');
-      canvas.width  = img.naturalWidth;
-      canvas.height = img.naturalHeight;
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      ctx.drawImage(wm, 0, 0, canvas.width, canvas.height);
-      canvas.toBlob(blob => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width  = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        ctx.drawImage(wm, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(blob => {
+          URL.revokeObjectURL(blobUrl);
+          if (!blob) { reject(new Error('워터마크 합성에 실패했어요. (canvas tainted 또는 메모리 부족)')); return; }
+          resolve(blob);
+        }, 'image/jpeg', 0.90);
+      } catch (e) {
         URL.revokeObjectURL(blobUrl);
-        if (!blob) { reject(new Error('워터마크 합성에 실패했어요.')); return; }
-        resolve(blob);
-      }, 'image/jpeg', 0.90);
+        reject(new Error('워터마크 합성 오류: ' + e.message));
+      }
     }
 
     img.onload  = () => { imgReady = true; tryCompose(); };
     img.onerror = () => { URL.revokeObjectURL(blobUrl); reject(new Error('이미지 로드에 실패했어요.')); };
     img.src = blobUrl;
 
+    // 캐시버스팅으로 crossOrigin 캐시 충돌 방지
+    const wmSrcWithBust = watermarkUrl + (watermarkUrl.includes('?') ? '&' : '?') + '_wm=' + Date.now();
     wm.crossOrigin = 'anonymous';
     wm.onload  = () => { wmReady = true; tryCompose(); };
-    wm.onerror = () => { URL.revokeObjectURL(blobUrl); reject(new Error('워터마크 이미지를 불러오는 데 실패했어요.')); };
-    wm.src = watermarkUrl;
+    wm.onerror = () => { URL.revokeObjectURL(blobUrl); reject(new Error('워터마크 이미지를 불러오는 데 실패했어요: ' + watermarkUrl)); };
+    wm.src = wmSrcWithBust;
   });
 }
 
