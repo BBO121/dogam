@@ -293,7 +293,8 @@
         }
       }
 
-      const canViewOriginal = isOwner || isAdminUser || isSpeciesOwner;
+      const canViewOriginal  = isOwner || isAdminUser || isSpeciesOwner;
+      const autoShowOriginal = isOwner || isSpeciesOwner; // 본인 소유/종족이면 원본 기본 표시
 
       const registeredDate = new Date(c.created_at).toLocaleDateString('ko-KR', {
         year: 'numeric', month: '2-digit', day: '2-digit'
@@ -345,8 +346,8 @@
             </div>
             ${canViewOriginal ? `
             <div style="margin-top:8px; text-align:center; font-size:12px; color:var(--text-mute);">
-              <span id="imgStateLabel">워터마크 이미지를 보고 있습니다.</span>
-              <button id="imgToggleBtn" onclick="toggleOriginalImage()" style="margin-left:6px; background:none; border:none; color:var(--sky-deep); font-size:12px; cursor:pointer; text-decoration:underline; font-family:inherit; padding:0;">원본 이미지 보기</button>
+              <span id="imgStateLabel">${autoShowOriginal ? '불러오는 중...' : '워터마크 이미지를 보고 있습니다.'}</span>
+              <button id="imgToggleBtn" onclick="toggleOriginalImage()" style="margin-left:6px; background:none; border:none; color:var(--sky-deep); font-size:12px; cursor:pointer; text-decoration:underline; font-family:inherit; padding:0;">${autoShowOriginal ? '' : '원본 이미지 보기'}</button>
             </div>` : ''}
             ${additionalImgs}
           </div>
@@ -486,6 +487,11 @@
           </div>
         </div>` : ''}
       `;
+
+      // 본인 소유/종족 개체는 원본 이미지를 기본으로 표시
+      if (autoShowOriginal) {
+        toggleOriginalImage();
+      }
 
       if (charId === '30') {
         const _v = await window.incrementAchCounter?.('gong_o_visit') || 0;
