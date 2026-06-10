@@ -389,11 +389,14 @@
           showPage();
           await loadAchievements(user.id);
 
-          // 기존 유저 own_variety 체크 — 이미 조건을 만족했지만 업적이 없는 경우 수여
-          const _ds = await window.getDistinctOwnedSpeciesCount?.() || 0;
-          if (_ds >= 5)  window.awardAchievement?.('own_variety_5');
-          if (_ds >= 10) window.awardAchievement?.('own_variety_10');
-          if (_ds >= 20) window.awardAchievement?.('own_variety_20');
+          // 기존 유저 own_variety 체크 — 세션당 1회만 실행 (중복 Supabase 호출 방지)
+          if (!sessionStorage.getItem('_own_variety_checked')) {
+            sessionStorage.setItem('_own_variety_checked', '1');
+            const _ds = await window.getDistinctOwnedSpeciesCount?.() || 0;
+            if (_ds >= 5)  window.awardAchievement?.('own_variety_5');
+            if (_ds >= 10) window.awardAchievement?.('own_variety_10');
+            if (_ds >= 20) window.awardAchievement?.('own_variety_20');
+          }
         }
       } catch (e) {
         console.error('[업적] initPage 오류:', e);

@@ -1257,10 +1257,42 @@
           await sb.from('adoptions').update({ character_name: ownerName }).eq('character_id', charId);
 
           // 소유주 업적 체크
-          const _od = document.getElementById('ownerDesc').value.trim();
-          if (_od) window.awardAchievement?.('char_owner_desc', { pending: true });
-          const _hasOwnerRelation = ownerSections.some(s => s.type === 'relation' && s.relations?.length);
-          if (_hasOwnerRelation) window.awardAchievement?.('char_owner_relation', { pending: true });
+          try {
+            const { data: { session: _achSess } } = await sb.auth.getSession();
+            const currentUser = _achSess?.user;
+            console.log('[업적DBG] currentUser:', currentUser?.id);
+            console.log('[업적DBG] isOwner:', editRole === 'owner');
+
+            // 설명: 소유주 설명 OR 종족주 설명(원본) 중 하나라도 있으면
+            const _od  = document.getElementById('ownerDesc').value.trim();
+            const _sd  = (originalCharData?.description || '').trim();
+            const _hasDesc = !!_od || !!_sd;
+            console.log('[업적DBG] owner desc value:', _od, '/ species desc value:', _sd, '/ hasDesc:', _hasDesc);
+
+            // 관계: 소유주 관계 OR 종족주 관계(원본) 중 하나라도 있으면
+            const _hasOwnerRel    = ownerSections.some(s => s.type === 'relation' && (s.relations?.length ?? 0) > 0);
+            const _speciesSecs    = (originalCharData?.char_sections || []).filter(s => (s.author_role || 'species_owner') === 'species_owner');
+            const _hasSpeciesRel  = _speciesSecs.some(s => s.type === 'relation' && (s.relations?.length ?? 0) > 0);
+            const _hasRelation    = _hasOwnerRel || _hasSpeciesRel;
+            console.log('[업적DBG] hasOwnerRel:', _hasOwnerRel, '/ hasSpeciesRel:', _hasSpeciesRel, '/ hasRelation:', _hasRelation);
+
+            if (_hasDesc) {
+              console.log('[업적DBG] char_owner_desc 호출');
+              try {
+                await window.awardAchievement?.('char_owner_desc', { pending: true });
+                console.log('[업적DBG] char_owner_desc 완료');
+              } catch (_e1) { console.error('[업적DBG] char_owner_desc 실패:', _e1); }
+            }
+            if (_hasRelation) {
+              console.log('[업적DBG] char_owner_relation 호출');
+              try {
+                await window.awardAchievement?.('char_owner_relation', { pending: true });
+                console.log('[업적DBG] char_owner_relation 완료');
+              } catch (_e2) { console.error('[업적DBG] char_owner_relation 실패:', _e2); }
+            }
+          } catch (_ae) {
+            console.error('[업적DBG] 소유주 업적 체크 실패:', _ae);
+          }
 
           window.location.href = `character.html?id=${charId}`;
         } catch (err) {
@@ -1437,11 +1469,39 @@
         if (adoptionSyncErr) console.warn('[adoption sync] character_name 동기화 실패:', adoptionSyncErr.message);
 
         // 현재 유저가 이 개체의 소유주이면 설명/관계 업적 체크
-        if (isCharOwner) {
-          const _od2 = document.getElementById('ownerDesc').value.trim();
-          if (_od2) window.awardAchievement?.('char_owner_desc', { pending: true });
-          const _hasOwnerRel2 = finalSections.some(s => s.type === 'relation' && s.author_role === 'owner' && s.relations?.length);
-          if (_hasOwnerRel2) window.awardAchievement?.('char_owner_relation', { pending: true });
+        try {
+          const { data: { session: _achSess2 } } = await sb.auth.getSession();
+          const currentUser2 = _achSess2?.user;
+          console.log('[업적DBG] currentUser:', currentUser2?.id);
+          console.log('[업적DBG] isOwner (isCharOwner):', isCharOwner);
+          console.log('[업적DBG] owner_user_id:', originalCharData?.owner_user_id);
+
+          // 설명: 소유주 설명 OR 종족주 설명 중 하나라도 있으면
+          const _od2      = document.getElementById('ownerDesc').value.trim();
+          const _sd2      = document.getElementById('charDesc').value.trim();
+          const _hasDesc2 = !!_od2 || !!_sd2;
+          console.log('[업적DBG] owner desc value:', _od2, '/ species desc value:', _sd2, '/ hasDesc:', _hasDesc2);
+
+          // 관계: 소유주 관계 OR 종족주 관계 중 하나라도 있으면
+          const _hasRelation2 = finalSections.some(s => s.type === 'relation' && (s.relations?.length ?? 0) > 0);
+          console.log('[업적DBG] hasRelation (OR):', _hasRelation2);
+
+          if (isCharOwner && _hasDesc2) {
+            console.log('[업적DBG] char_owner_desc 호출');
+            try {
+              await window.awardAchievement?.('char_owner_desc', { pending: true });
+              console.log('[업적DBG] char_owner_desc 완료');
+            } catch (_e3) { console.error('[업적DBG] char_owner_desc 실패:', _e3); }
+          }
+          if (isCharOwner && _hasRelation2) {
+            console.log('[업적DBG] char_owner_relation 호출');
+            try {
+              await window.awardAchievement?.('char_owner_relation', { pending: true });
+              console.log('[업적DBG] char_owner_relation 완료');
+            } catch (_e4) { console.error('[업적DBG] char_owner_relation 실패:', _e4); }
+          }
+        } catch (_ae) {
+          console.error('[업적DBG] 소유주 업적 체크 실패(admin path):', _ae);
         }
 
         window.location.href = `character.html?id=${charId}`;

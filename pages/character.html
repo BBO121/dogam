@@ -513,8 +513,6 @@
         toggleOriginalImage();
       }
 
-      console.log('[업적 DEBUG] achievements.js 로드 여부:', typeof window.trackCharView);
-      console.log('[업적 DEBUG] charId 값:', charId, '| 타입:', typeof charId);
       if (charId === '30') {
         const _v = await window.incrementAchCounter?.('gong_o_visit') || 0;
         if (_v >= 1)   window.awardAchievement?.('gong_o_visit_1');
@@ -523,9 +521,7 @@
         if (_v >= 100) window.awardAchievement?.('gong_o_visit_100');
       } else {
         // 개체 상세 조회 업적 (고유 조회 기준)
-        console.log('[업적 DEBUG] trackCharView 호출 직전', charId);
         const _cv = await window.trackCharView?.(parseInt(charId)) || 0;
-        console.log('[업적 DEBUG] trackCharView 반환값:', _cv);
         if (_cv >= 20)  window.awardAchievement?.('char_view_20');
         if (_cv >= 50)  window.awardAchievement?.('char_view_50');
         if (_cv >= 100) window.awardAchievement?.('char_view_100');

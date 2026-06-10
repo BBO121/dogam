@@ -3,71 +3,87 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>페이지를 찾을 수 없어요 — 종족연구소</title>
+  <title>페이지를 찾을 수 없어요 — 종족 연구소</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
-    .not-found-wrap {
+    .page-404 {
+      min-height: 100vh;
       display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 60vh;
+      padding: 24px;
+      background: #F8FAFC;
+    }
+    .card-404 {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      padding: 44px 40px 44px;
+      max-width: 440px;
+      width: 100%;
       text-align: center;
-      padding: 40px 20px;
-      gap: 16px;
     }
-    .not-found-code {
-      font-size: 72px;
-      font-weight: 800;
-      color: var(--color-primary, #6366f1);
-      line-height: 1;
+    .img-404 {
+      margin-bottom: 24px;
     }
-    .not-found-title {
+    .img-404 img {
+      width: 220px;
+      max-width: 100%;
+      height: auto;
+    }
+    .label-404 {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-mute);
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .title-404 {
       font-size: 20px;
       font-weight: 700;
-      color: var(--color-text, #1e1b4b);
+      color: var(--text);
+      margin: 0 0 10px;
     }
-    .not-found-desc {
+    .desc-404 {
       font-size: 14px;
-      color: var(--color-muted, #6b7280);
+      color: var(--text-sub);
+      line-height: 1.75;
+      margin: 0 0 32px;
     }
   </style>
 </head>
 <body>
-
-  <header class="header">
-    <div class="header-inner">
-      <a href="pages/index.html" class="logo">종족연구소</a>
-      <nav class="header-nav">
-        <a href="pages/login.html" class="btn-login">로그인</a>
-      </nav>
+  <div class="page-404">
+    <div class="card-404">
+      <div class="img-404">
+        <img src="images/404_images.png" alt="404 공오의 방">
+      </div>
+      <div class="label-404">연구소 기록 조회 중...</div>
+      <h1 class="title-404">해당 자료를 찾을 수 없습니다.</h1>
+      <p class="desc-404">아무래도 존재하지 않는 구역에 들어오신 것 같네요.</p>
+      <a href="pages/index.html" class="btn-secondary">연구소로 돌아가기</a>
     </div>
-  </header>
-
-  <main>
-    <div class="not-found-wrap">
-      <p class="not-found-code">404</p>
-      <p class="not-found-title">페이지를 찾을 수 없어요</p>
-      <p class="not-found-desc">주소가 잘못됐거나 존재하지 않는 페이지예요.</p>
-      <a href="pages/index.html" class="btn-primary" style="margin-top:8px;">홈으로 돌아가기</a>
-    </div>
-  </main>
-
-  <footer class="footer">
-    <p>© 2026 종족연구소</p>
-  </footer>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window._achBadgePath = 'images/achievement-badge.png';
+  </script>
   <script src="js/auth.js"></script>
   <script src="js/achievements.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
-      // visit_404 — 1회 방문
-      await window.awardAchievement?.('visit_404');
-
-      // visit_404_3 — 3회 방문
-      const _vc = await window.incrementAchCounter?.('visit_404_count') || 0;
-      if (_vc >= 3) window.awardAchievement?.('visit_404_3');
+      try {
+        await window.awardAchievement?.('visit_404');
+        const count = await window.incrementAchCounter?.('visit_404_count') ?? 0;
+        if (count >= 3) {
+          await window.awardAchievement?.('visit_404_3');
+        }
+      } catch (e) {
+        console.error('[404 업적] 처리 실패:', e);
+      }
     });
   </script>
 </body>

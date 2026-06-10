@@ -21,36 +21,45 @@ window.incrementAchCounter = async function(counterKey) {
 // pending: false → 현재 페이지에서 즉시 토스트 표시 (기본값)
 window.awardAchievement = async function(code, { pending = false } = {}) {
   try {
+    console.log('[업적DBG] ▶ awardAchievement 진입 — code:', code, '/ pending:', pending);
+
     const { data: { session } } = await sb.auth.getSession();
     const user = session?.user;
-    if (!user) return;
+    console.log('[업적DBG] session user:', user?.id ?? 'null(비로그인)');
+    if (!user) { console.warn('[업적DBG] user 없음 → return'); return; }
 
+    console.log('[업적DBG] insert 시도 — user_id:', user.id, '/ achievement_code:', code);
     const { error } = await sb.from('user_achievements').insert({
       user_id: user.id,
       achievement_code: code,
     });
 
     if (error) {
-      if (error.code === '23505') return; // 이미 획득한 업적 — 무시
-      console.error('[업적] 지급 실패:', code, error);
+      if (error.code === '23505') {
+        console.log('[업적DBG] 23505 중복 — 이미 획득한 업적:', code);
+        return;
+      }
+      console.error('[업적DBG] insert 실패 — code:', code, '/ error.code:', error.code, '/ message:', error.message, '/ details:', error.details);
       return;
     }
+    console.log('[업적DBG] insert 성공 ✓ — code:', code);
 
     // 업적 정보 조회
-    const { data: ach } = await sb.from('achievements')
+    const { data: ach, error: achErr } = await sb.from('achievements')
       .select('name, description')
       .eq('code', code)
       .single();
+    console.log('[업적DBG] achievements select — ach:', ach, '/ achErr:', achErr);
 
-    if (!ach) return;
+    if (!ach) { console.warn('[업적DBG] achievements 조회 결과 null → toast 생략'); return; }
 
     if (pending) {
-      // redirect 후 다음 페이지에서 표시
       const p = JSON.parse(sessionStorage.getItem('_ach_pending') || '[]');
       p.push({ name: ach.name, desc: ach.description || '' });
       sessionStorage.setItem('_ach_pending', JSON.stringify(p));
+      console.log('[업적DBG] pending 저장 완료 — sessionStorage._ach_pending:', JSON.stringify(p));
     } else {
-      // 현재 페이지에서 즉시 표시
+      console.log('[업적DBG] 즉시 토스트 표시');
       _showAchievementToast(ach.name, ach.description || '');
     }
 
@@ -69,7 +78,7 @@ window.awardAchievement = async function(code, { pending = false } = {}) {
       console.warn('[업적] 알림 생성 실패:', code, notifErr);
     }
   } catch (e) {
-    console.error('[업적] 예외 발생:', code, e);
+    console.error('[업적DBG] 예외 발생 — code:', code, '/ e:', e);
   }
 };
 
@@ -87,25 +96,25 @@ window.getCounterValue = async function(counterKey) {
   }
 };
 
-// 일일 방문 카운터 — 로그인 상태에서만, localStorage 기준 날짜별 관리
+// 일일 방문 카운터 — localStorage만 먼저 처리, Supabase는 10번째 방문에만 호출
 async function _checkDailyVisit() {
   try {
-    const { data: { session } } = await sb.auth.getSession();
-    if (!session) return;
-    const today   = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-    const stored  = JSON.parse(localStorage.getItem('_daily_visit') || '{}');
-    let count;
-    if (stored.date !== today) {
-      count = 1;
-    } else {
-      count = (stored.count || 0) + 1;
-    }
+    console.time('[업적] daily');
+    const today    = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const stored   = JSON.parse(localStorage.getItem('_daily_visit') || '{}');
+    const count    = stored.date !== today ? 1 : (stored.count || 0) + 1;
     localStorage.setItem('_daily_visit', JSON.stringify({ date: today, count }));
+
+    // 10번째 방문이고 오늘 아직 수여 안 했을 때만 Supabase 호출
     const _flagKey = `_work_overtime_awarded_${today}`;
     if (count === 10 && !localStorage.getItem(_flagKey)) {
-      localStorage.setItem(_flagKey, '1');
-      window.awardAchievement?.('work_overtime_fail');
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) {
+        localStorage.setItem(_flagKey, '1');
+        window.awardAchievement?.('work_overtime_fail');
+      }
     }
+    console.timeEnd('[업적] daily');
   } catch (e) {
     console.error('[업적] 일일 방문 체크 예외:', e);
   }
@@ -127,7 +136,7 @@ function _showAchievementToast(name, desc) {
   const toast = document.createElement('div');
   toast.className = 'achievement-toast';
   toast.innerHTML = `
-    <img class="achievement-toast-icon" src="../images/achievement-badge.png" alt="업적">
+    <img class="achievement-toast-icon" src="${window._achBadgePath || '../images/achievement-badge.png'}" alt="업적">
     <div class="achievement-toast-body">
       <p class="achievement-toast-label">업적 달성!</p>
       <p class="achievement-toast-name">${_escapeAch(name)}</p>
@@ -158,14 +167,10 @@ window.trackSpeciesView = async function(speciesId) {
 
 // 개체 고유 조회 추적 — 새 개체일 때만 카운트, 현재 총 고유 조회 수 반환
 window.trackCharView = async function(charId) {
-  console.log('[업적 DEBUG] trackCharView 함수 진입, charId:', charId, '| 타입:', typeof charId);
   try {
     const { data: { session } } = await sb.auth.getSession();
-    console.log('[업적 DEBUG] session 여부:', !!session);
-    if (!session) { console.log('[업적 DEBUG] session 없음 — 종료'); return 0; }
-    console.log('[업적 DEBUG] RPC track_character_view 호출');
+    if (!session) return 0;
     const { data, error } = await sb.rpc('track_character_view', { p_character_id: charId });
-    console.log('[업적 DEBUG] RPC 결과 — data:', data, '| error:', error);
     if (error) { console.error('[업적] 개체 조회 추적 실패:', error); return 0; }
     return data || 0;
   } catch (e) {

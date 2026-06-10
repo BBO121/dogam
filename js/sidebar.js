@@ -203,7 +203,8 @@ async function loadSpeciesSidebar() {
   const sheetPanel = document.getElementById('speciesSheetPanel');
   if (!body) return;
 
-  const { data, error } = await sb.from('species').select('id, name').order('name');
+  // window._getSpeciesData는 auth.js에서 정의 — 공통 캐시 사용
+  const data = await window._getSpeciesData?.();
 
   const q    = new URLSearchParams(window.location.search);
   const curr = q.get('id');
@@ -283,8 +284,7 @@ async function updateSidebarLogin() {
       const TESTERS = ['Moulow', 'moulow', 'Sawol'];
       const isTester = TESTERS.includes(nickname);
       const roleIsSpeciesOwner = user.user_metadata?.role === 'species_owner';
-      const { data: spById } = await sb.from('species').select('id').eq('owner_user_id', user.id).limit(1);
-      const isSpeciesOwner = roleIsSpeciesOwner || !!spById?.length;
+      const isSpeciesOwner = await window._cachedIsSpeciesOwner?.(user.id, roleIsSpeciesOwner) ?? roleIsSpeciesOwner;
 
       const badges = [];
       if (admin)                                        badges.push(`<a href="admin.html" class="badge-admin">관리자</a>`);
