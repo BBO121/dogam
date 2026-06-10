@@ -56,6 +56,16 @@
   <script src="../js/auth.js"></script>
   <script src="../js/achievements.js"></script>
   <script>
+    // 로그아웃 상태 방문 카운터 — 5회 달성 시 플래그 저장
+    document.addEventListener('DOMContentLoaded', async () => {
+      const { data: { session } } = await sb.auth.getSession();
+      if (!session) {
+        const c = (parseInt(localStorage.getItem('_login_page_visit') || '0')) + 1;
+        localStorage.setItem('_login_page_visit', String(c));
+        if (c >= 5) localStorage.setItem('_login_page_visit_done', '1');
+      }
+    });
+
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const nickname = document.getElementById('nickname').value.trim();
@@ -75,6 +85,19 @@
         btn.disabled = false;
       } else {
         await window.awardAchievement?.('first_login', { pending: true });
+
+        // 시간대 업적
+        const _h = new Date().getHours();
+        if (_h >= 1 && _h < 3) await window.awardAchievement?.('night_login', { pending: true });
+        if (_h >= 3 && _h < 5) await window.awardAchievement?.('dawn_login',  { pending: true });
+
+        // 문 두드리는 연구원 — 로그아웃 상태로 5번 방문 후 로그인
+        if (localStorage.getItem('_login_page_visit_done') === '1') {
+          await window.awardAchievement?.('login_no_auth_5', { pending: true });
+          localStorage.removeItem('_login_page_visit_done');
+          localStorage.removeItem('_login_page_visit');
+        }
+
         window.location.href = 'index.html';
       }
     });

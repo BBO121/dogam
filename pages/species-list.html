@@ -103,7 +103,15 @@
       if (!list.length) {
         grid.innerHTML = '<p class="page-loading">검색 결과가 없어요</p>';
         document.getElementById('paginationWrap').innerHTML = '';
-        if (q) window.awardAchievement?.('no_species_search');
+        if (q) {
+          window.awardAchievement?.('no_species_search');
+          const _fc = await window.incrementAchCounter?.('species_search_fail') || 0;
+          if (_fc >= 10) window.awardAchievement?.('species_search_fail_10');
+          if (_fc >= 5) {
+            const _cfc = await window.getCounterValue?.('char_search_fail') || 0;
+            if (_cfc >= 5) window.awardAchievement?.('odd_search');
+          }
+        }
         return;
       }
 

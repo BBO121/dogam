@@ -73,14 +73,50 @@ window.awardAchievement = async function(code, { pending = false } = {}) {
   }
 };
 
-// 페이지 로드 시 pending 토스트 처리
+// DB 카운터 값 조회 (실패 시 0 반환)
+window.getCounterValue = async function(counterKey) {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return 0;
+    const { data, error } = await sb.rpc('get_counter_value', { p_counter_key: counterKey });
+    if (error) { console.error('[업적] 카운터 조회 실패:', counterKey, error); return 0; }
+    return data || 0;
+  } catch (e) {
+    console.error('[업적] 카운터 조회 예외:', counterKey, e);
+    return 0;
+  }
+};
+
+// 일일 방문 카운터 — 로그인 상태에서만, localStorage 기준 날짜별 관리
+async function _checkDailyVisit() {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return;
+    const today   = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+    const stored  = JSON.parse(localStorage.getItem('_daily_visit') || '{}');
+    let count;
+    if (stored.date !== today) {
+      count = 1;
+    } else {
+      count = (stored.count || 0) + 1;
+    }
+    localStorage.setItem('_daily_visit', JSON.stringify({ date: today, count }));
+    if (count >= 10) window.awardAchievement?.('work_overtime_fail');
+  } catch (e) {
+    console.error('[업적] 일일 방문 체크 예외:', e);
+  }
+}
+
+// 페이지 로드 시 pending 토스트 처리 + 일일 방문 체크
 document.addEventListener('DOMContentLoaded', () => {
   const pending = JSON.parse(sessionStorage.getItem('_ach_pending') || '[]');
-  if (!pending.length) return;
-  sessionStorage.removeItem('_ach_pending');
-  pending.forEach((ach, i) => {
-    setTimeout(() => _showAchievementToast(ach.name, ach.desc), i * 900);
-  });
+  if (pending.length) {
+    sessionStorage.removeItem('_ach_pending');
+    pending.forEach((ach, i) => {
+      setTimeout(() => _showAchievementToast(ach.name, ach.desc), i * 900);
+    });
+  }
+  _checkDailyVisit();
 });
 
 function _showAchievementToast(name, desc) {
@@ -101,6 +137,48 @@ function _showAchievementToast(name, desc) {
     setTimeout(() => toast.remove(), 400);
   }, 3800);
 }
+
+// 종족 고유 조회 추적 — 새 종족일 때만 카운트, 현재 총 고유 조회 수 반환
+window.trackSpeciesView = async function(speciesId) {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return 0;
+    const { data, error } = await sb.rpc('track_species_view', { p_species_id: speciesId });
+    if (error) { console.error('[업적] 종족 조회 추적 실패:', error); return 0; }
+    return data || 0;
+  } catch (e) {
+    console.error('[업적] 종족 조회 추적 예외:', e);
+    return 0;
+  }
+};
+
+// 개체 고유 조회 추적 — 새 개체일 때만 카운트, 현재 총 고유 조회 수 반환
+window.trackCharView = async function(charId) {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return 0;
+    const { data, error } = await sb.rpc('track_character_view', { p_character_id: charId });
+    if (error) { console.error('[업적] 개체 조회 추적 실패:', error); return 0; }
+    return data || 0;
+  } catch (e) {
+    console.error('[업적] 개체 조회 추적 예외:', e);
+    return 0;
+  }
+};
+
+// 내가 소유한 서로 다른 종족 수 반환
+window.getDistinctOwnedSpeciesCount = async function() {
+  try {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session) return 0;
+    const { data, error } = await sb.rpc('get_distinct_owned_species_count');
+    if (error) { console.error('[업적] 다양 종족 수 조회 실패:', error); return 0; }
+    return data || 0;
+  } catch (e) {
+    console.error('[업적] 다양 종족 수 조회 예외:', e);
+    return 0;
+  }
+};
 
 function _escapeAch(str) {
   return String(str)

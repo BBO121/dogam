@@ -308,6 +308,20 @@
         document.getElementById('slotsSection').style.display = '';
         renderSlots(visibleSlots);
       }
+
+      // 종족 상세 조회 업적 (로그인 유저만, 고유 조회 기준)
+      if (speciesUserId) {
+        const _sv = await window.trackSpeciesView?.(parseInt(speciesId)) || 0;
+        if (_sv >= 10) window.awardAchievement?.('species_view_10');
+        if (_sv >= 30) window.awardAchievement?.('species_view_30');
+        if (_sv >= 50) window.awardAchievement?.('species_view_50');
+
+        // 관심 감사합니다? — 타인 종족 재방문 카운터
+        if (!isOwner) {
+          const _rc = await window.incrementAchCounter?.(`species_revisit_${speciesId}`) || 0;
+          if (_rc >= 10) window.awardAchievement?.('species_revisit_10');
+        }
+      }
     }
 
     function renderSlots(list) {

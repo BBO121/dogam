@@ -150,7 +150,14 @@
       if (!list.length) {
         document.getElementById('characterGrid').innerHTML = '';
         document.getElementById('paginationWrap').innerHTML = '';
-        if (q) window.awardAchievement?.('no_char_search');
+        if (q) {
+          window.awardAchievement?.('no_char_search');
+          const _cfc = await window.incrementAchCounter?.('char_search_fail') || 0;
+          if (_cfc >= 5) {
+            const _sfc = await window.getCounterValue?.('species_search_fail') || 0;
+            if (_sfc >= 5) window.awardAchievement?.('odd_search');
+          }
+        }
         return;
       }
 
