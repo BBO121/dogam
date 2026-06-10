@@ -5,10 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>페이지를 찾을 수 없어요 — 종족 연구소</title>
   <script>
-    // 실서버(GitHub Pages)와 로컬 경로 분기
-    var _b = location.hostname === 'localhost'
-      ? ''
-      : 'https://bbo121.github.io/dogam';
+    // 로컬은 '' (루트 상대), 실서버는 현재 origin 그대로 사용
+    var _b = location.hostname === 'localhost' ? '' : location.origin;
     document.write('<link rel="stylesheet" href="' + _b + '/css/style.css">');
   </script>
   <style>
@@ -71,7 +69,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     // 경로 세팅
-    var _b = location.hostname === 'localhost' ? '' : 'https://bbo121.github.io/dogam';
+    var _b = location.hostname === 'localhost' ? '' : location.origin;
     document.getElementById('_img404').src  = _b + '/images/404_images.png';
     document.getElementById('_btn404').href = _b + '/pages/index.html';
     window._achBadgePath = _b + '/images/achievement-badge.png';
