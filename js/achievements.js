@@ -154,10 +154,14 @@ window.trackSpeciesView = async function(speciesId) {
 
 // 개체 고유 조회 추적 — 새 개체일 때만 카운트, 현재 총 고유 조회 수 반환
 window.trackCharView = async function(charId) {
+  console.log('[업적 DEBUG] trackCharView 함수 진입, charId:', charId, '| 타입:', typeof charId);
   try {
     const { data: { session } } = await sb.auth.getSession();
-    if (!session) return 0;
+    console.log('[업적 DEBUG] session 여부:', !!session);
+    if (!session) { console.log('[업적 DEBUG] session 없음 — 종료'); return 0; }
+    console.log('[업적 DEBUG] RPC track_character_view 호출');
     const { data, error } = await sb.rpc('track_character_view', { p_character_id: charId });
+    console.log('[업적 DEBUG] RPC 결과 — data:', data, '| error:', error);
     if (error) { console.error('[업적] 개체 조회 추적 실패:', error); return 0; }
     return data || 0;
   } catch (e) {

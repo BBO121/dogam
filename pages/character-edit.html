@@ -339,6 +339,7 @@
   <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
   <script src="../js/auth.js"></script>
+  <script src="../js/achievements.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
@@ -348,6 +349,7 @@
 
     let currentUser          = null;
     let editRole             = null; // 'admin' | 'owner' | 'species_owner'
+    let isCharOwner          = false; // 현재 유저가 이 개체의 소유주인지
     let originalCharData     = null;
     let ownerType            = 'site';
     let selectedNick         = null;
@@ -770,6 +772,7 @@
                        : isSpeciesOwner ? 'species_owner'
                        : isOwner ? 'owner'
                        : 'species_owner';
+      isCharOwner      = isOwner;
       originalCharData = c;
       currentUser      = user;
 
@@ -1253,6 +1256,12 @@
 
           await sb.from('adoptions').update({ character_name: ownerName }).eq('character_id', charId);
 
+          // 소유주 업적 체크
+          const _od = document.getElementById('ownerDesc').value.trim();
+          if (_od) window.awardAchievement?.('char_owner_desc', { pending: true });
+          const _hasOwnerRelation = ownerSections.some(s => s.type === 'relation' && s.relations?.length);
+          if (_hasOwnerRelation) window.awardAchievement?.('char_owner_relation', { pending: true });
+
           window.location.href = `character.html?id=${charId}`;
         } catch (err) {
           errorEl.textContent = err.message;
@@ -1426,6 +1435,14 @@
           .update({ character_name: name })
           .eq('character_id', charId);
         if (adoptionSyncErr) console.warn('[adoption sync] character_name 동기화 실패:', adoptionSyncErr.message);
+
+        // 현재 유저가 이 개체의 소유주이면 설명/관계 업적 체크
+        if (isCharOwner) {
+          const _od2 = document.getElementById('ownerDesc').value.trim();
+          if (_od2) window.awardAchievement?.('char_owner_desc', { pending: true });
+          const _hasOwnerRel2 = finalSections.some(s => s.type === 'relation' && s.author_role === 'owner' && s.relations?.length);
+          if (_hasOwnerRel2) window.awardAchievement?.('char_owner_relation', { pending: true });
+        }
 
         window.location.href = `character.html?id=${charId}`;
       } catch (err) {

@@ -263,6 +263,11 @@
         if (!data?.ok) throw new Error(data?.error || '이전 수락에 실패했어요.');
 
         await window.awardAchievement?.('first_owned_character', { pending: true });
+        // 서로 다른 종족 소유 업적
+        const _ds = await window.getDistinctOwnedSpeciesCount?.() || 0;
+        if (_ds >= 5)  window.awardAchievement?.('own_variety_5',  { pending: true });
+        if (_ds >= 10) window.awardAchievement?.('own_variety_10', { pending: true });
+        if (_ds >= 20) window.awardAchievement?.('own_variety_20', { pending: true });
         window.location.href = `character.html?id=${charId}`;
       } catch (e) {
         console.error('[acceptTransfer 오류]', e);
