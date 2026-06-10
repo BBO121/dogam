@@ -45,7 +45,10 @@ CREATE POLICY "user_character_views_own"
 
 CREATE OR REPLACE FUNCTION track_species_view(p_species_id INT)
 RETURNS INT
-LANGUAGE plpgsql SECURITY DEFINER AS $$
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 DECLARE
   v_user_id UUID;
   v_count   INT;
@@ -70,7 +73,10 @@ $$;
 
 CREATE OR REPLACE FUNCTION track_character_view(p_character_id INT)
 RETURNS INT
-LANGUAGE plpgsql SECURITY DEFINER AS $$
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
 DECLARE
   v_user_id UUID;
   v_count   INT;
@@ -95,7 +101,10 @@ $$;
 
 CREATE OR REPLACE FUNCTION get_distinct_owned_species_count()
 RETURNS INT
-LANGUAGE sql SECURITY DEFINER AS $$
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+AS $$
   SELECT COUNT(DISTINCT species_name)::INT
   FROM characters
   WHERE owner_user_id    = auth.uid()
