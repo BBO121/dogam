@@ -93,11 +93,6 @@ let siteUsers   = [];
 let userIdMap   = {};
 
 async function loadSearchData() {
-  // species는 sidebar 캐시 공유 — 이미 fetch 중이면 같은 Promise 반환
-  const _spFetch = window._getSpeciesData
-    ? window._getSpeciesData().then(data => ({ data }))
-    : sb.from('species').select('id, name');
-
   const [
     { data: chars,   error: charErr },
     { data: userList },
@@ -105,7 +100,7 @@ async function loadSearchData() {
   ] = await Promise.all([
     sb.from('characters').select('id, name, species_name'),
     sb.rpc('get_all_users'),
-    _spFetch,
+    sb.from('species').select('id, name'),
   ]);
   if (charErr) { console.error('[검색] 데이터 로드 실패:', charErr); return; }
 

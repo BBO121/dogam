@@ -203,8 +203,7 @@ async function loadSpeciesSidebar() {
   const sheetPanel = document.getElementById('speciesSheetPanel');
   if (!body) return;
 
-  // window._getSpeciesData는 auth.js에서 정의 — 공통 캐시 사용
-  const data = await window._getSpeciesData?.();
+  const { data, error } = await sb.from('species').select('id, name').order('name');
 
   const q    = new URLSearchParams(window.location.search);
   const curr = q.get('id');
