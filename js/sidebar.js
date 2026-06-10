@@ -307,16 +307,35 @@ async function updateSidebarLogin() {
   }
 }
 
+// ── 화면 디버그 헬퍼 (임시) ──────────────────────────
+function _dbg(msg) {
+  let el = document.getElementById('_flyout_dbg');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = '_flyout_dbg';
+    el.style.cssText = 'position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:#1e293b;color:#f1f5f9;font-size:12px;padding:10px 16px;border-radius:8px;z-index:99999;max-width:90vw;line-height:1.7;pointer-events:none;';
+    document.body.appendChild(el);
+  }
+  el.innerHTML += msg + '<br>';
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.remove(), 6000);
+}
+
 // ── 종족 플라이아웃 (PC 전용) ─────────────────────────
 function onSpeciesClick(btn) {
+  _dbg('① onSpeciesClick 호출 / innerWidth:' + window.innerWidth);
   if (window.innerWidth < 768) {
+    _dbg('→ 모바일 분기 (sheet)');
     closeSidebar();
     openSpeciesSheet();
   } else {
     const flyout = document.getElementById('flyoutSpecies');
+    _dbg('② flyout 존재:' + !!flyout + ' / open:' + flyout?.classList.contains('open'));
     if (flyout && flyout.classList.contains('open')) {
+      _dbg('→ closeFlyout 호출');
       closeFlyout();
     } else {
+      _dbg('→ openFlyout 호출');
       openFlyout(btn);
     }
   }
@@ -333,13 +352,15 @@ function resetFlyoutSearch(container) {
 
 function openFlyout(btn) {
   const flyout = document.getElementById('flyoutSpecies');
-  if (!flyout) return;
+  _dbg('③ openFlyout / flyout:' + !!flyout + ' / innerHTML len:' + (flyout?.innerHTML?.length ?? 'N/A'));
+  if (!flyout) { _dbg('✗ flyout 없음 → return'); return; }
 
   resetFlyoutSearch(flyout);
   const rect = btn.getBoundingClientRect();
   flyout.style.top  = rect.top + 'px';
   flyout.style.left = (rect.right + 6) + 'px';
   flyout.classList.add('open');
+  _dbg('④ .open 추가 완료 / class:' + flyout.className);
 
   // 뷰포트 하단 벗어나면 위로 조정
   const fr = flyout.getBoundingClientRect();
