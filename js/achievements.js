@@ -101,7 +101,11 @@ async function _checkDailyVisit() {
       count = (stored.count || 0) + 1;
     }
     localStorage.setItem('_daily_visit', JSON.stringify({ date: today, count }));
-    if (count >= 10) window.awardAchievement?.('work_overtime_fail');
+    const _flagKey = `_work_overtime_awarded_${today}`;
+    if (count === 10 && !localStorage.getItem(_flagKey)) {
+      localStorage.setItem(_flagKey, '1');
+      window.awardAchievement?.('work_overtime_fail');
+    }
   } catch (e) {
     console.error('[업적] 일일 방문 체크 예외:', e);
   }
