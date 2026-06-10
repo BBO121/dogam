@@ -109,29 +109,29 @@ $$;
 INSERT INTO achievements (code, name, description, is_hidden) VALUES
 
 -- 종족 상세 조회
-('species_view_10', '발품 파는 연구원',      '10개의 종족 페이지를 방문하세요.',  false),
-('species_view_30', '발이 부은 연구원',      '30개의 종족 페이지를 방문하세요.',  false),
-('species_view_50', '다리 없는 연구원',      '50개의 종족 페이지를 방문하세요.',  true),
+('species_view_10', '연구소 관광객',          '종족을 10개 둘러보세요.',    false),
+('species_view_30', '견학 끝!',               '종족을 30개 확인하세요.',    false),
+('species_view_50', '연구소 비밀자료 열람 중', '종족을 50개 확인하세요.',    true),
 
 -- 종족 검색 결과 없음
-('species_search_fail_10', '없는 걸 찾고 있어요', '검색 결과가 없는 종족을 10번 조회하세요.', false),
+('species_search_fail_10', '길치 연구원', '검색창에서 존재하지 않는 종족을 10번 검색하세요.', true),
 
 -- 개체 상세 조회
-('char_view_20',  '개체 투어 I',   '20개의 개체 페이지를 방문하세요.',  false),
-('char_view_50',  '개체 투어 II',  '50개의 개체 페이지를 방문하세요.',  false),
-('char_view_100', '개체 투어 III', '100개의 개체 페이지를 방문하세요.', true),
+('char_view_20',  '누가 살고 있을까?',      '개체를 20마리 확인하세요.',  false),
+('char_view_50',  '관찰은 기본이죠',        '개체를 50마리 확인하세요.',  false),
+('char_view_100', '개체 이름 외웠죠 솔직히', '개체를 100마리 확인하세요.', true),
 
 -- 서로 다른 종족 소유
-('own_variety_5',  '다양성은 미덕!',   '서로 다른 5개 종족의 개체를 소유하세요.',  false),
-('own_variety_10', '수집가의 본능',    '서로 다른 10개 종족의 개체를 소유하세요.', true),
-('own_variety_20', '종족 도감 완성!',  '서로 다른 20개 종족의 개체를 소유하세요.', true),
+('own_variety_5',  '다 너무 좋아',    '서로 다른 종족의 개체를 5마리 소유하세요.',  false),
+('own_variety_10', '편식하지 않아요', '서로 다른 종족의 개체를 10마리 소유하세요.', false),
+('own_variety_20', '뭐든 가능합니다', '서로 다른 종족의 개체를 20마리 소유하세요.', true),
 
 -- 내 소유 개체 설명/관계 입력
-('char_owner_desc',     '내 이야기를 적어봤어요',  '내 소유 개체에 설명을 입력하세요.',  false),
-('char_owner_relation', '이 아이의 친구는요...',   '내 소유 개체에 관계를 등록하세요.', false),
+('char_owner_desc',     '사실 제 아이는요.',    '내 소유 개체의 설명을 입력하세요.',  false),
+('char_owner_relation', '저랑 관계 짜실분?',    '내 소유 개체의 관계를 입력하세요.', false),
 
 -- 404 페이지 (커스텀 404 연동 시 활성화)
-('visit_404', '여기가 어디죠?', '존재하지 않는 페이지를 방문하세요.', true)
+('visit_404', '여긴 왜 오셨어요?', '존재하지 않는 페이지를 확인하세요.', true)
 
 ON CONFLICT (code) DO UPDATE SET
   name        = EXCLUDED.name,
