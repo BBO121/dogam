@@ -256,6 +256,7 @@
   <script>
     const speciesId = new URLSearchParams(window.location.search).get('id');
     let currentImageUrl = null;
+    let originalName    = null;
 
     // ── Quill 초기화 ──────────────────────────
     const SizeStyle = Quill.import('attributors/style/size');
@@ -307,6 +308,7 @@
 
       const { data: s, error } = await sb.from('species').select('*').eq('id', speciesId).single();
       if (error || !s) { window.location.href = 'species-list.html'; return; }
+      originalName = s.name.trim();
 
       const isAdmin = isAdminOrStaff(user.user_metadata?.role);
       const isOwner = !!(user.id && s.owner_user_id && user.id === s.owner_user_id);
@@ -585,6 +587,20 @@
 
         if (error) throw new Error(`저장에 실패했어요: ${error.message}`);
         if (!data || data.length === 0) throw new Error('저장 권한이 없거나 변경할 수 없는 종족입니다.');
+
+        // 종족명이 변경된 경우 characters.species_name 일괄 동기화
+        if (originalName && name !== originalName) {
+          const { data: updatedChars, error: charError } = await sb
+            .from('characters')
+            .update({ species_name: name })
+            .eq('species_name', originalName)
+            .select('id');
+          if (charError) {
+            console.error('[종족명 변경] 개체 동기화 실패:', charError.message);
+          } else {
+            console.log(`[종족명 변경] "${originalName}" → "${name}" | 개체 ${updatedChars?.length ?? 0}마리 업데이트 완료`);
+          }
+        }
 
         window.location.href = `species.html?id=${speciesId}`;
       } catch (err) {
