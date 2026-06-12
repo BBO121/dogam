@@ -430,22 +430,7 @@
       }
 
       // 확인하기 버튼 (낙찰자 + 확인 대기중)
-      console.log('[confirmBtnWrap 조건]', {
-        currentUser: !!currentUser,
-        myNick,
-        winnerName: a.winner_name,
-        status: a.status,
-        match: currentUser && myNick === a.winner_name && a.status === '확인 대기중',
-      });
-      console.log('[nick debug]', {
-        myNick,
-        winnerName:    a.winner_name,
-        myNickLength:  myNick?.length,
-        winnerLength:  a.winner_name?.length,
-        myNickCodes:   myNick  ? [...myNick].map(c => c.charCodeAt(0))          : [],
-        winnerCodes:   a.winner_name ? [...a.winner_name].map(c => c.charCodeAt(0)) : [],
-      });
-      if (currentUser && myNick?.trim() === a.winner_name?.trim() && a.status === '확인 대기중') {
+      if (currentUser && a.winner_user_id && currentUser.id === a.winner_user_id && a.status === '확인 대기중') {
         document.getElementById('confirmBtnWrap').style.display = 'block';
       }
 
@@ -611,7 +596,7 @@
       if (!confirm('추첨을 진행할까요? 신청자 중 한 명이 랜덤으로 선택돼요.')) return;
 
       const { data: apps, error } = await sb.from('adoption_applications')
-        .select('applicant_nickname').eq('adoption_id', adoptionId);
+        .select('applicant_nickname, applicant_id').eq('adoption_id', adoptionId);
 
       if (error || !apps || apps.length === 0) {
         alert('신청자가 없어요. 추첨을 진행할 수 없어요. 분양을 마감합니다.');
@@ -620,11 +605,14 @@
         return;
       }
 
-      const winner = apps[Math.floor(Math.random() * apps.length)].applicant_nickname;
+      const winnerApp    = apps[Math.floor(Math.random() * apps.length)];
+      const winner       = winnerApp.applicant_nickname;
+      const winnerUserId = winnerApp.applicant_id || null;
 
       const { error: updateErr } = await sb.from('adoptions').update({
-        winner_name: winner,
-        status:      '확인 대기중',
+        winner_name:    winner,
+        winner_user_id: winnerUserId,
+        status:         '확인 대기중',
       }).eq('id', adoptionId);
 
       if (updateErr) { alert('오류가 발생했어요.'); return; }
@@ -676,10 +664,11 @@
         return;
       }
 
-      // 선착순 성공 — winner_name 설정
+      // 선착순 성공 — winner_name + winner_user_id 설정
       const { data: updated, error: updateErr } = await sb.from('adoptions').update({
-        winner_name: myNick,
-        status:      '확인 대기중',
+        winner_name:    myNick,
+        winner_user_id: currentUser.id,
+        status:         '확인 대기중',
       }).eq('id', adoptionId).select('id');
 
       if (updateErr || !updated || updated.length === 0) {
@@ -814,6 +803,7 @@
               <button class="btn-award"
                 data-name="${escAttr(currentBidderName)}"
                 data-amount="${escAttr(bid.bid_amount)}"
+                data-id="${escAttr(bid.bidder_id || '')}"
                 onclick="awardBid(this)">분양확정</button>
             ` : ''}
           </div>`;
@@ -886,9 +876,10 @@
       // 즉분가 입찰 → 즉시 낙찰 처리
       if (instNum !== null && bidNum === instNum) {
         const { data: instantUpdated, error: instantErr } = await sb.from('adoptions').update({
-          status:      '확인 대기중',
-          winner_name: myNick || '익명',
-          winner_bid:  `${bidNum.toLocaleString('ko-KR')}원 (즉분가)`,
+          status:         '확인 대기중',
+          winner_name:    myNick || '익명',
+          winner_user_id: currentUser.id,
+          winner_bid:     `${bidNum.toLocaleString('ko-KR')}원 (즉분가)`,
         }).eq('id', adoptionId).select('id');
 
         if (instantErr || !instantUpdated || instantUpdated.length === 0) {
@@ -927,14 +918,16 @@
     }
 
     async function awardBid(btn) {
-      const name   = btn.dataset.name;
-      const amount = btn.dataset.amount;
+      const name     = btn.dataset.name;
+      const amount   = btn.dataset.amount;
+      const bidderId = btn.dataset.id || null;
       if (!confirm(`${name}님을 낙찰자로 확정할까요?`)) return;
 
       const { error } = await sb.from('adoptions').update({
-        status:      '확인 대기중',
-        winner_name: name,
-        winner_bid:  amount,
+        status:         '확인 대기중',
+        winner_name:    name,
+        winner_user_id: bidderId,
+        winner_bid:     amount,
       }).eq('id', adoptionId);
 
       if (error) { alert('오류가 발생했어요.'); return; }
@@ -1057,6 +1050,12 @@
       const { data: recipientUserList } = await sb.rpc('get_all_users');
       const recipientUser   = (recipientUserList || []).find(u => u.nickname === recipient);
       const recipientUserId = recipientUser?.id || null;
+
+      // winner_user_id 선행 저장 (RPC가 status를 완료로 처리하기 전에)
+      await sb.from('adoptions').update({
+        winner_name:    recipient,
+        winner_user_id: recipientUserId,
+      }).eq('id', adoptionId);
 
       // RPC로 characters + adoptions 원자적 처리 (SECURITY DEFINER)
       const { data: result, error: transferError } = await sb.rpc('complete_adoption_transfer', {
