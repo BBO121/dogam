@@ -107,6 +107,11 @@ async function loadNotifList(myNick) {
     return;
   }
 
+  data.sort((a, b) => {
+    if (a.is_read !== b.is_read) return a.is_read ? 1 : -1;
+    return new Date(b.created_at) - new Date(a.created_at);
+  });
+
   listEl.innerHTML = data.map(n => `
     <a class="notif-item${n.is_read ? '' : ' notif-item--unread'}"
        href="${n.link || '#'}"
