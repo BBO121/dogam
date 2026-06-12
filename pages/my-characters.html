@@ -177,6 +177,11 @@
           <select class="list-sort" id="speciesFilter" onchange="filterCards()">
             <option value="">전체 종족</option>
           </select>
+          <select class="list-sort" id="sortSelect" onchange="setSortOrder(this.value)">
+            <option value="species">종족순</option>
+            <option value="recent">최신순</option>
+            <option value="name">이름순</option>
+          </select>
         </div>
 
         <div class="character-grid" id="charGrid"></div>
@@ -257,6 +262,7 @@
     let touchDragSrcId      = null;
     let touchDragSrcEl      = null;
     let isInitialLoad       = true;
+    let currentSort         = 'species';
     const pager = createPager(renderCards);
 
     // ── 초기화 ─────────────────────────────────────────
@@ -459,6 +465,48 @@
       filterCards();
     }
 
+    // ── 정렬 ─────────────────────────────────────────
+    function setSortOrder(val) {
+      currentSort = val;
+      filterCards();
+    }
+
+    function sortChars(list) {
+      const arr = [...list];
+      if (currentSort === 'recent') {
+        return arr.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      }
+      if (currentSort === 'name') {
+        return arr.sort((a, b) => (a.name || '').localeCompare(b.name || '', 'ko'));
+      }
+      // 종족순 (기본): species_name 가나다순, 없으면 맨 아래, 같은 종족 안에서는 개체번호순
+      const getNumGroup = str => {
+        if (!str) return 4;
+        if (/\d/.test(str))                   return 0;
+        if (/^[a-zA-Z]/.test(str))            return 1;
+        if (/^[가-힣ᄀ-ᇿ㄰-㆏]/.test(str)) return 2;
+        return 3;
+      };
+      const firstNum = str => { const m = str.match(/\d+/); return m ? parseInt(m[0], 10) : 0; };
+      const cmpCharNum = (a, b) => {
+        const as = a.char_number || '', bs = b.char_number || '';
+        const ag = getNumGroup(as), bg = getNumGroup(bs);
+        if (ag !== bg) return ag - bg;
+        if (ag === 0) { const d = firstNum(as) - firstNum(bs); return d !== 0 ? d : as.localeCompare(bs, 'ko'); }
+        if (ag === 4) return (a.name || '').localeCompare(b.name || '', 'ko');
+        return as.localeCompare(bs, 'ko');
+      };
+      return arr.sort((a, b) => {
+        const sa = a.species_name || '';
+        const sb = b.species_name || '';
+        if (!sa && sb)  return 1;
+        if (sa  && !sb) return -1;
+        if (!sa && !sb) return cmpCharNum(a, b);
+        const cmp = sa.localeCompare(sb, 'ko');
+        return cmp !== 0 ? cmp : cmpCharNum(a, b);
+      });
+    }
+
     // ── 필터 ─────────────────────────────────────────
     function filterCards() {
       const q       = document.getElementById('filterInput').value.trim().toLowerCase();
@@ -488,10 +536,10 @@
       }
       if (isInitialLoad) {
         isInitialLoad = false;
-        pager.init(filtered);
+        pager.init(sortChars(filtered));
       } else {
         saveFilterState();
-        pager.load(filtered);
+        pager.load(sortChars(filtered));
       }
     }
 
@@ -504,6 +552,11 @@
       if (species) document.getElementById('speciesFilter').value = species;
       if (folder === 'none') activeFolder = 'none';
       else if (folder) { const fid = parseInt(folder); if (!isNaN(fid)) activeFolder = fid; }
+      const sort = p.get('sort');
+      if (sort && ['species','recent','name'].includes(sort)) {
+        currentSort = sort;
+        document.getElementById('sortSelect').value = sort;
+      }
     }
 
     function saveFilterState() {
@@ -515,6 +568,8 @@
       if (activeFolder === 'none')             url.searchParams.set('folder', 'none');
       else if (typeof activeFolder === 'number') url.searchParams.set('folder', String(activeFolder));
       else                                     url.searchParams.delete('folder');
+      if (currentSort !== 'species') url.searchParams.set('sort', currentSort);
+      else                           url.searchParams.delete('sort');
       url.searchParams.delete('page');
       history.replaceState(null, '', url);
     }
