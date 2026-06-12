@@ -36,10 +36,13 @@
         <div class="profile-tabs">
           <button class="profile-tab active" data-tab="Notices">공지 관리</button>
           <button class="profile-tab" data-tab="Guides">가이드 관리</button>
+          <button class="profile-tab" data-tab="UpdateNotes">업데이트노트</button>
+          <button class="profile-tab" data-tab="DevLogs">개발일지</button>
           <button class="profile-tab" data-tab="Users">유저 관리</button>
           <button class="profile-tab" data-tab="Species">종족 관리</button>
           <button class="profile-tab" data-tab="Characters">개체 관리</button>
           <button class="profile-tab" data-tab="Adoptions">분양 관리</button>
+          <button class="profile-tab" data-tab="AdminLogs">관리자 로그</button>
         </div>
 
         <!-- 공지 관리 탭 -->
@@ -104,12 +107,42 @@
 
         </div>
 
+        <!-- 업데이트노트 관리 탭 -->
+        <div id="tabUpdateNotes" class="tab-content" style="display:none;">
+          <section class="section">
+            <div class="section-header">
+              <h2 class="settings-section-title" style="margin-bottom:0;">업데이트노트 목록</h2>
+              <a href="update-note-write.html" class="btn-secondary">+ 새 글 작성</a>
+            </div>
+            <div class="admin-card-list" id="updateNoteTableBody"></div>
+            <p id="updateNoteEmpty" class="empty-state" style="display:none;">등록된 업데이트노트가 없어요.</p>
+            <div id="pgUpdateNotes"></div>
+          </section>
+        </div>
+
+        <!-- 개발일지 관리 탭 -->
+        <div id="tabDevLogs" class="tab-content" style="display:none;">
+          <section class="section">
+            <div class="section-header">
+              <h2 class="settings-section-title" style="margin-bottom:0;">개발일지 목록</h2>
+              <a href="dev-log-write.html" class="btn-secondary">+ 새 글 작성</a>
+            </div>
+            <div class="admin-card-list" id="devLogTableBody"></div>
+            <p id="devLogEmpty" class="empty-state" style="display:none;">등록된 개발일지가 없어요.</p>
+            <div id="pgDevLogs"></div>
+          </section>
+        </div>
+
         <!-- 유저 관리 탭 -->
         <div id="tabUsers" class="tab-content" style="display:none;">
           <section class="section">
-            <h2 class="settings-section-title">유저 목록</h2>
+            <div class="section-header" style="margin-bottom:12px;">
+              <h2 class="settings-section-title" style="margin-bottom:0;">유저 목록</h2>
+              <input type="text" class="list-search" id="userAdminSearch" placeholder="닉네임 / 이메일 / UUID 검색" style="width:240px;" oninput="filterAdminUsers(this.value)">
+            </div>
             <div class="admin-card-list" id="userTableBody"></div>
             <p id="userEmpty" class="empty-state" style="display:none;">유저가 없어요.</p>
+            <p id="userAdminNoResult" class="empty-state" style="display:none;">검색 결과가 없습니다.</p>
             <div id="pgUsers"></div>
           </section>
         </div>
@@ -117,9 +150,13 @@
         <!-- 종족 관리 탭 -->
         <div id="tabSpecies" class="tab-content" style="display:none;">
           <section class="section">
-            <h2 class="settings-section-title">종족 목록</h2>
+            <div class="section-header" style="margin-bottom:12px;">
+              <h2 class="settings-section-title" style="margin-bottom:0;">종족 목록</h2>
+              <input type="text" class="list-search" id="speciesAdminSearch" placeholder="종족 검색..." style="width:200px;" oninput="filterAdminSpecies(this.value)">
+            </div>
             <div class="admin-card-list" id="speciesTableBody"></div>
             <p id="speciesAdminEmpty" class="empty-state" style="display:none;">등록된 종족이 없어요.</p>
+            <p id="speciesAdminNoResult" class="empty-state" style="display:none;">검색 결과가 없습니다.</p>
             <div id="pgSpecies"></div>
           </section>
         </div>
@@ -134,6 +171,18 @@
             <div class="admin-card-list" id="charTableBody"></div>
             <p id="charAdminEmpty" class="empty-state" style="display:none;">등록된 개체가 없어요.</p>
             <div id="pgChars"></div>
+          </section>
+        </div>
+
+        <!-- 관리자 로그 탭 -->
+        <div id="tabAdminLogs" class="tab-content" style="display:none;">
+          <section class="section">
+            <div class="section-header" style="margin-bottom:12px;">
+              <h2 class="settings-section-title" style="margin-bottom:0;">관리자 로그</h2>
+            </div>
+            <div class="admin-card-list" id="adminLogTableBody"></div>
+            <p id="adminLogEmpty" class="empty-state" style="display:none;">로그가 없어요.</p>
+            <div id="pgAdminLogs"></div>
           </section>
         </div>
 
@@ -152,6 +201,43 @@
 
       </div>
     </main>
+  </div>
+
+  <!-- 비밀번호 초기화 확인 모달 -->
+  <div id="pwResetConfirmModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:500; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:#fff; border-radius:16px; padding:24px; width:min(100%,380px); display:flex; flex-direction:column; gap:16px; box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+      <h3 style="margin:0; font-size:16px; font-weight:700;">비밀번호 초기화</h3>
+      <p id="pwResetConfirmText" style="margin:0; font-size:14px; color:var(--text-sub); line-height:1.6;"></p>
+      <p style="margin:0; font-size:12px; color:#dc2626; background:#fef2f2; border:1px solid #fecaca; border-radius:8px; padding:10px 12px; line-height:1.5;">
+        새 임시 비밀번호가 즉시 적용됩니다. 기존 비밀번호는 복구할 수 없어요.
+      </p>
+      <p class="auth-error" id="pwResetError"></p>
+      <div style="display:flex; gap:8px; justify-content:flex-end;">
+        <button class="btn-ghost" onclick="closePwResetConfirmModal()">취소</button>
+        <button id="pwResetConfirmBtn" style="padding:9px 18px; border:none; border-radius:9px; background:#dc2626; color:#fff; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit;" onclick="executePasswordReset()">초기화하기</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 비밀번호 초기화 결과 모달 -->
+  <div id="pwResetResultModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:500; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:#fff; border-radius:16px; padding:24px; width:min(100%,380px); display:flex; flex-direction:column; gap:16px; box-shadow:0 8px 32px rgba(0,0,0,0.18);">
+      <h3 style="margin:0; font-size:16px; font-weight:700;">초기화 완료</h3>
+      <p id="pwResetResultName" style="margin:0; font-size:13px; color:var(--text-sub);"></p>
+      <div>
+        <p style="font-size:12px; font-weight:600; color:var(--text-mute); margin-bottom:6px;">임시 비밀번호</p>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <code id="pwResetResultPw" style="flex:1; font-size:16px; font-weight:700; letter-spacing:0.08em; background:#f8fafc; border:1.5px solid var(--border); border-radius:9px; padding:10px 14px; font-family:monospace;"></code>
+          <button onclick="copyTempPassword()" style="flex-shrink:0; padding:10px 14px; border:1.5px solid var(--border); border-radius:9px; background:#fff; font-size:13px; cursor:pointer; font-family:inherit;" id="pwCopyBtn">복사</button>
+        </div>
+      </div>
+      <p style="margin:0; font-size:12px; color:var(--text-mute); line-height:1.5;">
+        이 비밀번호를 유저에게 직접 전달해주세요.<br>창을 닫으면 다시 확인할 수 없습니다.
+      </p>
+      <div style="display:flex; justify-content:flex-end;">
+        <button class="btn-secondary" onclick="closePwResetResultModal()">확인</button>
+      </div>
+    </div>
   </div>
 
   <!-- 관리자 개체 이전 모달 -->
@@ -176,7 +262,7 @@
   </div>
 
   <footer class="footer">
-    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.1</p>
+    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.2</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -187,12 +273,15 @@
   <script>
     let adminUser = null;
 
-    const noticePager   = createPager(renderNoticeRows,   'pgNotices');
-    const guidePager    = createPager(renderGuideRows,    'pgGuides');
-    const userPager     = createPager(renderUserRows,     'pgUsers');
-    const speciesPager  = createPager(renderSpeciesRows,  'pgSpecies');
-    const charPager     = createPager(renderCharRows,     'pgChars');
-    const adoptionPager = createPager(renderAdoptionRows, 'pgAdoptions');
+    const noticePager      = createPager(renderNoticeRows,      'pgNotices');
+    const guidePager       = createPager(renderGuideRows,       'pgGuides');
+    const updateNotePager  = createPager(renderUpdateNoteRows,  'pgUpdateNotes');
+    const devLogPager      = createPager(renderDevLogRows,      'pgDevLogs');
+    const userPager        = createPager(renderUserRows,        'pgUsers');
+    const speciesPager     = createPager(renderSpeciesRows,     'pgSpecies');
+    const charPager        = createPager(renderCharRows,        'pgChars');
+    const adoptionPager    = createPager(renderAdoptionRows,    'pgAdoptions');
+    const adminLogPager    = createPager(renderLogRows,         'pgAdminLogs');
 
     async function initPage() {
       const user = await getUser();
@@ -229,6 +318,12 @@
         if (btn.dataset.tab === 'Guides' && !tabLoaded.Guides) {
           tabLoaded.Guides = true; loadGuides();
         }
+        if (btn.dataset.tab === 'UpdateNotes' && !tabLoaded.UpdateNotes) {
+          tabLoaded.UpdateNotes = true; loadUpdateNotes();
+        }
+        if (btn.dataset.tab === 'DevLogs' && !tabLoaded.DevLogs) {
+          tabLoaded.DevLogs = true; loadDevLogs();
+        }
         if (btn.dataset.tab === 'Species' && !tabLoaded.Species) {
           tabLoaded.Species = true; loadAdminSpecies();
         }
@@ -237,6 +332,9 @@
         }
         if (btn.dataset.tab === 'Adoptions' && !tabLoaded.Adoptions) {
           tabLoaded.Adoptions = true; loadAdminAdoptions();
+        }
+        if (btn.dataset.tab === 'AdminLogs' && !tabLoaded.AdminLogs) {
+          tabLoaded.AdminLogs = true; loadAdminLogs();
         }
       });
     });
@@ -377,8 +475,95 @@
       loadGuides();
     }
 
+    // ── 업데이트노트 관리 ────────────────────────────
+    function renderUpdateNoteRows(slice) {
+      document.getElementById('updateNoteTableBody').innerHTML = slice.map(n => {
+        const date = new Date(n.created_at).toLocaleDateString('ko-KR', {
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        }).replace(/\. /g, '.').replace(/\.$/, '');
+        return `
+          <div class="admin-card-row">
+            <div class="admin-card-left">
+              ${n.is_pinned ? '<span class="notice-pin" style="flex-shrink:0;">고정</span>' : ''}
+              <a href="update-note-detail.html?id=${n.id}" class="admin-card-name">${n.title}</a>
+            </div>
+            <div class="admin-card-right">
+              <span class="admin-card-date">${date}</span>
+              <button class="admin-btn-edit" onclick="location.href='update-note-write.html?edit=${n.id}'">수정</button>
+              <button class="admin-btn-delete" onclick="deleteUpdateNote('${n.id}')">삭제</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function loadUpdateNotes() {
+      const { data, error } = await sb
+        .from('update_notes')
+        .select('id, title, is_pinned, created_at')
+        .order('is_pinned', { ascending: false })
+        .order('created_at', { ascending: false });
+      const empty = document.getElementById('updateNoteEmpty');
+      if (error || !data || data.length === 0) {
+        document.getElementById('updateNoteTableBody').innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      updateNotePager.load(data);
+    }
+
+    async function deleteUpdateNote(id) {
+      if (!confirm('정말 삭제할까요?')) return;
+      await sb.from('update_notes').delete().eq('id', id);
+      loadUpdateNotes();
+    }
+
+    // ── 개발일지 관리 ────────────────────────────
+    function renderDevLogRows(slice) {
+      document.getElementById('devLogTableBody').innerHTML = slice.map(n => {
+        const date = new Date(n.created_at).toLocaleDateString('ko-KR', {
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        }).replace(/\. /g, '.').replace(/\.$/, '');
+        return `
+          <div class="admin-card-row">
+            <div class="admin-card-left">
+              ${n.is_pinned ? '<span class="notice-pin" style="flex-shrink:0;">고정</span>' : ''}
+              <a href="dev-log-detail.html?id=${n.id}" class="admin-card-name">${n.title}</a>
+            </div>
+            <div class="admin-card-right">
+              <span class="admin-card-date">${date}</span>
+              <button class="admin-btn-edit" onclick="location.href='dev-log-write.html?edit=${n.id}'">수정</button>
+              <button class="admin-btn-delete" onclick="deleteDevLog('${n.id}')">삭제</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function loadDevLogs() {
+      const { data, error } = await sb
+        .from('dev_logs')
+        .select('id, title, is_pinned, created_at')
+        .order('is_pinned', { ascending: false })
+        .order('created_at', { ascending: false });
+      const empty = document.getElementById('devLogEmpty');
+      if (error || !data || data.length === 0) {
+        document.getElementById('devLogTableBody').innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      devLogPager.load(data);
+    }
+
+    async function deleteDevLog(id) {
+      if (!confirm('정말 삭제할까요?')) return;
+      await sb.from('dev_logs').delete().eq('id', id);
+      loadDevLogs();
+    }
+
     // ── 유저 관리 ────────────────────────────
     const TESTERS = ['Moulow', 'moulow', 'Sawol'];
+    let allAdminUsers = [];
 
     function adminUserPriority(u) {
       if (u.login_id === 'admin')          return 0;
@@ -410,6 +595,7 @@
             ${u.role === 'species_owner'
               ? `<button class="admin-btn-revoke" onclick="setRole('${u.id}', '')">권한 회수</button>`
               : `<button class="admin-btn-grant" onclick="setRole('${u.id}', 'species_owner')">종족주 임명</button>`}
+            <button class="admin-btn-edit" onclick="openPwResetConfirmModal('${u.id}', '${safeNick}')">비밀번호 초기화</button>
             <button class="admin-btn-delete" onclick="deleteUser('${u.id}', '${safeNick}')">삭제</button>
           </div>`;
         return `
@@ -437,8 +623,28 @@
       }
 
       empty.style.display = 'none';
-      console.log('[get_all_users 첫번째 row]', data[0]);
-      userPager.load(sortAdminUsers(data));
+      allAdminUsers = sortAdminUsers(data);
+      const q = document.getElementById('userAdminSearch')?.value || '';
+      if (q) { filterAdminUsers(q); } else { userPager.load(allAdminUsers); }
+    }
+
+    function filterAdminUsers(q) {
+      const qLow = q.toLowerCase();
+      const noResult = document.getElementById('userAdminNoResult');
+      const filtered = q
+        ? allAdminUsers.filter(u =>
+            (u.nickname  || '').toLowerCase().includes(qLow) ||
+            (u.login_id  || '').toLowerCase().includes(qLow) ||
+            (u.email     || '').toLowerCase().includes(qLow) ||
+            (u.id        || '').toLowerCase().includes(qLow))
+        : allAdminUsers;
+      if (q && filtered.length === 0) {
+        userPager.load([]);
+        noResult.style.display = 'block';
+      } else {
+        noResult.style.display = 'none';
+        userPager.load(filtered);
+      }
     }
 
     async function setRole(userId, role) {
@@ -455,6 +661,9 @@
         console.error('[setRole error]', error);
         return;
       }
+      const actionType = role === 'species_owner' ? 'role_grant' : 'role_revoke';
+      const actionDetails = role === 'species_owner' ? { granted_role: 'species_owner' } : { revoked_role: 'species_owner' };
+      await logAdminAction(actionType, 'user', userId, null, actionDetails);
       loadUsers();
     }
 
@@ -471,6 +680,7 @@
 
       const { error } = await sb.rpc('delete_user', { target_id: userId });
       if (error) { alert('계정 삭제에 실패했어요.'); return; }
+      await logAdminAction('user_delete', 'user', userId, nickname);
       loadUsers();
     }
 
@@ -495,12 +705,29 @@
       }).join('');
     }
 
+    let allAdminSpecies = [];
+
+    function filterAdminSpecies(q) {
+      const qLow = q.toLowerCase();
+      const noResult = document.getElementById('speciesAdminNoResult');
+      const filtered = q
+        ? allAdminSpecies.filter(s => s.name.toLowerCase().includes(qLow))
+        : allAdminSpecies;
+      if (q && filtered.length === 0) {
+        speciesPager.load([]);
+        noResult.style.display = 'block';
+      } else {
+        noResult.style.display = 'none';
+        speciesPager.load(filtered);
+      }
+    }
+
     async function loadAdminSpecies() {
       const { data, error } = await sb
         .from('species')
         .select('id, name, owner_nickname, created_at')
         .order('created_at', { ascending: false });
-
+        data?.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
       const empty = document.getElementById('speciesAdminEmpty');
 
       if (error || !data || data.length === 0) {
@@ -509,14 +736,18 @@
         return;
       }
 
+      allAdminSpecies = data;
       empty.style.display = 'none';
-      speciesPager.load(data);
+
+      const q = document.getElementById('speciesAdminSearch')?.value || '';
+      if (q) { filterAdminSpecies(q); } else { speciesPager.load(data); }
     }
 
     async function deleteSpecies(id, name) {
       if (!confirm(`"${name}" 종족을 삭제할까요?\n소속 개체도 함께 삭제돼요.`)) return;
       const { error } = await sb.rpc('admin_delete_species', { species_id: id, p_species_name: name });
       if (error) { alert('삭제에 실패했어요: ' + error.message); return; }
+      await logAdminAction('species_delete', 'species', id, name);
       loadAdminSpecies();
     }
 
@@ -580,6 +811,7 @@
       if (!confirm(`"${name}" 개체를 삭제할까요?`)) return;
       const { error } = await sb.from('characters').delete().eq('id', id);
       if (error) { alert('삭제에 실패했어요.'); return; }
+      await logAdminAction('character_delete', 'character', id, name);
       allAdminChars = allAdminChars.filter(c => String(c.id) !== String(id));
       charPager.load(allAdminChars);
     }
@@ -668,6 +900,7 @@
       const char = allAdminChars.find(c => String(c.id) === String(_adminTransferCharId));
       if (char) { char.owner_nickname = _adminTransferToNick; char.owner_user_id = _adminTransferToId; }
 
+      await logAdminAction('character_transfer', 'character', _adminTransferCharId, _adminTransferCharName, { to_nickname: _adminTransferToNick });
       closeAdminTransferModal();
       charPager.load(allAdminChars);
     }
@@ -732,8 +965,160 @@
       const { data: deleted, error } = await sb.from('adoptions').delete().eq('id', id).select('id');
       if (error) { alert('삭제에 실패했어요: ' + error.message); return; }
       if (!deleted?.length) { alert('삭제 권한이 없어요.\nSupabase에서 관리자 DELETE 정책을 추가해주세요.'); return; }
+      await logAdminAction('adoption_delete', 'adoption', id, name);
       allAdminAdoptions = allAdminAdoptions.filter(a => String(a.id) !== String(id));
       adoptionPager.load(allAdminAdoptions);
+    }
+
+    // ── 비밀번호 초기화 ──────────────────────
+    const EDGE_FN_URL = `${SUPABASE_URL}/functions/v1/reset-user-password`;
+    let _pwResetUserId   = null;
+    let _pwResetNickname = null;
+
+    function openPwResetConfirmModal(userId, nickname) {
+      _pwResetUserId   = userId;
+      _pwResetNickname = nickname;
+      document.getElementById('pwResetConfirmText').textContent = `"${nickname}" 유저의 비밀번호를 새 임시 비밀번호로 초기화할까요?`;
+      document.getElementById('pwResetError').textContent = '';
+      document.getElementById('pwResetConfirmBtn').textContent = '초기화하기';
+      document.getElementById('pwResetConfirmBtn').disabled = false;
+      document.getElementById('pwResetConfirmModal').style.display = 'flex';
+    }
+
+    function closePwResetConfirmModal() {
+      document.getElementById('pwResetConfirmModal').style.display = 'none';
+      _pwResetUserId = null; _pwResetNickname = null;
+    }
+
+    function closePwResetResultModal() {
+      document.getElementById('pwResetResultModal').style.display = 'none';
+    }
+
+    function copyTempPassword() {
+      const pw = document.getElementById('pwResetResultPw').textContent;
+      navigator.clipboard.writeText(pw).then(() => {
+        const btn = document.getElementById('pwCopyBtn');
+        btn.textContent = '복사됨';
+        setTimeout(() => { btn.textContent = '복사'; }, 1500);
+      });
+    }
+
+    async function executePasswordReset() {
+      const btn     = document.getElementById('pwResetConfirmBtn');
+      const errorEl = document.getElementById('pwResetError');
+      errorEl.textContent = '';
+      btn.textContent = '초기화 중...';
+      btn.disabled = true;
+
+      try {
+        const { data: { session } } = await sb.auth.getSession();
+        if (!session) throw new Error('로그인이 필요해요.');
+
+        // 프론트는 userId, targetNickname만 전달 — 비밀번호는 서버에서 생성
+        const res = await fetch(EDGE_FN_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`,
+          },
+          body: JSON.stringify({
+            userId:         _pwResetUserId,
+            targetNickname: _pwResetNickname,
+          }),
+        });
+
+        const json = await res.json();
+        if (!res.ok || json.error) throw new Error(json.error || '초기화에 실패했어요.');
+
+        // 서버에서 받은 임시 비밀번호를 1회 표시
+        document.getElementById('pwResetConfirmModal').style.display = 'none';
+        document.getElementById('pwResetResultName').textContent = `${_pwResetNickname} 유저의 임시 비밀번호`;
+        document.getElementById('pwResetResultPw').textContent   = json.tempPassword;
+        document.getElementById('pwCopyBtn').textContent         = '복사';
+        document.getElementById('pwResetResultModal').style.display = 'flex';
+
+        await logAdminAction('password_reset', 'user', _pwResetUserId, _pwResetNickname, { target_nickname: _pwResetNickname });
+        _pwResetUserId = null; _pwResetNickname = null;
+      } catch (err) {
+        errorEl.textContent = err.message;
+        btn.textContent = '초기화하기';
+        btn.disabled = false;
+      }
+    }
+
+    // ── 관리자 로그 ──────────────────────────
+    const LOG_ACTION_LABELS = {
+      // 유저
+      password_reset:          ['비밀번호 초기화',  '#7c3aed', '#f5f3ff'],
+      role_grant:               ['권한 임명',        '#0284c7', '#e0f2fe'],
+      role_revoke:              ['권한 회수',        '#64748b', '#f1f5f9'],
+      user_delete:              ['유저 삭제',        '#dc2626', '#fef2f2'],
+      // 문의
+      inquiry_comment_create:   ['문의 댓글 등록',   '#0284c7', '#e0f2fe'],
+      inquiry_comment_edit:     ['문의 댓글 수정',   '#7c3aed', '#f5f3ff'],
+      inquiry_comment_delete:   ['문의 댓글 삭제',   '#dc2626', '#fef2f2'],
+      // 버그 리포트
+      bug_comment_create:       ['버그 댓글 등록',   '#0284c7', '#e0f2fe'],
+      bug_comment_edit:         ['버그 댓글 수정',   '#7c3aed', '#f5f3ff'],
+      bug_comment_delete:       ['버그 댓글 삭제',   '#dc2626', '#fef2f2'],
+      // 종족주 신청
+      species_apply_approve:    ['종족주 신청 승인', '#16a34a', '#f0fdf4'],
+      species_apply_reject:     ['종족주 신청 반려', '#dc2626', '#fef2f2'],
+      // 종족
+      species_edit:             ['종족 수정',        '#7c3aed', '#f5f3ff'],
+      species_delete:           ['종족 삭제',        '#dc2626', '#fef2f2'],
+      // 개체
+      character_edit:           ['개체 수정',        '#7c3aed', '#f5f3ff'],
+      character_delete:         ['개체 삭제',        '#dc2626', '#fef2f2'],
+      character_transfer:       ['개체 이전',        '#0284c7', '#e0f2fe'],
+      // 분양
+      adoption_delete:          ['분양글 삭제',      '#dc2626', '#fef2f2'],
+    };
+
+    function renderLogRows(slice) {
+      document.getElementById('adminLogTableBody').innerHTML = slice.map(log => {
+        const [label, color, bg] = LOG_ACTION_LABELS[log.action_type] || [log.action_type, '#64748b', '#f1f5f9'];
+        const dt = new Date(log.created_at);
+        const dateStr = dt.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\. /g, '.').replace(/\.$/, '');
+        const timeStr = dt.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+        const details = log.details && Object.keys(log.details).length
+          ? Object.entries(log.details).map(([k, v]) => `${k}: ${v}`).join(' · ')
+          : '';
+        return `
+          <div class="admin-card-row">
+            <div class="admin-card-left">
+              <span style="flex-shrink:0; font-size:11px; font-weight:700; padding:3px 8px; border-radius:6px; background:${bg}; color:${color};">${label}</span>
+              <span class="admin-card-name">${log.target_name || log.target_id || '—'}</span>
+              <span class="admin-card-meta">작업자: ${log.admin_nickname}${details ? ' · ' + details : ''}</span>
+            </div>
+            <div class="admin-card-right" style="flex-shrink:0;">
+              <span class="admin-card-date">${dateStr} ${timeStr}</span>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function loadAdminLogs() {
+      const empty = document.getElementById('adminLogEmpty');
+      const { data, error } = await sb
+        .from('admin_logs')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(200);
+
+      if (error) {
+        console.error('[loadAdminLogs] RLS 또는 쿼리 오류:', error);
+        document.getElementById('adminLogTableBody').innerHTML = `<p style="padding:16px; color:#ef4444; font-size:13px;">로그 조회 실패: ${error.message}</p>`;
+        empty.style.display = 'none';
+        return;
+      }
+      if (!data || data.length === 0) {
+        document.getElementById('adminLogTableBody').innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      adminLogPager.load(data);
     }
 
     initPage();

@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>워터마크 백필 — 종족연구소 관리자</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .backfill-wrap { max-width: 640px; margin: 40px auto; padding: 0 20px; }
+    .backfill-log  { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; font-size: 12px; font-family: monospace; max-height: 400px; overflow-y: auto; line-height: 1.7; white-space: pre-wrap; word-break: break-all; }
+    .log-ok   { color: #16a34a; }
+    .log-skip { color: #64748b; }
+    .log-err  { color: #dc2626; }
+    .log-info { color: #0284c7; }
+    .log-step { color: #9333ea; }
+    .progress-bar-wrap { background: #e2e8f0; border-radius: 6px; height: 8px; margin: 12px 0; overflow: hidden; }
+    .progress-bar      { background: var(--sky); height: 100%; transition: width 0.3s; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">종족연구소</a>
+    </div>
+  </header>
+
+  <div class="backfill-wrap">
+    <h1 class="register-title" style="margin-bottom:6px;">워터마크 백필</h1>
+    <p style="font-size:13px; color:var(--text-mute); margin-bottom:24px;">기존 개체 이미지에 기본 워터마크를 적용합니다. 관리자 전용 도구입니다.</p>
+
+    <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:14px 16px; font-size:13px; color:#92400e; margin-bottom:20px; line-height:1.6;">
+      <strong>주의사항</strong><br>
+      • original_image_url이 이미 있는 개체는 건너뜁니다.<br>
+      • 기존 image_url이 original_image_url로 이동되고, 워터마크 이미지가 image_url로 저장됩니다.<br>
+      • 테스트 모드: 뽀 계정 소유 개체만 처리합니다. 전체 적용 전 반드시 테스트를 먼저 실행하세요.
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+      <button id="btnTest"  class="btn-secondary" onclick="startBackfill(true)">테스트 실행 (뽀 계정만)</button>
+      <button id="btnAll"   class="btn-ghost"     onclick="startBackfill(false)" style="border-color:#fca5a5; color:#ef4444;">전체 적용</button>
+      <button id="btnStop"  class="btn-ghost"     onclick="stopBackfill()" style="display:none;">중단</button>
+    </div>
+
+    <div id="progressWrap" style="display:none;">
+      <p id="progressText" style="font-size:13px; color:var(--text-mute); margin-bottom:6px;">준비 중...</p>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+    </div>
+
+    <div id="logBox" class="backfill-log" style="display:none;"></div>
+
+    <hr style="margin: 32px 0; border: none; border-top: 1px solid var(--border);">
+
+    <h2 style="font-size:16px; font-weight:600; margin-bottom:6px;">추가 이미지 백필</h2>
+    <p style="font-size:13px; color:var(--text-mute); margin-bottom:16px; line-height:1.6;">
+      original_additional_images가 없는 기존 개체의 추가 이미지를 백필합니다.<br>
+      현재 additional_images를 원본으로 저장하고, 기본 워터마크 적용본으로 교체합니다.<br>
+      personal 워터마크 개체는 이후 프로필에서 재적용하세요.
+    </p>
+
+    <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:14px 16px; font-size:13px; color:#92400e; margin-bottom:20px; line-height:1.6;">
+      <strong>주의사항</strong><br>
+      • original_additional_images가 이미 있는 개체는 건너뜁니다.<br>
+      • 현재 additional_images가 원본(워터마크 미적용) 상태인 경우에만 실행하세요.<br>
+      • 기본 워터마크(/images/watermark.png)로 합성합니다.<br>
+      • 테스트 모드: 뽀 계정 소유 개체만 처리합니다.
+    </div>
+
+    <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap;">
+      <input id="extraSingleIdInput" type="text" placeholder="개체 ID로 단일 테스트"
+        style="flex:1; min-width:200px; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:monospace;">
+      <button id="btnExtraSingle" class="btn-secondary" onclick="startExtraBackfillSingle()">단일 ID 실행</button>
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+      <button id="btnExtraTest" class="btn-secondary" onclick="startExtraBackfill(true)">테스트 실행 (뽀 계정만)</button>
+      <button id="btnExtraAll"  class="btn-ghost"     onclick="startExtraBackfill(false)" style="border-color:#fca5a5; color:#ef4444;">전체 적용</button>
+      <button id="btnExtraStop" class="btn-ghost"     onclick="stopExtraBackfill()" style="display:none;">중단</button>
+    </div>
+
+    <div id="extraProgressWrap" style="display:none;">
+      <p id="extraProgressText" style="font-size:13px; color:var(--text-mute); margin-bottom:6px;">준비 중...</p>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="extraProgressBar" style="width:0%"></div></div>
+    </div>
+
+    <div id="extraLogBox" class="backfill-log" style="display:none;"></div>
+
+    <hr style="margin: 32px 0; border: none; border-top: 1px solid var(--border);">
+
+    <h2 style="font-size:16px; font-weight:600; margin-bottom:6px;">단일 개체 image_url 재생성</h2>
+    <p style="font-size:13px; color:var(--text-mute); margin-bottom:16px; line-height:1.6;">
+      이미 original_image_url이 있는 개체의 image_url을 현재 <code>/images/watermark.png</code>로 재합성합니다.<br>
+      original_image_url은 절대 변경하지 않으며, image_url과 썸네일은 건드리지 않습니다.
+    </p>
+
+    <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:10px; padding:14px 16px; font-size:13px; color:#0c4a6e; margin-bottom:16px; line-height:1.6;">
+      <strong>동작 방식</strong><br>
+      1. original_image_url을 소스로 사용 (없으면 image_url 사용)<br>
+      2. /images/watermark.png 합성 후 새 파일로 Storage 업로드<br>
+      3. image_url만 새 파일로 교체 — original_image_url / thumbnail_url 불변
+    </div>
+
+    <div style="display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap;">
+      <input id="regenIdInput" type="text" placeholder="개체 ID (UUID 또는 숫자)"
+        style="flex:1; min-width:200px; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:monospace;">
+      <button id="btnRegen" class="btn-secondary" onclick="startRegen()">image_url 재생성</button>
+    </div>
+
+    <div id="regenLogBox" class="backfill-log" style="display:none;"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    const WM_URL  = '../images/watermark.png';
+    const BO_NICK = '뽀';
+    let _stop    = false;
+    let _running = false;
+
+    function log(msg, cls = '') {
+      const box = document.getElementById('logBox');
+      box.style.display = '';
+      const line = document.createElement('span');
+      if (cls) line.className = cls;
+      line.textContent = msg + '\n';
+      box.appendChild(line);
+      box.scrollTop = box.scrollHeight;
+      console.log(`[backfill${cls ? ':' + cls : ''}]`, msg);
+    }
+
+    function setProgress(done, total) {
+      const pct = total ? Math.round(done / total * 100) : 0;
+      document.getElementById('progressBar').style.width = pct + '%';
+      document.getElementById('progressText').textContent = `처리 중: ${done} / ${total} (${pct}%)`;
+    }
+
+    function stopBackfill() { _stop = true; log('[중단 요청됨]', 'log-info'); }
+
+    // 워터마크 사전 로드 확인
+    function preloadWatermark(url) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload  = () => resolve(img);
+        img.onerror = () => reject(new Error(`워터마크 이미지 로드 실패: ${url}`));
+        setTimeout(() => reject(new Error('워터마크 로드 시간 초과 (10초)')), 10000);
+        img.src = url;
+      });
+    }
+
+    // URL에서 직접 이미지 로드 (fetch CORS 우회)
+    function loadImageElement(url, timeoutMs = 15000) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const timer = setTimeout(() => reject(new Error(`이미지 로드 시간 초과: ${url.slice(0, 60)}...`)), timeoutMs);
+        img.crossOrigin = 'anonymous';
+        img.onload  = () => { clearTimeout(timer); resolve(img); };
+        img.onerror = () => { clearTimeout(timer); reject(new Error(`이미지 로드 실패: ${url.slice(0, 60)}...`)); };
+        img.src = url + (url.includes('?') ? '&' : '?') + '_t=' + Date.now();
+      });
+    }
+
+    // 소스 이미지 + 워터마크 이미지 → 합성 Blob
+    function compositeImages(srcImg, wmImg, quality = 0.90) {
+      return new Promise((resolve, reject) => {
+        try {
+          const canvas = document.createElement('canvas');
+          canvas.width  = srcImg.naturalWidth;
+          canvas.height = srcImg.naturalHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(srcImg, 0, 0);
+          ctx.drawImage(wmImg, 0, 0, canvas.width, canvas.height);
+          canvas.toBlob(blob => {
+            if (!blob) { reject(new Error('canvas → Blob 변환 실패')); return; }
+            resolve(blob);
+          }, 'image/jpeg', quality);
+        } catch (e) {
+          reject(new Error('canvas 합성 오류: ' + e.message));
+        }
+      });
+    }
+
+    async function startBackfill(testMode) {
+      if (_running) { alert('이미 실행 중이에요.'); return; }
+      if (!testMode && !confirm('전체 개체에 워터마크를 일괄 적용합니다.\n테스트를 먼저 실행했는지 확인하세요.\n계속할까요?')) return;
+
+      _stop    = false;
+      _running = true;
+      document.getElementById('btnTest').disabled = true;
+      document.getElementById('btnAll').disabled  = true;
+      document.getElementById('btnStop').style.display = '';
+      document.getElementById('progressWrap').style.display = '';
+      document.getElementById('logBox').innerHTML = '';
+      document.getElementById('logBox').style.display = '';
+
+      try {
+        const user = await getUser();
+        if (!user || (user.user_metadata?.role !== 'admin' && user.user_metadata?.role !== 'staff')) {
+          log('관리자/스태프만 사용할 수 있어요.', 'log-err'); return;
+        }
+
+        // 워터마크 이미지 사전 로드
+        log('워터마크 이미지 로드 확인 중...', 'log-info');
+        let wmImg;
+        try {
+          wmImg = await preloadWatermark(WM_URL);
+          log(`워터마크 로드 성공 (${wmImg.naturalWidth}×${wmImg.naturalHeight})`, 'log-ok');
+        } catch (e) {
+          log(`워터마크 로드 실패: ${e.message}`, 'log-err');
+          log('→ /images/watermark.png 파일이 존재하는지 확인해주세요.', 'log-err');
+          return;
+        }
+
+        log(`[${testMode ? '테스트 모드' : '전체 모드'}] 대상 조회 중...`, 'log-info');
+
+        let chars = [];
+        if (testMode) {
+          const { data: boUser } = await sb.rpc('get_all_users');
+          const boData = (boUser || []).find(u => u.nickname === BO_NICK);
+          if (!boData) { log(`'${BO_NICK}' 계정을 찾을 수 없어요.`, 'log-err'); return; }
+          log(`'${BO_NICK}' 계정 ID: ${boData.id}`, 'log-info');
+          const { data, error } = await sb.from('characters')
+            .select('id, name, image_url, owner_nickname')
+            .is('original_image_url', null)
+            .not('image_url', 'is', null)
+            .eq('owner_user_id', boData.id);
+          if (error) { log('조회 오류: ' + error.message, 'log-err'); return; }
+          chars = data || [];
+        } else {
+          const { data, error } = await sb.from('characters')
+            .select('id, name, image_url, owner_nickname')
+            .is('original_image_url', null)
+            .not('image_url', 'is', null);
+          if (error) { log('조회 오류: ' + error.message, 'log-err'); return; }
+          chars = data || [];
+        }
+
+        await processChars(chars, wmImg, testMode);
+
+      } catch (e) {
+        log('예상치 못한 오류: ' + e.message, 'log-err');
+        console.error('[backfill] 예상치 못한 오류', e);
+      } finally {
+        _running = false;
+        document.getElementById('btnTest').disabled = false;
+        document.getElementById('btnAll').disabled  = false;
+        document.getElementById('btnStop').style.display = 'none';
+      }
+    }
+
+    async function processChars(chars, wmImg, testMode) {
+      const total = chars.length;
+      log(`대상 ${total}개${testMode ? ` (${BO_NICK} 계정)` : ''} 확인됨.`, 'log-info');
+      if (total === 0) { log('처리할 개체가 없어요.', 'log-skip'); return; }
+
+      let done = 0, failed = 0;
+      setProgress(0, total);
+
+      for (const char of chars) {
+        if (_stop) { log('[중단됨]', 'log-info'); break; }
+
+        log(`→ 처리 시작: ${char.name} (${String(char.id).slice(0,8)})`, 'log-step');
+
+        try {
+          // 1. 소스 이미지 로드 (Image 요소 사용 — fetch CORS 우회)
+          log(`  [1] 이미지 로드 중...`, 'log-step');
+          let srcImg;
+          try {
+            srcImg = await loadImageElement(char.image_url);
+            log(`  [1] 로드 완료 (${srcImg.naturalWidth}×${srcImg.naturalHeight})`, 'log-step');
+          } catch (e) {
+            throw new Error('이미지 로드 실패: ' + e.message);
+          }
+
+          // 2. 워터마크 합성
+          log(`  [2] 워터마크 합성 중...`, 'log-step');
+          let wmBlob;
+          try {
+            wmBlob = await compositeImages(srcImg, wmImg);
+            log(`  [2] 합성 완료 (${wmBlob.size} bytes)`, 'log-step');
+          } catch (e) {
+            throw new Error('워터마크 합성 실패: ' + e.message);
+          }
+
+          // 3. 워터마크 이미지 Storage 업로드
+          log(`  [3] Storage 업로드 중...`, 'log-step');
+          const wmName = `${Date.now()}_wm_${String(char.id).slice(0,8)}.jpg`;
+          const { error: upErr } = await sb.storage.from('images').upload(wmName, wmBlob, { contentType: 'image/jpeg' });
+          if (upErr) throw new Error('Storage 업로드 실패: ' + upErr.message);
+          const wmUrl = sb.storage.from('images').getPublicUrl(wmName).data.publicUrl;
+          log(`  [3] 업로드 완료`, 'log-step');
+
+          // 4. DB 업데이트 (중복 방지 조건 포함)
+          log(`  [4] DB 업데이트 중...`, 'log-step');
+          const { error: dbErr } = await sb.from('characters').update({
+            original_image_url: char.image_url,
+            image_url:          wmUrl,
+          }).eq('id', char.id).is('original_image_url', null);
+          if (dbErr) throw new Error('DB 업데이트 실패: ' + dbErr.message);
+          log(`  [4] DB 완료`, 'log-step');
+
+          done++;
+          log(`✓ [${done}/${total}] ${char.name} 완료`, 'log-ok');
+
+        } catch (e) {
+          failed++;
+          log(`✗ ${char.name} (${String(char.id).slice(0,8)}): ${e.message}`, 'log-err');
+          console.error('[backfill] 처리 실패:', char.name, e);
+        }
+
+        setProgress(done + failed, total);
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      log(`\n완료: 성공 ${done}개 / 실패 ${failed}개`, 'log-info');
+    }
+
+    // ── 추가 이미지 전체 백필 ──────────────────────────────────────────
+
+    let _extraStop    = false;
+    let _extraRunning = false;
+
+    function extraLog(msg, cls = '') {
+      const box = document.getElementById('extraLogBox');
+      box.style.display = '';
+      const line = document.createElement('span');
+      if (cls) line.className = cls;
+      line.textContent = msg + '\n';
+      box.appendChild(line);
+      box.scrollTop = box.scrollHeight;
+    }
+
+    function setExtraProgress(done, total) {
+      const pct = total ? Math.round(done / total * 100) : 0;
+      document.getElementById('extraProgressBar').style.width = pct + '%';
+      document.getElementById('extraProgressText').textContent = `처리 중: ${done} / ${total} (${pct}%)`;
+    }
+
+    function stopExtraBackfill() { _extraStop = true; extraLog('[중단 요청됨]', 'log-info'); }
+
+    async function startExtraBackfill(testMode) {
+      if (_extraRunning) { alert('이미 실행 중이에요.'); return; }
+      if (!testMode && !confirm(
+        '전체 개체의 추가 이미지를 백필합니다.\n' +
+        '현재 additional_images를 original_additional_images로 이동하고\n' +
+        '기본 워터마크 적용본으로 교체합니다.\n\n' +
+        '반드시 테스트를 먼저 실행했는지 확인하세요.\n계속할까요?'
+      )) return;
+
+      _extraStop    = false;
+      _extraRunning = true;
+      document.getElementById('btnExtraTest').disabled = true;
+      document.getElementById('btnExtraAll').disabled  = true;
+      document.getElementById('btnExtraStop').style.display = '';
+      document.getElementById('extraProgressWrap').style.display = '';
+      document.getElementById('extraLogBox').innerHTML = '';
+      document.getElementById('extraLogBox').style.display = '';
+
+      try {
+        const user = await getUser();
+        if (!user || (user.user_metadata?.role !== 'admin' && user.user_metadata?.role !== 'staff')) {
+          extraLog('관리자/스태프만 사용할 수 있어요.', 'log-err'); return;
+        }
+
+        // 워터마크 이미지 사전 로드
+        extraLog('워터마크 이미지 로드 확인 중...', 'log-info');
+        let wmImg;
+        try {
+          wmImg = await preloadWatermark(WM_URL);
+          extraLog(`워터마크 로드 성공 (${wmImg.naturalWidth}×${wmImg.naturalHeight})`, 'log-ok');
+        } catch (e) {
+          extraLog('워터마크 로드 실패: ' + e.message, 'log-err'); return;
+        }
+
+        extraLog(`[${testMode ? '테스트 모드' : '전체 모드'}] 대상 조회 중...`, 'log-info');
+
+        let chars = [];
+        if (testMode) {
+          const { data: boUser } = await sb.rpc('get_all_users');
+          const boData = (boUser || []).find(u => u.nickname === BO_NICK);
+          if (!boData) { extraLog(`'${BO_NICK}' 계정을 찾을 수 없어요.`, 'log-err'); return; }
+          extraLog(`'${BO_NICK}' 계정 ID: ${boData.id}`, 'log-info');
+          const { data, error } = await sb.from('characters')
+            .select('id, name, additional_images')
+            .is('original_additional_images', null)
+            .not('additional_images', 'is', null)
+            .eq('owner_user_id', boData.id);
+          if (error) { extraLog('조회 오류: ' + error.message, 'log-err'); return; }
+          chars = data || [];
+        } else {
+          const { data, error } = await sb.from('characters')
+            .select('id, name, additional_images')
+            .is('original_additional_images', null)
+            .not('additional_images', 'is', null);
+          if (error) { extraLog('조회 오류: ' + error.message, 'log-err'); return; }
+          chars = data || [];
+        }
+
+        await processExtraChars(chars, wmImg);
+
+      } catch (e) {
+        extraLog('예상치 못한 오류: ' + e.message, 'log-err');
+        console.error('[extra-backfill]', e);
+      } finally {
+        _extraRunning = false;
+        document.getElementById('btnExtraTest').disabled = false;
+        document.getElementById('btnExtraAll').disabled  = false;
+        document.getElementById('btnExtraStop').style.display = 'none';
+      }
+    }
+
+    async function processExtraChars(chars, wmImg) {
+      const total = chars.length;
+      extraLog(`대상 ${total}개 확인됨.`, 'log-info');
+      if (total === 0) { extraLog('처리할 개체가 없어요 (original_additional_images 없는 개체).', 'log-skip'); return; }
+
+      let done = 0, failed = 0;
+      setExtraProgress(0, total);
+
+      for (const char of chars) {
+        if (_extraStop) { extraLog('[중단됨]', 'log-info'); break; }
+
+        const origUrls = char.additional_images;
+        extraLog(`→ ${char.name} (추가 이미지 ${origUrls.length}장)`, 'log-step');
+
+        try {
+          const newWmUrls  = [];
+          let   anyFailed  = false;
+
+          for (let idx = 0; idx < origUrls.length; idx++) {
+            extraLog(`  [${idx + 1}/${origUrls.length}] 처리 중...`, 'log-step');
+
+            // 이미지 로드
+            let srcImg;
+            try {
+              srcImg = await loadImageElement(origUrls[idx]);
+            } catch (e) {
+              extraLog(`  [${idx + 1}] 로드 실패: ${e.message}`, 'log-err');
+              newWmUrls.push(origUrls[idx]); // 실패 시 원본 유지
+              anyFailed = true;
+              continue;
+            }
+
+            // 워터마크 합성
+            let wmBlob;
+            try {
+              wmBlob = await compositeImages(srcImg, wmImg);
+            } catch (e) {
+              extraLog(`  [${idx + 1}] 합성 실패: ${e.message}`, 'log-err');
+              newWmUrls.push(origUrls[idx]);
+              anyFailed = true;
+              continue;
+            }
+
+            // Storage 업로드
+            const wmName = `${Date.now()}_ex_wm${idx}_${String(char.id).slice(0, 8)}.jpg`;
+            const { error: upErr } = await sb.storage.from('images').upload(wmName, wmBlob, { contentType: 'image/jpeg' });
+            if (upErr) {
+              extraLog(`  [${idx + 1}] 업로드 실패: ${upErr.message}`, 'log-err');
+              newWmUrls.push(origUrls[idx]);
+              anyFailed = true;
+              continue;
+            }
+            newWmUrls.push(sb.storage.from('images').getPublicUrl(wmName).data.publicUrl);
+            extraLog(`  [${idx + 1}] 완료`, 'log-step');
+
+            await new Promise(r => setTimeout(r, 300));
+          }
+
+          // DB 업데이트 — original_additional_images IS NULL 조건으로 중복 방지
+          const { error: dbErr } = await sb.from('characters').update({
+            original_additional_images: origUrls,
+            additional_images:          newWmUrls,
+          }).eq('id', char.id).is('original_additional_images', null);
+          if (dbErr) throw new Error('DB 업데이트 실패: ' + dbErr.message);
+
+          done++;
+          if (anyFailed) {
+            extraLog(`△ ${char.name}: 일부 실패 (원본 URL 유지됨)`, 'log-skip');
+          } else {
+            extraLog(`✓ ${char.name}: ${origUrls.length}장 완료`, 'log-ok');
+          }
+
+        } catch (e) {
+          failed++;
+          extraLog(`✗ ${char.name}: ${e.message}`, 'log-err');
+          console.error('[extra-backfill]', char.name, e);
+        }
+
+        setExtraProgress(done + failed, total);
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      extraLog(`\n완료: 성공 ${done}개 / 실패 ${failed}개`, 'log-info');
+    }
+
+    async function startExtraBackfillSingle() {
+      const rawId = document.getElementById('extraSingleIdInput').value.trim();
+      if (!rawId) { alert('개체 ID를 입력해주세요.'); return; }
+
+      const btn = document.getElementById('btnExtraSingle');
+      btn.disabled = true;
+      document.getElementById('extraLogBox').innerHTML = '';
+      document.getElementById('extraLogBox').style.display = '';
+      document.getElementById('extraProgressWrap').style.display = 'none';
+
+      try {
+        const user = await getUser();
+        if (!user || (user.user_metadata?.role !== 'admin' && user.user_metadata?.role !== 'staff')) {
+          extraLog('관리자/스태프만 사용할 수 있어요.', 'log-err'); return;
+        }
+
+        extraLog(`대상 조회: ${rawId}`, 'log-info');
+        const { data, error } = await sb.from('characters')
+          .select('id, name, additional_images, original_additional_images')
+          .eq('id', rawId)
+          .single();
+
+        if (error || !data) {
+          extraLog(`개체를 찾을 수 없어요. (${error?.message ?? 'no data'})`, 'log-err'); return;
+        }
+
+        extraLog(`개체 확인: ${data.name}`, 'log-info');
+        extraLog(`  additional_images          : ${(data.additional_images || []).length}장`, 'log-info');
+        extraLog(`  original_additional_images : ${data.original_additional_images ? data.original_additional_images.length + '장 (이미 있음)' : '없음'}`, 'log-info');
+
+        if (!data.additional_images?.length) {
+          extraLog('추가 이미지가 없어요. 처리를 중단합니다.', 'log-skip'); return;
+        }
+        if (data.original_additional_images) {
+          extraLog('original_additional_images가 이미 있어요. 백필이 필요하지 않습니다.', 'log-skip'); return;
+        }
+
+        extraLog('워터마크 이미지 로드 중...', 'log-step');
+        let wmImg;
+        try {
+          wmImg = await preloadWatermark(WM_URL);
+          extraLog(`워터마크 로드 완료 (${wmImg.naturalWidth}×${wmImg.naturalHeight})`, 'log-step');
+        } catch (e) {
+          extraLog('워터마크 로드 실패: ' + e.message, 'log-err'); return;
+        }
+
+        await processExtraChars([data], wmImg);
+
+      } catch (e) {
+        extraLog('예상치 못한 오류: ' + e.message, 'log-err');
+        console.error('[extra-backfill-single]', e);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // ── 단일 개체 재생성 ──────────────────────────────────────────────
+
+    function regenLog(msg, cls = '') {
+      const box = document.getElementById('regenLogBox');
+      box.style.display = '';
+      const line = document.createElement('span');
+      if (cls) line.className = cls;
+      line.textContent = msg + '\n';
+      box.appendChild(line);
+      box.scrollTop = box.scrollHeight;
+      console.log(`[regen${cls ? ':' + cls : ''}]`, msg);
+    }
+
+    async function startRegen() {
+      const rawId = document.getElementById('regenIdInput').value.trim();
+      if (!rawId) { alert('개체 ID를 입력해주세요.'); return; }
+
+      const btn = document.getElementById('btnRegen');
+      btn.disabled = true;
+      document.getElementById('regenLogBox').innerHTML = '';
+      document.getElementById('regenLogBox').style.display = '';
+
+      try {
+        const user = await getUser();
+        if (!user || (user.user_metadata?.role !== 'admin' && user.user_metadata?.role !== 'staff')) {
+          regenLog('관리자/스태프만 사용할 수 있어요.', 'log-err');
+          return;
+        }
+
+        regenLog(`대상 조회: ${rawId}`, 'log-info');
+
+        const { data, error } = await sb.from('characters')
+          .select('id, name, image_url, original_image_url, additional_images, original_additional_images')
+          .eq('id', rawId)
+          .single();
+
+        if (error || !data) {
+          regenLog(`개체를 찾을 수 없어요. (${error?.message ?? 'no data'})`, 'log-err');
+          return;
+        }
+
+        regenLog(`개체 확인: ${data.name} (id: ${String(data.id).slice(0, 8)}...)`, 'log-info');
+        regenLog(`  image_url                  : ${data.image_url ? '있음' : '없음'}`, 'log-info');
+        regenLog(`  original_image_url         : ${data.original_image_url ? '있음' : '없음'}`, 'log-info');
+        regenLog(`  additional_images          : ${(data.additional_images || []).length}장`, 'log-info');
+        regenLog(`  original_additional_images : ${(data.original_additional_images || []).length}장`, 'log-info');
+
+        // 워터마크 로드
+        regenLog('워터마크 이미지 로드 중...', 'log-step');
+        let wmImg;
+        try {
+          wmImg = await preloadWatermark(WM_URL);
+          regenLog(`워터마크 로드 완료 (${wmImg.naturalWidth}×${wmImg.naturalHeight})`, 'log-step');
+        } catch (e) {
+          regenLog('워터마크 로드 실패: ' + e.message, 'log-err');
+          return;
+        }
+
+        const dbUpdate = {};
+
+        // ── 대표 이미지 재생성 ──────────────────────────────────────────
+        const mainSrcUrl = data.original_image_url || data.image_url;
+        if (!mainSrcUrl) {
+          regenLog('대표 이미지 소스 없음 — 건너뜁니다.', 'log-skip');
+        } else {
+          regenLog(`\n[대표 이미지] 소스: ${data.original_image_url ? 'original_image_url' : 'image_url'}`, 'log-step');
+          try {
+            const srcImg = await loadImageElement(mainSrcUrl);
+            regenLog(`  로드 완료 (${srcImg.naturalWidth}×${srcImg.naturalHeight})`, 'log-step');
+            const wmBlob = await compositeImages(srcImg, wmImg);
+            const wmName = `${Date.now()}_regen_${String(data.id).slice(0, 8)}.jpg`;
+            const { error: upErr } = await sb.storage.from('images').upload(wmName, wmBlob, { contentType: 'image/jpeg' });
+            if (upErr) throw new Error('Storage 업로드 실패: ' + upErr.message);
+            dbUpdate.image_url = sb.storage.from('images').getPublicUrl(wmName).data.publicUrl;
+            regenLog('  업로드 완료 → image_url 교체 예정', 'log-step');
+          } catch (e) {
+            regenLog('  대표 이미지 재생성 실패: ' + e.message, 'log-err');
+          }
+        }
+
+        // ── 추가 이미지 재생성 (original_additional_images 있는 것만) ──
+        const origAdditional = data.original_additional_images || [];
+        const wmAdditional   = [...(data.additional_images || [])];
+        let extraUpdated = false;
+
+        for (let idx = 0; idx < origAdditional.length; idx++) {
+          const origUrl = origAdditional[idx];
+          if (!origUrl) {
+            regenLog(`\n[추가 이미지 ${idx + 1}] original 없음 — 건너뜁니다.`, 'log-skip');
+            continue;
+          }
+          regenLog(`\n[추가 이미지 ${idx + 1}] original 기준 재합성`, 'log-step');
+          try {
+            const srcImg = await loadImageElement(origUrl);
+            regenLog(`  로드 완료 (${srcImg.naturalWidth}×${srcImg.naturalHeight})`, 'log-step');
+            const wmBlob = await compositeImages(srcImg, wmImg);
+            const wmName = `${Date.now()}_regen_extra${idx}_${String(data.id).slice(0, 8)}.jpg`;
+            const { error: upErr } = await sb.storage.from('images').upload(wmName, wmBlob, { contentType: 'image/jpeg' });
+            if (upErr) throw new Error('Storage 업로드 실패: ' + upErr.message);
+            wmAdditional[idx] = sb.storage.from('images').getPublicUrl(wmName).data.publicUrl;
+            regenLog(`  업로드 완료 → additional_images[${idx}] 교체 예정`, 'log-step');
+            extraUpdated = true;
+          } catch (e) {
+            regenLog(`  추가 이미지 ${idx + 1} 재생성 실패: ${e.message}`, 'log-err');
+          }
+          await new Promise(r => setTimeout(r, 300));
+        }
+
+        if (extraUpdated) {
+          dbUpdate.additional_images = wmAdditional;
+        }
+
+        if (Object.keys(dbUpdate).length === 0) {
+          regenLog('\n처리할 항목이 없어요. (원본 URL이 모두 없음)', 'log-skip');
+          return;
+        }
+
+        // DB 업데이트 — original 컬럼은 절대 덮어쓰지 않음
+        regenLog('\nDB 업데이트 중...', 'log-step');
+        const { error: dbErr } = await sb.from('characters')
+          .update(dbUpdate)
+          .eq('id', data.id);
+        if (dbErr) {
+          regenLog('DB 업데이트 실패: ' + dbErr.message, 'log-err');
+          return;
+        }
+
+        regenLog(`\n✓ 재생성 완료! ${data.name}`, 'log-ok');
+        if (dbUpdate.image_url)        regenLog('  대표 이미지 교체됨 (original_image_url 불변)', 'log-ok');
+        if (dbUpdate.additional_images) regenLog(`  추가 이미지 ${origAdditional.filter(Boolean).length}장 교체됨 (original_additional_images 불변)`, 'log-ok');
+
+      } catch (e) {
+        regenLog('예상치 못한 오류: ' + e.message, 'log-err');
+        console.error('[regen]', e);
+      } finally {
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>

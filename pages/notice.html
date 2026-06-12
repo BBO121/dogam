@@ -46,13 +46,14 @@
   </div>
 
   <footer class="footer">
-    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.1</p>
+    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.2</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
+  <script src="../js/achievements.js"></script>
   <script src="../js/main.js"></script>
   <script>
     let _noticeData = null;
@@ -79,6 +80,9 @@
       document.getElementById('toggleBtn').style.display = 'inline';
       _noticeData = data;
       pager.load(data);
+      const _nc = await window.incrementAchCounter?.('notice_view') || 0;
+      if (_nc >= 1) await window.awardAchievement?.('first_notice');
+      if (_nc >= 5) await window.awardAchievement?.('notice_5');
     }
 
     function renderNotices(list) {

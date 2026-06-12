@@ -3,6 +3,7 @@ async function initSidebar() {
   if (!sidebar) return;
 
   const path = window.location.pathname.split('/').pop();
+  const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
   sidebar.innerHTML = `
     <div class="sidebar-user-block" id="sidebarUserBlock"></div>
@@ -24,6 +25,7 @@ async function initSidebar() {
 
     <nav class="sidebar-menu">
       <a href="guide.html" class="sidebar-item ${path === 'guide.html' || path === 'guide-detail.html' ? 'active' : ''}">가이드</a>
+      ${isLocal ? `<button class="sidebar-item" onclick="openGuideTour()" style="background:none;border:none;width:100%;text-align:left;cursor:pointer;color:#f59e0b;">🗺️ 가이드맵 [DEV]</button>` : ''}
     </nav>
 
     <div class="sidebar-divider"></div>
@@ -49,6 +51,7 @@ async function initSidebar() {
       <a href="my-species.html"    class="sidebar-item sidebar-login ${path === 'my-species.html'    ? 'active' : ''}">내 종족</a>
       <a href="my-characters.html" class="sidebar-item sidebar-login ${path === 'my-characters.html' ? 'active' : ''}">내 캐릭터</a>
       <a href="my-designs.html"    class="sidebar-item sidebar-login ${path === 'my-designs.html'    ? 'active' : ''}">내 디자인</a>
+      <a href="my-slots.html"      class="sidebar-item sidebar-login ${path === 'my-slots.html'      ? 'active' : ''}">내 디자인권</a>
       <a href="my-adoptions.html" class="sidebar-item sidebar-login ${path === 'my-adoptions.html' ? 'active' : ''}">내 분양</a>
       <!-- 메시지: 추후 활성화 예정
       <a href="messages.html"      class="sidebar-item sidebar-login ${path === 'messages.html' || path === 'chat.html' ? 'active' : ''}">메시지</a>
@@ -58,7 +61,7 @@ async function initSidebar() {
           내 정보<span class="sidebar-accordion-arrow" id="arrMyInfo"></span>
         </button>
         <div class="sidebar-accordion-body" id="bodyMyInfo">
-          <a href="profile.html"           class="sidebar-subitem ${path === 'profile.html'           ? 'active' : ''}">프로필 설정</a>
+          <a href="profile.html"           class="sidebar-subitem ${path === 'profile.html'           ? 'active' : ''}">내 프로필</a>
           <a href="transfer-history.html" class="sidebar-subitem ${path === 'transfer-history.html' ? 'active' : ''}">캐릭터 이전 내역</a>
         </div>
       </div>
@@ -239,9 +242,16 @@ async function loadSpeciesSidebar() {
     });
   }
 
+  const searchHtml = `<div class="flyout-search-wrap"><input type="text" class="flyout-search-input" placeholder="종족 검색..."></div>`;
+  const scrollWrapOpen  = '<div class="flyout-scroll-body">';
+  const scrollWrapClose = '</div>';
+
   // 플라이아웃 (PC)
   if (flyout) {
-    flyout.innerHTML = groupedHtml;
+    flyout.innerHTML = searchHtml + scrollWrapOpen + groupedHtml + scrollWrapClose;
+    const input = flyout.querySelector('.flyout-search-input');
+    const scrollBody = flyout.querySelector('.flyout-scroll-body');
+    input.addEventListener('input', () => filterFlyout(scrollBody, input.value));
     flyout.querySelectorAll('a').forEach(el => {
       el.addEventListener('click', () => { if (window.innerWidth >= 768) closeFlyout(); });
     });
@@ -249,7 +259,10 @@ async function loadSpeciesSidebar() {
 
   // 바텀시트 (모바일)
   if (sheetPanel) {
-    sheetPanel.innerHTML = '<div class="species-sheet-handle"></div>' + groupedHtml;
+    sheetPanel.innerHTML = '<div class="species-sheet-handle"></div>' + searchHtml + scrollWrapOpen + groupedHtml + scrollWrapClose;
+    const input = sheetPanel.querySelector('.flyout-search-input');
+    const scrollBody = sheetPanel.querySelector('.flyout-scroll-body');
+    input.addEventListener('input', () => filterFlyout(scrollBody, input.value));
     sheetPanel.querySelectorAll('a').forEach(el => {
       el.addEventListener('click', closeSpeciesSheet);
     });
@@ -270,8 +283,7 @@ async function updateSidebarLogin() {
       const TESTERS = ['Moulow', 'moulow', 'Sawol'];
       const isTester = TESTERS.includes(nickname);
       const roleIsSpeciesOwner = user.user_metadata?.role === 'species_owner';
-      const { data: spById } = await sb.from('species').select('id').eq('owner_user_id', user.id).limit(1);
-      const isSpeciesOwner = roleIsSpeciesOwner || !!spById?.length;
+      const isSpeciesOwner = await window._cachedIsSpeciesOwner?.(user.id, roleIsSpeciesOwner) ?? roleIsSpeciesOwner;
 
       const badges = [];
       if (admin)                                        badges.push(`<a href="admin.html" class="badge-admin">관리자</a>`);
@@ -310,10 +322,20 @@ function onSpeciesClick(btn) {
   }
 }
 
+function resetFlyoutSearch(container) {
+  const input = container?.querySelector('.flyout-search-input');
+  if (input && input.value) {
+    input.value = '';
+    const scrollBody = container.querySelector('.flyout-scroll-body');
+    if (scrollBody) filterFlyout(scrollBody, '');
+  }
+}
+
 function openFlyout(btn) {
   const flyout = document.getElementById('flyoutSpecies');
   if (!flyout) return;
 
+  resetFlyoutSearch(flyout);
   const rect = btn.getBoundingClientRect();
   flyout.style.top  = rect.top + 'px';
   flyout.style.left = (rect.right + 6) + 'px';
@@ -341,7 +363,12 @@ function openSpeciesSheet() {
   const overlay = document.getElementById('speciesSheetOverlay');
   const panel   = document.getElementById('speciesSheetPanel');
   if (overlay) overlay.classList.add('show');
-  if (panel)   { panel.classList.add('open'); panel.scrollTop = 0; }
+  if (panel) {
+    resetFlyoutSearch(panel);
+    panel.classList.add('open');
+    const scrollBody = panel.querySelector('.flyout-scroll-body');
+    if (scrollBody) scrollBody.scrollTop = 0;
+  }
   document.body.style.overflow = 'hidden';
 }
 
@@ -356,6 +383,54 @@ function closeSpeciesSheet() {
 function dismissSpeciesSheet() {
   closeSpeciesSheet();
   toggleSidebar();
+}
+
+function filterFlyout(scrollBody, query) {
+  const q = query.trim().toLowerCase();
+  const items  = scrollBody.querySelectorAll('.sidebar-subitem');
+  const labels = scrollBody.querySelectorAll('.flyout-group-label');
+
+  if (!q) {
+    items.forEach(el => el.style.display = '');
+    labels.forEach(el => el.style.display = '');
+    const empty = scrollBody.querySelector('.flyout-empty');
+    if (empty) empty.remove();
+    return;
+  }
+
+  items.forEach(el => {
+    if (el.classList.contains('sidebar-subitem--all') || el.classList.contains('flyout-all-link')) {
+      el.style.display = '';
+    } else {
+      el.style.display = el.textContent.toLowerCase().includes(q) ? '' : 'none';
+    }
+  });
+
+  labels.forEach(label => {
+    let next = label.nextElementSibling;
+    let hasVisible = false;
+    while (next && !next.classList.contains('flyout-group-label')) {
+      if (next.tagName === 'A' && next.style.display !== 'none') { hasVisible = true; break; }
+      next = next.nextElementSibling;
+    }
+    label.style.display = hasVisible ? '' : 'none';
+  });
+
+  const allHidden = [...items].filter(el =>
+    !el.classList.contains('sidebar-subitem--all') && !el.classList.contains('flyout-all-link')
+  ).every(el => el.style.display === 'none');
+
+  let empty = scrollBody.querySelector('.flyout-empty');
+  if (allHidden) {
+    if (!empty) {
+      empty = document.createElement('p');
+      empty.className = 'flyout-empty';
+      empty.textContent = '검색 결과가 없어요.';
+      scrollBody.appendChild(empty);
+    }
+  } else {
+    if (empty) empty.remove();
+  }
 }
 
 function onFlyoutOutsideClick(e) {
@@ -405,3 +480,24 @@ async function loadAdminBadges() {
 }
 
 document.addEventListener('DOMContentLoaded', initSidebar);
+
+// ── 가이드맵 동적 로드 ────────────────────────────────
+function _loadGuideTour() {
+  if (typeof openCategoryModal !== 'undefined') return;
+  const s = document.createElement('script');
+  s.src = '../js/guide-tour.js';
+  document.head.appendChild(s);
+}
+document.addEventListener('DOMContentLoaded', _loadGuideTour);
+
+function openGuideTour() {
+  if (typeof openCategoryModal === 'function') {
+    openCategoryModal();
+    return;
+  }
+  // 아직 로드 중이면 로드 후 열기
+  const s = document.createElement('script');
+  s.src = '../js/guide-tour.js';
+  s.onload = () => openCategoryModal();
+  document.head.appendChild(s);
+}

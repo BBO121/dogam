@@ -56,19 +56,23 @@
   </div>
 
   <footer class="footer">
-    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.1</p>
+    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.2</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
+  <script src="../js/achievements.js"></script>
   <script src="../js/main.js"></script>
   <script>
-    let allChars = [];
-    let idToNick = {};
+    let allChars      = [];
+    let idToNick      = {};
+    let isInitialLoad = true;
     let ownerParamId = null;
-    const ownerParam = new URLSearchParams(window.location.search).get('owner');
+    const _qs          = new URLSearchParams(window.location.search);
+    const ownerParam   = _qs.get('owner');
+    const ownerIdParam = _qs.get('owner_id'); // UUID 기준 조회
     const pager = createPager(render);
 
     async function loadCharacters() {
@@ -85,19 +89,33 @@
       }
 
       if (userList) userList.forEach(u => { if (u.id && u.nickname) idToNick[u.id] = u.nickname; });
-      if (ownerParam && userList) {
+
+      if (ownerIdParam) {
+        // login_id → UUID 조회 (URL에 UUID 비노출)
+        const foundUser = (userList || []).find(u =>
+          u.login_id?.toLowerCase() === ownerIdParam.toLowerCase()
+        );
+        ownerParamId = foundUser?.id || null;
+        const displayLabel = foundUser?.nickname || ownerIdParam;
+        document.querySelector('.list-page-title').textContent = `${displayLabel}의 개체`;
+      } else if (ownerParam && userList) {
         const found = userList.find(u => u.nickname === ownerParam);
         ownerParamId = found?.id || null;
       }
 
       allChars = data;
 
-      if (ownerParam) {
+      if (!ownerIdParam && ownerParam) {
         document.querySelector('.list-page-title').textContent = `${ownerParam}의 개체`;
       }
 
-      const urlQ = new URLSearchParams(window.location.search).get('q');
-      if (urlQ) document.getElementById('searchInput').value = urlQ;
+      if (isInitialLoad) {
+        const p    = new URLSearchParams(location.search);
+        const urlQ = p.get('q'); const sp = p.get('species'); const sort = p.get('sort');
+        if (urlQ) document.getElementById('searchInput').value  = urlQ;
+        if (sp)   document.getElementById('speciesFilter').value = sp;
+        if (sort) document.getElementById('sortSelect').value    = sort;
+      }
 
       // 종족 필터 옵션 생성
       const species = [...new Set(data.map(c => c.species_name).filter(Boolean))].sort((a,b) => a.localeCompare(b,'ko'));
@@ -112,7 +130,7 @@
       applyFilter();
     }
 
-    function applyFilter() {
+    async function applyFilter() {
       const q      = document.getElementById('searchInput').value.trim();
       const sp     = document.getElementById('speciesFilter').value;
       const sort   = document.getElementById('sortSelect').value;
@@ -121,7 +139,7 @@
       let list = allChars.filter(c =>
         (!q          || c.name.toLowerCase().includes(qLow)) &&
         (!sp         || c.species_name === sp) &&
-        (!ownerParam || (ownerParamId ? c.owner_user_id === ownerParamId : c.owner_nickname === ownerParam))
+        (!(ownerParam || ownerIdParam) || (ownerParamId ? c.owner_user_id === ownerParamId : c.owner_nickname === ownerParam))
       );
 
       if (sort === 'name') list = [...list].sort((a,b) => a.name.localeCompare(b.name,'ko'));
@@ -132,10 +150,32 @@
       if (!list.length) {
         document.getElementById('characterGrid').innerHTML = '';
         document.getElementById('paginationWrap').innerHTML = '';
+        if (q) {
+          window.awardAchievement?.('no_char_search');
+          const _cfc = await window.incrementAchCounter?.('char_search_fail') || 0;
+          if (_cfc >= 5) {
+            const _sfc = await window.getCounterValue?.('species_search_fail') || 0;
+            if (_sfc >= 5) window.awardAchievement?.('odd_search');
+          }
+        }
         return;
       }
 
-      pager.load(list);
+      if (isInitialLoad) {
+        isInitialLoad = false;
+        pager.init(list);
+      } else {
+        const url  = new URL(location.href);
+        const q    = document.getElementById('searchInput').value.trim();
+        const sp   = document.getElementById('speciesFilter').value;
+        const sort = document.getElementById('sortSelect').value;
+        if (q)    url.searchParams.set('q', q);           else url.searchParams.delete('q');
+        if (sp)   url.searchParams.set('species', sp);    else url.searchParams.delete('species');
+        if (sort) url.searchParams.set('sort', sort);     else url.searchParams.delete('sort');
+        url.searchParams.delete('page');
+        history.replaceState(null, '', url);
+        pager.load(list);
+      }
     }
 
     function render(data) {

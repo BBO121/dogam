@@ -48,18 +48,76 @@
   </div>
 
   <footer class="footer">
-    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.1</p>
+    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.2</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/auth.js"></script>
+  <script src="../js/achievements.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
   <script>
     const charId = new URLSearchParams(window.location.search).get('id');
     let afterDeleteHref = 'species-list.html';
+
+    // 원본 이미지 토글 상태
+    let _showingOriginal        = false;
+    let _origImgUrl             = null;
+    let _wmImgUrl               = null;
+    let _origAdditionalUrls     = null;  // original_additional_images (on-demand 로드)
+
+    async function toggleOriginalImage() {
+      const btn   = document.getElementById('imgToggleBtn');
+      const label = document.getElementById('imgStateLabel');
+      const imgEl = document.getElementById('charMainImg');
+      if (!imgEl) return;
+
+      if (!_showingOriginal) {
+        if (!_origImgUrl) {
+          btn.textContent = '불러오는 중...';
+          btn.disabled    = true;
+          const { data, error } = await sb.from('characters')
+            .select('original_image_url, original_additional_images').eq('id', charId).single();
+          if (error || !data?.original_image_url) {
+            btn.textContent = '원본 이미지 없음';
+            return;
+          }
+          _origImgUrl         = data.original_image_url;
+          _origAdditionalUrls = data.original_additional_images || null;
+        }
+        _wmImgUrl         = imgEl.src;
+        imgEl.src         = _origImgUrl;
+        label.textContent = '원본 이미지를 보고 있습니다.';
+        btn.textContent   = '워터마크 이미지 보기';
+        btn.disabled      = false;
+        _showingOriginal  = true;
+
+        // 추가 이미지도 원본으로 전환 (original이 있는 인덱스만)
+        document.querySelectorAll('[data-extra-idx]').forEach(el => {
+          const idx     = parseInt(el.dataset.extraIdx);
+          const origUrl = _origAdditionalUrls?.[idx];
+          if (origUrl) {
+            el.dataset.wmSrc = el.src;
+            el.src = origUrl;
+          }
+        });
+      } else {
+        imgEl.src         = _wmImgUrl;
+        label.textContent = '워터마크 이미지를 보고 있습니다.';
+        btn.textContent   = '원본 이미지 보기';
+        _showingOriginal  = false;
+
+        // 추가 이미지도 워터마크본으로 복원
+        document.querySelectorAll('[data-extra-idx]').forEach(el => {
+          if (el.dataset.wmSrc) {
+            el.src = el.dataset.wmSrc;
+            delete el.dataset.wmSrc;
+          }
+        });
+      }
+    }
 
     // 소유권 이전 모달 상태
     let _siteNicks      = new Set();
@@ -190,8 +248,10 @@
       const userNickname = user?.user_metadata?.display_name || user?.user_metadata?.nickname || null;
       const isAdminUser  = isAdminOrStaff(user?.user_metadata?.role);
 
+      // original_image_url 제외 — 권한자가 토글 시 on-demand 조회
+      const CHAR_SELECT = 'id,name,species_name,image_url,thumbnail_url,additional_images,owner_nickname,owner_user_id,owner_is_offsite,owner_contact,designer_nickname,designer_contact,char_number,description,owner_description,is_sensitive,sensitive_note,char_sections,custom_field_values,char_categories,allow_free_adoption,allow_resale,allow_paid_adoption,allow_other_adoption,pending_transfer';
       const [{ data: c, error }, { data: siteUserData }] = await Promise.all([
-        sb.from('characters').select('*').eq('id', charId).single(),
+        sb.from('characters').select(CHAR_SELECT).eq('id', charId).single(),
         sb.rpc('get_all_users'),
       ]);
 
@@ -220,7 +280,7 @@
       console.log('[DEBUG] c.owner_user_id:', c.owner_user_id);
       console.log('[DEBUG] c.species_name:', c.species_name);
       if (c.species_name) {
-        const { data: spData } = await sb.from('species').select('id, owner_nickname, owner_user_id, allow_free_adoption, allow_resale, allow_paid_adoption, allow_other_adoption').eq('name', c.species_name).single();
+        const { data: spData } = await sb.from('species').select('id, owner_nickname, owner_user_id, allow_free_adoption, allow_resale, allow_paid_adoption, allow_other_adoption, custom_fields').eq('name', c.species_name).single();
         sp = spData;
         console.log('[DEBUG] sp:', sp);
         if (sp) {
@@ -253,13 +313,16 @@
         }
       }
 
+      const canViewOriginal  = isOwner || isSpeciesOwner; // 소유 관계만 토글 표시
+      const autoShowOriginal = isOwner || isSpeciesOwner;
+
       const registeredDate = new Date(c.created_at).toLocaleDateString('ko-KR', {
         year: 'numeric', month: '2-digit', day: '2-digit'
       }).replace(/\. /g, '.').replace(/\.$/, '');
 
-      const additionalImgs = (c.additional_images || []).map(url => `
+      const additionalImgs = (c.additional_images || []).map((url, idx) => `
         <div style="width:100%; border-radius:var(--radius); overflow:hidden; margin-top:10px; ${c.is_sensitive ? 'position:relative;' : ''}">
-          <img src="${url}" class="${c.is_sensitive ? 'blurred' : ''}" style="width:100%; display:block; object-fit:cover;">
+          <img src="${url}" data-extra-idx="${idx}" class="${c.is_sensitive ? 'blurred' : ''}" style="width:100%; display:block; object-fit:cover;">
           ${c.is_sensitive ? `<div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span>${c.sensitive_note ? '<span class="sensitive-overlay-note">' + c.sensitive_note + '</span>' : ''}<span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div>` : ''}
         </div>
       `).join('');
@@ -297,10 +360,15 @@
             <div class="char-img-area">
               ${c.image_url
                 ? (c.is_sensitive
-                    ? `<div style="position:relative; overflow:hidden; border-radius:var(--radius);"><img src="${c.image_url}" alt="${c.name}" class="blurred" style="width:100%; height:auto; display:block;"><div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span>${c.sensitive_note ? '<span class="sensitive-overlay-note">' + c.sensitive_note + '</span>' : ''}<span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div></div>`
-                    : `<img src="${c.image_url}" alt="${c.name}" style="width:100%; height:auto; display:block;">`)
+                    ? `<div style="position:relative; overflow:hidden; border-radius:var(--radius);"><img id="charMainImg" src="${c.image_url}" alt="${c.name}" class="blurred" style="width:100%; height:auto; display:block;"><div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span>${c.sensitive_note ? '<span class="sensitive-overlay-note">' + c.sensitive_note + '</span>' : ''}<span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div></div>`
+                    : `<img id="charMainImg" src="${c.image_url}" alt="${c.name}" style="width:100%; height:auto; display:block;">`)
                 : ''}
             </div>
+            ${canViewOriginal ? `
+            <div style="margin-top:8px; text-align:center; font-size:12px; color:var(--text-mute);">
+              <span id="imgStateLabel">${autoShowOriginal ? '불러오는 중...' : '워터마크 이미지를 보고 있습니다.'}</span>
+              <button id="imgToggleBtn" onclick="toggleOriginalImage()" style="margin-left:6px; background:none; border:none; color:var(--sky-deep); font-size:12px; cursor:pointer; text-decoration:underline; font-family:inherit; padding:0;">${autoShowOriginal ? '' : '원본 이미지 보기'}</button>
+            </div>` : ''}
             ${additionalImgs}
           </div>
 
@@ -352,16 +420,26 @@
             <div class="char-info-divider"></div>
             <p class="char-info-desc">${c.description}</p>` : ''}
 
-            ${c.custom_field_values && Object.keys(c.custom_field_values).length ? `
+            ${c.owner_description ? `
             <div class="char-info-divider"></div>
-            ${Object.entries(c.custom_field_values).map(([k, v]) => `
-              <div class="char-info-row">
-                <span class="char-info-label">${k}</span>
-                <span class="char-info-value">${v}</span>
-              </div>
-            `).join('')}` : ''}
+            <p class="char-info-desc">${c.owner_description}</p>` : ''}
 
-            ${isOwner || (isSpeciesOwner && c.owner_is_offsite) ? `
+            ${(() => {
+              if (!c.custom_field_values) return '';
+              const validKeys = Array.isArray(sp?.custom_fields) && sp.custom_fields.length
+                ? sp.custom_fields
+                : Object.keys(c.custom_field_values);
+              const rows = validKeys
+                .filter(k => c.custom_field_values[k])
+                .map(k => `
+                  <div class="char-info-row">
+                    <span class="char-info-label">${k}</span>
+                    <span class="char-info-value">${c.custom_field_values[k]}</span>
+                  </div>`).join('');
+              return rows ? `<div class="char-info-divider"></div>${rows}` : '';
+            })()}
+
+            ${isOwner || isSpeciesOwner ? `
             <div class="char-info-divider"></div>
             <div style="display:flex; justify-content:${isOwner ? 'space-between' : 'flex-end'}; align-items:center;">
               ${isOwner ? `<button onclick="deleteCharacter()" style="padding:8px 16px; border:1px solid #fca5a5; border-radius:8px; background:#fff; color:#ef4444; font-size:13px; cursor:pointer; font-family:inherit;">개체 삭제</button>` : ''}
@@ -429,6 +507,25 @@
           </div>
         </div>` : ''}
       `;
+
+      // 본인 소유/종족 개체는 원본 이미지를 기본으로 표시
+      if (autoShowOriginal) {
+        toggleOriginalImage();
+      }
+
+      if (charId === '30') {
+        const _v = await window.incrementAchCounter?.('gong_o_visit') || 0;
+        if (_v >= 1)   window.awardAchievement?.('gong_o_visit_1');
+        if (_v >= 5)   window.awardAchievement?.('gong_o_visit_5');
+        if (_v >= 20)  window.awardAchievement?.('gong_o_visit_20');
+        if (_v >= 100) window.awardAchievement?.('gong_o_visit_100');
+      } else {
+        // 개체 상세 조회 업적 (고유 조회 기준)
+        const _cv = await window.trackCharView?.(parseInt(charId)) || 0;
+        if (_cv >= 20)  window.awardAchievement?.('char_view_20');
+        if (_cv >= 50)  window.awardAchievement?.('char_view_50');
+        if (_cv >= 100) window.awardAchievement?.('char_view_100');
+      }
     }
   </script>
 </body>

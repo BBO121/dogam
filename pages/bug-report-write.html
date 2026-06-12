@@ -60,11 +60,12 @@
   </div>
 
   <footer class="footer">
-    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.1</p>
+    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.2</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/auth.js"></script>
+  <script src="../js/achievements.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
@@ -114,6 +115,14 @@ const errorEl = document.getElementById('formError');
         return;
       }
 
+      await window.awardAchievement?.('first_bug_report', { pending: true });
+      if (!window.incrementAchCounter) {
+        console.error('[업적] incrementAchCounter 함수가 없음 — achievements.js 로드 확인 필요');
+      }
+      const _bc = await window.incrementAchCounter?.('bug_report') || 0;
+      console.log('[업적] bug_report 카운터 결과:', _bc);
+      if (_bc >= 3)  await window.awardAchievement?.('bug_report_3', { pending: true });
+      if (_bc >= 10) await window.awardAchievement?.('bug_report_10', { pending: true });
       window.location.href = 'bug-report.html';
     });
 

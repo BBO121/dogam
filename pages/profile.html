@@ -7,6 +7,31 @@
   <link rel="stylesheet" href="../css/style.css">
   <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
   <style>
+    /* ── 업적 통계 (인라인 보장 — CSS 캐시 우회) ── */
+    .achievement-stats { margin-bottom: 12px; }
+    .achievement-stats-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 7px; }
+    .achievement-stats-count { font-size: 14px; font-weight: 700; color: #1E293B; }
+    .achievement-stats-pct { font-size: 13px; font-weight: 700; color: #0284C7; }
+    .achievement-progress-bar { height: 8px; background: #E2E8F0; border-radius: 999px; overflow: hidden; }
+    .achievement-progress-fill { height: 100%; background: linear-gradient(90deg, #6ec1ff, #8fd3ff, #b7e4ff); border-radius: 999px; transition: width 0.8s cubic-bezier(0.4,0,0.2,1); }
+    .achievement-progress-fill.complete { background: linear-gradient(90deg, #f9c74f, #f8961e, #f3722c); }
+    /* ── 대표 업적 쇼케이스 ── */
+    .ach-showcase-label { font-size: 11px; font-weight: 700; color: #94A3B8; margin: 14px 0 10px; letter-spacing: 0.3px; }
+    .ach-showcase-grid { display: grid; grid-template-columns: 1fr; gap: 6px; }
+    @media (min-width: 600px) { .ach-showcase-grid { grid-template-columns: repeat(2, 1fr); } }
+    /* ── 카테고리별 달성 현황 (뱃지 시안) ── */
+    #achCategoryStats { margin-top: 12px; flex-wrap: wrap; gap: 6px; }
+    .ach-cat-badge { display: inline-flex; align-items: center; padding: 4px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; gap: 5px; }
+    .ach-cat-badge-name { font-weight: 500; }
+    .ach-cat-badge.none     { border: 1.5px solid #DDE3EA; color: var(--text-mute); background: rgba(148,163,184,0.10); }
+    .ach-cat-badge.progress { border: 1.5px solid #BAE6FD; color: var(--sky-dark); background: rgba(56,189,248,0.08); }
+    .ach-cat-badge.complete { border: 1.5px solid transparent; background: linear-gradient(#FFFBEB, #FFFBEB) padding-box, linear-gradient(to right, #F59E0B, #FDE68A) border-box; color: #B45309; }
+    /* ── 대표 업적 선택 모달 ── */
+    .featured-ach-option { display:flex; align-items:center; gap:10px; padding:10px 12px; border:1.5px solid #E2E8F0; border-radius:8px; cursor:pointer; transition:border-color 0.12s, background 0.12s; }
+    .featured-ach-option.selected { border-color:#0EA5E9; background:#F0F9FF; }
+    .featured-ach-check { width:20px; height:20px; border-radius:4px; border:1.5px solid #CBD5E1; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex-shrink:0; color:#fff; }
+    .featured-ach-option.selected .featured-ach-check { background:#0EA5E9; border-color:#0EA5E9; }
+
     .quill-wrap .ql-toolbar { border-radius:9px 9px 0 0; border:1.5px solid var(--border); border-bottom:none; font-family:inherit; }
     .quill-wrap .ql-container { border-radius:0 0 9px 9px; border:1.5px solid var(--border); min-height:90px; font-size:14px; font-family:inherit; line-height:1.7; }
     .quill-wrap:focus-within .ql-toolbar,
@@ -71,51 +96,63 @@
           </div>
         </section>
 
-        <!-- 탭 -->
-        <div class="profile-tabs">
-          <button class="profile-tab active" data-tab="activity">활동</button>
-          <button class="profile-tab" data-tab="tos">개인공지</button>
-        </div>
+        <!-- 메인 컨텐츠 (설정 열리면 숨김) -->
+        <div id="profileMain">
 
-        <!-- 내 활동 탭 -->
-        <div id="tabActivity" class="tab-content">
-          <section class="section">
-            <!-- 서브탭 -->
-            <div class="activity-subtabs">
-              <button class="activity-subtab active" onclick="switchSubtab(this,'species')">종족</button>
-              <span class="activity-subtab-divider">|</span>
-              <button class="activity-subtab" onclick="switchSubtab(this,'characters')">캐릭터</button>
+          <!-- 개인공지 -->
+          <section class="section" id="sectionTos">
+            <div class="section-header">
+              <h2>개인공지</h2>
+              <button id="tosToggleBtn" class="btn-more profile-tos-toggle-btn" onclick="toggleTos()" style="display:none;">더보기</button>
             </div>
-
-            <!-- 종족 -->
-            <div id="subtabSpecies">
-              <div class="section-header">
-                <h2>종족 <span class="count-badge" id="mySpeciesCount">0</span></h2>
-                <a href="my-species.html" class="btn-more">전체보기</a>
-              </div>
-              <div id="mySpeciesPreview" class="species-grid"></div>
-              <p id="mySpeciesEmpty" class="empty-state" style="display:none;">아직 등록된 종족이 없어요.</p>
+            <div class="profile-tos-wrap collapsed" id="profileTosWrap">
+              <div id="profileTos" class="ql-display profile-tos-inner" style="font-size:14px; line-height:1.8; color:var(--text-sub);"></div>
             </div>
-
-            <!-- 보유 캐릭터 -->
-            <div id="subtabCharacters" style="display:none;">
-              <div class="section-header">
-                <h2>보유 캐릭터 <span class="count-badge" id="myCharCount">0</span></h2>
-                <a href="my-characters.html" class="btn-more">전체보기</a>
-              </div>
-              <div id="myCharPreview" class="character-grid"></div>
-              <p id="myCharEmpty" class="empty-state" style="display:none;">아직 등록된 개체가 없어요.</p>
-            </div>
-
-          </section>
-        </div>
-
-        <!-- 개인공지 탭 -->
-        <div id="tabTos" class="tab-content" style="display:none;">
-          <section class="section">
-            <div id="profileTos" class="ql-display" style="font-size:14px; line-height:1.8; color:var(--text-sub);"></div>
             <p id="profileTosEmpty" class="empty-state" style="display:none;">등록된 개인공지가 없어요.</p>
           </section>
+
+          <!-- 종족 -->
+          <section class="section">
+            <div class="section-header">
+              <h2>종족 <span class="count-badge" id="mySpeciesCount"></span></h2>
+              <a href="my-species.html" class="btn-more" id="speciesMoreLink">더보기</a>
+            </div>
+            <div id="mySpeciesPreview" class="species-grid"></div>
+            <p id="mySpeciesEmpty" class="empty-state" style="display:none;">아직 등록된 종족이 없어요.</p>
+          </section>
+
+          <!-- 캐릭터 -->
+          <section class="section">
+            <div class="section-header">
+              <h2>캐릭터 <span class="count-badge" id="myCharCount"></span></h2>
+              <a href="my-characters.html" class="btn-more" id="charMoreLink">더보기</a>
+            </div>
+            <div id="myCharPreview" class="character-grid"></div>
+            <p id="myCharEmpty" class="empty-state" style="display:none;">아직 등록된 개체가 없어요.</p>
+          </section>
+
+          <!-- 업적 요약 -->
+          <section class="section" id="sectionAchievements">
+            <div class="section-header">
+              <h2>업적</h2>
+  <a href="achievements.html" class="btn-more" id="achievementsLink">전체 보기</a>
+            </div>
+            <div class="achievement-stats" id="achievementStats" style="display:none;">
+              <div class="achievement-stats-row">
+                <span class="achievement-stats-count" id="achievementStatsText"></span>
+                <span class="achievement-stats-pct" id="achievementPct"></span>
+              </div>
+              <div class="achievement-progress-bar">
+                <div class="achievement-progress-fill" id="achievementProgressFill" style="width:0%"></div>
+              </div>
+            </div>
+            <div id="achCategoryStats" style="display:none;"></div>
+            <div id="achShowcase" style="display:none; margin-top:20px;">
+              <p class="ach-showcase-label">대표 업적</p>
+              <div class="ach-showcase-grid" id="achShowcaseGrid"></div>
+            </div>
+          </section>
+
         </div>
 
         <!-- 설정 탭 -->
@@ -128,6 +165,33 @@
               <div style="display:flex; align-items:center; gap:16px;">
                 <div id="settingsAvatarPreview" style="width:64px; height:64px; border-radius:50%; background:#e8e8e8; background-size:cover; background-position:center; flex-shrink:0;"></div>
                 <button class="btn-secondary" type="button" onclick="document.getElementById('avatarInput').click()">이미지 변경</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- 개인 워터마크 -->
+          <section class="section">
+            <h2 class="settings-section-title">개인 워터마크</h2>
+            <div class="settings-form">
+              <p class="form-hint" style="margin-bottom:14px;">개체 이미지 업로드 시 적용할 워터마크예요. 등록하지 않으면 기본 워터마크가 사용됩니다.</p>
+              <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+                <div id="wmPreview" style="width:80px; height:80px; border:1px solid var(--border); border-radius:8px; background:#f8fafc; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0;">
+                  <span id="wmPreviewEmpty" style="font-size:12px; color:var(--text-mute);">없음</span>
+                  <img id="wmPreviewImg" style="display:none; width:100%; height:100%; object-fit:contain;" alt="워터마크 미리보기">
+                </div>
+                <div style="display:flex; flex-direction:column; gap:8px;">
+                  <input type="file" id="wmFileInput" accept="image/png,image/gif,image/jpeg,image/webp" style="display:none;" onchange="uploadWatermark(this)">
+                  <button class="btn-secondary" type="button" onclick="document.getElementById('wmFileInput').click()">워터마크 등록</button>
+                  <button class="btn-ghost" type="button" id="wmDeleteBtn" onclick="deleteWatermark()" style="display:none; font-size:13px; color:#ef4444; border-color:#fca5a5;">워터마크 삭제</button>
+                </div>
+              </div>
+              <p id="wmMsg" style="font-size:13px; margin-top:10px; display:none;"></p>
+              <!-- 자동 모드 개체 재적용 -->
+              <div id="wmReapplySection" style="display:none; margin-top:14px; padding:12px 14px; background:var(--sky-pale); border:1px solid var(--sky); border-radius:10px;">
+                <p style="font-size:13px; color:var(--sky-deep); margin-bottom:10px;">워터마크 등록/삭제 시 자동으로 재적용됩니다. 수동으로 다시 실행하거나 아래 로그를 확인할 수 있어요.</p>
+                <button class="btn-secondary" type="button" onclick="reapplyAutoWatermarks()" id="wmReapplyBtn" style="font-size:13px;">수동으로 다시 적용</button>
+                <p id="wmReapplyProgress" style="font-size:12px; color:var(--text-mute); margin-top:8px; display:none;"></p>
+                <div id="wmReapplyLog" style="margin-top:8px; background:#f8fafc; border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-size:11px; font-family:monospace; max-height:160px; overflow-y:auto; white-space:pre-wrap; display:none;"></div>
               </div>
             </div>
           </section>
@@ -216,13 +280,14 @@
 
   <!-- 푸터 -->
   <footer class="footer">
-    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.1</p>
+    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.2</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
   <script src="../js/auth.js"></script>
+  <script src="../js/achievements.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
@@ -230,6 +295,69 @@
   <script>
     const viewNick = new URLSearchParams(window.location.search).get('user');
     let currentUser = null;
+
+    // ── 업적 카테고리 상수 ────────────────────────
+    const ACH_CATEGORY_MAP = {
+      // 연구원 업적
+      first_login:           '연구원 업적',
+      profile_setup:         '연구원 업적',
+      nickname_set:          '연구원 업적',
+      first_guide:           '연구원 업적',
+      open_beta:             '연구원 업적',
+      login_no_auth_5:       '연구원 업적',
+      night_login:           '연구원 업적',
+      dawn_login:            '연구원 업적',
+      work_overtime_fail:    '연구원 업적',
+      // 종족 연구 업적
+      first_species:         '종족 연구 업적',
+      species_3:             '종족 연구 업적',
+      species_view_10:       '종족 연구 업적',
+      species_view_30:       '종족 연구 업적',
+      species_view_50:       '종족 연구 업적',
+      species_search_fail_10:'종족 연구 업적',
+      species_revisit_10:    '종족 연구 업적',
+      // 개체 연구 업적
+      first_character:       '개체 연구 업적',
+      first_owned_character: '개체 연구 업적',
+      chars_10:              '개체 연구 업적',
+      chars_30:              '개체 연구 업적',
+      chars_50:              '개체 연구 업적',
+      chars_100:             '개체 연구 업적',
+      char_view_20:          '개체 연구 업적',
+      char_view_50:          '개체 연구 업적',
+      char_view_100:         '개체 연구 업적',
+      own_variety_5:         '개체 연구 업적',
+      own_variety_10:        '개체 연구 업적',
+      own_variety_20:        '개체 연구 업적',
+      char_owner_desc:       '개체 연구 업적',
+      char_owner_relation:   '개체 연구 업적',
+      // 분양 업적
+      first_adoption:        '분양 업적',
+      adoption_10:           '분양 업적',
+      adoption_20:           '분양 업적',
+      adoption_30:           '분양 업적',
+      // 문의 & 버그 업적
+      first_inquiry:         '문의 & 버그 업적',
+      first_bug_report:      '문의 & 버그 업적',
+      bug_report_3:          '문의 & 버그 업적',
+      bug_report_10:         '문의 & 버그 업적',
+      // 탐험 업적
+      first_update_note:     '탐험 업적',
+      first_dev_log:         '탐험 업적',
+      first_notice:          '탐험 업적',
+      notice_5:              '탐험 업적',
+      no_species_search:     '탐험 업적',
+      no_char_search:        '탐험 업적',
+      first_terms:           '탐험 업적',
+      terms_5:               '탐험 업적',
+      terms_20:              '탐험 업적',
+      visit_404:             '탐험 업적',
+      visit_404_3:           '탐험 업적',
+      odd_search:            '탐험 업적',
+    };
+    const ACH_GONG_O_CODES   = new Set(['gong_o_visit_1','gong_o_visit_5','gong_o_visit_20','gong_o_visit_100']);
+    const ACH_CATEGORY_ORDER = ['연구원 업적','종족 연구 업적','개체 연구 업적','분양 업적','문의 & 버그 업적','탐험 업적','공오 업적'];
+    // ─────────────────────────────────────────────
 
     // ── Quill 초기화 ──────────────────────────
     const SizeStyle = Quill.import('attributors/style/size');
@@ -269,6 +397,40 @@
       if (tosQuill.getLength() - 1 > TOS_MAX) tosQuill.deleteText(TOS_MAX, tosQuill.getLength());
       updateCharCount(tosQuill, 'tosCharCount', TOS_MAX);
     });
+
+    function autolinkTos(html) {
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      const URL_RE = /(https?:\/\/[^\s<>"'\]）】]+)/g;
+      function walk(node) {
+        if (node.nodeType === 3) {
+          const text = node.textContent;
+          if (!URL_RE.test(text)) return;
+          URL_RE.lastIndex = 0;
+          const parts = text.split(URL_RE);
+          if (parts.length <= 1) return;
+          const frag = document.createDocumentFragment();
+          parts.forEach((part, i) => {
+            if (i % 2 === 0) {
+              if (part) frag.appendChild(document.createTextNode(part));
+            } else {
+              const a = document.createElement('a');
+              a.href = part;
+              a.textContent = part;
+              a.target = '_blank';
+              a.rel = 'noopener noreferrer';
+              a.style.wordBreak = 'break-all';
+              frag.appendChild(a);
+            }
+          });
+          node.parentNode.replaceChild(frag, node);
+        } else if (node.nodeType === 1 && node.tagName !== 'A') {
+          [...node.childNodes].forEach(walk);
+        }
+      }
+      [...div.childNodes].forEach(walk);
+      return div.innerHTML;
+    }
 
     function revealSensitive(overlayEl, e) {
       e.stopPropagation(); e.preventDefault();
@@ -319,6 +481,187 @@
       input.value = '';
     }
 
+    function _setWmPreview(url) {
+      const img   = document.getElementById('wmPreviewImg');
+      const empty = document.getElementById('wmPreviewEmpty');
+      const delBtn = document.getElementById('wmDeleteBtn');
+      if (url) {
+        img.src          = url;
+        img.style.display = '';
+        empty.style.display = 'none';
+        delBtn.style.display = '';
+      } else {
+        img.style.display   = 'none';
+        empty.style.display  = '';
+        delBtn.style.display = 'none';
+      }
+    }
+
+    function _wmMsg(text, isError = false) {
+      const el = document.getElementById('wmMsg');
+      if (!el) return;
+      el.textContent   = text;
+      el.style.color   = isError ? '#ef4444' : 'var(--sky-deep)';
+      el.style.display = text ? '' : 'none';
+    }
+
+    let _currentWmUrl = null; // 현재 적용된 워터마크 URL (재적용 시 사용)
+
+    async function uploadWatermark(input) {
+      const file = input.files[0];
+      if (!file) return;
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        _wmMsg('PNG, JPG, WebP, GIF 형식만 가능해요.', true); return;
+      }
+      _wmMsg('업로드 중...');
+      try {
+        const fileName = `watermark_${currentUser.id}.png`;
+        const { error: upErr } = await sb.storage.from('images').upload(fileName, file, {
+          contentType: file.type, upsert: true,
+        });
+        if (upErr) throw upErr;
+        const wmUrl = sb.storage.from('images').getPublicUrl(fileName).data.publicUrl + '?v=' + Date.now();
+        const displayName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
+        await sb.from('user_profiles').upsert({ nickname: displayName, watermark_url: wmUrl }, { onConflict: 'nickname' });
+        _setWmPreview(wmUrl);
+        _currentWmUrl = wmUrl;
+        document.getElementById('wmReapplySection').style.display = '';
+        _wmMsg('워터마크가 등록됐어요. 종족 개체 이미지를 새 워터마크로 재생성합니다...');
+        await reapplyAutoWatermarks(wmUrl, 'apply');
+        _wmMsg('워터마크 등록 및 재생성이 완료됐어요.');
+      } catch (e) {
+        console.error('[watermark upload]', e);
+        _wmMsg('업로드에 실패했어요: ' + e.message, true);
+      }
+      input.value = '';
+    }
+
+    async function deleteWatermark() {
+      if (!confirm('워터마크를 삭제할까요?\n삭제 후 종족 개체 이미지가 기본 워터마크로 자동 재생성됩니다.')) return;
+      _wmMsg('삭제 중...');
+      try {
+        const displayName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
+        await sb.from('user_profiles').upsert({ nickname: displayName, watermark_url: null }, { onConflict: 'nickname' });
+        _setWmPreview(null);
+        _currentWmUrl = null;
+        document.getElementById('wmReapplySection').style.display = '';
+        _wmMsg('워터마크가 삭제됐어요. 종족 개체 이미지를 기본 워터마크로 재생성합니다...');
+        await reapplyAutoWatermarks('../images/watermark.png', 'delete');
+        _wmMsg('워터마크 삭제 및 재생성이 완료됐어요.');
+      } catch (e) {
+        console.error('[watermark delete]', e);
+        _wmMsg('삭제에 실패했어요: ' + e.message, true);
+      }
+    }
+
+    // mode 'apply' : 개인 워터마크 등록/수정 → 종족 전체 대상, watermark_type = personal 로 변경
+    // mode 'delete': 개인 워터마크 삭제     → personal 개체만 대상, watermark_type = lab_black 으로 변경
+    // mode 미전달  : 수동 버튼 — currentWmUrl 있으면 apply, 없으면 delete
+    async function reapplyAutoWatermarks(wmSrcOverride, mode) {
+      const btn      = document.getElementById('wmReapplyBtn');
+      const progress = document.getElementById('wmReapplyProgress');
+      const logEl    = document.getElementById('wmReapplyLog');
+      btn.disabled   = true;
+      progress.style.display = '';
+      logEl.style.display    = '';
+      logEl.textContent      = '';
+
+      const resolvedMode = mode ?? (_currentWmUrl ? 'apply' : 'delete');
+      const isDeleting   = resolvedMode === 'delete';
+      const wmSrc        = wmSrcOverride ?? _currentWmUrl ?? '../images/watermark.png';
+      const newWmType    = isDeleting ? 'lab_black' : 'personal';
+
+      function reLog(msg) {
+        logEl.textContent += msg + '\n';
+        logEl.scrollTop = logEl.scrollHeight;
+      }
+
+      try {
+        // 내 종족 조회 (소유 개체 기준 아님)
+        const { data: mySpecies } = await sb.from('species').select('id, name').eq('owner_user_id', currentUser.id);
+        if (!mySpecies?.length) { progress.textContent = '소유한 종족이 없어요.'; btn.disabled = false; return; }
+        const speciesNames = mySpecies.map(s => s.name);
+
+        // 대상 조회
+        // 등록/수정: watermark_type 무관 + original_image_url 있는 개체 전체
+        // 삭제:      watermark_type = personal + original_image_url 있는 개체
+        let query = sb.from('characters')
+          .select('id, name, original_image_url, additional_images, original_additional_images')
+          .in('species_name', speciesNames)
+          .not('original_image_url', 'is', null);
+        if (isDeleting) query = query.eq('watermark_type', 'personal');
+
+        const { data: chars, error } = await query;
+        if (error) throw error;
+
+        const total = chars?.length || 0;
+        progress.textContent = `대상 ${total}개 확인됨.`;
+        if (!total) {
+          progress.textContent = isDeleting
+            ? '처리할 개체가 없어요 (personal 워터마크 + 원본 있는 개체).'
+            : '처리할 개체가 없어요 (원본 있는 개체).';
+          btn.disabled = false;
+          return;
+        }
+
+        let done = 0, failed = 0;
+        for (const char of chars) {
+          try {
+            const dbUpdate = { watermark_type: newWmType };
+
+            // 대표 이미지: original_image_url 기준 재합성
+            const mainRes = await fetch(char.original_image_url);
+            if (!mainRes.ok) throw new Error(`대표 이미지 다운로드 실패 (${mainRes.status})`);
+            const mainBlob   = await mainRes.blob();
+            const mainWmBlob = await applyWatermark(mainBlob, wmSrc);
+            const mainName   = `${Date.now()}_rewm_${String(char.id).slice(0, 8)}.jpg`;
+            const { error: mainUpErr } = await sb.storage.from('images').upload(mainName, mainWmBlob, { contentType: 'image/jpeg' });
+            if (mainUpErr) throw new Error(mainUpErr.message);
+            dbUpdate.image_url = sb.storage.from('images').getPublicUrl(mainName).data.publicUrl;
+
+            // 추가 이미지: original_additional_images 기준, null 항목 건너뜀
+            const origAdditional = char.original_additional_images || [];
+            const wmAdditional   = [...(char.additional_images || [])];
+            let extraCount = 0;
+            for (let idx = 0; idx < origAdditional.length; idx++) {
+              const origUrl = origAdditional[idx];
+              if (!origUrl) continue;
+              try {
+                const res = await fetch(origUrl);
+                if (!res.ok) { reLog(`  ↳ 추가 이미지 ${idx + 1} 다운로드 실패 (${res.status})`); continue; }
+                const blob   = await res.blob();
+                const wmBlob = await applyWatermark(blob, wmSrc);
+                const name   = `${Date.now()}_rewm_ex${idx}_${String(char.id).slice(0, 8)}.jpg`;
+                const { error: upErr } = await sb.storage.from('images').upload(name, wmBlob, { contentType: 'image/jpeg' });
+                if (upErr) { reLog(`  ↳ 추가 이미지 ${idx + 1} 업로드 실패: ${upErr.message}`); continue; }
+                wmAdditional[idx] = sb.storage.from('images').getPublicUrl(name).data.publicUrl;
+                extraCount++;
+              } catch (extraErr) {
+                reLog(`  ↳ 추가 이미지 ${idx + 1} 처리 실패: ${extraErr.message}`);
+              }
+              await new Promise(r => setTimeout(r, 200));
+            }
+            if (extraCount > 0) dbUpdate.additional_images = wmAdditional;
+
+            const { error: dbErr } = await sb.from('characters').update(dbUpdate).eq('id', char.id);
+            if (dbErr) throw new Error(dbErr.message);
+            done++;
+            reLog(`✓ ${char.name}${extraCount > 0 ? ` (추가 이미지 ${extraCount}장 포함)` : ''}`);
+          } catch (e) {
+            failed++;
+            reLog(`✗ ${char.name}: ${e.message}`);
+          }
+          progress.textContent = `처리 중: ${done + failed} / ${total}`;
+          await new Promise(r => setTimeout(r, 400));
+        }
+        progress.textContent = `완료: 성공 ${done}개 / 실패 ${failed}개`;
+      } catch (e) {
+        progress.textContent = '오류: ' + e.message;
+        console.error('[reapplyAutoWatermarks]', e);
+      }
+      btn.disabled = false;
+    }
+
     async function initProfile() {
       const user = await getUser();
       if (!user) { window.location.href = 'login.html'; return; }
@@ -337,7 +680,6 @@
       document.getElementById('avatarInput').style.display = 'none';
       document.getElementById('profileAvatar').style.cursor = 'default';
       document.getElementById('profileAvatar').onclick = null;
-      document.querySelector('.profile-tab[data-tab="tos"]').textContent = '개인공지';
 
       // get_all_users + user_profiles 병렬 조회
       const [{ data: userList }, { data: profile }] = await Promise.all([
@@ -384,9 +726,10 @@
       document.getElementById('profileJoinDate').textContent = joinDate;
       if (bio) document.getElementById('profileBio').innerHTML = DOMPurify.sanitize(bio);
       if (tos) {
-        document.getElementById('profileTos').innerHTML = DOMPurify.sanitize(tos);
+        document.getElementById('profileTos').innerHTML = autolinkTos(DOMPurify.sanitize(tos));
+        setTimeout(initTosToggle, 0);
       } else {
-        document.getElementById('profileTosEmpty').style.display = 'block';
+        document.getElementById('sectionTos').style.display = 'none';
       }
       if (avatarUrl) {
         const el = document.getElementById('profileAvatar');
@@ -395,11 +738,15 @@
         el.style.backgroundPosition = 'center';
       }
 
-      // 전체보기 링크 → 해당 유저 필터
-      const speciesMoreEl = document.querySelector('#subtabSpecies .btn-more');
-      const charMoreEl    = document.querySelector('#subtabCharacters .btn-more');
-      if (speciesMoreEl) speciesMoreEl.href = `my-species.html?owner=${encodeURIComponent(displayName)}`;
-      if (charMoreEl)    charMoreEl.href    = `character-list.html?owner=${encodeURIComponent(displayName)}`;
+      // 더보기 링크 → 해당 유저 필터
+      const speciesMoreEl = document.getElementById('speciesMoreLink');
+      const charMoreEl    = document.getElementById('charMoreLink');
+      if (speciesMoreEl) speciesMoreEl.href = found?.login_id
+        ? `my-species.html?owner_id=${encodeURIComponent(found.login_id)}`
+        : `my-species.html?owner=${encodeURIComponent(displayName)}`;
+      if (charMoreEl)    charMoreEl.href    = found?.login_id
+        ? `character-list.html?owner_id=${encodeURIComponent(found.login_id)}`
+        : `character-list.html?owner=${encodeURIComponent(displayName)}`;
 
       document.getElementById('profileLoading').style.display = 'none';
       document.getElementById('profileContent').style.display = 'block';
@@ -408,6 +755,7 @@
       console.log('[initOtherProfile] profileOwnerId:', profileOwnerId, '/ displayName:', displayName);
       loadMySpecies(profileOwnerId, displayName);
       loadMyCharacters(profileOwnerId, displayName);
+      loadAchievements(profileOwnerId, displayName);
     }
 
     async function initMyProfile(user) {
@@ -419,8 +767,11 @@
 
       const [{ data: mySpById }, { data: myProfile }] = await Promise.all([
         sb.from('species').select('id').eq('owner_user_id', user.id).limit(1),
-        sb.from('user_profiles').select('bio, tos').eq('nickname', displayName).single(),
+        sb.from('user_profiles').select('bio, tos, watermark_url').eq('nickname', displayName).single(),
       ]);
+
+      // 워터마크 미리보기 초기화
+      _setWmPreview(myProfile?.watermark_url || null);
       const isSpeciesOwner = user.user_metadata?.role === 'species_owner' || !!mySpById?.length;
 
       // bio/tos: user_profiles 우선. user_metadata에 남은 데이터는 이관 후 제거
@@ -457,9 +808,10 @@
       document.getElementById('profileJoinDate').textContent = joinDate;
       if (bio) document.getElementById('profileBio').innerHTML = DOMPurify.sanitize(bio);
       if (tos) {
-        document.getElementById('profileTos').innerHTML = DOMPurify.sanitize(tos);
+        document.getElementById('profileTos').innerHTML = autolinkTos(DOMPurify.sanitize(tos));
+        setTimeout(initTosToggle, 0);
       } else {
-        document.getElementById('profileTosEmpty').style.display = 'block';
+        document.getElementById('sectionTos').style.display = 'none';
       }
 
       document.getElementById('editId').value          = nickname;
@@ -491,6 +843,7 @@
       console.log('[initMyProfile] user.id:', user.id, '/ displayName:', displayName);
       loadMySpecies(user.id, displayName);
       loadMyCharacters(user.id, displayName);
+      loadAchievements(user.id, null);
     }
 
     async function loadMySpecies(userId, nickname) {
@@ -504,7 +857,7 @@
         return;
       }
 
-      countEl.textContent = data.length;
+      if (data.length > 0) countEl.textContent = data.length;
       const preview = data.slice(0, 6);
       gridEl.innerHTML = preview.map(s => `
         <a href="species.html?id=${s.id}" class="species-card">
@@ -549,9 +902,10 @@
         return;
       }
 
-      countEl.textContent = data.length;
+      if (data.length > 0) countEl.textContent = data.length;
+      const charPreview = data.slice(0, 8);
 
-      gridEl.innerHTML = data.map(c => `
+      gridEl.innerHTML = charPreview.map(c => `
         <a href="character.html?id=${c.id}" class="character-card">
           ${c.is_sensitive && c.image_url ? `
           <div style="position:relative; overflow:hidden; border-radius:var(--radius);">
@@ -567,41 +921,182 @@
       `).join('');
     }
 
-    // 메인 탭 전환
-    document.querySelectorAll('.profile-tab').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.profile-tab').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-        document.getElementById('gearBtn').classList.remove('active');
-        const tabId = 'tab' + btn.dataset.tab[0].toUpperCase() + btn.dataset.tab.slice(1);
-        document.getElementById(tabId).style.display = 'block';
-      });
-    });
+    async function loadAchievements(userId, viewNickname) {
+      const isOwnProfile = !viewNickname;
+      if (!userId) {
+        document.getElementById('sectionAchievements').style.display = 'none';
+        return;
+      }
+      try {
+        const profileNickname = viewNickname ||
+          (currentUser?.user_metadata?.display_name || currentUser?.user_metadata?.nickname);
+
+        const [{ data: allAch }, { data: myAch }, { data: profileData }] = await Promise.all([
+          sb.from('achievements').select('id, code'),
+          sb.from('user_achievements')
+            .select('achievement_code, unlocked_at')
+            .eq('user_id', userId)
+            .order('unlocked_at', { ascending: false }),
+          sb.from('user_profiles')
+            .select('featured_achievements')
+            .eq('nickname', profileNickname)
+            .single(),
+        ]);
+
+        if (!allAch) { document.getElementById('sectionAchievements').style.display = 'none'; return; }
+
+        const earnedCount = myAch?.length || 0;
+        const totalCount  = allAch.length;
+        const pct         = totalCount > 0 ? Math.floor((earnedCount / totalCount) * 100) : 0;
+
+        document.getElementById('achievementStats').style.display = 'block';
+        document.getElementById('achievementStatsText').textContent = `${earnedCount} / ${totalCount} 달성`;
+        document.getElementById('achievementPct').textContent = `${pct}%`;
+        const fillEl = document.getElementById('achievementProgressFill');
+        fillEl.style.width = `${pct}%`;
+        if (pct === 100) fillEl.classList.add('complete');
+
+        // 전체 보기 링크: 본인만 표시
+        const achLink = document.getElementById('achievementsLink');
+        if (!isOwnProfile) {
+          achLink.style.display = 'none';
+        }
+
+        // ── 카테고리별 달성 현황 ──────────────────
+        const earnedSet = new Set((myAch || []).map(a => a.achievement_code));
+        const hasGongO  = [...earnedSet].some(code => ACH_GONG_O_CODES.has(code));
+
+        const catStats = {};
+        ACH_CATEGORY_ORDER.forEach(c => { catStats[c] = { earned: 0, total: 0 }; });
+        (allAch || []).forEach(a => {
+          const cat = ACH_GONG_O_CODES.has(a.code) ? '공오 업적' : (ACH_CATEGORY_MAP[a.code] || '탐험 업적');
+          if (!catStats[cat]) catStats[cat] = { earned: 0, total: 0 };
+          catStats[cat].total++;
+          if (earnedSet.has(a.code)) catStats[cat].earned++;
+        });
+
+        const ACH_CAT_SHORT = {
+          '연구원 업적':      '연구원',
+          '종족 연구 업적':   '종족 연구',
+          '개체 연구 업적':   '개체 연구',
+          '분양 업적':        '분양',
+          '문의 & 버그 업적': '문의',
+          '탐험 업적':        '탐험',
+          '공오 업적':        '공오',
+        };
+        const visibleCats = ACH_CATEGORY_ORDER.filter(cat => (catStats[cat]?.total || 0) > 0);
+        const catHtml = visibleCats.map(cat => {
+            const isHidden   = cat === '공오 업적' && !hasGongO;
+            const shortName  = isHidden ? '???' : (ACH_CAT_SHORT[cat] || cat);
+            const s          = catStats[cat] || { earned: 0, total: 0 };
+            const isComplete = s.total > 0 && s.earned === s.total;
+            const isNone     = s.earned === 0;
+            const state      = isComplete ? 'complete' : isNone ? 'none' : 'progress';
+            return `<span class="ach-cat-badge ${state}">
+              <span class="ach-cat-badge-name">${shortName}</span>
+              <span>${s.earned}/${s.total}</span>
+            </span>`;
+          }).join('');
+
+        const catStatsEl = document.getElementById('achCategoryStats');
+        if (catStatsEl && catHtml) {
+          catStatsEl.innerHTML     = catHtml;
+          catStatsEl.style.display = 'flex';
+        }
+
+        // ── 대표 업적 쇼케이스 (이름 + 획득일만 표시) ──
+        const dateMap       = Object.fromEntries((myAch || []).map(a => [a.achievement_code, a.unlocked_at]));
+        const featuredRaw   = (profileData?.featured_achievements || []).filter(c => earnedSet.has(c));
+        const showcaseCodes = featuredRaw.length > 0
+          ? featuredRaw.slice(0, 4)
+          : (myAch || []).slice(0, 4).map(a => a.achievement_code);
+
+        if (showcaseCodes.length > 0) {
+          const { data: details } = await sb.from('achievements')
+            .select('code, name')
+            .in('code', showcaseCodes);
+
+          if (details?.length) {
+            const achMap = Object.fromEntries(details.map(a => [a.code, a]));
+            document.getElementById('achShowcaseGrid').innerHTML = showcaseCodes
+              .filter(code => achMap[code])
+              .map(code => {
+                const a    = achMap[code];
+                const date = new Date(dateMap[code]).toLocaleDateString('ko-KR', {
+                  year: 'numeric', month: '2-digit', day: '2-digit'
+                }).replace(/\. /g, '.').replace(/\.$/, '');
+                return `
+                  <div class="achievement-item earned">
+                    <div class="ach-icon-wrap transparent">
+                      <img src="../images/achievement-badge.png" class="ach-icon" alt="업적">
+                    </div>
+                    <div class="achievement-item-body">
+                      <p class="achievement-item-name">${a.name}</p>
+                    </div>
+                    <span class="achievement-item-date">${date}</span>
+                  </div>`;
+              })
+              .join('');
+            document.getElementById('achShowcase').style.display = 'block';
+          }
+        }
+      } catch (e) {
+        console.error('[업적] profile loadAchievements 오류:', e);
+      }
+    }
 
     function toggleSettings() {
       const settingsEl = document.getElementById('tabSettings');
+      const mainEl     = document.getElementById('profileMain');
       const gearBtn    = document.getElementById('gearBtn');
       const isOpen     = settingsEl.style.display !== 'none';
 
       if (isOpen) {
         settingsEl.style.display = 'none';
+        mainEl.style.display     = 'block';
         gearBtn.classList.remove('active');
-        document.getElementById('tabActivity').style.display = 'block';
-        document.querySelector('.profile-tab[data-tab="activity"]').classList.add('active');
       } else {
-        document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-        document.querySelectorAll('.profile-tab').forEach(b => b.classList.remove('active'));
         settingsEl.style.display = 'block';
+        mainEl.style.display     = 'none';
         gearBtn.classList.add('active');
       }
     }
 
-    function switchSubtab(el, t) {
-      document.querySelectorAll('.activity-subtab').forEach(b => b.classList.remove('active'));
-      el.classList.add('active');
-      document.getElementById('subtabSpecies').style.display    = t === 'species'    ? 'block' : 'none';
-      document.getElementById('subtabCharacters').style.display = t === 'characters' ? 'block' : 'none';
+    function toggleTos() {
+      const inner = document.getElementById('profileTos');
+      const wrap  = document.getElementById('profileTosWrap');
+      const btn   = document.getElementById('tosToggleBtn');
+      const isExpanded = inner.dataset.expanded === 'true';
+      if (isExpanded) {
+        inner.style.maxHeight = '130px';
+        inner.dataset.expanded = 'false';
+        btn.textContent = '더보기';
+        wrap.classList.add('collapsed');
+      } else {
+        inner.style.maxHeight = inner.scrollHeight + 'px';
+        inner.dataset.expanded = 'true';
+        btn.textContent = '접기';
+        wrap.classList.remove('collapsed');
+      }
+    }
+
+    function initTosToggle() {
+      const inner = document.getElementById('profileTos');
+      const wrap  = document.getElementById('profileTosWrap');
+      const btn   = document.getElementById('tosToggleBtn');
+      if (!inner || !btn) return;
+      const collapseH = 130;
+      inner.style.maxHeight = 'none';
+      const fullH = inner.scrollHeight;
+      if (fullH <= collapseH) {
+        inner.style.maxHeight = '';
+        wrap.classList.remove('collapsed');
+        return;
+      }
+      inner.style.maxHeight = collapseH + 'px';
+      inner.dataset.expanded = 'false';
+      wrap.classList.add('collapsed');
+      btn.style.display = 'flex';
     }
 
     // 프로필 저장
@@ -650,14 +1145,27 @@
           currentUser.user_metadata.display_name = newDisplayName;
           document.getElementById('profileName').textContent = newDisplayName;
           document.getElementById('breadcrumbName').textContent = newDisplayName;
+          window.awardAchievement?.('nickname_set');
         }
         const _profileUpsert = { nickname: newDisplayName, bio, tos, joined_at: currentUser.created_at };
         if (currentUser.user_metadata?.avatar_url) _profileUpsert.avatar_url = currentUser.user_metadata.avatar_url;
         await sb.from('user_profiles').upsert(_profileUpsert, { onConflict: 'nickname' });
         successEl.textContent = '저장됐어요!';
+        window.awardAchievement?.('profile_setup');
         document.getElementById('profileBio').innerHTML = DOMPurify.sanitize(bio);
-        document.getElementById('profileTos').innerHTML = DOMPurify.sanitize(tos);
-        document.getElementById('profileTosEmpty').style.display = tos ? 'none' : 'block';
+        const tosSectionEl = document.getElementById('sectionTos');
+        const tosEl = document.getElementById('profileTos');
+        tosEl.innerHTML = autolinkTos(DOMPurify.sanitize(tos));
+        if (tos) {
+          tosSectionEl.style.display = '';
+          tosEl.style.maxHeight = '';
+          tosEl.dataset.expanded = '';
+          document.getElementById('profileTosWrap').classList.add('collapsed');
+          document.getElementById('tosToggleBtn').style.display = 'none';
+          setTimeout(initTosToggle, 0);
+        } else {
+          tosSectionEl.style.display = 'none';
+        }
         setTimeout(() => successEl.textContent = '', 3000);
       }
 

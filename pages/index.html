@@ -100,11 +100,12 @@
 
   <!-- 푸터 -->
   <footer class="footer">
-    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.1</p>
+    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.2</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/auth.js"></script>
+  <script src="../js/achievements.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
@@ -120,7 +121,7 @@
         { data: updateNoteList },
       ] = await Promise.all([
         sb.from('species').select('id, name, image_url, is_sensitive, sensitive_note').order('created_at', { ascending: false }).limit(18),
-        sb.from('adoptions').select('id, character_name, species_name, adoption_type, status, image_url, characters(is_sensitive, sensitive_note)').order('created_at', { ascending: false }).limit(8),
+        sb.from('adoptions').select('id, character_name, species_name, adoption_type, status, image_url, thumbnail_url, characters(is_sensitive, sensitive_note)').order('created_at', { ascending: false }).limit(8),
         sb.from('notices').select('id, title').order('is_pinned', { ascending: false }).order('created_at', { ascending: false }).limit(1),
         sb.from('update_notes').select('id, title').eq('is_pinned', true).order('created_at', { ascending: false }).limit(2),
       ]);
@@ -193,11 +194,12 @@
           const typeClass = TYPE_CLASS[a.adoption_type] || '';
           const closed    = a.status === '완료';
 
+          const cardImg = a.thumbnail_url || a.image_url;
           let cardImgHtml;
-          if (isSensitive && a.image_url) {
-            cardImgHtml = `<div class="adoption-card-img" style="position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background-image:url('${a.image_url}');background-size:cover;background-position:center;" class="blurred"></div>${buildSensitiveOverlay(sensitiveNote)}</div>`;
+          if (isSensitive && cardImg) {
+            cardImgHtml = `<div class="adoption-card-img" style="position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background-image:url('${cardImg}');background-size:cover;background-position:center;" class="blurred"></div>${buildSensitiveOverlay(sensitiveNote)}</div>`;
           } else {
-            const imgStyle = a.image_url ? `background-image:url('${a.image_url}');background-size:cover;background-position:center;` : '';
+            const imgStyle = cardImg ? `background-image:url('${cardImg}');background-size:cover;background-position:center;` : '';
             cardImgHtml = `<div class="adoption-card-img" style="${imgStyle}"></div>`;
           }
 

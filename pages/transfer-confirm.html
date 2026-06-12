@@ -158,10 +158,11 @@
     </main>
   </div>
 
-  <footer class="footer"><p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.1</p></footer>
+  <footer class="footer"><p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.2</p></footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/auth.js"></script>
+  <script src="../js/achievements.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
@@ -250,28 +251,23 @@
       acceptBtn.textContent = '처리 중...';
 
       try {
-        const { data, error } = await sb.rpc('accept_transfer', { p_char_id: charId });
+        const myNick = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
 
-        if (error) throw error;
-        if (!data?.ok) throw new Error(data?.error || '이전 수락에 실패했어요.');
-
-        // RPC가 owner_user_id를 업데이트하지 않으므로 직접 설정
-        await sb.from('characters').update({
-          owner_user_id:    currentUser.id,
-          owner_is_offsite: false,
-        }).eq('id', charId);
-
-        // 이전 기록 저장
-        await logTransfer({
-          character_name: charData.name,
-          species_name:   charData.species_name || '',
-          from_nickname:  fromNick,
-          from_user_id:   fromUserId,
-          to_nickname:    toNick,
-          to_user_id:     currentUser.id,
-          method,
+        // SECURITY DEFINER RPC가 소유권 변경 + 이전 기록까지 원자적으로 처리
+        const { data, error } = await sb.rpc('accept_transfer', {
+          p_char_id:        charId,
+          p_new_owner_nick: myNick || toNick || '',
         });
 
+        if (error) throw new Error(`이전 처리에 실패했어요: ${error.message}`);
+        if (!data?.ok) throw new Error(data?.error || '이전 수락에 실패했어요.');
+
+        await window.awardAchievement?.('first_owned_character', { pending: true });
+        // 서로 다른 종족 소유 업적
+        const _ds = await window.getDistinctOwnedSpeciesCount?.() || 0;
+        if (_ds >= 5)  window.awardAchievement?.('own_variety_5',  { pending: true });
+        if (_ds >= 10) window.awardAchievement?.('own_variety_10', { pending: true });
+        if (_ds >= 20) window.awardAchievement?.('own_variety_20', { pending: true });
         window.location.href = `character.html?id=${charId}`;
       } catch (e) {
         console.error('[acceptTransfer 오류]', e);

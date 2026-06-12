@@ -74,7 +74,7 @@
   </div>
 
   <footer class="footer">
-    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.1</p>
+    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.2</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -82,6 +82,7 @@
   <script src="../js/auth.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
+  <script src="../js/achievements.js"></script>
   <script src="../js/main.js"></script>
   <script>
     const params = new URLSearchParams(window.location.search);
@@ -129,6 +130,8 @@
 
       document.getElementById('pageLoading').style.display = 'none';
       document.getElementById('pageContent').style.display = 'block';
+
+      window.awardAchievement?.('first_dev_log');
     }
 
     async function deleteNote() {

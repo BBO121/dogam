@@ -120,7 +120,7 @@ async function loadNotifList(myNick) {
 async function markRead(id) {
   await sb.from('notifications').update({ is_read: true }).eq('id', id);
   const user = await getUser();
-  const myNick = user?.user_metadata?.nickname;
+  const myNick = user?.user_metadata?.display_name || user?.user_metadata?.nickname;
   if (myNick) refreshNotifCount(myNick);
 }
 
@@ -150,6 +150,6 @@ function escapeNotif(str) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  insertNotifBell();   // 동기 실행 — auth가 닉네임 삽입하기 전에 먼저 위치 확보
-  initNotifications(); // async — 로그인 확인 후 뱃지 숫자 채움
+  insertNotifBell();                          // 동기 실행 — 위치 먼저 확보
+  setTimeout(() => initNotifications(), 0);  // 렌더링 블록 없이 지연 실행
 });

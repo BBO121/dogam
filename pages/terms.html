@@ -273,7 +273,7 @@
   </div>
 
   <footer class="footer">
-    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.1</p>
+    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.2</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -281,6 +281,7 @@
   <script src="../js/auth.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
+  <script src="../js/achievements.js"></script>
   <script src="../js/main.js"></script>
   <script>
     async function initPage() {
@@ -302,6 +303,11 @@
         });
         document.getElementById('termsUpdated').textContent = `최종 업데이트: ${updated}`;
       }
+
+      const _tc = await window.incrementAchCounter?.('terms_view') || 0;
+      if (_tc >= 1)  window.awardAchievement?.('first_terms');
+      if (_tc >= 5)  window.awardAchievement?.('terms_5');
+      if (_tc >= 20) window.awardAchievement?.('terms_20');
     }
     initPage();
   </script>

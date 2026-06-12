@@ -38,11 +38,40 @@ async function signOut() {
   window.location.href = 'index.html';
 }
 
-// 현재 로그인된 유저
-async function getUser() {
-  const { data: { user } } = await sb.auth.getUser();
-  return user;
-}
+// 스크립트 파싱 즉시 fetch 시작 — DOMContentLoaded 대기 없이 최대한 일찍 실행
+const _userPromise = sb.auth.getUser().then(({ data: { user } }) => user);
+async function getUser() { return _userPromise; }
+
+// ── 종족 목록 공통 캐시 (auth.js에 정의 — 모든 파일보다 먼저 로드됨) ──
+// sidebar.js, main.js, 모든 페이지가 공유. 파싱 즉시 정의, 첫 호출 시 fetch 시작.
+;(function() {
+  let _p = null;
+  window._getSpeciesData = function() {
+    if (!_p) {
+      const cached = sessionStorage.getItem('_sb_species_list');
+      _p = cached
+        ? Promise.resolve(JSON.parse(cached))
+        : sb.from('species').select('id, name').order('name').then(({ data, error }) => {
+            if (!error && data) sessionStorage.setItem('_sb_species_list', JSON.stringify(data));
+            return data;
+          });
+    }
+    return _p;
+  };
+})();
+
+// 종족주 여부 — 페이지당 1회만 쿼리, 이후 캐시 반환
+let _spOwnerPromise = null;
+window._cachedIsSpeciesOwner = async function(userId, roleIsSpeciesOwner) {
+  if (roleIsSpeciesOwner) return true;
+  if (!userId) return false;
+  if (!_spOwnerPromise) {
+    _spOwnerPromise = sb.from('species').select('id')
+      .eq('owner_user_id', userId).limit(1)
+      .then(({ data }) => !!data?.length);
+  }
+  return _spOwnerPromise;
+};
 
 // 관리자/스태프 여부
 async function isAdmin() {
@@ -89,6 +118,25 @@ async function getMySpecies(userId) {
   return { data: data ?? [], error };
 }
 
+// 관리자 액션 로그 기록 (공통 — 모든 페이지에서 호출 가능)
+async function logAdminAction(actionType, targetType, targetId, targetName, details = {}) {
+  const user = await getUser();
+  if (!user || !isAdminOrStaff(user.user_metadata?.role)) return;
+  try {
+    await sb.from('admin_logs').insert({
+      admin_id:       user.id,
+      admin_nickname: user.user_metadata?.display_name || user.user_metadata?.nickname || '',
+      action_type:    actionType,
+      target_type:    targetType || null,
+      target_id:      targetId ? String(targetId) : null,
+      target_name:    targetName || null,
+      details,
+    });
+  } catch (e) {
+    console.warn('[logAdminAction] 로그 기록 실패:', e);
+  }
+}
+
 // 캐릭터 이전 로그 기록
 async function logTransfer({ character_name, species_name, from_nickname, from_user_id, to_nickname, to_user_id, method }) {
   const { error } = await sb.from('character_transfers').insert({
@@ -131,8 +179,7 @@ async function updateHeader() {
 
     const TESTERS = ['Moulow', 'moulow', 'Sawol'];
     const roleIsSpeciesOwner = user.user_metadata?.role === 'species_owner';
-    const { data: spById } = await sb.from('species').select('id').eq('owner_user_id', user.id).limit(1);
-    const isSpeciesOwner = roleIsSpeciesOwner || !!spById?.length;
+    const isSpeciesOwner = await window._cachedIsSpeciesOwner(user.id, roleIsSpeciesOwner);
     const isTester = TESTERS.includes(nickname);
 
     if (loginBtn) {

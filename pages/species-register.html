@@ -82,9 +82,9 @@
             <input type="text" id="speciesDesignRights" class="form-input" placeholder="문의, 판매중 등">
           </div>
 
-          <!-- 종족주 안내 -->
+          <!-- 종족 설정 -->
           <div class="form-group">
-            <label class="form-label">종족주 안내 <span class="form-hint-inline">비워두면 상세페이지에 표시되지 않아요</span></label>
+            <label class="form-label">종족 설정 <span class="form-hint-inline">비워두면 상세페이지에 표시되지 않아요</span></label>
             <p class="form-hint" style="margin-bottom:12px;">소속 개체 위에 탭 형식으로 표시돼요</p>
 
             <div class="guide-check-row">
@@ -152,6 +152,25 @@
             </div>
           </div>
 
+          <!-- 종족 공개 타입 -->
+          <div class="form-group">
+            <label class="form-label">종족 공개 타입</label>
+            <div style="display:flex; flex-direction:column; gap:8px;">
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px; color:var(--text);">
+                <input type="radio" name="openType" value="" checked style="width:16px; height:16px; cursor:pointer; accent-color:var(--sky); flex-shrink:0;">
+                표시안함
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px; color:var(--text);">
+                <input type="radio" name="openType" value="open" style="width:16px; height:16px; cursor:pointer; accent-color:var(--sky); flex-shrink:0;">
+                열린종족
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer; font-size:14px; color:var(--text);">
+                <input type="radio" name="openType" value="closed" style="width:16px; height:16px; cursor:pointer; accent-color:var(--sky); flex-shrink:0;">
+                닫힌종족
+              </label>
+            </div>
+          </div>
+
           <!-- 민감한 요소 -->
           <div class="form-group">
             <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
@@ -161,8 +180,11 @@
               </label>
               <input type="text" id="sensitiveNote" class="form-input" placeholder="시선공포, 쨍한색 등" style="flex:1; min-width:160px;">
             </div>
+              <p class="form-hint" style="margin-top:2px;">
+                종족의 민감 요소 설정은 종족 페이지에만 적용됩니다.소속 개체는 개별적으로 설정해 주세요.
+              </p>
           </div>
-
+            
           <!-- 분양 규칙 -->
           <div class="form-group">
             <label class="form-label">분양 규칙</label>
@@ -201,11 +223,12 @@
   </div>
 
   <footer class="footer">
-    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.1</p>
+    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.2</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/auth.js"></script>
+  <script src="../js/achievements.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
@@ -214,6 +237,8 @@
     let currentUser = null;
 
     async function init() {
+      const { error: refreshError } = await sb.auth.refreshSession();
+      if (refreshError) { console.error('세션 갱신 실패:', refreshError); }
       currentUser = await getUser();
       if (!currentUser) { window.location.href = 'login.html'; return; }
       const role = currentUser.user_metadata?.role;
@@ -414,6 +439,7 @@
         const nickname     = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname || '';
         const isSensitive  = document.getElementById('isSensitive').checked;
         const sensitiveNote = document.getElementById('sensitiveNote').value.trim();
+        const openTypeVal  = document.querySelector('input[name="openType"]:checked')?.value || null;
 
         const { data, error } = await sb.from('species').insert({
           name,
@@ -427,6 +453,7 @@
           guide:          guide.length ? guide : null,
           is_sensitive:        isSensitive,
           sensitive_note:      isSensitive ? (sensitiveNote || null) : null,
+          open_type:           openTypeVal || null,
           allow_free_adoption:  document.getElementById('allowFreeAdoption').checked,
           allow_resale:         document.getElementById('allowResale').checked,
           allow_paid_adoption:  document.getElementById('allowPaidAdoption').checked,
@@ -435,6 +462,10 @@
 
         if (error) throw new Error(`등록에 실패했어요: ${error.message}`);
 
+        await window.awardAchievement?.('first_species', { pending: true });
+        const { count: _spCount } = await sb.from('species')
+          .select('*', { count: 'exact', head: true }).eq('owner_user_id', currentUser.id);
+        if ((_spCount || 0) >= 3) await window.awardAchievement?.('species_3', { pending: true });
         window.location.href = `species.html?id=${data.id}`;
       } catch (err) {
         errorEl.textContent = err.message;

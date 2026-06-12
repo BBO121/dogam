@@ -110,7 +110,7 @@
   </div>
 
   <footer class="footer">
-    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.1</p>
+    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.2</p>
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -130,6 +130,7 @@
     let applicantNickname = null;
     let applicantUserId = null;
     let adminNickname = null;
+    let applySpeciesName = '';
 
     async function initPage() {
       currentId = new URLSearchParams(window.location.search).get('id');
@@ -152,6 +153,7 @@
 
       applicantNickname = (data.user_id && idToNick[data.user_id]) || data.nickname;
       applicantUserId = data.user_id || null;
+      applySpeciesName = data.species_name || '';
 
       document.title = `${data.species_name} 종족주 신청 — 종족연구소`;
 
@@ -279,6 +281,11 @@
         });
         if (notiError) console.warn('[approveApplication] 알림 저장 실패:', notiError.message);
 
+        await logAdminAction('species_apply_approve', 'species_apply', currentId, applySpeciesName, {
+          species_name: applySpeciesName,
+          applicant:    applicantNickname,
+        });
+
         window.location.reload();
       } catch (err) {
         console.error('[approveApplication] 오류:', err);
@@ -306,6 +313,11 @@
         message: '종족주 신청 결과가 등록됐어요.',
         link: `species-apply-detail.html?id=${currentId}`,
         is_read: false,
+      });
+
+      await logAdminAction('species_apply_reject', 'species_apply', currentId, applySpeciesName, {
+        species_name: applySpeciesName,
+        applicant:    applicantNickname,
       });
 
       window.location.reload();

@@ -32,6 +32,13 @@
           <a href="species-register.html" class="btn-secondary" id="btnRegisterSpecies" style="display:none;">+ 종족 등록</a>
         </div>
 
+        <!-- 종족 유형 필터 -->
+        <div class="species-filter-chips" id="openFilterChips">
+          <button class="species-filter-chip active" data-filter="all">전체보기</button>
+          <button class="species-filter-chip" data-filter="open">열린종족</button>
+          <button class="species-filter-chip" data-filter="closed">닫힌종족</button>
+        </div>
+
         <!-- 검색 + 정렬 -->
         <div class="list-controls">
           <input type="text" class="list-search" id="searchInput" placeholder="종족 이름으로 검색">
@@ -50,22 +57,36 @@
   </div>
 
   <footer class="footer">
-    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.1</p>
+    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.2</p>
   </footer>
+
+  <style>
+    .species-filter-chips { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px; }
+    .species-filter-chip {
+      padding:6px 14px; border:1.5px solid var(--border); border-radius:9px;
+      background:#fff; font-size:13px; font-weight:600; color:var(--text-sub);
+      cursor:pointer; font-family:inherit; transition:all 0.15s; white-space:nowrap;
+    }
+    .species-filter-chip:hover  { border-color:var(--sky-dark); color:var(--sky-dark); }
+    .species-filter-chip.active { background:var(--sky-dark); border-color:var(--sky-dark); color:#fff; }
+  </style>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
+  <script src="../js/achievements.js"></script>
   <script src="../js/main.js"></script>
   <script>
-    let allSpecies = [];
+    let allSpecies    = [];
+    let isInitialLoad = true;
+    let openFilter    = 'all';
     const pager = createPager(render);
 
     async function loadSpecies() {
       const { data, error } = await sb
         .from('species')
-        .select('id, name, image_url, created_at, is_sensitive, sensitive_note')
+        .select('id, name, image_url, created_at, is_sensitive, sensitive_note, open_type')
         .order('created_at', { ascending: false });
 
       if (error || !data) {
@@ -74,15 +95,25 @@
       }
 
       allSpecies = data;
+      if (isInitialLoad) {
+        const p = new URLSearchParams(location.search);
+        const q = p.get('q'); const sort = p.get('sort');
+        if (q)    document.getElementById('searchInput').value = q;
+        if (sort) document.getElementById('sortSelect').value  = sort;
+      }
       applyFilter();
     }
 
-    function applyFilter() {
+    async function applyFilter() {
       const q    = document.getElementById('searchInput').value.trim();
       const sort = document.getElementById('sortSelect').value;
 
       const qLow = q.toLowerCase();
-      let list = allSpecies.filter(s => !q || s.name.toLowerCase().includes(qLow));
+      let list = allSpecies.filter(s => {
+        if (openFilter === 'open'   && s.open_type !== 'open')   return false;
+        if (openFilter === 'closed' && s.open_type !== 'closed') return false;
+        return !q || s.name.toLowerCase().includes(qLow);
+      });
 
       if (sort === 'name') {
         list = [...list].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
@@ -95,10 +126,31 @@
       if (!list.length) {
         grid.innerHTML = '<p class="page-loading">검색 결과가 없어요</p>';
         document.getElementById('paginationWrap').innerHTML = '';
+        if (q) {
+          window.awardAchievement?.('no_species_search');
+          const _fc = await window.incrementAchCounter?.('species_search_fail') || 0;
+          if (_fc >= 10) window.awardAchievement?.('species_search_fail_10');
+          if (_fc >= 5) {
+            const _cfc = await window.getCounterValue?.('char_search_fail') || 0;
+            if (_cfc >= 5) window.awardAchievement?.('odd_search');
+          }
+        }
         return;
       }
 
-      pager.load(list);
+      if (isInitialLoad) {
+        isInitialLoad = false;
+        pager.init(list);
+      } else {
+        const url = new URL(location.href);
+        const q    = document.getElementById('searchInput').value.trim();
+        const sort = document.getElementById('sortSelect').value;
+        if (q)    url.searchParams.set('q', q);       else url.searchParams.delete('q');
+        if (sort) url.searchParams.set('sort', sort); else url.searchParams.delete('sort');
+        url.searchParams.delete('page');
+        history.replaceState(null, '', url);
+        pager.load(list);
+      }
     }
 
     function render(data) {
@@ -125,6 +177,17 @@
       wrap.querySelectorAll('.blurred').forEach(el => el.classList.remove('blurred'));
       overlayEl.remove();
     }
+
+    document.getElementById('openFilterChips').addEventListener('click', e => {
+      const btn = e.target.closest('[data-filter]');
+      if (!btn) return;
+      openFilter = btn.dataset.filter;
+      document.querySelectorAll('#openFilterChips .species-filter-chip').forEach(el =>
+        el.classList.toggle('active', el === btn)
+      );
+      isInitialLoad = false;
+      applyFilter();
+    });
 
     document.getElementById('searchInput').addEventListener('input', applyFilter);
     document.getElementById('sortSelect').addEventListener('change', applyFilter);
