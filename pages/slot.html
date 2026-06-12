@@ -298,7 +298,7 @@
 
       const { error } = await sb.from('slots').update({ owner_user_id, owner_name }).eq('id', slotId);
       if (error) {
-        errEl.textContent = '이전에 실패했어요: ' + error.message;
+        errEl.textContent = '디자인권 이전에 실패했어요: ' + error.message;
         btn.textContent = '이전하기';
         btn.disabled    = false;
         return;

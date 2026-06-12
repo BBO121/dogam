@@ -332,6 +332,8 @@
     const TYPE_LABEL = { free: '무료', paid: '유료', auction: '경매', etc: '기타' };
     const TYPE_CLASS  = { free: 'adoption-type--free', paid: 'adoption-type--paid', auction: 'adoption-type--auction', etc: 'adoption-type--paid' };
 
+    function normalizeNick(s) { return (s || '').trim().toLowerCase(); }
+
     async function initPage() {
       if (!adoptionId) { window.location.href = 'adoption.html'; return; }
 
@@ -522,8 +524,12 @@
         await renderFreeAction(a, isAuthor, isOpen);
       }
 
-      // 확인하기 버튼 (낙찰자 + 확인 대기중)
-      if (currentUser && a.winner_user_id && currentUser.id === a.winner_user_id && a.status === '확인 대기중') {
+      // 확인하기 버튼 (낙찰자 + 확인 대기중) — UUID 비교 우선, 닉네임 폴백
+      const isCurrentUserWinner = currentUser && a.status === '확인 대기중' && (
+        (a.winner_user_id && currentUser.id === a.winner_user_id) ||
+        (myNick && a.winner_name && normalizeNick(myNick) === normalizeNick(a.winner_name))
+      );
+      if (isCurrentUserWinner) {
         document.getElementById('confirmBtnWrap').style.display = 'block';
       }
 
@@ -599,7 +605,13 @@
           }
         }
 
-        if (!isOpen) return;
+        if (!isOpen) {
+          // 추첨 완료 후 — 당첨자에게 안내 메시지 (first_come 타입과 동일한 패턴)
+          if (currentUser && myNick && a.winner_name && normalizeNick(myNick) === normalizeNick(a.winner_name) && a.status === '확인 대기중') {
+            area.innerHTML = `<div class="raffle-info-box">🎉 추첨에 당첨됐어요! 아래 확인하기 버튼을 눌러 소유권을 받으세요.</div>`;
+          }
+          return;
+        }
 
         if (!isPast) {
           // 신청 가능 기간

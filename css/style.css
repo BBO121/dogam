@@ -3068,6 +3068,7 @@ button.btn-more {
 .empty-state-desc {
   font-size: 14px;
   color: var(--text-mute);
+  text-align: center;
 }
 
 /* ═══════════════════════════════════════
