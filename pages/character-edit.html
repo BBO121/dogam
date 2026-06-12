@@ -1462,6 +1462,13 @@
 
         if (error) throw new Error(`저장에 실패했어요: ${error.message}`);
 
+        if (editRole === 'admin') {
+          await logAdminAction('character_edit', 'character', charId, name, {
+            species_name:    originalCharData.species_name || '',
+            owner_nickname:  owner,
+          }).catch(() => {});
+        }
+
         // 캐릭터 이름 변경 시 분양글 character_name 동기화
         const { error: adoptionSyncErr } = await sb.from('adoptions')
           .update({ character_name: name })

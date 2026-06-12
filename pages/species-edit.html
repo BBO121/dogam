@@ -255,8 +255,9 @@
   <script src="../js/utils.js?v=2"></script>
   <script>
     const speciesId = new URLSearchParams(window.location.search).get('id');
-    let currentImageUrl = null;
-    let originalName    = null;
+    let currentImageUrl  = null;
+    let originalName     = null;
+    let isAdminEditor    = false;
 
     // ── Quill 초기화 ──────────────────────────
     const SizeStyle = Quill.import('attributors/style/size');
@@ -313,6 +314,7 @@
       const isAdmin = isAdminOrStaff(user.user_metadata?.role);
       const isOwner = !!(user.id && s.owner_user_id && user.id === s.owner_user_id);
       if (!isOwner && !isAdmin) { window.location.href = `species.html?id=${speciesId}`; return; }
+      isAdminEditor = isAdmin;
 
       document.getElementById('breadcrumbName').textContent = s.name;
       document.getElementById('speciesName').value = s.name;
@@ -587,6 +589,10 @@
 
         if (error) throw new Error(`저장에 실패했어요: ${error.message}`);
         if (!data || data.length === 0) throw new Error('저장 권한이 없거나 변경할 수 없는 종족입니다.');
+
+        if (isAdminEditor) {
+          await logAdminAction('species_edit', 'species', speciesId, name, { species_name: name }).catch(() => {});
+        }
 
         // 종족명이 변경된 경우 characters.species_name 일괄 동기화
         if (originalName && name !== originalName) {

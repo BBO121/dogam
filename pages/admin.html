@@ -283,24 +283,6 @@
     const adoptionPager    = createPager(renderAdoptionRows,    'pgAdoptions');
     const adminLogPager    = createPager(renderLogRows,         'pgAdminLogs');
 
-    // ── 관리자 로그 헬퍼 ──────────────────────
-    async function logAdminAction(actionType, targetType, targetId, targetName, details = {}) {
-      if (!adminUser) return;
-      try {
-        await sb.from('admin_logs').insert({
-          admin_id:       adminUser.id,
-          admin_nickname: adminUser.user_metadata?.nickname || '',
-          action_type:    actionType,
-          target_type:    targetType || null,
-          target_id:      targetId ? String(targetId) : null,
-          target_name:    targetName || null,
-          details,
-        });
-      } catch (e) {
-        console.warn('[logAdminAction] 로그 기록 실패:', e);
-      }
-    }
-
     async function initPage() {
       const user = await getUser();
       const role = user?.user_metadata?.role;
@@ -1055,6 +1037,7 @@
         document.getElementById('pwCopyBtn').textContent         = '복사';
         document.getElementById('pwResetResultModal').style.display = 'flex';
 
+        await logAdminAction('password_reset', 'user', _pwResetUserId, _pwResetNickname, { target_nickname: _pwResetNickname });
         _pwResetUserId = null; _pwResetNickname = null;
       } catch (err) {
         errorEl.textContent = err.message;
@@ -1065,14 +1048,31 @@
 
     // ── 관리자 로그 ──────────────────────────
     const LOG_ACTION_LABELS = {
-      password_reset:     ['비밀번호 초기화', '#7c3aed', '#f5f3ff'],
-      role_grant:         ['권한 임명',       '#0284c7', '#e0f2fe'],
-      role_revoke:        ['권한 회수',       '#64748b', '#f1f5f9'],
-      user_delete:        ['유저 삭제',       '#dc2626', '#fef2f2'],
-      species_delete:     ['종족 삭제',       '#dc2626', '#fef2f2'],
-      character_delete:   ['개체 삭제',       '#dc2626', '#fef2f2'],
-      character_transfer: ['개체 이전',       '#0284c7', '#e0f2fe'],
-      adoption_delete:    ['분양글 삭제',     '#dc2626', '#fef2f2'],
+      // 유저
+      password_reset:          ['비밀번호 초기화',  '#7c3aed', '#f5f3ff'],
+      role_grant:               ['권한 임명',        '#0284c7', '#e0f2fe'],
+      role_revoke:              ['권한 회수',        '#64748b', '#f1f5f9'],
+      user_delete:              ['유저 삭제',        '#dc2626', '#fef2f2'],
+      // 문의
+      inquiry_comment_create:   ['문의 댓글 등록',   '#0284c7', '#e0f2fe'],
+      inquiry_comment_edit:     ['문의 댓글 수정',   '#7c3aed', '#f5f3ff'],
+      inquiry_comment_delete:   ['문의 댓글 삭제',   '#dc2626', '#fef2f2'],
+      // 버그 리포트
+      bug_comment_create:       ['버그 댓글 등록',   '#0284c7', '#e0f2fe'],
+      bug_comment_edit:         ['버그 댓글 수정',   '#7c3aed', '#f5f3ff'],
+      bug_comment_delete:       ['버그 댓글 삭제',   '#dc2626', '#fef2f2'],
+      // 종족주 신청
+      species_apply_approve:    ['종족주 신청 승인', '#16a34a', '#f0fdf4'],
+      species_apply_reject:     ['종족주 신청 반려', '#dc2626', '#fef2f2'],
+      // 종족
+      species_edit:             ['종족 수정',        '#7c3aed', '#f5f3ff'],
+      species_delete:           ['종족 삭제',        '#dc2626', '#fef2f2'],
+      // 개체
+      character_edit:           ['개체 수정',        '#7c3aed', '#f5f3ff'],
+      character_delete:         ['개체 삭제',        '#dc2626', '#fef2f2'],
+      character_transfer:       ['개체 이전',        '#0284c7', '#e0f2fe'],
+      // 분양
+      adoption_delete:          ['분양글 삭제',      '#dc2626', '#fef2f2'],
     };
 
     function renderLogRows(slice) {

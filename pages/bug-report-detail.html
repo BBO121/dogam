@@ -249,6 +249,9 @@
       const { error } = await sb.from('bug_reports').update({ comments: currentData.comments }).eq('id', currentId);
       if (error) { alert('수정에 실패했어요.'); return; }
 
+      if (isAdminUser) {
+        logAdminAction('bug_comment_edit', 'bug_report', currentId, pageAuthorNick, { bug_report_id: currentId, target_author: pageAuthorNick }).catch(() => {});
+      }
       renderComments(currentData, pageAuthorNick);
     }
 
@@ -260,6 +263,9 @@
       const { error } = await sb.from('bug_reports').update({ comments: currentData.comments }).eq('id', currentId);
       if (error) { alert('삭제에 실패했어요.'); return; }
 
+      if (isAdminUser) {
+        logAdminAction('bug_comment_delete', 'bug_report', currentId, pageAuthorNick, { bug_report_id: currentId, target_author: pageAuthorNick }).catch(() => {});
+      }
       renderComments(currentData, pageAuthorNick);
     }
 
@@ -364,12 +370,22 @@
         }
       }
 
+      const prevStatus = currentData.status;
       const { error } = await sb.from('bug_reports').update(updateData).eq('id', currentId);
       if (error) {
         errorEl.textContent = `등록에 실패했어요. (${error.message})`;
         submitBtn.disabled = false;
         submitBtn.textContent = '등록';
         return;
+      }
+
+      if (isAdminUser) {
+        const logDetails = { bug_report_id: currentId, target_author: pageAuthorNick };
+        if (updateData.status && updateData.status !== prevStatus) {
+          logDetails.status_from = prevStatus;
+          logDetails.status_to   = updateData.status;
+        }
+        logAdminAction('bug_comment_create', 'bug_report', currentId, pageAuthorNick, logDetails).catch(() => {});
       }
 
       // 로컬 상태 업데이트

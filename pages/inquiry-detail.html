@@ -310,12 +310,22 @@
         }
       }
 
+      const prevStatus = currentData.status;
       const { error } = await sb.from('inquiries').update(updateData).eq('id', currentId);
       if (error) {
         errorEl.textContent = `등록에 실패했어요. (${error.message})`;
         submitBtn.disabled = false;
         submitBtn.textContent = '등록';
         return;
+      }
+
+      if (isAdminUser) {
+        const logDetails = { inquiry_id: currentId, target_author: pageAuthorNick };
+        if (updateData.status && updateData.status !== prevStatus) {
+          logDetails.status_from = prevStatus;
+          logDetails.status_to   = updateData.status;
+        }
+        logAdminAction('inquiry_comment_create', 'inquiry', currentId, pageAuthorNick, logDetails).catch(() => {});
       }
 
       // 로컬 상태 업데이트
@@ -415,6 +425,9 @@
       const { error } = await sb.from('inquiries').update({ comments: currentData.comments }).eq('id', currentId);
       if (error) { alert('수정에 실패했어요.'); return; }
 
+      if (isAdminUser) {
+        logAdminAction('inquiry_comment_edit', 'inquiry', currentId, pageAuthorNick, { inquiry_id: currentId, target_author: pageAuthorNick }).catch(() => {});
+      }
       renderComments(currentData, pageAuthorNick);
     }
 
@@ -426,6 +439,9 @@
       const { error } = await sb.from('inquiries').update({ comments: currentData.comments }).eq('id', currentId);
       if (error) { alert('삭제에 실패했어요.'); return; }
 
+      if (isAdminUser) {
+        logAdminAction('inquiry_comment_delete', 'inquiry', currentId, pageAuthorNick, { inquiry_id: currentId, target_author: pageAuthorNick }).catch(() => {});
+      }
       renderComments(currentData, pageAuthorNick);
     }
 

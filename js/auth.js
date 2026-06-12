@@ -118,6 +118,25 @@ async function getMySpecies(userId) {
   return { data: data ?? [], error };
 }
 
+// 관리자 액션 로그 기록 (공통 — 모든 페이지에서 호출 가능)
+async function logAdminAction(actionType, targetType, targetId, targetName, details = {}) {
+  const user = await getUser();
+  if (!user || !isAdminOrStaff(user.user_metadata?.role)) return;
+  try {
+    await sb.from('admin_logs').insert({
+      admin_id:       user.id,
+      admin_nickname: user.user_metadata?.display_name || user.user_metadata?.nickname || '',
+      action_type:    actionType,
+      target_type:    targetType || null,
+      target_id:      targetId ? String(targetId) : null,
+      target_name:    targetName || null,
+      details,
+    });
+  } catch (e) {
+    console.warn('[logAdminAction] 로그 기록 실패:', e);
+  }
+}
+
 // 캐릭터 이전 로그 기록
 async function logTransfer({ character_name, species_name, from_nickname, from_user_id, to_nickname, to_user_id, method }) {
   const { error } = await sb.from('character_transfers').insert({
