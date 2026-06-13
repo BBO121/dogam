@@ -93,6 +93,11 @@
               </div>
             </div>
             <p class="profile-bio" id="profileBio"></p>
+
+            <!-- 뱃지 전시대 -->
+            <div id="sectionBadges" style="display:none;">
+              <div class="badge-showcase" id="profileBadgeList"></div>
+            </div>
           </div>
         </section>
 
@@ -275,6 +280,17 @@
         <button class="btn-ghost" onclick="closeDeleteModal()">취소</button>
         <button class="btn-danger" id="confirmDeleteBtn" onclick="executeDelete()">탈퇴 확인</button>
       </div>
+    </div>
+  </div>
+
+  <!-- 뱃지 상세 모달 -->
+  <div class="modal-overlay" id="badgeModal" style="display:none;" onclick="closeBadgeModal(event)">
+    <div class="badge-modal-card">
+      <button class="badge-modal-close" onclick="closeBadgeModal()" aria-label="닫기">✕</button>
+      <img id="badgeModalImg" src="" alt="" class="badge-modal-img">
+      <p class="badge-modal-name" id="badgeModalName"></p>
+      <p class="badge-modal-desc" id="badgeModalDesc"></p>
+      <p class="badge-modal-date" id="badgeModalDate"></p>
     </div>
   </div>
 
@@ -753,6 +769,7 @@
 
       const profileOwnerId = found?.id || null;
       console.log('[initOtherProfile] profileOwnerId:', profileOwnerId, '/ displayName:', displayName);
+      loadBadges(profileOwnerId);
       loadMySpecies(profileOwnerId, displayName);
       loadMyCharacters(profileOwnerId, displayName);
       loadAchievements(profileOwnerId, displayName);
@@ -841,6 +858,7 @@
       sb.from('user_profiles').upsert(_syncData, { onConflict: 'nickname' });
 
       console.log('[initMyProfile] user.id:', user.id, '/ displayName:', displayName);
+      loadBadges(user.id);
       loadMySpecies(user.id, displayName);
       loadMyCharacters(user.id, displayName);
       loadAchievements(user.id, null);
@@ -919,6 +937,51 @@
           </div>
         </a>
       `).join('');
+    }
+
+    const _badgeDataMap = {};
+
+    async function loadBadges(userId) {
+      if (!userId) return;
+      try {
+        const { data } = await sb
+          .from('user_badges')
+          .select('badge_code, awarded_at, badges(name, description, image_url)')
+          .eq('user_id', userId)
+          .order('awarded_at', { ascending: true });
+        if (!data?.length) return;
+        data.forEach(row => {
+          if (row.badges) _badgeDataMap[row.badge_code] = { ...row.badges, awarded_at: row.awarded_at };
+        });
+        document.getElementById('sectionBadges').style.display = '';
+        document.getElementById('profileBadgeList').innerHTML = data.map(row => {
+          const b = row.badges;
+          if (!b) return '';
+          return `<img src="../images/badges/${b.image_url}" alt="${b.name}" title="${b.name}" style="cursor:pointer;" onclick="openBadgeModal('${row.badge_code}')">`;
+        }).join('');
+      } catch (e) {
+        console.warn('[뱃지] 로드 실패:', e);
+      }
+    }
+
+    function openBadgeModal(code) {
+      const b = _badgeDataMap[code];
+      if (!b) return;
+      const awardedDate = b.awarded_at
+        ? new Date(b.awarded_at).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })
+            .replace(/\. /g, '.').replace(/\.$/, '')
+        : '—';
+      document.getElementById('badgeModalImg').src  = `../images/badges/${b.image_url}`;
+      document.getElementById('badgeModalImg').alt  = b.name;
+      document.getElementById('badgeModalName').textContent = b.name;
+      document.getElementById('badgeModalDesc').textContent = b.description || '';
+      document.getElementById('badgeModalDate').textContent = awardedDate;
+      document.getElementById('badgeModal').style.display  = 'flex';
+    }
+
+    function closeBadgeModal(e) {
+      if (e && e.target !== document.getElementById('badgeModal')) return;
+      document.getElementById('badgeModal').style.display = 'none';
     }
 
     async function loadAchievements(userId, viewNickname) {

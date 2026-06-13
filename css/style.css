@@ -4430,6 +4430,89 @@ button.btn-more {
   gap: 0;
 }
 
+/* ═══════════════════════════════════════
+   뱃지 모달
+═══════════════════════════════════════ */
+.badge-modal-card {
+  position: relative;
+  background: var(--white);
+  border-radius: 20px;
+  padding: 32px 28px 28px;
+  max-width: 280px;
+  width: 100%;
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+}
+
+.badge-modal-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  background: none;
+  border: none;
+  font-size: 16px;
+  color: var(--text-mute);
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 4px;
+}
+
+.badge-modal-close:hover {
+  color: var(--text);
+}
+
+.badge-modal-img {
+  width: 112px;
+  height: 112px;
+  object-fit: contain;
+  display: block;
+  margin: 0 auto 10px;
+}
+
+.badge-modal-name {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.badge-modal-desc {
+  font-size: 13px;
+  color: var(--text-sub);
+  line-height: 1.7;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.badge-modal-date {
+  margin-top: 14px;
+  font-size: 11px;
+  color: var(--text-mute);
+}
+
+/* ═══════════════════════════════════════
+   뱃지 전시대
+═══════════════════════════════════════ */
+.badge-showcase {
+  margin-top: 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge-showcase img {
+  width: 68px;
+  height: 68px;
+  object-fit: contain;
+  transition: transform 0.15s ease;
+}
+
+.badge-showcase img:hover {
+  transform: scale(1.08);
+}
+}
+
 .guide-static-section {
   padding: 36px 0;
   border-top: 1px solid var(--border);

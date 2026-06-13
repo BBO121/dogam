@@ -77,7 +77,7 @@
       btn.textContent = '가입 중...';
       btn.disabled = true;
 
-      const { error } = await signUp(nickname, password);
+      const { data: signUpData, error } = await signUp(nickname, password);
 
       if (error) {
         if (error.message.includes('already registered')) {
@@ -91,8 +91,13 @@
         try {
           await window.awardAchievement?.('first_login', { pending: true });
           await window.awardAchievement?.('open_beta',   { pending: true });
+          // 오픈베타 뱃지 자동 지급 (베타 종료 시 이 블록 제거)
+          const betaUserId = signUpData?.user?.id;
+          if (betaUserId) {
+            await sb.rpc('grant_beta_badge', { p_user_id: betaUserId });
+          }
         } catch (e) {
-          console.error('[업적] 가입 업적 지급 오류:', e);
+          console.error('[업적/뱃지] 가입 지급 오류:', e);
         }
         window.location.href = 'index.html';
       }
