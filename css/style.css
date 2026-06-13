@@ -4502,8 +4502,8 @@ button.btn-more {
 }
 
 .badge-showcase img {
-  width: 68px;
-  height: 68px;
+  width: 62px;
+  height: 62px;
   object-fit: contain;
   transition: transform 0.15s ease;
 }
