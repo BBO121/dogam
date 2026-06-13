@@ -4242,6 +4242,7 @@ button.btn-more {
   /* 모달 */
   .modal-overlay { padding: 16px; align-items: flex-end; }
   .modal-card    { border-radius: 16px 16px 12px 12px; max-width: 100%; }
+  #badgeModal    { align-items: center; }
 
   /* 공지사항 */
   .notice-date   { display: none; }
