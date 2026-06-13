@@ -310,7 +310,7 @@
     </div>
   </div>
 
-  <footer class="footer"><p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.2</p></footer>
+  <footer class="footer"><p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; ver.1.3</p></footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/auth.js"></script>
@@ -519,9 +519,23 @@
         banner.style.display = 'block';
       }
 
+      // 당첨자 여부 — winner_user_id 우선, 없으면 닉네임 fallback
+      const isWinner = !!(currentUser && (
+        (a.winner_user_id && currentUser.id === a.winner_user_id) ||
+        (!a.winner_user_id && myNick?.trim() === a.winner_name?.trim())
+      ));
+      console.log('[confirmBtnWrap 조건]', {
+        currentUserId: currentUser?.id,
+        winnerUserId:  a.winner_user_id,
+        myNick,
+        winnerName:    a.winner_name,
+        isWinner,
+        status:        a.status,
+      });
+
       // 무료 추첨/선착순 액션 영역
       if (a.adoption_type === 'free') {
-        await renderFreeAction(a, isAuthor, isOpen);
+        await renderFreeAction(a, isAuthor, isOpen, isWinner);
       }
 
       // 확인하기 버튼 (낙찰자 + 확인 대기중) — UUID 비교 우선, 닉네임 폴백
@@ -571,7 +585,7 @@
       }
     }
 
-    async function renderFreeAction(a, isAuthor, isOpen) {
+    async function renderFreeAction(a, isAuthor, isOpen, isWinner) {
       const area = document.getElementById('freeActionArea');
       if (!a.free_type || a.free_type === 'normal') return;
 
@@ -646,7 +660,7 @@
           const winner = a.winner_name;
           let html = '';
           if (winner) {
-            if (currentUser && myNick === winner) {
+            if (isWinner) {
               // 당첨자 본인 — confirmBtnWrap은 renderMain에서 표시
               if (a.status === '확인 대기중') {
                 html = `<div class="raffle-info-box">🎉 선착순 신청에 성공했어요! 아래 확인하기 버튼을 눌러 소유권을 받으세요.</div>`;
@@ -746,36 +760,50 @@
 
       if (updateErr) { alert('오류가 발생했어요.'); return; }
 
-      // 당첨자 + 분양자 기존 알림
-      await sb.from('notifications').insert([
-        {
-          user_nickname: winner,
-          type:          'raffle_win',
-          message:       `🎲 "${currentAdoption.character_name}" 랜덤 추첨에 당첨됐어요! 분양자가 확정을 처리할 예정이에요.`,
-          link:          `adoption-detail.html?id=${adoptionId}`,
-        },
-        {
-          user_nickname: currentAdoption.author,
-          type:          'raffle_done',
-          message:       `🎲 "${currentAdoption.character_name}" 추첨 결과: ${winner}님 당첨!`,
-          link:          `adoption-detail.html?id=${adoptionId}`,
-        },
-      ]);
+      const raffleLink = `adoption-detail.html?id=${adoptionId}`;
 
-      // 낙첨자 알림 (당첨자·분양자 제외, 중복 제거)
-      const losers = [...new Set(
-        apps.map(ap => ap.applicant_nickname)
-            .filter(nick => nick !== winner && nick !== currentAdoption.author)
-      )];
-      if (losers.length > 0) {
-        await sb.from('notifications').insert(
-          losers.map(nick => ({
+      // 당첨자 알림 — notify_user_by_id RPC (UUID 기반)
+      if (winnerApp.applicant_id) {
+        sb.rpc('notify_user_by_id', {
+          p_user_id: winnerApp.applicant_id,
+          p_type:    'raffle_win',
+          p_message: `🎲 "${currentAdoption.character_name}" 랜덤 추첨에 당첨됐어요! 분양자가 확정을 처리할 예정이에요.`,
+          p_link:    raffleLink,
+        }).catch(e => console.error('[알림] raffle_win RPC 실패:', e));
+      }
+
+      // 분양자(작성자) 알림 — notify_user_by_id RPC (UUID 기반)
+      if (currentAdoption.user_id) {
+        sb.rpc('notify_user_by_id', {
+          p_user_id: currentAdoption.user_id,
+          p_type:    'raffle_done',
+          p_message: `🎲 "${currentAdoption.character_name}" 추첨 결과: ${winner}님 당첨!`,
+          p_link:    raffleLink,
+        }).catch(e => console.error('[알림] raffle_done RPC 실패:', e));
+      }
+
+      // 낙첨자 알림 — UUID 있는 경우 RPC, 없으면 닉네임 직접 insert
+      const loserApps = apps.filter(ap => ap.applicant_nickname !== winner && ap.applicant_nickname !== currentAdoption.author);
+      const loserById = loserApps.filter(ap => ap.applicant_id);
+      const loserByNick = [...new Set(loserApps.filter(ap => !ap.applicant_id).map(ap => ap.applicant_nickname))];
+
+      loserById.forEach(ap => {
+        sb.rpc('notify_user_by_id', {
+          p_user_id: ap.applicant_id,
+          p_type:    'raffle_lose',
+          p_message: `🎲 참여한 "${currentAdoption.character_name}" 추첨이 완료됐어요. 이번엔 아쉽지만 다음 기회에!`,
+          p_link:    raffleLink,
+        }).catch(() => {});
+      });
+      if (loserByNick.length > 0) {
+        sb.from('notifications').insert(
+          loserByNick.map(nick => ({
             user_nickname: nick,
             type:          'raffle_lose',
             message:       `🎲 참여한 "${currentAdoption.character_name}" 추첨이 완료됐어요. 이번엔 아쉽지만 다음 기회에!`,
-            link:          `adoption-detail.html?id=${adoptionId}`,
+            link:          raffleLink,
           }))
-        );
+        ).catch(() => {});
       }
 
       alert('추첨 완료!');
@@ -823,20 +851,26 @@
         return;
       }
 
-      await sb.from('notifications').insert([
-        {
-          user_nickname: currentAdoption.author,
-          type:          'first_come_win',
-          message:       `🏃 "${currentAdoption.character_name}" 선착순 분양 신청자가 생겼어요! 분양을 확정해주세요.`,
-          link:          `adoption-detail.html?id=${adoptionId}`,
-        },
-        {
-          user_nickname: myNick,
-          type:          'first_come_success',
-          message:       `🎉 "${currentAdoption.character_name}" 선착순 분양에 성공했어요! 분양 페이지에서 확인하기 버튼을 눌러 소유권을 받으세요.`,
-          link:          `adoption-detail.html?id=${adoptionId}`,
-        },
-      ]);
+      const adoptionLink = `adoption-detail.html?id=${adoptionId}`;
+
+      // 분양자(작성자)에게 알림 — notify_user_by_id RPC (SECURITY DEFINER, RLS 우회)
+      if (currentAdoption.user_id) {
+        sb.rpc('notify_user_by_id', {
+          p_user_id: currentAdoption.user_id,
+          p_type:    'first_come_win',
+          p_message: `🏃 "${currentAdoption.character_name}" 선착순 분양 신청자가 생겼어요! 분양을 확정해주세요.`,
+          p_link:    adoptionLink,
+        }).catch(e => console.error('[알림] first_come_win RPC 실패:', e));
+      }
+
+      // 당첨자(본인)에게 알림 — notify_user_by_id RPC (UUID 기반, 닉네임 불일치 방지)
+      const { error: notifErr } = await sb.rpc('notify_user_by_id', {
+        p_user_id: currentUser.id,
+        p_type:    'first_come_success',
+        p_message: `🎉 "${currentAdoption.character_name}" 선착순 분양에 성공했어요! 분양 페이지에서 확인하기 버튼을 눌러 소유권을 받으세요.`,
+        p_link:    adoptionLink,
+      });
+      if (notifErr) console.error('[알림] first_come_success RPC 실패:', notifErr);
 
       alert('신청 완료.');
       location.reload();
