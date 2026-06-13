@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>운영진 도감 — 종족연구소</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .credits-header {
+      text-align: center;
+      padding-top: 24px;
+      margin-bottom: 36px;
+    }
+    .credits-section { margin-bottom: 40px; }
+    .credits-section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-mute);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    .credits-grid--center {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 18px;
+      justify-content: center;
+    }
+    .credits-grid--center .credits-card {
+      width: 200px;
+    }
+    .credits-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: box-shadow 0.2s, transform 0.2s;
+      text-decoration: none;
+      display: block;
+    }
+    .credits-card:hover {
+      box-shadow: var(--shadow-lg);
+      transform: translateY(-3px);
+    }
+    .credits-card-img {
+      width: 100%;
+      height: 200px;
+      background: #F8FAFC;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    .credits-card-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .credits-card-img svg {
+      width: 32px;
+      height: 32px;
+      color: var(--sky);
+      opacity: 0.4;
+    }
+    .credits-card-info {
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+    }
+    .credits-card-name {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text);
+    }
+    .credits-card-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      margin-top: 5px;
+    }
+    .credits-card-duties {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 3px;
+      margin-top: 4px;
+    }
+    .credits-badge {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 700;
+    }
+    .credits-badge--director {
+      background: #FEF3C7;
+      color: #D97706;
+    }
+    .credits-badge--staff {
+      background: #DCFCE7;
+      color: #16A34A;
+    }
+    .credits-badge--role {
+      background: #E0F2FE;
+      color: #0369A1;
+    }
+    .credits-thanks {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      font-size: 14px;
+      color: var(--text-sub);
+      line-height: 1.8;
+      text-align: center;
+    }
+    @media (max-width: 480px) {
+      .credits-grid--center .credits-card { width: calc(50% - 9px); }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <button class="hamburger-btn" id="hamburgerBtn" aria-label="메뉴">
+        <span></span><span></span><span></span>
+      </button>
+      <a href="index.html" class="logo">종족연구소</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login" id="headerLoginBtn">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+
+      <!-- 페이지 헤더 -->
+      <div class="credits-header">
+        <h1 class="list-page-title">운영진 도감</h1>
+        <p class="list-page-count" style="margin-top: 4px;">종족연구소를 함께 만들어가고 있어요!</p>
+        <div style="margin-top: 24px; border-top: 1px solid var(--border);"></div>
+      </div>
+
+      <!-- 연구소장 -->
+      <div class="credits-section">
+        <p class="credits-section-title">연구소장</p>
+        <div class="credits-grid--center">
+          <a class="credits-card" href="profile.html?user=%EB%BD%80">
+            <div class="credits-card-img">
+              <img src="../images/profile_bbo.png" alt="뽀">
+            </div>
+            <div class="credits-card-info">
+              <div class="credits-card-name">뽀</div>
+              <div class="credits-card-badges">
+                <span class="credits-badge credits-badge--director">연구소장</span>
+              </div>
+              <div class="credits-card-duties">
+                <span class="credits-badge credits-badge--role">기획</span>
+                <span class="credits-badge credits-badge--role">개발</span>
+                <span class="credits-badge credits-badge--role">디자인</span>
+                <span class="credits-badge credits-badge--role">운영</span>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- 스태프 -->
+      <div class="credits-section">
+        <p class="credits-section-title">스태프</p>
+        <div class="credits-grid--center">
+          <a class="credits-card" href="profile.html?user=%EB%83%A0%EC%88%98">
+            <div class="credits-card-img">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+              </svg>
+            </div>
+            <div class="credits-card-info">
+              <div class="credits-card-name">냐수</div>
+              <div class="credits-card-badges">
+                <span class="credits-badge credits-badge--staff">스태프</span>
+              </div>
+              <div class="credits-card-duties">
+                <span class="credits-badge credits-badge--role">기획</span>
+                <span class="credits-badge credits-badge--role">운영</span>
+              </div>
+            </div>
+          </a>
+          <a class="credits-card" href="profile.html?user=%EB%AA%A8%EB%A1%9Cmoulow">
+            <div class="credits-card-img">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+              </svg>
+            </div>
+            <div class="credits-card-info">
+              <div class="credits-card-name">모로moulow</div>
+              <div class="credits-card-badges">
+                <span class="credits-badge credits-badge--staff">스태프</span>
+              </div>
+              <div class="credits-card-duties">
+                <span class="credits-badge credits-badge--role">기획</span>
+                <span class="credits-badge credits-badge--role">운영</span>
+              </div>
+            </div>
+          </a>
+          <a class="credits-card" href="profile.html?user=%EC%82%AC%EC%9B%94%E5%B7%B3%E6%9C%88">
+            <div class="credits-card-img">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+              </svg>
+            </div>
+            <div class="credits-card-info">
+              <div class="credits-card-name">사월巳月</div>
+              <div class="credits-card-badges">
+                <span class="credits-badge credits-badge--staff">스태프</span>
+              </div>
+              <div class="credits-card-duties">
+                <span class="credits-badge credits-badge--role">기획</span>
+                <span class="credits-badge credits-badge--role">운영</span>
+              </div>
+            </div>
+          </a>
+          <a class="credits-card" href="profile.html?user=%EC%95%84%EC%9A%94">
+            <div class="credits-card-img">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+              </svg>
+            </div>
+            <div class="credits-card-info">
+              <div class="credits-card-name">아요</div>
+              <div class="credits-card-badges">
+                <span class="credits-badge credits-badge--staff">스태프</span>
+              </div>
+              <div class="credits-card-duties">
+                <span class="credits-badge credits-badge--role">기획</span>
+                <span class="credits-badge credits-badge--role">운영</span>
+              </div>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- 하단 문구 -->
+      <div class="credits-section">
+        <div class="credits-thanks">
+          베타 테스트 기간 동안 도움을 주신 모든 연구원 여러분께 감사드립니다. 💖
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; <a href="credits.html">운영진</a> &nbsp;·&nbsp; ver.1.3</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/achievements.js"></script>
+  <script src="../js/main.js"></script>
+</body>
+</html>
