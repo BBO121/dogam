@@ -1021,7 +1021,7 @@
         const charSections = collectSections();
 
         // DB 저장
-        const { error } = await sb.from('characters').insert({
+        const { data: newChar, error } = await sb.from('characters').insert({
           name,
           char_number:         document.getElementById('charNumber').value.trim() || null,
           species_name:        speciesName || null,
@@ -1046,9 +1046,22 @@
           allow_paid_adoption:  getTristate('allowPaidAdoption'),
           allow_other_adoption: getTristate('allowOtherAdoption'),
           char_sections:       charSections.length ? charSections : null,
-        });
+        }).select('id').single();
 
         if (error) throw new Error(`등록에 실패했어요: ${error.message}`);
+
+        if (ownerType === 'site' && selectedNickId && selectedNickId !== currentUser?.id) {
+          try {
+            await sb.rpc('notify_user_by_id', {
+              p_user_id: selectedNickId,
+              p_type:    'character_registered',
+              p_message: `'${name}' 소유자로 등록됐어요!`,
+              p_link:    `character.html?id=${newChar?.id}`,
+            });
+          } catch (notifErr) {
+            console.warn('소유자 등록 알림 전송 실패 (등록은 완료됨):', notifErr);
+          }
+        }
 
         await window.awardAchievement?.('first_character', { pending: true });
         if (ownerType === 'site' && selectedNickId === currentUser?.id) {
