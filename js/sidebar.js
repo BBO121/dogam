@@ -25,7 +25,6 @@ async function initSidebar() {
 
     <nav class="sidebar-menu">
       <a href="guide.html" class="sidebar-item ${path === 'guide.html' || path === 'guide-detail.html' ? 'active' : ''}">가이드</a>
-      ${isLocal ? `<button class="sidebar-item" onclick="openGuideTour()" style="background:none;border:none;width:100%;text-align:left;cursor:pointer;color:#f59e0b;">🗺️ 가이드맵 [DEV]</button>` : ''}
     </nav>
 
     <div class="sidebar-divider"></div>
@@ -481,23 +480,23 @@ async function loadAdminBadges() {
 
 document.addEventListener('DOMContentLoaded', initSidebar);
 
-// ── 가이드맵 동적 로드 ────────────────────────────────
-function _loadGuideTour() {
-  if (typeof openCategoryModal !== 'undefined') return;
-  const s = document.createElement('script');
-  s.src = '../js/guide-tour.js';
-  document.head.appendChild(s);
-}
-document.addEventListener('DOMContentLoaded', _loadGuideTour);
+// ── 가이드맵 동적 로드 (미구현, 추후 연결 예정) ────────────────────────────────
+// function _loadGuideTour() {
+//   if (typeof openCategoryModal !== 'undefined') return;
+//   const s = document.createElement('script');
+//   s.src = '../js/guide-tour.js';
+//   document.head.appendChild(s);
+// }
+// document.addEventListener('DOMContentLoaded', _loadGuideTour);
 
 function openGuideTour() {
-  if (typeof openCategoryModal === 'function') {
-    openCategoryModal();
-    return;
-  }
-  // 아직 로드 중이면 로드 후 열기
-  const s = document.createElement('script');
-  s.src = '../js/guide-tour.js';
-  s.onload = () => openCategoryModal();
-  document.head.appendChild(s);
+  // guide-tour.js 미구현 — 추후 연결 예정
+  // if (typeof openCategoryModal === 'function') {
+  //   openCategoryModal();
+  //   return;
+  // }
+  // const s = document.createElement('script');
+  // s.src = '../js/guide-tour.js';
+  // s.onload = () => openCategoryModal();
+  // document.head.appendChild(s);
 }
