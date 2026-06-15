@@ -1,0 +1,290 @@
+/* ═══════════════════════════════════════
+   사이드바
+═══════════════════════════════════════ */
+.sidebar {
+  width: 200px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 76px;
+  padding: 24px 0;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--text-sub);
+  transition: background 0.15s, color 0.15s;
+  font-weight: 500;
+}
+
+.sidebar-item:hover {
+  background: var(--sky-pale);
+  color: var(--sky-dark);
+}
+
+.sidebar-item.active {
+  background: var(--sky-light);
+  color: var(--sky-deep);
+  font-weight: 700;
+}
+
+.sidebar-item--login {
+  color: var(--text-mute);
+}
+
+.sidebar-item--login:hover {
+  background: var(--sky-pale);
+  color: var(--sky-dark);
+}
+
+.icon {
+  font-size: 15px;
+}
+
+.sidebar-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 16px 0;
+}
+
+.sidebar-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-mute);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  padding: 0 12px;
+  margin-bottom: 8px;
+}
+
+.sidebar-species {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar-species-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-sub);
+  transition: background 0.15s, color 0.15s;
+}
+
+.sidebar-species-item:hover {
+  background: var(--sky-pale);
+  color: var(--sky-dark);
+}
+
+.sidebar-species-item.active {
+  font-weight: 700;
+  color: var(--sky-deep);
+  background: var(--sky-light);
+}
+
+.sidebar-species-item span {
+  font-size: 11px;
+  color: var(--text-mute);
+  background: var(--border);
+  padding: 1px 7px;
+  border-radius: 20px;
+}
+
+.sidebar-species-all {
+  display: block;
+  padding: 7px 12px;
+  font-size: 12px;
+  color: var(--sky-dark);
+  border-radius: 8px;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+.sidebar-species-all:hover {
+  background: var(--sky-pale);
+}
+
+/* ═══════════════════════════════════════
+   사이드바 아코디언
+═══════════════════════════════════════ */
+.sidebar-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar-accordion-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  color: var(--text-sub);
+  font-weight: 500;
+  cursor: pointer;
+  background: none;
+  border: none;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.15s, color 0.15s;
+}
+
+.sidebar-accordion-btn:hover {
+  background: var(--sky-pale);
+  color: var(--sky-dark);
+}
+
+.sidebar-accordion-btn.active {
+  background: var(--sky-light);
+  color: var(--sky-deep);
+  font-weight: 700;
+}
+
+.sidebar-accordion-arrow {
+  font-size: 10px;
+  transition: transform 0.2s;
+  color: var(--text-mute);
+  display: inline-block;
+}
+
+.sidebar-accordion-arrow::after {
+  content: '▾';
+}
+
+.sidebar-accordion-body {
+  display: none;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 8px;
+}
+
+.sidebar-accordion-body.open {
+  display: flex;
+}
+
+.sidebar-subitem {
+  display: block;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text-sub);
+  transition: background 0.15s, color 0.15s;
+}
+
+.sidebar-subitem:hover {
+  background: var(--sky-pale);
+  color: var(--sky-dark);
+}
+
+.sidebar-subitem.active {
+  color: var(--sky-deep);
+  font-weight: 700;
+  background: var(--sky-light);
+}
+
+.sidebar-accordion-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.sidebar-accordion-head .sidebar-accordion-btn {
+  flex: 1;
+}
+
+.sidebar-all-link {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sky-deep);
+  padding: 0 12px;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.sidebar-login {
+  color: var(--text-mute);
+}
+
+.sidebar-loading {
+  padding: 7px 12px;
+  font-size: 12px;
+  color: var(--text-mute);
+}
+
+/* 사이드바 알림 뱃지 */
+.sidebar-notif-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  background: #EF4444;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 0 4px;
+  margin-left: auto;
+}
+
+/* ═══════════════════════════════════════
+   사이드바 유저 블록 (모바일 전용)
+═══════════════════════════════════════ */
+.sidebar-user-block {
+  display: none;
+  padding: 14px 12px 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+
+.sidebar-user-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+
+.sidebar-user-block .btn-login {
+  display: block;
+  text-align: center;
+  width: 100%;
+}
+
+.sidebar-user-block .btn-logout {
+  display: block;
+  width: 100%;
+  margin-left: 0;
+  text-align: center;
+}
+
+/* ── 사이드바 가이드맵 버튼 ── */
+.sidebar-guidemap-btn {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  font-family: inherit;
+  cursor: pointer;
+  color: inherit;
+}
+
+/* ── 가이드 활성 시 모바일 사이드바 최상위 표시 ── */
+body.tour-sidebar-step .sidebar {
+  z-index: 9983;
+}

@@ -1,0 +1,97 @@
+/* ═══════════════════════════════════════
+   헤더
+═══════════════════════════════════════ */
+.header {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: var(--shadow-sm);
+}
+
+.header-inner {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--sky-dark);
+  letter-spacing: -0.5px;
+}
+
+.logo::after {
+  content: 'Beta';
+  display: inline-block;
+  margin-left: 6px;
+  padding: 2px 8px;
+  background: var(--sky);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 6px;
+  vertical-align: middle;
+  letter-spacing: 0;
+}
+
+.header-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-login {
+  background: var(--sky-dark);
+  color: var(--white);
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+
+.btn-login:hover {
+  background: var(--sky-deep);
+}
+
+/* ═══════════════════════════════════════
+   레이아웃
+═══════════════════════════════════════ */
+.layout {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 24px;
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+}
+
+/* ═══════════════════════════════════════
+   푸터
+═══════════════════════════════════════ */
+.footer {
+  border-top: 1px solid var(--border);
+  text-align: center;
+  padding: 28px;
+  font-size: 13px;
+  color: var(--text-mute);
+  margin-top: 40px;
+  background: var(--white);
+}
+
+.footer a {
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.footer a:hover {
+  color: var(--sky-dark);
+}
