@@ -947,7 +947,7 @@
       if (!userId) return;
       try {
         const [{ data: allBadges, error: badgesErr }, { data: earnedRows, error: earnedErr }] = await Promise.all([
-          sb.from('badges').select('code, name, description, image_url, is_obtainable').order('id', { ascending: true }),
+          sb.from('badges').select('code, name, description, image_url, is_obtainable'),
           sb.from('user_badges').select('badge_code, awarded_at').eq('user_id', userId)
         ]);
         if (badgesErr) { console.warn('[뱃지] badges 조회 오류:', badgesErr); return; }
