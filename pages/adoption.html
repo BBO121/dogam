@@ -163,9 +163,10 @@
 
         // 카드 썸네일: thumbnail_url 우선, 없으면 image_url fallback
         const cardThumb = a.thumbnail_url || a.image_url;
+        const stamp = closed ? `<img src="../images/adoption-complete.png" class="adoption-stamp" alt="분양완료">` : '';
         let cardImgHtml;
         if (isSensitive && cardThumb) {
-          cardImgHtml = `<div class="adoption-card-img" style="position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background-image:url('${cardThumb}');background-size:cover;background-position:center;" class="blurred"></div>${buildSensitiveOverlay(sensitiveNote)}</div>`;
+          cardImgHtml = `<div class="adoption-card-img"><div style="position:absolute;inset:0;background-image:url('${cardThumb}');background-size:cover;background-position:center;" class="blurred"></div>${buildSensitiveOverlay(sensitiveNote)}</div>`;
         } else {
           const imgStyle = cardThumb ? `background-image:url('${cardThumb}');background-size:cover;background-position:center;` : '';
           cardImgHtml = `<div class="adoption-card-img" style="${imgStyle}"></div>`;
@@ -174,6 +175,7 @@
         return `
           <a class="adoption-card${closed ? ' adoption-card--closed' : ''}" href="adoption-detail.html?id=${a.id}">
             ${cardImgHtml}
+            ${stamp}
             <div class="adoption-card-info">
               <div class="adoption-card-badges">
                 <span class="adoption-type-badge ${typeClass}">${typeLabel}</span>
