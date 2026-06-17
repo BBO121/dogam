@@ -289,6 +289,8 @@
       <button class="badge-modal-close" onclick="closeBadgeModal()" aria-label="닫기">✕</button>
       <img id="badgeModalImg" src="" alt="" class="badge-modal-img">
       <p class="badge-modal-name" id="badgeModalName"></p>
+      <p class="badge-modal-status" id="badgeModalStatus" style="display:none;"></p>
+      <p class="badge-modal-obtainable" id="badgeModalObtainable" style="display:none;"></p>
       <p class="badge-modal-desc" id="badgeModalDesc"></p>
       <p class="badge-modal-date" id="badgeModalDate"></p>
     </div>
@@ -944,20 +946,33 @@
     async function loadBadges(userId) {
       if (!userId) return;
       try {
-        const { data } = await sb
-          .from('user_badges')
-          .select('badge_code, awarded_at, badges(name, description, image_url)')
-          .eq('user_id', userId)
-          .order('awarded_at', { ascending: true });
-        if (!data?.length) return;
-        data.forEach(row => {
-          if (row.badges) _badgeDataMap[row.badge_code] = { ...row.badges, awarded_at: row.awarded_at };
+        const [{ data: allBadges, error: badgesErr }, { data: earnedRows, error: earnedErr }] = await Promise.all([
+          sb.from('badges').select('code, name, description, image_url, is_obtainable'),
+          sb.from('user_badges').select('badge_code, awarded_at').eq('user_id', userId)
+        ]);
+        if (badgesErr) { console.warn('[뱃지] badges 조회 오류:', badgesErr); return; }
+        if (earnedErr)  console.warn('[뱃지] user_badges 조회 오류:', earnedErr);
+        console.log('[뱃지] badges 전체:', allBadges?.length, '/ 획득:', earnedRows?.length);
+        if (!allBadges?.length) return;
+
+        const earnedMap = {};
+        (earnedRows || []).forEach(r => { earnedMap[r.badge_code] = r.awarded_at; });
+
+        allBadges.forEach(b => {
+          _badgeDataMap[b.code] = {
+            name: b.name,
+            description: b.description,
+            image_url: b.image_url,
+            is_obtainable: b.is_obtainable,
+            awarded_at: earnedMap[b.code] ?? null
+          };
         });
+
         document.getElementById('sectionBadges').style.display = '';
-        document.getElementById('profileBadgeList').innerHTML = data.map(row => {
-          const b = row.badges;
-          if (!b) return '';
-          return `<img src="../images/badges/${b.image_url}" alt="${b.name}" title="${b.name}" style="cursor:pointer;" onclick="openBadgeModal('${row.badge_code}')">`;
+        document.getElementById('profileBadgeList').innerHTML = allBadges.map(b => {
+          const earned = b.code in earnedMap;
+          const cls    = earned ? '' : ' badge-unearned';
+          return `<img src="../images/badges/${b.image_url}" alt="${b.name}" title="${b.name}" class="badge-showcase-item${cls}" onclick="openBadgeModal('${b.code}')">`;
         }).join('');
       } catch (e) {
         console.warn('[뱃지] 로드 실패:', e);
@@ -967,16 +982,40 @@
     function openBadgeModal(code) {
       const b = _badgeDataMap[code];
       if (!b) return;
-      const awardedDate = b.awarded_at
-        ? new Date(b.awarded_at).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })
-            .replace(/\. /g, '.').replace(/\.$/, '')
-        : '—';
-      document.getElementById('badgeModalImg').src  = `../images/badges/${b.image_url}`;
-      document.getElementById('badgeModalImg').alt  = b.name;
+      const earned = b.awarded_at !== null;
+
+      const imgEl          = document.getElementById('badgeModalImg');
+      const statusEl       = document.getElementById('badgeModalStatus');
+      const obtainableEl   = document.getElementById('badgeModalObtainable');
+      const dateEl         = document.getElementById('badgeModalDate');
+
+      imgEl.src = `../images/badges/${b.image_url}`;
+      imgEl.alt = b.name;
+      imgEl.style.filter  = earned ? '' : 'grayscale(100%)';
+      imgEl.style.opacity = earned ? '1' : '0.3';
+
       document.getElementById('badgeModalName').textContent = b.name;
       document.getElementById('badgeModalDesc').textContent = b.description || '';
-      document.getElementById('badgeModalDate').textContent = awardedDate;
-      document.getElementById('badgeModal').style.display  = 'flex';
+
+      if (earned) {
+        statusEl.style.display     = 'none';
+        obtainableEl.style.display = 'none';
+        const d = new Date(b.awarded_at).toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })
+          .replace(/\. /g, '.').replace(/\.$/, '');
+        dateEl.textContent    = d + ' 획득';
+        dateEl.style.display  = '';
+      } else {
+        statusEl.textContent   = '미획득 뱃지';
+        statusEl.style.display = '';
+        obtainableEl.textContent  = b.is_obtainable === false ? '현재 획득 불가' : '현재 획득 가능';
+        obtainableEl.className    = b.is_obtainable === false
+          ? 'badge-modal-obtainable badge-modal-obtainable--no'
+          : 'badge-modal-obtainable badge-modal-obtainable--yes';
+        obtainableEl.style.display = '';
+        dateEl.style.display = 'none';
+      }
+
+      document.getElementById('badgeModal').style.display = 'flex';
     }
 
     function closeBadgeModal(e) {

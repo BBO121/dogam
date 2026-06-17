@@ -6,7 +6,13 @@ function createPager(renderFn, wrapId = 'paginationWrap', pageParam = 'page') {
   let data = [];
 
   const pager = {
-    load(arr) { data = arr; page = 1; pager._draw(); },
+    load(arr) {
+      data = arr; page = 1;
+      const url = new URL(location.href);
+      url.searchParams.delete(pageParam);
+      history.replaceState(null, '', url);
+      pager._draw();
+    },
     // 초기 로드 시 URL의 ?page= 값으로 복원
     init(arr) {
       data = arr;
