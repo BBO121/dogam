@@ -106,6 +106,7 @@
     let searchQuery  = '';
 
     // ── 필터 적용 ──────────────────────────────────
+    let _firstLoad = true;
     function applyFilters() {
       const q = searchQuery.toLowerCase();
 
@@ -138,7 +139,8 @@
       }
 
       document.getElementById('adoptionCount').textContent = `총 ${filtered.length}개`;
-      pager.load(filtered);
+      if (_firstLoad) { _firstLoad = false; pager.init(filtered); }
+      else            { pager.load(filtered); }
     }
 
     // ── 카드 렌더링 ────────────────────────────────
