@@ -3699,7 +3699,9 @@ button.btn-more {
     left: -280px;
     width: 260px;
     height: 100dvh;
-    height: 100vh; /* fallback */
+    // height: 100vh; /* fallback */
+    // vh는 특정 사이트 내 상단 주소바/하단 메뉴바를 포함한 전체 화면 사이즈 기준이고 dvh는 사용자가 스크롤하거나 모바일 주소창과 같은 UI 요소가 나타나거나 사라질 때마다 뷰포트의 높이가 변하는 경우, 이를 반영하여 실시간으로 계산된 값을 제공해주는 단위. 
+    // 사이드바는 dvh로 작업하여야 모바일에서 잘리는 부분 없이 나타남. 
     z-index: 300;
     background: var(--white);
     border-right: 1px solid var(--border);

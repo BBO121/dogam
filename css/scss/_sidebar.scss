@@ -4,8 +4,8 @@
 .sidebar {
   width: 200px;
   flex-shrink: 0;
-  position: sticky;
-  top: 76px;
+  // position: sticky; // 사이드바 같이 스크롤 되게 하려면 해당 속성 없어야 함.
+  // top: 76px; // sticky 속성 빠지면 얘도 필요 없음
   padding: 24px 0;
 }
 
