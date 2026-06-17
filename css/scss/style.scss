@@ -1878,6 +1878,7 @@ button.btn-more {
 }
 
 .adoption-card {
+  position: relative;
   display: block;
   background: var(--white);
   border: 1px solid var(--border);
@@ -1893,19 +1894,44 @@ button.btn-more {
   transform: translateY(-3px);
 }
 
-.adoption-card--closed {
-  opacity: 0.5;
-}
+
 .adoption-card--closed:hover {
   transform: none;
   box-shadow: none;
   cursor: default;
 }
 
+.adoption-card--closed .adoption-card-img::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.52);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.adoption-card--closed .adoption-card-info {
+  opacity: 0.5;
+}
+
 .adoption-card-img {
+  position: relative;
+  overflow: hidden;
   width: 100%;
   aspect-ratio: 1;
   background: #F8FAFC;
+}
+
+.adoption-stamp {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(-12deg);
+  width: 100%;
+  max-width: 240px;
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 10;
 }
 
 .adoption-card-info {
