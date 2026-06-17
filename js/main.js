@@ -19,20 +19,24 @@ function createPager(renderFn, wrapId = 'paginationWrap', pageParam = 'page') {
       const p     = parseInt(new URLSearchParams(location.search).get(pageParam));
       const total = Math.ceil(arr.length / PER_PAGE);
       page = (p >= 1 && p <= (total || 1)) ? p : 1;
+      console.log('[pager] init() | URL ?page =', p, '| total =', total, '| 확정 page =', page);
       pager._draw();
     },
     go(p) {
+      console.log('[pager] ③ go() 호출 | 요청 p =', p);
       const total = Math.ceil(data.length / PER_PAGE);
       page = Math.max(1, Math.min(p, total || 1));
       const url = new URL(location.href);
       if (page === 1) url.searchParams.delete(pageParam);
       else            url.searchParams.set(pageParam, page);
       history.replaceState(null, '', url);
+      console.log('[pager] ⑤ URL 변경 후 =', url.toString(), '| page 변수 =', page);
       pager._draw();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     _draw() {
       const slice = data.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+      console.log('[pager] ④ _draw() | 현재 page =', page, '| 렌더 아이템 수 =', slice.length, '| 첫 항목 id =', slice[0]?.id);
       renderFn(slice);
 
       const wrap = document.getElementById(wrapId);
@@ -59,7 +63,10 @@ function createPager(renderFn, wrapId = 'paginationWrap', pageParam = 'page') {
 
       wrap.innerHTML = html;
       wrap.querySelectorAll('.pg-btn:not([disabled])').forEach(btn =>
-        btn.addEventListener('click', () => pager.go(+btn.dataset.p))
+        btn.addEventListener('click', () => {
+          console.log('[pager] ① click 이벤트 발생 | data-p =', btn.dataset.p, '| 파싱값 =', +btn.dataset.p);
+          pager.go(+btn.dataset.p);
+        })
       );
     }
   };
