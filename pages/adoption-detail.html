@@ -91,10 +91,12 @@
       z-index:1000; padding:16px; cursor:zoom-out;
     }
     .img-modal-inner {
-      position:relative; max-width:min(90vw,640px); max-height:90vh; cursor:default;
+      position:relative; width:fit-content;
+      max-width:95vw; max-height:90vh; cursor:default;
     }
     .img-modal-inner img {
-      display:block; max-width:100%; max-height:90vh;
+      display:block; width:auto; height:auto;
+      max-width:95vw; max-height:90vh;
       border-radius:10px; object-fit:contain;
     }
     .img-modal-close {
@@ -411,6 +413,8 @@
           mainImg.style.backgroundImage    = `url('${dispUrl}')`;
           mainImg.style.backgroundSize     = 'cover';
           mainImg.style.backgroundPosition = 'center';
+          mainImg.style.cursor             = 'pointer';
+          mainImg.onclick = () => openImgModal(dispUrl);
         }
       }
 
@@ -419,7 +423,7 @@
         document.getElementById('extraImgsRow').innerHTML = a.extra_images.map(url =>
           isSensitive
             ? `<div class="adoption-extra-img" style="position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background-image:url('${url}');background-size:cover;background-position:center;" class="blurred"></div>${buildSensitiveOverlay(sensitiveNote)}</div>`
-            : `<div class="adoption-extra-img" style="background-image:url('${url}');background-size:cover;background-position:center;"></div>`
+            : `<div class="adoption-extra-img" style="background-image:url('${url}');background-size:cover;background-position:center;cursor:pointer;" onclick="openImgModal('${url}')"></div>`
         ).join('');
       }
 
