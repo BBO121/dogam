@@ -302,15 +302,15 @@
       }
       afterDeleteHref = speciesHref;
 
-      // 관계 섹션에 사용할 상대 캐릭터 정보 미리 로드
+      // 관계 섹션에 사용할 상대 캐릭터 정보 미리 로드 (복수 관계 섹션 대응)
       let relationCharsMap = {};
-      const relSection = (c.char_sections || []).find(s => s.type === 'relation');
-      if (relSection?.relations?.length) {
-        const relIds = relSection.relations.map(r => r.char_id).filter(Boolean);
-        if (relIds.length) {
-          const { data: relChars } = await sb.from('characters').select('id, name, image_url, thumbnail_url, species_name').in('id', relIds);
-          (relChars || []).forEach(rc => { relationCharsMap[rc.id] = rc; });
-        }
+      const allRelIds = (c.char_sections || [])
+        .filter(s => s.type === 'relation')
+        .flatMap(s => (s.relations || []).map(r => r.char_id))
+        .filter(Boolean);
+      if (allRelIds.length) {
+        const { data: relChars } = await sb.from('characters').select('id, name, image_url, thumbnail_url, species_name').in('id', allRelIds);
+        (relChars || []).forEach(rc => { relationCharsMap[rc.id] = rc; });
       }
 
       const canViewOriginal  = isOwner || isSpeciesOwner; // 소유 관계만 토글 표시

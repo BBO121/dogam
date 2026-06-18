@@ -549,6 +549,11 @@
       const itemId = 'rel_' + Date.now() + '_' + Math.random().toString(36).slice(2, 5);
       const div = document.createElement('div');
       div.className = 'relation-item';
+      if (data) {
+        div.dataset.charId      = data.char_id      || '';
+        div.dataset.charName    = data.char_name    || '';
+        div.dataset.speciesName = data.species_name || '';
+      }
       div.innerHTML = `
         <div style="display:flex; gap:8px; margin-bottom:8px; flex-wrap:wrap;">
           <select class="form-input rel-species-select" style="flex:1; min-width:120px; padding:8px 10px;" onchange="loadRelChars(this, '${itemId}_chars')">
@@ -608,11 +613,14 @@
           card.querySelectorAll('.relation-item').forEach(item => {
             const speciesOpt = item.querySelector('.rel-species-select option:checked');
             const charOpt    = item.querySelector('.rel-char-select option:checked');
-            if (!charOpt?.value) return;
+            // loadRelChars 비동기 미완료 시 data 속성 fallback 사용
+            const charId   = charOpt?.value || item.dataset.charId   || '';
+            const charName = charOpt?.dataset.name || charOpt?.textContent.trim() || item.dataset.charName || '';
+            if (!charId) return;
             relations.push({
-              char_id:        charOpt.value,
-              char_name:      charOpt.dataset.name || charOpt.textContent.trim(),
-              species_name:   speciesOpt?.dataset?.name || '',
+              char_id:        charId,
+              char_name:      charName,
+              species_name:   speciesOpt?.dataset?.name || item.dataset.speciesName || '',
               relation_label: item.querySelector('.rel-label').value.trim(),
               description: (() => { const c = item.querySelector('.ql-container'); const q = c && Quill.find(c); return q && q.getLength() > 1 ? q.root.innerHTML : ''; })(),
             });
