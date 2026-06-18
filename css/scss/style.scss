@@ -495,7 +495,7 @@
 .search-dropdown li a {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 4px;
   padding: 10px 14px;
   font-size: 14px;
   color: var(--text);
@@ -521,6 +521,18 @@
   border: 1px solid #E2E8F0;
 }
 
+.dd-badge--admin {
+  background: #FEF3C7;
+  color: #D97706;
+  border: 1px solid #FDE68A;
+}
+
+.dd-badge--staff {
+  background: #DCFCE7;
+  color: #16A34A;
+  border: 1px solid #BBF7D0;
+}
+
 .dd-badge--species-owner {
   background: #E0F2FE;
   color: #0284C7;
@@ -542,6 +554,7 @@
 .dd-label {
   font-size: 13px;
   color: var(--text);
+  margin-left: 4px;
 }
 
 .search-dropdown li + li {
@@ -4107,6 +4120,11 @@ button.btn-more {
 
 .badge-showcase img:hover {
   transform: scale(1.08);
+}
+
+.badge-showcase img.badge-unearned {
+  filter: grayscale(100%);
+  opacity: 0.4;
 }
 
 

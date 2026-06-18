@@ -97,6 +97,7 @@ let characters = [];
 let speciesList = [];
 let siteUsers   = [];
 let userIdMap   = {};
+let speciesOwnerNicksSet = new Set();
 
 async function loadSearchData() {
   const [
@@ -106,30 +107,32 @@ async function loadSearchData() {
   ] = await Promise.all([
     sb.from('characters').select('id, name, species_name'),
     sb.rpc('get_all_users'),
-    sb.from('species').select('id, name'),
+    sb.from('species').select('id, name, owner_nickname'),
   ]);
   if (charErr) { console.error('[검색] 데이터 로드 실패:', charErr); return; }
 
+  if (spList) {
+    spList.forEach(s => { if (s.owner_nickname) speciesOwnerNicksSet.add(s.owner_nickname); });
+    speciesList = spList.map(s => ({
+      name: s.name,
+      url:  `species.html?id=${s.id}`,
+    }));
+  }
+
   if (userList) {
     siteUsers = userList
-      .filter(u => u.role !== 'admin')
+      .filter(u => u.login_id !== 'admin')
       .map(u => ({
-        name:    u.nickname  || '',
-        loginId: u.login_id || u.nickname || '',
-        role:    u.role     || '',
+        name:           u.nickname  || '',
+        loginId:        u.login_id || u.nickname || '',
+        role:           u.role     || '',
+        isSpeciesOwner: u.role === 'species_owner' || speciesOwnerNicksSet.has(u.nickname || ''),
       }));
     userList.forEach(u => {
       const loginId     = (u.login_id  || u.nickname || '').toLowerCase();
       const displayName = (u.nickname  || '').toLowerCase();
       if (loginId) userIdMap[loginId] = displayName;
     });
-  }
-
-  if (spList) {
-    speciesList = spList.map(s => ({
-      name: s.name,
-      url:  `species.html?id=${s.id}`,
-    }));
   }
 
   if (chars) {
@@ -153,17 +156,9 @@ if (searchInput && searchDropdown) {
 
     const qLow = q.toLowerCase();
 
-    const matchedSpeciesOwners = siteUsers.filter(u =>
-      u.role === 'species_owner' && (
-        u.name.toLowerCase().includes(qLow) ||
-        u.loginId.toLowerCase().includes(qLow)
-      )
-    );
     const matchedUsers = siteUsers.filter(u =>
-      u.role !== 'species_owner' && (
-        u.name.toLowerCase().includes(qLow) ||
-        u.loginId.toLowerCase().includes(qLow)
-      )
+      u.name.toLowerCase().includes(qLow) ||
+      u.loginId.toLowerCase().includes(qLow)
     );
     const matchedSpecies = speciesList.filter(s =>
       s.name.toLowerCase().includes(qLow)
@@ -172,7 +167,7 @@ if (searchInput && searchDropdown) {
       c.name.toLowerCase().includes(qLow)
     );
 
-    renderDropdown(q, matchedSpeciesOwners, matchedUsers, matchedSpecies, matchedChars);
+    renderDropdown(q, matchedUsers, matchedSpecies, matchedChars);
   });
 
   searchInput.addEventListener('keydown', (e) => {
@@ -188,30 +183,38 @@ if (searchInput && searchDropdown) {
   });
 }
 
-function renderDropdown(q, matchedSpeciesOwners, matchedUsers, matchedSpecies, matchedChars) {
-  const total = matchedSpeciesOwners.length + matchedUsers.length + matchedSpecies.length + matchedChars.length;
+function userPriority(u) {
+  if (u.role === 'admin') return 1;
+  if (u.role === 'staff') return 2;
+  if (u.isSpeciesOwner)   return 3;
+  return 4;
+}
+
+function getUserBadgesHtml(u) {
+  const badges = [];
+  if (u.role === 'admin') badges.push('<span class="dd-badge dd-badge--admin">관리자</span>');
+  if (u.role === 'staff') badges.push('<span class="dd-badge dd-badge--staff">스태프</span>');
+  if (u.isSpeciesOwner)   badges.push('<span class="dd-badge dd-badge--species-owner">종족주</span>');
+  if (!badges.length)     badges.push('<span class="dd-badge dd-badge--user">일반유저</span>');
+  return badges.join('');
+}
+
+function renderDropdown(q, matchedUsers, matchedSpecies, matchedChars) {
+  const total = matchedUsers.length + matchedSpecies.length + matchedChars.length;
   if (!total) { closeDropdown(); return; }
 
-  const p = {
-    speciesOwners: matchedSpeciesOwners.slice(0, 2),
-    users:         matchedUsers.slice(0, 2),
-    species:       matchedSpecies.slice(0, 2),
-    chars:         matchedChars.slice(0, 3),
-  };
+  const sortedUsers = [...matchedUsers].sort((a, b) => userPriority(a) - userPriority(b));
 
-  const ownerHtml = p.speciesOwners.map(u => `
-    <li>
-      <a href="character-list.html?owner=${encodeURIComponent(u.name)}">
-        <span class="dd-badge dd-badge--species-owner">종족주</span>
-        <span class="dd-label">${highlight(u.name, q)}</span>
-      </a>
-    </li>
-  `).join('');
+  const p = {
+    users:   sortedUsers.slice(0, 4),
+    species: matchedSpecies.slice(0, 2),
+    chars:   matchedChars.slice(0, 3),
+  };
 
   const userHtml = p.users.map(u => `
     <li>
-      <a href="character-list.html?owner=${encodeURIComponent(u.name)}">
-        <span class="dd-badge dd-badge--user">일반유저</span>
+      <a href="profile.html?user=${encodeURIComponent(u.name)}">
+        ${getUserBadgesHtml(u)}
         <span class="dd-label">${highlight(u.name, q)}</span>
       </a>
     </li>
@@ -235,9 +238,9 @@ function renderDropdown(q, matchedSpeciesOwners, matchedUsers, matchedSpecies, m
     </li>
   `).join('');
 
-  searchDropdown.innerHTML = ownerHtml + userHtml + speciesHtml + charHtml;
+  searchDropdown.innerHTML = userHtml + speciesHtml + charHtml;
 
-  const shown = p.speciesOwners.length + p.users.length + p.species.length + p.chars.length;
+  const shown = p.users.length + p.species.length + p.chars.length;
   if (total > shown) {
     const li = document.createElement('li');
     li.className = 'dd-enter';
