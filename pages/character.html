@@ -308,7 +308,7 @@
       if (relSection?.relations?.length) {
         const relIds = relSection.relations.map(r => r.char_id).filter(Boolean);
         if (relIds.length) {
-          const { data: relChars } = await sb.from('characters').select('id, name, image_url, species_name').in('id', relIds);
+          const { data: relChars } = await sb.from('characters').select('id, name, image_url, thumbnail_url, species_name').in('id', relIds);
           (relChars || []).forEach(rc => { relationCharsMap[rc.id] = rc; });
         }
       }
@@ -480,7 +480,7 @@
                         <div class="relation-card">
                           <div class="relation-card-duo">
                             <div class="relation-char-side">
-                              ${makeAvatar(c.image_url, c.name)}
+                              ${makeAvatar(c.thumbnail_url || c.image_url, c.name)}
                               <span class="relation-char-name">${c.name}</span>
                               <span class="relation-char-species">${c.species_name || ''}</span>
                             </div>
@@ -489,7 +489,7 @@
                               <span class="relation-arrows">↔</span>
                             </div>
                             <div class="relation-char-side relation-char-side--right">
-                              ${makeAvatar(rc.image_url, r.char_name)}
+                              ${makeAvatar(rc.thumbnail_url || rc.image_url, r.char_name)}
                               <a href="character.html?id=${r.char_id}" class="relation-char-name">${r.char_name}</a>
                               <span class="relation-char-species">${r.species_name || ''}</span>
                             </div>
