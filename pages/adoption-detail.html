@@ -88,16 +88,22 @@
     .img-modal-overlay {
       position:fixed; inset:0; background:rgba(0,0,0,0.88);
       display:flex; align-items:center; justify-content:center;
-      z-index:1000; padding:16px; cursor:zoom-out;
+      z-index:1000; padding:20px; box-sizing:border-box; cursor:zoom-out;
     }
     .img-modal-inner {
-      position:relative; width:fit-content;
-      max-width:95vw; max-height:90vh; cursor:default;
+      position:relative; cursor:default;
+      width:auto; max-width:95vw; max-height:90vh;
+      display:flex; align-items:center; justify-content:center;
+      overflow:visible;
     }
     .img-modal-inner img {
-      display:block; width:auto; height:auto;
-      max-width:95vw; max-height:90vh;
-      border-radius:10px; object-fit:contain;
+      display:block !important;
+      width:auto !important;
+      height:auto !important;
+      max-width:95vw !important;
+      max-height:90vh !important;
+      object-fit:contain !important;
+      border-radius:10px;
     }
     .img-modal-close {
       position:absolute; top:-13px; right:-13px;
@@ -404,6 +410,7 @@
       // 메인 이미지 — thumbnail_url 우선, 없으면 image_url fallback
       const mainImg  = document.getElementById('mainImg');
       const dispUrl  = a.thumbnail_url || a.image_url;
+      const modalUrl = a.image_url    || a.thumbnail_url;
       if (dispUrl) {
         if (isSensitive) {
           mainImg.style.position = 'relative';
@@ -414,17 +421,24 @@
           mainImg.style.backgroundSize     = 'cover';
           mainImg.style.backgroundPosition = 'center';
           mainImg.style.cursor             = 'pointer';
-          mainImg.onclick = () => openImgModal(dispUrl);
+          mainImg.addEventListener('click', () => window.openImgModal(modalUrl));
         }
       }
 
       // 추가 이미지
+      const extraRow = document.getElementById('extraImgsRow');
       if (a.extra_images && a.extra_images.length > 0) {
-        document.getElementById('extraImgsRow').innerHTML = a.extra_images.map(url =>
+        extraRow.innerHTML = a.extra_images.map(url =>
           isSensitive
             ? `<div class="adoption-extra-img" style="position:relative;overflow:hidden;"><div style="position:absolute;inset:0;background-image:url('${url}');background-size:cover;background-position:center;" class="blurred"></div>${buildSensitiveOverlay(sensitiveNote)}</div>`
-            : `<div class="adoption-extra-img" style="background-image:url('${url}');background-size:cover;background-position:center;cursor:pointer;" onclick="openImgModal('${url}')"></div>`
+            : `<div class="adoption-extra-img" style="background-image:url('${url}');background-size:cover;background-position:center;cursor:pointer;" data-img-url="${url.replace(/"/g,'&quot;')}"></div>`
         ).join('');
+        if (!isSensitive) {
+          extraRow.addEventListener('click', e => {
+            const el = e.target.closest('[data-img-url]');
+            if (el) window.openImgModal(el.dataset.imgUrl);
+          });
+        }
       }
 
       // 뱃지
@@ -1779,15 +1793,15 @@
       const mentions = activeMentions.get(ta.id);
       if (mentions && mentions.size) updateMentionChips(ta);
     });
-    function openImgModal(url) {
+    window.openImgModal = function(url) {
       document.getElementById('imgModalSrc').src = url;
       document.getElementById('imgModal').style.display = 'flex';
       document.body.style.overflow = 'hidden';
-    }
-    function closeImgModal() {
+    };
+    window.closeImgModal = function() {
       document.getElementById('imgModal').style.display = 'none';
       document.body.style.overflow = '';
-    }
+    };
 
     document.addEventListener('keydown', e => {
       if (e.key === 'Escape') { hideMentionDropdown(); closeImgModal(); }
