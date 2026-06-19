@@ -627,23 +627,31 @@
           try {
             const dbUpdate = { watermark_type: newWmType };
 
-            // 대표 이미지: original_image_url 기준 재합성
-            const mainRes = await fetch(char.original_image_url);
-            if (!mainRes.ok) throw new Error(`대표 이미지 다운로드 실패 (${mainRes.status})`);
-            const mainBlob   = await mainRes.blob();
-            const mainWmBlob = await applyWatermark(mainBlob, wmSrc);
-            const mainName   = `${Date.now()}_rewm_${String(char.id).slice(0, 8)}.jpg`;
-            const { error: mainUpErr } = await sb.storage.from('images').upload(mainName, mainWmBlob, { contentType: 'image/jpeg' });
-            if (mainUpErr) throw new Error(mainUpErr.message);
-            dbUpdate.image_url = sb.storage.from('images').getPublicUrl(mainName).data.publicUrl;
+            // 대표 이미지: original_image_url 기준 재합성 (GIF 제외)
+            if (/\.gif(\?|$)/i.test(char.original_image_url)) {
+              dbUpdate.image_url = char.original_image_url; // GIF는 워터마크 미적용, 원본 그대로
+            } else {
+              const mainRes = await fetch(char.original_image_url);
+              if (!mainRes.ok) throw new Error(`대표 이미지 다운로드 실패 (${mainRes.status})`);
+              const mainBlob   = await mainRes.blob();
+              const mainWmBlob = await applyWatermark(mainBlob, wmSrc);
+              const mainName   = `${Date.now()}_rewm_${String(char.id).slice(0, 8)}.jpg`;
+              const { error: mainUpErr } = await sb.storage.from('images').upload(mainName, mainWmBlob, { contentType: 'image/jpeg' });
+              if (mainUpErr) throw new Error(mainUpErr.message);
+              dbUpdate.image_url = sb.storage.from('images').getPublicUrl(mainName).data.publicUrl;
+            }
 
-            // 추가 이미지: original_additional_images 기준, null 항목 건너뜀
+            // 추가 이미지: original_additional_images 기준, null 항목 및 GIF 건너뜀
             const origAdditional = char.original_additional_images || [];
             const wmAdditional   = [...(char.additional_images || [])];
             let extraCount = 0;
             for (let idx = 0; idx < origAdditional.length; idx++) {
               const origUrl = origAdditional[idx];
               if (!origUrl) continue;
+              if (/\.gif(\?|$)/i.test(origUrl)) {
+                wmAdditional[idx] = origUrl; // GIF는 원본 그대로 유지
+                continue;
+              }
               try {
                 const res = await fetch(origUrl);
                 if (!res.ok) { reLog(`  ↳ 추가 이미지 ${idx + 1} 다운로드 실패 (${res.status})`); continue; }

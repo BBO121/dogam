@@ -262,6 +262,12 @@
         log(`→ 처리 시작: ${char.name} (${String(char.id).slice(0,8)})`, 'log-step');
 
         try {
+          // GIF 파일은 Canvas 처리 불가 — 건너뜀
+          if (/\.gif(\?|$)/i.test(char.image_url)) {
+            log(`↷ ${char.name}: GIF 파일 — 건너뜁니다.`, 'log-skip');
+            continue;
+          }
+
           // 1. 소스 이미지 로드 (Image 요소 사용 — fetch CORS 우회)
           log(`  [1] 이미지 로드 중...`, 'log-step');
           let srcImg;
@@ -429,6 +435,13 @@
 
           for (let idx = 0; idx < origUrls.length; idx++) {
             extraLog(`  [${idx + 1}/${origUrls.length}] 처리 중...`, 'log-step');
+
+            // GIF 파일은 Canvas 처리 불가 — 원본 그대로 유지
+            if (/\.gif(\?|$)/i.test(origUrls[idx])) {
+              newWmUrls.push(origUrls[idx]);
+              extraLog(`  [${idx + 1}] GIF 파일 — 건너뜁니다.`, 'log-skip');
+              continue;
+            }
 
             // 이미지 로드
             let srcImg;
@@ -614,6 +627,8 @@
         const mainSrcUrl = data.original_image_url || data.image_url;
         if (!mainSrcUrl) {
           regenLog('대표 이미지 소스 없음 — 건너뜁니다.', 'log-skip');
+        } else if (/\.gif(\?|$)/i.test(mainSrcUrl)) {
+          regenLog('\n[대표 이미지] GIF 파일 — 재생성 대상 아님, 건너뜁니다.', 'log-skip');
         } else {
           regenLog(`\n[대표 이미지] 소스: ${data.original_image_url ? 'original_image_url' : 'image_url'}`, 'log-step');
           try {
@@ -641,6 +656,10 @@
             regenLog(`\n[추가 이미지 ${idx + 1}] original 없음 — 건너뜁니다.`, 'log-skip');
             continue;
           }
+          if (/\.gif(\?|$)/i.test(origUrl)) {
+            wmAdditional[idx] = origUrl;
+            regenLog(`\n[추가 이미지 ${idx + 1}] GIF 파일 — 건너뜁니다.`, 'log-skip');
+          } else {
           regenLog(`\n[추가 이미지 ${idx + 1}] original 기준 재합성`, 'log-step');
           try {
             const srcImg = await loadImageElement(origUrl);
@@ -654,6 +673,7 @@
             extraUpdated = true;
           } catch (e) {
             regenLog(`  추가 이미지 ${idx + 1} 재생성 실패: ${e.message}`, 'log-err');
+          }
           }
           await new Promise(r => setTimeout(r, 300));
         }

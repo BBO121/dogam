@@ -370,9 +370,11 @@
     }
 
     async function uploadGuideImg(imgFile) {
-      const blob     = await compressImage(imgFile);
-      const fileName = `guide_${Date.now()}_${Math.random().toString(36).slice(2,7)}.jpg`;
-      const { error } = await sb.storage.from('images').upload(fileName, blob, { upsert: true, contentType: 'image/jpeg' });
+      const isGif   = imgFile.type === 'image/gif';
+      const ext     = isGif ? 'gif' : 'jpg';
+      const blob    = await compressImage(imgFile);
+      const fileName = `guide_${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`;
+      const { error } = await sb.storage.from('images').upload(fileName, blob, { upsert: true, contentType: isGif ? 'image/gif' : 'image/jpeg' });
       if (error) throw new Error(`가이드 이미지 업로드 실패: ${error.message}`);
       const { data } = sb.storage.from('images').getPublicUrl(fileName);
       return data.publicUrl;
@@ -425,10 +427,12 @@
         let imageUrl = null;
         const imgFile = document.getElementById('imgInput').files[0];
         if (imgFile) {
-          const blob     = await compressImage(imgFile);
-          const fileName = `species_${Date.now()}.jpg`;
+          const isGif   = imgFile.type === 'image/gif';
+          const ext     = isGif ? 'gif' : 'jpg';
+          const blob    = await compressImage(imgFile);
+          const fileName = `species_${Date.now()}.${ext}`;
           const { error: uploadError } = await sb.storage.from('images').upload(fileName, blob, {
-            upsert: true, contentType: 'image/jpeg',
+            upsert: true, contentType: isGif ? 'image/gif' : 'image/jpeg',
           });
           if (uploadError) throw new Error(`이미지 업로드 실패: ${uploadError.message}`);
           const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);

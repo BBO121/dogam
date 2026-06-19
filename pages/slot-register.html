@@ -347,6 +347,15 @@
       selectedMainFile = file;
       pendingThumbnailBlob = null;
 
+      // GIF: 크롭 모달 스킵, 애니메이션 미리보기 표시
+      if (file.type === 'image/gif') {
+        const url = URL.createObjectURL(file);
+        document.getElementById('imagePreview').src           = url;
+        document.getElementById('imagePreview').style.display = 'block';
+        document.getElementById('uploadPlaceholder').style.display = 'none';
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = ev => {
         const cropImg = document.getElementById('cropImage');
@@ -434,20 +443,27 @@
         const file = document.getElementById('imageFile').files[0];
 
         if (file) {
-          const wmSrc = userWatermarkUrl || '../images/watermark.png';
-          const ts    = Date.now();
-          const blob  = await compressImage(file);
+          const wmSrc  = userWatermarkUrl || '../images/watermark.png';
+          const ts     = Date.now();
+          const isGif  = file.type === 'image/gif';
+          const ext    = isGif ? 'gif' : 'jpg';
+          const blob   = await compressImage(file);
 
-          const origName = `slot_${ts}_orig.jpg`;
-          const { error: origErr } = await sb.storage.from('images').upload(origName, blob, { contentType: 'image/jpeg' });
+          const origName = `slot_${ts}_orig.${ext}`;
+          const { error: origErr } = await sb.storage.from('images').upload(origName, blob, { contentType: isGif ? 'image/gif' : 'image/jpeg' });
           if (origErr) throw new Error(`원본 이미지 업로드 실패: ${origErr.message}`);
           original_image_url = sb.storage.from('images').getPublicUrl(origName).data.publicUrl;
 
-          const wmBlob   = await applyWatermark(blob, wmSrc);
-          const mainName = `slot_${ts}.jpg`;
-          const { error: mainErr } = await sb.storage.from('images').upload(mainName, wmBlob, { contentType: 'image/jpeg' });
-          if (mainErr) throw new Error(`메인 이미지 업로드 실패: ${mainErr.message}`);
-          image_url = sb.storage.from('images').getPublicUrl(mainName).data.publicUrl;
+          if (isGif) {
+            // GIF: 워터마크 미적용, 원본 그대로 사용
+            image_url = original_image_url;
+          } else {
+            const wmBlob   = await applyWatermark(blob, wmSrc);
+            const mainName = `slot_${ts}.jpg`;
+            const { error: mainErr } = await sb.storage.from('images').upload(mainName, wmBlob, { contentType: 'image/jpeg' });
+            if (mainErr) throw new Error(`메인 이미지 업로드 실패: ${mainErr.message}`);
+            image_url = sb.storage.from('images').getPublicUrl(mainName).data.publicUrl;
+          }
 
           const thumbBlob = pendingThumbnailBlob || await autoCenterCropToBlob(file, 3/4, 600, 0.85);
           const thumbName = `slot_${ts}_thumb.jpg`;

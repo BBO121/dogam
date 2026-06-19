@@ -94,11 +94,11 @@
         btn.disabled      = false;
         _showingOriginal  = true;
 
-        // 추가 이미지도 원본으로 전환 (original이 있는 인덱스만)
+        // 추가 이미지도 원본으로 전환 (original이 있고 GIF가 아닌 인덱스만)
         document.querySelectorAll('[data-extra-idx]').forEach(el => {
           const idx     = parseInt(el.dataset.extraIdx);
           const origUrl = _origAdditionalUrls?.[idx];
-          if (origUrl) {
+          if (origUrl && !/\.gif(\?|$)/i.test(origUrl)) {
             el.dataset.wmSrc = el.src;
             el.src = origUrl;
           }
@@ -313,8 +313,9 @@
         (relChars || []).forEach(rc => { relationCharsMap[rc.id] = rc; });
       }
 
-      const canViewOriginal  = isOwner || isSpeciesOwner; // 소유 관계만 토글 표시
-      const autoShowOriginal = isOwner || isSpeciesOwner;
+      const isMainGif        = /\.gif(\?|$)/i.test(c.image_url || '');
+      const canViewOriginal  = !isMainGif && (isOwner || isSpeciesOwner); // GIF는 워터마크 없으므로 토글 미표시
+      const autoShowOriginal = !isMainGif && (isOwner || isSpeciesOwner);
 
       const registeredDate = new Date(c.created_at).toLocaleDateString('ko-KR', {
         year: 'numeric', month: '2-digit', day: '2-digit'

@@ -9,6 +9,30 @@ function compressImage(file, maxSize = 1200, quality = 0.82) {
       return;
     }
 
+    // GIF: 애니메이션 보존을 위해 Canvas 변환 없이 원본 반환
+    if (file.type === 'image/gif') {
+      if (file.size > MAX_BLOB_BYTES) {
+        reject(new Error('GIF 파일은 2MB 이하만 업로드할 수 있어요.'));
+        return;
+      }
+      const gifReader = new FileReader();
+      gifReader.onerror = () => reject(new Error('이미지 파일을 읽는 데 실패했어요.'));
+      gifReader.onload = (e) => {
+        const img = new Image();
+        img.onerror = () => reject(new Error('이미지를 불러오는 데 실패했어요. 파일이 손상됐을 수 있어요.'));
+        img.onload = () => {
+          if (img.width > MAX_IMAGE_DIMENSION || img.height > MAX_IMAGE_DIMENSION) {
+            reject(new Error(`이미지 해상도가 너무 커요. 최대 ${MAX_IMAGE_DIMENSION}×${MAX_IMAGE_DIMENSION}px까지 업로드할 수 있어요. (현재: ${img.width}×${img.height}px)`));
+            return;
+          }
+          resolve(file);
+        };
+        img.src = e.target.result;
+      };
+      gifReader.readAsDataURL(file);
+      return;
+    }
+
     const reader = new FileReader();
     reader.onerror = () => reject(new Error('이미지 파일을 읽는 데 실패했어요.'));
     reader.onload = (e) => {
