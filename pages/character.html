@@ -279,7 +279,7 @@
       console.log('[DEBUG] c.owner_is_offsite:', c.owner_is_offsite, '| type:', typeof c.owner_is_offsite);
       console.log('[DEBUG] c.owner_user_id:', c.owner_user_id);
       console.log('[DEBUG] c.species_name:', c.species_name);
-      if (c.species_name) {
+      if (c.species_name && c.species_name !== '(알 수 없음)') {
         const { data: spData } = await sb.from('species').select('id, owner_nickname, owner_user_id, allow_free_adoption, allow_resale, allow_paid_adoption, allow_other_adoption, custom_fields').eq('name', c.species_name).single();
         sp = spData;
         console.log('[DEBUG] sp:', sp);
@@ -349,7 +349,7 @@
       document.getElementById('charContent').innerHTML = `
         <div class="char-page-header">
           <div class="breadcrumb">
-            ${c.species_name ? `<a href="${speciesHref}">${c.species_name}</a><span>/</span>` : ''}
+            ${(c.species_name && c.species_name !== '(알 수 없음)') ? `<a href="${speciesHref}">${c.species_name}</a><span>/</span>` : ''}
             <span>${c.name}</span>
           </div>
           <h1 class="char-page-name">${c.name}</h1>
@@ -378,11 +378,15 @@
               이전 확인 중 · <strong>${c.pending_transfer.to}</strong>님에게
             </div>` : ''}
             ${categoryBadgeHtml}
-            ${c.species_name ? `
+            ${c.species_name === '(알 수 없음)' ? `
+            <div class="char-info-row">
+              <span class="char-info-label">종족</span>
+              <span class="char-info-value" style="color:var(--text-mute);">(알 수 없음)</span>
+            </div>` : (c.species_name ? `
             <div class="char-info-row">
               <span class="char-info-label">종족</span>
               <a href="${speciesHref}" class="char-info-value char-info-link">${c.species_name}</a>
-            </div>` : ''}
+            </div>` : '')}
             ${c.char_number ? `
             <div class="char-info-row">
               <span class="char-info-label">개체번호</span>

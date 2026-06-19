@@ -375,7 +375,7 @@
                   </div>
                 </div>
               </div>
-              <p class="character-species">${c.species_name || ''}</p>
+              <p class="character-species" ${c.species_name === '(알 수 없음)' ? 'style="color:#999;font-weight:400;"' : ''}>${c.species_name || ''}</p>
             </div>
           </a>`;
       }).join('');

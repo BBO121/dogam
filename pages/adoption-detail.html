@@ -286,7 +286,8 @@
 
         <div class="notice-detail-bottom" style="justify-content:space-between;">
           <a href="adoption.html" class="btn-ghost">← 목록으로</a>
-          <button id="deletePostBtn" class="btn-danger" style="display:none;" onclick="deletePost()">글 삭제</button>
+          <button id="closePostBtn" class="btn-ghost" style="display:none;" onclick="closePost()">분양 마감</button>
+          <span id="closedPostLabel" style="display:none; padding:8px 16px; font-size:13px; font-weight:600; color:#999; background:#f1f5f9; border-radius:8px; align-items:center;">분양 마감됨</span>
         </div>
 
       </div>
@@ -588,9 +589,11 @@
         }, 5000);
       }
 
-      // 삭제 버튼 (작성자 전용)
-      if (isAuthor) {
-        document.getElementById('deletePostBtn').style.display = 'inline-flex';
+      // 마감 버튼 / 마감됨 표시 (작성자 전용)
+      if (isAuthor && isOpen) {
+        document.getElementById('closePostBtn').style.display = 'inline-flex';
+      } else if (isAuthor && a.status === '완료') {
+        document.getElementById('closedPostLabel').style.display = 'inline-flex';
       }
 
       // 댓글 섹션 안내문
@@ -1759,30 +1762,22 @@
       loadComments();
     }
 
-    async function deletePost() {
-      if (!confirm('분양 글을 삭제할까요? 되돌릴 수 없어요.')) return;
+    async function closePost() {
+      if (!confirm('이 분양을 마감하시겠습니까?\n\n마감된 분양은 다시 진행할 수 없으며,\n분양 기록은 보존됩니다.')) return;
 
-      const btn = document.getElementById('deletePostBtn');
-      btn.textContent = '삭제 중...';
+      const btn = document.getElementById('closePostBtn');
+      btn.textContent = '마감 중...';
       btn.disabled = true;
 
-      await Promise.all([
-        sb.from('adoption_comments').delete().eq('adoption_id', adoptionId),
-        sb.from('auction_bids').delete().eq('adoption_id', adoptionId),
-        sb.from('auction_details').delete().eq('adoption_id', adoptionId),
-        sb.from('adoption_applications').delete().eq('adoption_id', adoptionId),
-      ]);
-      const { error } = await sb.from('adoptions').delete().eq('id', adoptionId);
-
+      const { error } = await sb.from('adoptions').update({ status: '완료' }).eq('id', adoptionId);
       if (error) {
-        console.error('[delete error]', error);
-        alert(`삭제 실패: ${error.message}`);
-        btn.textContent = '글 삭제';
+        alert('마감에 실패했어요: ' + error.message);
+        btn.textContent = '분양 마감';
         btn.disabled = false;
         return;
       }
 
-      window.location.href = 'adoption.html';
+      location.reload();
     }
 
     // ── 멘션 자동완성 이벤트 위임 ──────────────────────────

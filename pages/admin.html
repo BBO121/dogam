@@ -960,14 +960,8 @@
       adoptionPager.load(filtered);
     }
 
-    async function deleteAdoption(id, name) {
-      if (!confirm(`"${name}" 분양글을 삭제할까요?`)) return;
-      const { data: deleted, error } = await sb.from('adoptions').delete().eq('id', id).select('id');
-      if (error) { alert('삭제에 실패했어요: ' + error.message); return; }
-      if (!deleted?.length) { alert('삭제 권한이 없어요.\nSupabase에서 관리자 DELETE 정책을 추가해주세요.'); return; }
-      await logAdminAction('adoption_delete', 'adoption', id, name);
-      allAdminAdoptions = allAdminAdoptions.filter(a => String(a.id) !== String(id));
-      adoptionPager.load(allAdminAdoptions);
+    function deleteAdoption(id, name) {
+      alert('분양글은 기록 보존 정책에 따라 삭제할 수 없습니다.\n꼭 필요한 경우 Supabase 대시보드에서 직접 처리해주세요.');
     }
 
     // ── 비밀번호 초기화 ──────────────────────
