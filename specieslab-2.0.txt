@@ -2,6 +2,7 @@
   종족연구소 2.0 기획 문서
 ========================================
 작성일: 2026-06-19
+최종수정: 2026-06-19 (설계 검토 반영 — v2)
 담당: 뽀 + 클롱
 원칙: 메인 브랜치 직접 반영 금지 / 중간 커밋·푸시 금지 / 로컬 전용 개발
       기능 단위 완료 후 보고 / DB 변경은 별도 SQL 파일로 관리
@@ -57,20 +58,24 @@
 2-1. user_wallets — 재화 잔액
 ------------------------------------
 유저당 1개의 지갑 row. 잔액은 반드시 RPC를 통해서만 변경됨.
+※ 가입 즉시 DB 트리거로 자동 생성 (아래 2-3 참조)
+
+  컬럼 명칭 결정: research_notes → research_records
+  (유저 노출명 "연구기록"과 의미 통일. records = 기록물이 더 정확한 번역)
 
   CREATE TABLE public.user_wallets (
-    id               uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id          uuid        NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
-    research_notes   integer     NOT NULL DEFAULT 0 CHECK (research_notes >= 0),
-    keys             integer     NOT NULL DEFAULT 0 CHECK (keys >= 0),
-    updated_at       timestamptz NOT NULL DEFAULT now()
+    id                uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id           uuid        NOT NULL UNIQUE REFERENCES auth.users(id) ON DELETE CASCADE,
+    research_records  integer     NOT NULL DEFAULT 0 CHECK (research_records >= 0),
+    keys              integer     NOT NULL DEFAULT 0 CHECK (keys >= 0),
+    updated_at        timestamptz NOT NULL DEFAULT now()
   );
 
-  컬럼             타입       설명
-  ───────────────────────────────────────────────────
-  user_id          uuid       auth.users.id 참조 (UNIQUE)
-  research_notes   integer    연구기록 잔액 (음수 불가)
-  keys             integer    열쇠 잔액 (음수 불가)
+  컬럼              타입       설명
+  ─────────────────────────────────────────────────
+  user_id           uuid       auth.users.id 참조 (UNIQUE)
+  research_records  integer    연구기록 잔액 (음수 불가)
+  keys              integer    열쇠 잔액 (음수 불가)
 
   RLS 정책:
   - SELECT: 본인 지갑만 조회 가능 (auth.uid() = user_id)
@@ -79,11 +84,13 @@
 ------------------------------------
 2-2. currency_logs — 재화 거래 내역
 ------------------------------------
+※ type과 source를 분리하여 추후 기능 확장 시 필터링/집계가 용이한 구조
 
   CREATE TABLE public.currency_logs (
     id                    uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id               uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
     type                  text        NOT NULL,
+    source                text        NOT NULL,
     currency              text        NOT NULL,
     amount                integer     NOT NULL,
     balance_after         integer     NOT NULL,
@@ -96,25 +103,75 @@
   컬럼                    타입       설명
   ──────────────────────────────────────────────────────────────
   user_id                 uuid       이 로그의 주체 (잔액이 변경된 유저)
-  type                    text       거래 유형 (아래 참조)
-  currency                text       재화 종류 ('research_notes' | 'keys')
+  type                    text       세부 거래 유형 (아래 참조)
+  source                  text       발생 출처/시스템 (아래 참조)
+  currency                text       재화 종류 ('research_records' | 'keys')
   amount                  integer    변동량 (항상 양수)
   balance_after           integer    처리 후 잔액 (표시용 스냅샷)
   counterpart_user_id     uuid       전송 상대방 UUID (nullable)
   counterpart_nickname    text       전송 상대방 닉네임 (표시용, nullable)
   note                    text       사유/메모 (nullable)
 
-  type 값 정의:
-  ──────────────────────────────────────────────────
-  earn          시스템에서 적립 (향후)
-  send          내가 보낸 전송
-  receive       내가 받은 전송
-  admin_grant   관리자 지급
-  admin_deduct  관리자 차감
+  type 값 정의 (확장 가능한 구조):
+  ─────────────────────────────────────────────────────────────
+  [1차 구현]
+  signup_bonus        가입 보너스 지급
+  transfer_send       연구기록 전송 (발신)
+  transfer_receive    연구기록 전송 (수신)
+  admin_grant         관리자 지급
+  admin_deduct        관리자 차감
+
+  [향후 추가 예정]
+  attendance_reward   출석 보상
+  exploration_reward  탐험 보상
+  shop_purchase       상점 구매 차감
+  event_reward        이벤트 보상
+
+  source 값 정의:
+  ─────────────────────────────────────────────────────────────
+  signup        가입 시 시스템 발생
+  transfer      유저 간 전송
+  admin         관리자 직접 조작
+  attendance    출석 시스템 (향후)
+  exploration   탐험 시스템 (향후)
+  shop          상점 시스템 (향후)
+  event         이벤트 시스템 (향후)
 
   RLS 정책:
   - SELECT: 본인 로그만 조회 (auth.uid() = user_id)
   - INSERT / UPDATE / DELETE: 직접 허용 안 함 (RPC로만 처리)
+
+------------------------------------
+2-3. 지갑 자동 생성 — DB 트리거
+------------------------------------
+결정: 가입 즉시 자동 생성 (트리거 방식 채택)
+
+  채택 이유:
+  - 클라이언트에서 지갑 생성 여부를 매번 확인할 필요 없음
+  - 가입 보너스를 트리거 내에서 바로 지급 가능
+  - 지갑 없는 유저가 발생할 수 없어 잔액 조회 로직이 단순해짐
+
+  CREATE OR REPLACE FUNCTION handle_new_user_wallet()
+  RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER AS $$
+  BEGIN
+    INSERT INTO public.user_wallets (user_id, research_records, keys)
+    VALUES (NEW.id, 100, 0);  -- 가입 보너스 100 연구기록 즉시 지급
+
+    INSERT INTO public.currency_logs
+      (user_id, type, source, currency, amount, balance_after, note)
+    VALUES
+      (NEW.id, 'signup_bonus', 'signup', 'research_records', 100, 100, '가입을 환영합니다!');
+
+    RETURN NEW;
+  END;
+  $$;
+
+  CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION handle_new_user_wallet();
+
+  ※ 가입 보너스 금액(100)은 추후 운영 정책에 따라 조정 가능
+  ※ 기존 유저 대상 backfill SQL 별도 작성 필요 (bank_setup.sql에 포함)
 
 
 ========================================
@@ -188,16 +245,22 @@
 
 [로그 타입별 예시]
 
+  가입 시:
+  신규 유저: { type: 'signup_bonus', source: 'signup', currency: 'research_records', amount: 100, balance_after: 100, note: '가입을 환영합니다!' }
+
   연구기록 전송 시:
-  발신자 로그: { type: 'send',    currency: 'research_notes', amount: 100, balance_after: 1150, counterpart: 수신자 }
-  수신자 로그: { type: 'receive', currency: 'research_notes', amount: 100, balance_after:  350, counterpart: 발신자 }
+  발신자 로그: { type: 'transfer_send',    source: 'transfer', currency: 'research_records', amount: 100, balance_after: 1150, counterpart: 수신자 }
+  수신자 로그: { type: 'transfer_receive', source: 'transfer', currency: 'research_records', amount: 100, balance_after:  350, counterpart: 발신자 }
+
+  관리자 지급 시:
+  대상 유저: { type: 'admin_grant', source: 'admin', currency: 'research_records', amount: 500, balance_after: 850, note: '이벤트 보상' }
 
 
 ========================================
 5. 전송 시스템 구조
 ========================================
 
-[RPC: transfer_research_notes]
+[RPC: transfer_research_records]
 원자적 처리를 위해 SECURITY DEFINER RPC로 구현.
 
   파라미터:
@@ -209,13 +272,14 @@
     1. auth.uid() 확인 → 미로그인이면 에러
     2. 수신자 닉네임으로 auth.users 검색 → 없으면 에러
     3. 자기 자신에게 전송 시 에러
-    4. 발신자 지갑 잔액 확인 → 부족하면 에러
-    5. 발신자 지갑 차감 (research_notes - p_amount)
-    6. 수신자 지갑 증가 (research_notes + p_amount)
-       ※ 수신자 지갑이 없으면 INSERT (DEFAULT 0 → p_amount)
-    7. 발신자 currency_logs 삽입 (type: 'send')
-    8. 수신자 currency_logs 삽입 (type: 'receive')
-    9. 성공 반환 { success: true, new_balance: N }
+    4. p_amount < 1 이면 에러
+    5. 발신자 지갑 잔액 확인 → 부족하면 에러
+    6. 발신자 지갑 차감 (research_records - p_amount)
+    7. 수신자 지갑 증가 (research_records + p_amount)
+       ※ 트리거로 가입 시 지갑이 생성되므로 INSERT 불필요
+    8. 발신자 currency_logs 삽입 (type: 'transfer_send', source: 'transfer')
+    9. 수신자 currency_logs 삽입 (type: 'transfer_receive', source: 'transfer')
+   10. 성공 반환 { success: true, new_balance: N }
 
   에러 코드 (클라이언트 처리용):
   ────────────────────────────────────────────────
@@ -274,10 +338,12 @@
 
 Phase 1 — DB 설계 및 SQL 작성
   [ ] bank_setup.sql 작성
-       - user_wallets 테이블
-       - currency_logs 테이블
+       - user_wallets 테이블 (research_records, keys)
+       - currency_logs 테이블 (type + source 분리 구조)
        - RLS 정책
-       - transfer_research_notes RPC
+       - handle_new_user_wallet 트리거 (가입 시 지갑 생성 + 가입 보너스 100)
+       - transfer_research_records RPC
+       - 기존 유저 backfill (지갑 생성 + 가입 보너스 지급)
 
 Phase 2 — 공통 JS 함수
   [ ] auth.js에 추가
@@ -309,8 +375,10 @@ Phase 6 — 테스트
 9. 미결 사항 (설계 검토 필요)
 ========================================
 
+[미결]
 1. 연구기록 획득 방법
-   → 1차에서는 관리자 지급만? 추후 활동 보상 예정?
+   → 1차: 가입 보너스(100) + 관리자 지급. 추후 출석/탐험 보상 추가 예정.
+   → 출석/탐험 시스템 구체적인 스펙은 2차 기획에서 결정.
 
 2. 전송 최소 단위
    → 1 연구기록 단위로 전송 가능하게 할지?
@@ -321,8 +389,12 @@ Phase 6 — 테스트
 4. 내 은행 진입점
    → "내 정보" 아코디언 내부 vs 독립 메뉴?
 
-5. 지갑 초기화 시점
-   → 첫 로그인 시 자동 생성(DB 트리거) vs 첫 접근 시 생성(클라이언트)?
+[결정 완료]
+5. 컬럼명: research_notes → research_records (유저 노출명과 통일)
+6. currency_logs: source 컬럼 추가 (signup / transfer / admin / attendance / exploration / shop / event)
+7. type 값: 확장 가능한 세부 명칭 체계 도입 (transfer_send, transfer_receive, signup_bonus, admin_grant, admin_deduct 등)
+8. 가입 보너스: 가입 시 연구기록 100 자동 지급 (DB 트리거)
+9. 지갑 생성 방식: 가입 즉시 DB 트리거로 자동 생성 (클라이언트 처리 불필요)
 
 ========================================
 ※ 이 문서는 설계 검토 후 구현 시작 전까지 계속 업데이트됩니다.
