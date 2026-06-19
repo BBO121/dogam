@@ -89,7 +89,7 @@
 
       // UUID 기반 조회(신규) + nickname 기반 조회(레거시) 병행 후 중복 제거
       const [{ data: byUuid }, { data: byNick }] = await Promise.all([
-        sb.from('characters').select(SELECT).filter('designer_user_ids', 'cs', `{${userId}}`),
+        sb.from('characters').select(SELECT).contains('designer_user_ids', [userId]),
         sb.from('characters').select(SELECT).eq('designer_nickname', nickname),
       ]);
       const seen = new Set();
@@ -108,9 +108,9 @@
       }
 
       allChars = combined;
-      document.getElementById('charCount').textContent = data.length;
+      document.getElementById('charCount').textContent = combined.length;
 
-      const species = [...new Set(data.map(c => c.species_name).filter(Boolean))];
+      const species = [...new Set(combined.map(c => c.species_name).filter(Boolean))];
       const select  = document.getElementById('speciesFilter');
       species.forEach(s => {
         const opt = document.createElement('option');
@@ -119,7 +119,7 @@
         select.appendChild(opt);
       });
 
-      pager.load(data);
+      pager.load(combined);
     }
 
     function revealSensitive(overlayEl, e) {
