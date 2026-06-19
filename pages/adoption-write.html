@@ -373,6 +373,8 @@
 
       if (!selectedVal) { errorEl.textContent = '캐릭터 또는 디자인권을 선택해주세요.'; return; }
 
+      if (!confirm('분양글은 등록 후 수정할 수 없습니다.\n분양가, 조건, 분양 방식 등을 다시 한 번 확인해주세요.\n이대로 등록하시겠습니까?')) return;
+
       const isSlot = selectedVal.startsWith('s:');
       const rawId  = selectedVal.slice(2);
       const charId = isSlot ? null : rawId;
