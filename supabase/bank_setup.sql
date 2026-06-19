@@ -102,10 +102,12 @@ AS $$
 DECLARE
   v_from_id         uuid := auth.uid();
   v_to_id           uuid;
-  v_to_nickname     text;
+  v_to_nickname     text;   -- 수신자 표시 닉네임 (display_name 우선)
+  v_from_nickname   text;   -- 발신자 표시 닉네임 (display_name 우선)
   v_from_balance    integer;
   v_from_new_bal    integer;
   v_to_new_bal      integer;
+  v_safe_note       text;
 BEGIN
   -- 로그인 확인
   IF v_from_id IS NULL THEN
@@ -117,8 +119,14 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'error', 'INVALID_AMOUNT');
   END IF;
 
-  -- 수신자 조회 (닉네임 → UUID)
-  SELECT id, raw_user_meta_data->>'nickname'
+  -- note 길이 제한 (100자)
+  v_safe_note := LEFT(p_note, 100);
+
+  -- 수신자 조회 (닉네임 → UUID + 표시명)
+  -- display_name 우선, 없으면 nickname fallback
+  SELECT
+    id,
+    COALESCE(raw_user_meta_data->>'display_name', raw_user_meta_data->>'nickname')
   INTO v_to_id, v_to_nickname
   FROM auth.users
   WHERE raw_user_meta_data->>'nickname' = p_to_nickname
@@ -134,13 +142,23 @@ BEGIN
     RETURN jsonb_build_object('success', false, 'error', 'SELF_TRANSFER');
   END IF;
 
+  -- 발신자 표시명 조회
+  SELECT COALESCE(raw_user_meta_data->>'display_name', raw_user_meta_data->>'nickname')
+  INTO v_from_nickname
+  FROM auth.users WHERE id = v_from_id;
+
   -- 발신자 잔액 확인 (FOR UPDATE로 동시성 보호)
   SELECT research_records INTO v_from_balance
   FROM public.user_wallets
   WHERE user_id = v_from_id
   FOR UPDATE;
 
-  IF v_from_balance IS NULL OR v_from_balance < p_amount THEN
+  -- 지갑 없음과 잔액 부족을 구분하여 에러 반환
+  IF v_from_balance IS NULL THEN
+    RETURN jsonb_build_object('success', false, 'error', 'WALLET_NOT_FOUND');
+  END IF;
+
+  IF v_from_balance < p_amount THEN
     RETURN jsonb_build_object('success', false, 'error', 'INSUFFICIENT_BALANCE');
   END IF;
 
@@ -150,30 +168,27 @@ BEGIN
   SET research_records = v_from_new_bal, updated_at = now()
   WHERE user_id = v_from_id;
 
-  -- 수신자 잔액 증가 (FOR UPDATE)
-  SELECT research_records INTO v_to_new_bal
-  FROM public.user_wallets
-  WHERE user_id = v_to_id
-  FOR UPDATE;
-
-  v_to_new_bal := COALESCE(v_to_new_bal, 0) + p_amount;
-  UPDATE public.user_wallets
-  SET research_records = v_to_new_bal, updated_at = now()
-  WHERE user_id = v_to_id;
+  -- 수신자 잔액 증가 (UPSERT — 지갑 없는 경우 방어 처리)
+  INSERT INTO public.user_wallets (user_id, research_records, keys, updated_at)
+  VALUES (v_to_id, p_amount, 0, now())
+  ON CONFLICT (user_id) DO UPDATE
+  SET research_records = public.user_wallets.research_records + p_amount,
+      updated_at       = now()
+  RETURNING research_records INTO v_to_new_bal;
 
   -- 발신자 로그
   INSERT INTO public.currency_logs
     (user_id, type, source, currency, amount, balance_after, counterpart_user_id, counterpart_nickname, note)
   VALUES
-    (v_from_id, 'transfer_send', 'transfer', 'research_records', p_amount, v_from_new_bal, v_to_id, v_to_nickname, p_note);
+    (v_from_id, 'transfer_send', 'transfer', 'research_records',
+     p_amount, v_from_new_bal, v_to_id, v_to_nickname, v_safe_note);
 
   -- 수신자 로그
   INSERT INTO public.currency_logs
     (user_id, type, source, currency, amount, balance_after, counterpart_user_id, counterpart_nickname, note)
   VALUES
-    (v_to_id, 'transfer_receive', 'transfer', 'research_records', p_amount, v_to_new_bal, v_from_id,
-     (SELECT raw_user_meta_data->>'display_name' FROM auth.users WHERE id = v_from_id),
-     p_note);
+    (v_to_id, 'transfer_receive', 'transfer', 'research_records',
+     p_amount, v_to_new_bal, v_from_id, v_from_nickname, v_safe_note);
 
   RETURN jsonb_build_object('success', true, 'new_balance', v_from_new_bal);
 END;
