@@ -105,14 +105,15 @@ SECURITY DEFINER
 SET search_path = public
 AS $$
 DECLARE
-  v_from_id       uuid := auth.uid();
-  v_to_id         uuid;
-  v_to_nickname   text;
-  v_from_nickname text;
-  v_from_balance  integer;
-  v_from_new_bal  integer;
-  v_to_new_bal    integer;
-  v_safe_note     text;
+  v_from_id        uuid := auth.uid();
+  v_to_id          uuid;
+  v_to_nickname    text;
+  v_from_nickname  text;
+  v_from_balance   integer;
+  v_from_new_bal   integer;
+  v_to_new_bal     integer;
+  v_safe_note      text;
+  v_currency_label text;
 BEGIN
   -- 로그인 확인
   IF v_from_id IS NULL THEN
@@ -131,6 +132,13 @@ BEGIN
 
   -- note 길이 제한 (100자)
   v_safe_note := LEFT(p_note, 100);
+
+  -- 재화 표시명
+  v_currency_label := CASE p_currency
+    WHEN 'research_records' THEN '연구기록'
+    WHEN 'keys'             THEN '열쇠'
+    ELSE p_currency
+  END;
 
   -- 수신자 조회 (display_name 우선, 없으면 nickname fallback)
   SELECT
@@ -216,6 +224,14 @@ BEGIN
   VALUES
     (v_to_id, 'transfer_receive', 'transfer', p_currency,
      p_amount, v_to_new_bal, v_from_id, v_from_nickname, v_safe_note);
+
+  -- 수신자 알림 (notify_user_by_id RPC — SECURITY DEFINER, RLS 우회)
+  PERFORM public.notify_user_by_id(
+    p_user_id := v_to_id,
+    p_type    := 'currency_receive',
+    p_message := v_from_nickname || '님이 ' || v_currency_label || ' ' || p_amount || '개를 보냈어요.',
+    p_link    := 'my-wallet.html'
+  );
 
   RETURN jsonb_build_object('success', true, 'new_balance', v_from_new_bal);
 END;
