@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>내 지갑 — 종족연구소</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">종족연구소</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+
+      <div id="pageLoading" class="page-loading">불러오는 중...</div>
+
+      <div id="pageContent" style="display:none;">
+
+        <div class="list-page-header" style="margin-bottom:0;">
+          <div>
+            <div class="breadcrumb" style="margin-bottom:8px;">
+              <a href="index.html">홈</a>
+              <span>/</span>
+              <span>내 지갑</span>
+            </div>
+            <h1 class="list-page-title">내 지갑</h1>
+          </div>
+        </div>
+
+        <!-- 섹션 1: 내 재화 -->
+        <div class="section">
+          <div class="section-header"><h2>내 재화</h2></div>
+          <div class="wallet-grid">
+            <div class="wallet-card">
+              <div class="wallet-card-icon">📋</div>
+              <div class="wallet-card-amount" id="researchAmount">—</div>
+              <div class="wallet-card-label">연구기록</div>
+            </div>
+            <div class="wallet-card wallet-card--keys">
+              <div class="wallet-card-icon">🗝️</div>
+              <div class="wallet-card-amount" id="keysAmount">—</div>
+              <div class="wallet-card-label">열쇠</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 섹션 2: 연구기록 전송 -->
+        <div class="section">
+          <div class="section-header"><h2>연구기록 전송</h2></div>
+          <div class="wallet-send-form">
+            <div class="form-group">
+              <label class="form-label">받는 사람</label>
+              <input type="text" class="form-input" id="sendToInput" placeholder="닉네임을 입력해주세요" autocomplete="off">
+            </div>
+            <div class="form-group">
+              <label class="form-label">전송량</label>
+              <input type="number" class="form-input" id="sendAmountInput" placeholder="0" min="1">
+              <p class="form-hint" id="balanceHint"></p>
+            </div>
+            <div class="form-group">
+              <label class="form-label">메모 <span class="form-label-sub">선택 · 최대 100자</span></label>
+              <input type="text" class="form-input" id="sendNoteInput" placeholder="메모를 입력해주세요" maxlength="100">
+            </div>
+            <p id="sendError" style="font-size:13px; color:#EF4444; margin-bottom:12px; display:none;"></p>
+            <button class="btn-submit" onclick="openSendModal()">전송</button>
+          </div>
+        </div>
+
+        <!-- 섹션 3: 거래 내역 -->
+        <div class="section">
+          <div class="section-header">
+            <h2>거래 내역</h2>
+            <span id="logCount" style="font-size:13px; color:var(--text-mute);"></span>
+          </div>
+
+          <div class="transfer-filter-wrap">
+            <button class="transfer-filter-btn active" onclick="filterLogs(this,'all')">전체</button>
+            <button class="transfer-filter-btn" onclick="filterLogs(this,'receive')">받음</button>
+            <button class="transfer-filter-btn" onclick="filterLogs(this,'send')">보냄</button>
+          </div>
+
+          <div id="logTableWrap"></div>
+          <div id="paginationWrap"></div>
+          <p id="logEmpty" class="empty-state" style="display:none; padding:40px 0; text-align:center;">거래 내역이 없어요.</p>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer"><p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; <a href="credits.html">운영진</a> &nbsp;·&nbsp; ver.2.0</p></footer>
+
+  <!-- 전송 확인 모달 -->
+  <div class="modal-overlay" id="sendModal" style="display:none;" onclick="if(event.target===this)closeSendModal()">
+    <div class="modal-card">
+      <p class="modal-title">연구기록 전송</p>
+      <p class="modal-desc" id="modalDesc"></p>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeSendModal()">취소</button>
+        <button class="btn-submit" id="modalConfirmBtn" onclick="doTransfer()">전송</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    const TYPE_LABEL = {
+      signup_bonus:     '가입보너스',
+      transfer_receive: '받음',
+      transfer_send:    '보냄',
+      admin_grant:      '지급',
+      admin_deduct:     '차감',
+    };
+    const TYPE_CLASS = {
+      signup_bonus:     'wallet-log-type--receive',
+      transfer_receive: 'wallet-log-type--receive',
+      admin_grant:      'wallet-log-type--admin',
+      transfer_send:    'wallet-log-type--send',
+      admin_deduct:     'wallet-log-type--send',
+    };
+    const RECEIVE_TYPES = new Set(['signup_bonus', 'transfer_receive', 'admin_grant']);
+
+    let myBalance = 0;
+    let allLogs   = [];
+    const pager   = createPager(renderLogs);
+
+    function fmt(n) { return Number(n ?? 0).toLocaleString(); }
+    function fmtDate(s) {
+      const d = new Date(s);
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+    }
+
+    async function initPage() {
+      const user = await getUser();
+      if (!user) { window.location.href = 'login.html'; return; }
+
+      const [{ data: wallet }, { data: logs }] = await Promise.all([
+        getMyWallet(user.id),
+        getMyCurrencyLogs(user.id),
+      ]);
+
+      document.getElementById('pageLoading').style.display = 'none';
+      document.getElementById('pageContent').style.display = 'block';
+
+      myBalance = wallet?.research_records ?? 0;
+      document.getElementById('researchAmount').textContent = fmt(myBalance);
+      document.getElementById('keysAmount').textContent     = fmt(wallet?.keys ?? 0);
+      document.getElementById('balanceHint').textContent    = `보유 연구기록: ${fmt(myBalance)}`;
+
+      allLogs = logs ?? [];
+      document.getElementById('logCount').textContent = `총 ${allLogs.length}건`;
+
+      if (allLogs.length === 0) {
+        document.getElementById('logEmpty').style.display = 'block';
+      } else {
+        pager.load(allLogs);
+      }
+    }
+
+    function renderLogs(slice) {
+      const wrap = document.getElementById('logTableWrap');
+      if (!slice.length) { wrap.innerHTML = ''; return; }
+
+      const rows = slice.map(log => {
+        const isPlus   = RECEIVE_TYPES.has(log.type);
+        const amtHtml  = isPlus
+          ? `<span class="wallet-log-amount--plus">+${fmt(log.amount)}</span>`
+          : `<span class="wallet-log-amount--minus">-${fmt(log.amount)}</span>`;
+        const typeLabel = TYPE_LABEL[log.type] ?? log.type;
+        const typeClass = TYPE_CLASS[log.type] ?? '';
+        const nick      = log.counterpart_nickname;
+        const counterpart = nick
+          ? `<a href="profile.html?user=${encodeURIComponent(nick)}" style="color:inherit;">${nick}</a>`
+          : '—';
+
+        return `
+          <div class="transfer-table-row">
+            <div class="transfer-table-cell wlog-date">${fmtDate(log.created_at)}</div>
+            <div class="transfer-table-cell wlog-type">
+              <span class="wallet-log-type-badge ${typeClass}">${typeLabel}</span>
+            </div>
+            <div class="transfer-table-cell wlog-amount">${amtHtml}</div>
+            <div class="transfer-table-cell wlog-balance" style="color:var(--text-sub);">${fmt(log.balance_after)}</div>
+            <div class="transfer-table-cell wlog-counterpart">${counterpart}</div>
+            <div class="transfer-table-cell wlog-note" style="color:var(--text-mute);">${log.note ?? '—'}</div>
+          </div>`;
+      }).join('');
+
+      wrap.innerHTML = `
+        <div class="transfer-table wallet-log-table">
+          <div class="transfer-table-head">
+            <div class="transfer-table-cell">일시</div>
+            <div class="transfer-table-cell">구분</div>
+            <div class="transfer-table-cell">변동</div>
+            <div class="transfer-table-cell">잔액</div>
+            <div class="transfer-table-cell">상대방</div>
+            <div class="transfer-table-cell">메모</div>
+          </div>
+          ${rows}
+        </div>`;
+    }
+
+    function filterLogs(btn, filter) {
+      document.querySelectorAll('.transfer-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      let filtered = allLogs;
+      if (filter === 'receive') filtered = allLogs.filter(l => RECEIVE_TYPES.has(l.type));
+      if (filter === 'send')    filtered = allLogs.filter(l => !RECEIVE_TYPES.has(l.type));
+
+      const empty = document.getElementById('logEmpty');
+      if (filtered.length === 0) {
+        document.getElementById('logTableWrap').innerHTML = '';
+        document.getElementById('paginationWrap').innerHTML = '';
+        empty.style.display = 'block';
+      } else {
+        empty.style.display = 'none';
+        pager.load(filtered);
+      }
+    }
+
+    function showSendError(msg) {
+      const el = document.getElementById('sendError');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+    function hideSendError() {
+      document.getElementById('sendError').style.display = 'none';
+    }
+
+    function openSendModal() {
+      hideSendError();
+      const to     = document.getElementById('sendToInput').value.trim();
+      const amount = parseInt(document.getElementById('sendAmountInput').value, 10);
+      const note   = document.getElementById('sendNoteInput').value.trim();
+
+      if (!to)                  return showSendError('받는 사람을 입력해주세요.');
+      if (!amount || amount < 1) return showSendError('전송량은 1 이상이어야 합니다.');
+      if (amount > myBalance)   return showSendError('보유 잔액이 부족합니다.');
+
+      let desc = `<b>${to}</b>님에게 <b>${fmt(amount)} 연구기록</b>을 전송합니다.`;
+      if (note) desc += `<br><span style="font-size:13px; color:var(--text-mute); margin-top:6px; display:block;">메모: ${note}</span>`;
+      document.getElementById('modalDesc').innerHTML = desc;
+      document.getElementById('sendModal').style.display = 'flex';
+    }
+
+    function closeSendModal() {
+      document.getElementById('sendModal').style.display = 'none';
+    }
+
+    async function doTransfer() {
+      const to     = document.getElementById('sendToInput').value.trim();
+      const amount = parseInt(document.getElementById('sendAmountInput').value, 10);
+      const note   = document.getElementById('sendNoteInput').value.trim() || null;
+
+      const btn = document.getElementById('modalConfirmBtn');
+      btn.disabled    = true;
+      btn.textContent = '처리 중...';
+      closeSendModal();
+
+      const { data, error } = await transferResearchRecords(to, amount, note);
+
+      btn.disabled    = false;
+      btn.textContent = '전송';
+
+      if (error || !data?.success) {
+        const errMap = {
+          NOT_AUTHENTICATED:    '로그인이 필요합니다.',
+          INVALID_AMOUNT:       '전송량은 1 이상이어야 합니다.',
+          USER_NOT_FOUND:       '존재하지 않는 유저입니다.',
+          SELF_TRANSFER:        '자기 자신에게는 전송할 수 없습니다.',
+          WALLET_NOT_FOUND:     '지갑 정보를 찾을 수 없습니다.',
+          INSUFFICIENT_BALANCE: '잔액이 부족합니다.',
+        };
+        return showSendError(errMap[data?.error] ?? '전송 중 오류가 발생했습니다.');
+      }
+
+      // 성공: 잔액 갱신 + 폼 초기화 + 내역 새로고침
+      myBalance = data.new_balance;
+      document.getElementById('researchAmount').textContent = fmt(myBalance);
+      document.getElementById('balanceHint').textContent    = `보유 연구기록: ${fmt(myBalance)}`;
+      document.getElementById('sendToInput').value     = '';
+      document.getElementById('sendAmountInput').value = '';
+      document.getElementById('sendNoteInput').value   = '';
+
+      const user = await getUser();
+      const { data: logs } = await getMyCurrencyLogs(user.id);
+      allLogs = logs ?? [];
+      document.getElementById('logCount').textContent      = `총 ${allLogs.length}건`;
+      document.getElementById('logEmpty').style.display    = allLogs.length ? 'none' : 'block';
+      if (allLogs.length) pager.load(allLogs);
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

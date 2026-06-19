@@ -167,6 +167,38 @@ async function getTransferHistory(userId, nicknames) {
   return { data: unique, error };
 }
 
+// 내 지갑 잔액 조회
+async function getMyWallet(userId) {
+  if (!userId) return { data: null, error: null };
+  const { data, error } = await sb
+    .from('user_wallets')
+    .select('research_records, keys, updated_at')
+    .eq('user_id', userId)
+    .single();
+  return { data, error };
+}
+
+// 내 거래 내역 조회
+async function getMyCurrencyLogs(userId) {
+  if (!userId) return { data: [], error: null };
+  const { data, error } = await sb
+    .from('currency_logs')
+    .select('*')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+  return { data: data ?? [], error };
+}
+
+// 연구기록 전송 RPC
+async function transferResearchRecords(toNickname, amount, note) {
+  const { data, error } = await sb.rpc('transfer_research_records', {
+    p_to_nickname: toNickname,
+    p_amount:      amount,
+    p_note:        note || null,
+  });
+  return { data, error };
+}
+
 // 헤더 상태 업데이트
 async function updateHeader() {
   const user = await getUser();

@@ -5670,3 +5670,115 @@ button.btn-more {
     width: 320px;
   }
 }
+
+/* ═══════════════════════════════════════
+   내 지갑
+═══════════════════════════════════════ */
+.wallet-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.wallet-card {
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 14px;
+  padding: 28px 16px 22px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.wallet-card-icon {
+  font-size: 26px;
+  margin-bottom: 4px;
+}
+
+.wallet-card-amount {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--sky-deep);
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+
+.wallet-card--keys .wallet-card-amount {
+  color: var(--text-sub);
+}
+
+.wallet-card-label {
+  font-size: 12px;
+  color: var(--text-mute);
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.wallet-send-form {
+  max-width: 480px;
+}
+
+/* 거래 내역 테이블 — 6컬럼 */
+.wallet-log-table .transfer-table-head,
+.wallet-log-table .transfer-table-row {
+  grid-template-columns: 1.1fr 0.7fr 0.8fr 0.8fr 0.9fr 1.2fr;
+}
+
+/* 금액 색상 */
+.wallet-log-amount--plus {
+  color: #16A34A;
+  font-weight: 700;
+}
+
+.wallet-log-amount--minus {
+  color: var(--sky-deep);
+  font-weight: 700;
+}
+
+/* 거래 유형 뱃지 */
+.wallet-log-type-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.wallet-log-type--receive {
+  background: #DCFCE7;
+  color: #16A34A;
+}
+
+.wallet-log-type--send {
+  background: #DBEAFE;
+  color: var(--sky-deep);
+}
+
+.wallet-log-type--admin {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+/* 내 지갑 — 모바일 */
+@media (max-width: 767px) {
+  .wallet-log-table .transfer-table-head {
+    display: none;
+  }
+  .wallet-log-table .transfer-table-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 8px;
+    padding: 12px 14px;
+  }
+  .wallet-log-table .wlog-type  { order: 1; flex-shrink: 0; }
+  .wallet-log-table .wlog-date  { order: 1; margin-left: auto; font-size: 11px; color: var(--text-mute); }
+  .wallet-log-table .wlog-amount  { order: 2; width: 100%; font-size: 15px; margin-top: 4px; }
+  .wallet-log-table .wlog-balance { order: 2; margin-left: auto; font-size: 12px; color: var(--text-mute); margin-top: 4px; }
+  .wallet-log-table .wlog-counterpart { order: 3; font-size: 12px; color: var(--text-sub); margin-top: 2px; }
+  .wallet-log-table .wlog-note { order: 3; font-size: 12px; color: var(--text-mute); margin-top: 2px; margin-left: auto; }
+}

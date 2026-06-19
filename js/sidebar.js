@@ -64,6 +64,7 @@ async function initSidebar() {
           <a href="transfer-history.html" class="sidebar-subitem ${path === 'transfer-history.html' ? 'active' : ''}">캐릭터 이전 내역</a>
         </div>
       </div>
+      <a href="my-wallet.html" class="sidebar-item sidebar-login ${path === 'my-wallet.html' ? 'active' : ''}">내 지갑</a>
       <a href="notifications.html" class="sidebar-item sidebar-login ${path === 'notifications.html' ? 'active' : ''}" style="justify-content:space-between;">
         알림<span class="sidebar-notif-badge" id="sidebarNotifBadge" style="display:none">0</span>
       </a>
