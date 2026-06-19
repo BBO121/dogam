@@ -227,6 +227,27 @@
             </div>
           </div>
 
+          <!-- 제휴종족 -->
+          <div class="form-group">
+            <label class="form-label">제휴종족 <span class="form-hint-inline">비워두면 표시되지 않아요</span></label>
+            <p class="form-hint">다른 종족과의 연관 관계를 표시해요</p>
+            <div id="affiliatedList" style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px;"></div>
+            <div style="margin-bottom:10px;">
+              <p style="font-size:13px; font-weight:600; color:var(--text); margin:0 0 6px;">연구소 등록 종족</p>
+              <div style="position:relative;">
+                <input type="text" id="affiliatedSearch" class="form-input" placeholder="종족명으로 검색..." oninput="searchAffiliatedSpecies(this.value)" autocomplete="off">
+                <div id="affiliatedDropdown" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:100; background:#fff; border:1px solid var(--border); border-radius:10px; max-height:200px; overflow-y:auto; margin-top:2px; box-shadow:0 4px 12px rgba(0,0,0,0.08);"></div>
+              </div>
+            </div>
+            <div>
+              <p style="font-size:13px; font-weight:600; color:var(--text); margin:0 0 6px;">사이트 밖 종족</p>
+              <div style="display:flex; gap:8px;">
+                <input type="text" id="externalSpeciesName" class="form-input" placeholder="종족명 직접 입력" style="flex:1;">
+                <button type="button" onclick="addExternalSpecies()" style="padding:0 16px; height:40px; border-radius:8px; border:1.5px solid var(--sky); background:var(--sky); color:#fff; font-size:13px; cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0;">추가</button>
+              </div>
+            </div>
+          </div>
+
           <!-- 에러 -->
           <p class="auth-error" id="formError"></p>
 
@@ -258,6 +279,86 @@
     let currentImageUrl  = null;
     let originalName     = null;
     let isAdminEditor    = false;
+    let affiliatedSpecies = [];
+    let allSpeciesList    = [];
+
+    async function loadAllSpecies() {
+      const { data } = await sb.from('species').select('id, name').order('name');
+      allSpeciesList = data || [];
+    }
+
+    function renderAffiliatedList() {
+      const el = document.getElementById('affiliatedList');
+      if (!affiliatedSpecies.length) { el.innerHTML = ''; return; }
+      el.innerHTML = affiliatedSpecies.map((item, idx) => `
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:var(--bg-sub); border-radius:8px; border:1px solid var(--border);">
+          <span style="font-size:13px; color:var(--text);">
+            <span style="font-size:11px; color:var(--text-mute); background:#e2e8f0; padding:1px 6px; border-radius:4px; margin-right:6px;">${item.type === 'internal' ? '연구소' : '외부'}</span>
+            ${item.name}
+          </span>
+          <button type="button" onclick="removeAffiliated(${idx})" style="background:none; border:none; cursor:pointer; color:var(--text-mute); font-size:16px; padding:2px 6px; border-radius:4px; line-height:1; font-family:inherit;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='var(--text-mute)'">✕</button>
+        </div>
+      `).join('');
+    }
+
+    function searchAffiliatedSpecies(q) {
+      const dropdown = document.getElementById('affiliatedDropdown');
+      const qTrim = q.trim();
+      if (!qTrim) { dropdown.style.display = 'none'; return; }
+      const qLow = qTrim.toLowerCase();
+      const results = allSpeciesList.filter(sp => {
+        if (sp.id === speciesId) return false;
+        if (affiliatedSpecies.some(a => a.type === 'internal' && a.species_id === sp.id)) return false;
+        return sp.name.toLowerCase().includes(qLow);
+      }).slice(0, 10);
+      if (!results.length) {
+        dropdown.innerHTML = '<p style="padding:10px 14px; font-size:13px; color:var(--text-mute);">일치하는 종족이 없어요</p>';
+        dropdown.style.display = '';
+        return;
+      }
+      dropdown.innerHTML = results.map(sp => `
+        <div onclick="addInternalSpecies('${sp.id}', '${sp.name.replace(/'/g, "\\'")}')"
+          style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border); transition:background 0.1s;"
+          onmouseover="this.style.background='var(--sky-pale)'" onmouseout="this.style.background=''">
+          ${sp.name}
+        </div>
+      `).join('');
+      dropdown.style.display = '';
+    }
+
+    function addInternalSpecies(id, name) {
+      if (affiliatedSpecies.some(a => a.type === 'internal' && a.species_id === id)) return;
+      affiliatedSpecies.push({ type: 'internal', species_id: id, name });
+      renderAffiliatedList();
+      document.getElementById('affiliatedSearch').value = '';
+      document.getElementById('affiliatedDropdown').style.display = 'none';
+    }
+
+    function addExternalSpecies() {
+      const input   = document.getElementById('externalSpeciesName');
+      const name    = input.value.trim();
+      const errorEl = document.getElementById('formError');
+      if (!name) { errorEl.textContent = '종족명을 입력해주세요.'; return; }
+      if (affiliatedSpecies.some(a => a.type === 'external' && a.name === name)) {
+        errorEl.textContent = '이미 추가된 외부 종족이에요.'; return;
+      }
+      errorEl.textContent = '';
+      affiliatedSpecies.push({ type: 'external', name });
+      renderAffiliatedList();
+      input.value = '';
+    }
+
+    function removeAffiliated(idx) {
+      affiliatedSpecies.splice(idx, 1);
+      renderAffiliatedList();
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#affiliatedSearch') && !e.target.closest('#affiliatedDropdown')) {
+        const dd = document.getElementById('affiliatedDropdown');
+        if (dd) dd.style.display = 'none';
+      }
+    });
 
     // ── Quill 초기화 ──────────────────────────
     const SizeStyle = Quill.import('attributors/style/size');
@@ -307,6 +408,8 @@
       const user = await getUser();
       if (!user) { window.location.href = 'login.html'; return; }
 
+      await loadAllSpecies();
+
       const { data: s, error } = await sb.from('species').select('*').eq('id', speciesId).single();
       if (error || !s) { window.location.href = 'species-list.html'; return; }
       originalName = s.name.trim();
@@ -341,6 +444,22 @@
       document.getElementById('allowResale').checked         = s.allow_resale          !== false;
       document.getElementById('allowPaidAdoption').checked   = s.allow_paid_adoption   !== false;
       document.getElementById('allowOtherAdoption').checked  = s.allow_other_adoption  !== false;
+
+      // 기존 제휴종족 로드 — allSpeciesList 대신 species_id 목록으로 직접 조회
+      const rawAffiliated = s.affiliated_species || [];
+      const internalIds   = rawAffiliated.filter(a => a.type === 'internal').map(a => a.species_id).filter(Boolean);
+      const nameById      = {};
+      if (internalIds.length) {
+        const { data: fetchedSp } = await sb.from('species').select('id, name').in('id', internalIds);
+        (fetchedSp || []).forEach(sp => { nameById[sp.id] = sp.name; });
+      }
+      affiliatedSpecies = rawAffiliated.map(item => {
+        if (item.type === 'internal') {
+          return { type: 'internal', species_id: item.species_id, name: nameById[item.species_id] || '(알 수 없음)' };
+        }
+        return { type: 'external', name: item.name };
+      });
+      renderAffiliatedList();
     }
 
     function loadGuideData(g) {
@@ -569,6 +688,11 @@
         const isSensitive  = document.getElementById('isSensitive').checked;
         const sensitiveNote = document.getElementById('sensitiveNote').value.trim();
         const openTypeVal  = document.querySelector('input[name="openType"]:checked')?.value || null;
+        const affiliated   = affiliatedSpecies.map(item =>
+          item.type === 'internal'
+            ? { type: 'internal', species_id: item.species_id }
+            : { type: 'external', name: item.name }
+        );
 
         const { data, error } = await sb.from('species').update({
           name,
@@ -585,6 +709,7 @@
           allow_resale:         document.getElementById('allowResale').checked,
           allow_paid_adoption:  document.getElementById('allowPaidAdoption').checked,
           allow_other_adoption: document.getElementById('allowOtherAdoption').checked,
+          affiliated_species:   affiliated,
         }).eq('id', speciesId).select();
 
         if (error) throw new Error(`저장에 실패했어요: ${error.message}`);

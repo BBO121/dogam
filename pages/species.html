@@ -201,6 +201,43 @@
         ? (idToNick[s.owner_user_id] || s.owner_nickname)
         : s.owner_nickname;
 
+      // 제휴종족 사전 조회
+      let affiliatedHtml = '';
+      if (s.affiliated_species?.length) {
+        const internalIds = s.affiliated_species.filter(a => a.type === 'internal').map(a => a.species_id);
+        const internalMap = {};
+        if (internalIds.length) {
+          const { data: spData } = await sb.from('species').select('id, name, image_url').in('id', internalIds);
+          (spData || []).forEach(sp => { internalMap[sp.id] = sp; });
+        }
+        const items = s.affiliated_species.map(item => {
+          if (item.type === 'internal') {
+            const sp = internalMap[item.species_id];
+            if (!sp) return '';
+            return `<a href="species.html?id=${item.species_id}" style="display:flex; flex-direction:column; align-items:center; gap:6px; text-decoration:none; color:inherit; min-width:60px; max-width:72px;">
+              <div style="width:56px; height:56px; border-radius:10px; overflow:hidden; border:1px solid var(--border); background:#f1f5f9; flex-shrink:0;">
+                ${sp.image_url ? `<img src="${sp.image_url}" style="width:100%; height:100%; object-fit:cover;">` : ''}
+              </div>
+              <span style="font-size:12px; color:var(--text); font-weight:500; text-align:center; word-break:break-all; line-height:1.4;">${sp.name}</span>
+            </a>`;
+          } else {
+            return `<div style="display:flex; flex-direction:column; align-items:center; gap:6px; min-width:60px; max-width:72px;">
+              <div style="width:56px; height:56px; border-radius:10px; border:1px solid var(--border); background:#f1f5f9; display:flex; align-items:center; justify-content:center; color:var(--text-mute); font-size:20px; flex-shrink:0;">—</div>
+              <span style="font-size:12px; color:var(--text); font-weight:500; text-align:center; word-break:break-all; line-height:1.4;">${item.name}</span>
+            </div>`;
+          }
+        }).filter(Boolean);
+        if (items.length) {
+          affiliatedHtml = `
+        <div style="margin-bottom:28px; background:#fff; border-radius:10px; border:1px solid var(--border); padding:14px 16px;">
+          <p style="font-size:13px; font-weight:700; color:var(--text); margin:0 0 12px;">제휴종족</p>
+          <div style="display:flex; flex-wrap:wrap; gap:16px;">
+            ${items.join('')}
+          </div>
+        </div>`;
+        }
+      }
+
       document.getElementById('speciesDetail').innerHTML = `
         <div class="species-detail-top">
           ${s.is_sensitive && s.image_url ? `
@@ -269,6 +306,8 @@
             ).join('')}
           </div>
         </div>
+
+        ${affiliatedHtml}
 
         ${s.description ? `
         <div class="species-desc-full">
