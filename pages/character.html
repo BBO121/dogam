@@ -249,7 +249,7 @@
       const isAdminUser  = isAdminOrStaff(user?.user_metadata?.role);
 
       // original_image_url 제외 — 권한자가 토글 시 on-demand 조회
-      const CHAR_SELECT = 'id,name,species_name,image_url,thumbnail_url,additional_images,owner_nickname,owner_user_id,owner_is_offsite,owner_contact,designer_nickname,designer_contact,char_number,description,owner_description,is_sensitive,sensitive_note,char_sections,custom_field_values,char_categories,allow_free_adoption,allow_resale,allow_paid_adoption,allow_other_adoption,pending_transfer,created_at';
+      const CHAR_SELECT = 'id,name,species_name,image_url,thumbnail_url,additional_images,owner_nickname,owner_user_id,owner_is_offsite,owner_contact,designer_nickname,designer_user_ids,designer_contact,char_number,description,owner_description,is_sensitive,sensitive_note,char_sections,custom_field_values,char_categories,allow_free_adoption,allow_resale,allow_paid_adoption,allow_other_adoption,pending_transfer,created_at';
       const [{ data: c, error }, { data: siteUserData }] = await Promise.all([
         sb.from('characters').select(CHAR_SELECT).eq('id', charId).single(),
         sb.rpc('get_all_users'),

@@ -108,30 +108,23 @@
           </div>
 
           <!-- 디자이너 -->
-          <div class="form-group">
+          <div class="form-group" id="designerSection">
             <label class="form-label">디자이너 <span class="required">*</span></label>
-
-            <div style="display:flex; gap:8px; margin-bottom:12px;">
-              <button type="button" id="btnDesignerSite" onclick="setDesignerType('site')"
-                style="flex:1; padding:8px; border-radius:8px; border:2px solid var(--sky); background:var(--sky); color:#fff; font-size:13px; cursor:pointer;">
-                사이트 유저
-              </button>
-              <button type="button" id="btnDesignerExternal" onclick="setDesignerType('external')"
-                style="flex:1; padding:8px; border-radius:8px; border:2px solid var(--border); background:#fff; color:var(--text-sub); font-size:13px; cursor:pointer;">
-                사이트 밖 유저
-              </button>
-            </div>
-
-            <div id="designerSiteSection">
-              <input type="text" id="designerSearch" class="form-input" placeholder="닉네임 또는 아이디로 검색..." oninput="filterDesigners(this.value)" style="margin-bottom:8px;">
-              <div id="designerUserList" style="border:1px solid var(--border); border-radius:10px; max-height:200px; overflow-y:auto; background:#fff;">
-                <p style="padding:12px; color:var(--text-mute); font-size:13px;">불러오는 중...</p>
+            <p class="form-hint">여러 명 추가 가능 · 순서대로 표시됩니다</p>
+            <div id="designerList" style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px;"></div>
+            <div style="margin-bottom:10px;">
+              <p style="font-size:12px; font-weight:600; color:var(--text-sub); margin:0 0 5px;">연구소 유저</p>
+              <div style="position:relative;">
+                <input type="text" id="designerSearch" class="form-input" placeholder="닉네임 또는 아이디로 검색..." oninput="filterDesigners(this.value)" autocomplete="off">
+                <div id="designerDropdown" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:100; background:#fff; border:1px solid var(--border); border-radius:10px; max-height:180px; overflow-y:auto; margin-top:2px; box-shadow:0 4px 12px rgba(0,0,0,0.08);"></div>
               </div>
-              <p id="designerSelectedDisplay" style="margin-top:8px; font-size:13px; color:var(--sky-deep); display:none;"></p>
             </div>
-
-            <div id="designerExternalSection" style="display:none;">
-              <input type="text" id="designerExternalName" class="form-input" placeholder="이름 입력" style="margin-bottom:8px;">
+            <div>
+              <p style="font-size:12px; font-weight:600; color:var(--text-sub); margin:0 0 5px;">사이트 밖 유저</p>
+              <div style="display:flex; gap:8px; margin-bottom:6px;">
+                <input type="text" id="designerExternalName" class="form-input" placeholder="이름 입력" style="flex:1;">
+                <button type="button" id="designerAddExternalBtn" onclick="addExternalDesigner()" style="padding:0 14px; height:40px; border-radius:8px; border:1.5px solid var(--border); background:#fff; color:var(--text); font-size:13px; cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0;">추가</button>
+              </div>
               <input type="text" id="designerExternalContact" class="form-input" placeholder="연락처 (트위터, 디스코드 등) — 선택사항">
             </div>
           </div>
@@ -302,13 +295,12 @@
   <script src="../js/main.js"></script>
   <script src="../js/utils.js"></script>
   <script>
-    let currentUser          = null;
-    let ownerType            = 'site';
-    let selectedNick         = null;
-    let selectedNickId       = null;
-    let designerType         = 'site';
-    let selectedDesignerNick = null;
-    let allUsers             = [];
+    let currentUser   = null;
+    let ownerType     = 'site';
+    let selectedNick  = null;
+    let selectedNickId = null;
+    let designers     = []; // { type:'site', userId, nickname } | { type:'external', name, contact }
+    let allUsers      = [];
     let allSpecies           = [];
     let addedCategories      = [];
     let selectedMainFile     = null;
@@ -687,7 +679,6 @@
         .sort((a, b) => a.nickname.localeCompare(b.nickname, 'ko'));
 
       renderUserList([]);
-      renderDesignerList([]);
 
       if (myName) selectUser(myName);
     }
@@ -731,56 +722,78 @@
       if (selectedNick) selectUser(selectedNick);
     }
 
-    function renderDesignerList(list) {
-      const el = document.getElementById('designerUserList');
-      if (!list.length) {
-        el.innerHTML = '<p style="padding:12px; color:var(--text-mute); font-size:13px;">닉네임 또는 아이디를 입력하세요</p>';
-        return;
-      }
-      el.innerHTML = list.map(u => `
-        <div onclick="selectDesigner('${u.nickname}')" id="designerItem_${u.nickname}"
-          style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border); transition:background 0.1s;"
-          onmouseover="this.style.background='var(--sky-pale)'" onmouseout="this.style.background= selectedDesignerNick==='${u.nickname}' ? 'var(--sky-light)' : ''">
-          ${u.nickname}${u.loginId !== u.nickname ? `<span style="color:var(--text-mute); font-size:11px; margin-left:6px;">(${u.loginId})</span>` : ''}
+    function renderDesignerItems() {
+      const el = document.getElementById('designerList');
+      if (!designers.length) { el.innerHTML = ''; return; }
+      el.innerHTML = designers.map((d, idx) => `
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:7px 12px; background:var(--bg-sub); border-radius:8px; border:1px solid var(--border);">
+          <span style="font-size:13px; color:var(--text);">
+            <span style="font-size:11px; color:var(--text-mute); background:#e2e8f0; padding:1px 6px; border-radius:4px; margin-right:6px;">${d.type === 'site' ? '연구소' : '외부'}</span>
+            ${d.type === 'site' ? d.nickname : d.name}${d.type === 'external' && d.contact ? `<span style="color:var(--text-mute);font-size:11px;margin-left:4px;">(${d.contact})</span>` : ''}
+          </span>
+          <button type="button" onclick="removeDesigner(${idx})" style="background:none;border:none;cursor:pointer;color:var(--text-mute);font-size:16px;padding:2px 6px;border-radius:4px;line-height:1;font-family:inherit;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='var(--text-mute)'">✕</button>
         </div>
       `).join('');
     }
 
-    function selectDesigner(nick) {
-      selectedDesignerNick = nick;
-      document.querySelectorAll('#designerUserList > div').forEach(el => {
-        el.style.background = el.id === `designerItem_${nick}` ? 'var(--sky-light)' : '';
-        el.style.fontWeight  = el.id === `designerItem_${nick}` ? '600' : '';
-      });
-      const disp = document.getElementById('designerSelectedDisplay');
-      disp.textContent = `선택됨: ${nick}`;
-      disp.style.display = 'block';
-    }
-
     function filterDesigners(q) {
-      const qLow = q.toLowerCase();
-      const filtered = q
-        ? allUsers.filter(u =>
-            u.nickname.toLowerCase().includes(qLow) ||
-            u.loginId.toLowerCase().includes(qLow)
-          )
-        : [];
-      renderDesignerList(filtered);
-      if (selectedDesignerNick) selectDesigner(selectedDesignerNick);
+      const dropdown = document.getElementById('designerDropdown');
+      const qTrim = q.trim();
+      if (!qTrim) { dropdown.style.display = 'none'; return; }
+      const qLow = qTrim.toLowerCase();
+      const results = allUsers.filter(u => {
+        if (designers.some(d => d.type === 'site' && d.userId === u.id)) return false;
+        return u.nickname.toLowerCase().includes(qLow) || u.loginId.toLowerCase().includes(qLow);
+      }).slice(0, 10);
+      if (!results.length) {
+        dropdown.innerHTML = '<p style="padding:10px 14px; font-size:13px; color:var(--text-mute);">일치하는 유저가 없어요</p>';
+        dropdown.style.display = '';
+        return;
+      }
+      dropdown.innerHTML = results.map(u => `
+        <div onclick="addSiteDesigner('${u.id}','${u.nickname.replace(/'/g,"\\'")}')"
+          style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border); transition:background 0.1s;"
+          onmouseover="this.style.background='var(--sky-pale)'" onmouseout="this.style.background=''">
+          ${u.nickname}${u.loginId !== u.nickname ? `<span style="color:var(--text-mute);font-size:11px;margin-left:6px;">(${u.loginId})</span>` : ''}
+        </div>
+      `).join('');
+      dropdown.style.display = '';
     }
 
-    function setDesignerType(type) {
-      designerType = type;
-      const isSite = type === 'site';
-      document.getElementById('designerSiteSection').style.display    = isSite ? '' : 'none';
-      document.getElementById('designerExternalSection').style.display = isSite ? 'none' : '';
-      document.getElementById('btnDesignerSite').style.background  = isSite ? 'var(--sky)' : '#fff';
-      document.getElementById('btnDesignerSite').style.color       = isSite ? '#fff' : 'var(--text-sub)';
-      document.getElementById('btnDesignerSite').style.borderColor = isSite ? 'var(--sky)' : 'var(--border)';
-      document.getElementById('btnDesignerExternal').style.background  = isSite ? '#fff' : 'var(--sky)';
-      document.getElementById('btnDesignerExternal').style.color       = isSite ? 'var(--text-sub)' : '#fff';
-      document.getElementById('btnDesignerExternal').style.borderColor = isSite ? 'var(--border)' : 'var(--sky)';
+    function addSiteDesigner(userId, nickname) {
+      if (designers.some(d => d.type === 'site' && d.userId === userId)) return;
+      designers.push({ type: 'site', userId, nickname });
+      renderDesignerItems();
+      document.getElementById('designerSearch').value = '';
+      document.getElementById('designerDropdown').style.display = 'none';
     }
+
+    function addExternalDesigner() {
+      const name    = document.getElementById('designerExternalName').value.trim();
+      const contact = document.getElementById('designerExternalContact').value.trim();
+      const errorEl = document.getElementById('registerError');
+      if (!name) { errorEl.textContent = '디자이너 이름을 입력해주세요.'; return; }
+      if (designers.some(d => d.type === 'external' && d.name === name)) {
+        errorEl.textContent = '이미 추가된 외부 디자이너예요.'; return;
+      }
+      errorEl.textContent = '';
+      designers.push({ type: 'external', name, contact });
+      renderDesignerItems();
+      document.getElementById('designerExternalName').value = '';
+      document.getElementById('designerExternalContact').value = '';
+    }
+
+    function removeDesigner(idx) {
+      designers.splice(idx, 1);
+      renderDesignerItems();
+    }
+
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('#designerSearch') && !e.target.closest('#designerDropdown')) {
+        const dd = document.getElementById('designerDropdown');
+        if (dd) dd.style.display = 'none';
+      }
+    });
 
     function setOwnerType(type) {
       ownerType = type;
@@ -939,17 +952,11 @@
         owner = externalName;
       }
 
-      // 디자이너 수집 (필수)
-      let designer = null;
-      let designer_contact = null;
-      if (designerType === 'site') {
-        if (!selectedDesignerNick) { errorEl.textContent = '디자이너를 선택해주세요.'; return; }
-        designer = selectedDesignerNick;
-      } else {
-        designer = document.getElementById('designerExternalName').value.trim();
-        if (!designer) { errorEl.textContent = '디자이너 이름을 입력해주세요.'; return; }
-        designer_contact = document.getElementById('designerExternalContact').value.trim() || null;
-      }
+      // 디자이너 수집 (1명 이상 필수)
+      if (!designers.length) { errorEl.textContent = '디자이너를 1명 이상 추가해주세요.'; return; }
+      const designer_nickname = designers.map(d => d.type === 'site' ? d.nickname : d.name).join(' / ');
+      const designer_user_ids = designers.filter(d => d.type === 'site').map(d => d.userId);
+      const designer_contact  = designers.find(d => d.type === 'external')?.contact || null;
 
       btn.textContent = '등록 중...';
       btn.disabled = true;
@@ -1050,7 +1057,8 @@
           name,
           char_number:         document.getElementById('charNumber').value.trim() || null,
           species_name:        speciesName || null,
-          designer_nickname:   designer,
+          designer_nickname:   designer_nickname,
+          designer_user_ids:   designer_user_ids,
           designer_contact:    designer_contact,
           owner_nickname:      owner,
           owner_user_id:       ownerType === 'site' ? (selectedNickId || null) : null,
