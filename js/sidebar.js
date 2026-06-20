@@ -8,96 +8,101 @@ async function initSidebar() {
   sidebar.innerHTML = `
     <div class="sidebar-user-block" id="sidebarUserBlock"></div>
 
-    <nav class="sidebar-menu">
-      <a href="index.html"  class="sidebar-item ${path === 'index.html' ? 'active' : ''}">홈</a>
-      <a href="notice.html" class="sidebar-item ${path === 'notice.html' || path === 'notice-detail.html' ? 'active' : ''}">공지사항</a>
-    </nav>
-
-    <div class="sidebar-accordion" id="accNotes">
-      <button class="sidebar-accordion-btn" onclick="toggleAccordion('accNotes')">
-        연구소 노트<span class="sidebar-accordion-arrow" id="arrNotes"></span>
+    <!-- ── 홈 아코디언 ─────────────────────────────── -->
+    <div class="sidebar-accordion" id="accHome">
+      <button class="sidebar-accordion-btn" onclick="toggleAccordion('accHome')">
+        홈<span class="sidebar-accordion-arrow" id="arrHome"></span>
       </button>
-      <div class="sidebar-accordion-body" id="bodyNotes">
-        <a href="update-note.html" class="sidebar-subitem ${path === 'update-note.html' || path === 'update-note-detail.html' || path === 'update-note-write.html' ? 'active' : ''}">업데이트</a>
-        <a href="dev-log.html"     class="sidebar-subitem ${path === 'dev-log.html' || path === 'dev-log-detail.html' || path === 'dev-log-write.html' ? 'active' : ''}">개발일지</a>
+      <div class="sidebar-accordion-body" id="bodyHome">
+        <a href="notice.html"      class="sidebar-subitem ${path === 'notice.html'           || path === 'notice-detail.html'        ? 'active' : ''}">공지사항</a>
+        <a href="guide.html"       class="sidebar-subitem ${path === 'guide.html'            || path === 'guide-detail.html'         ? 'active' : ''}">가이드</a>
+        <div class="sidebar-divider" style="margin:8px 0;"></div>
+        <a href="update-note.html" class="sidebar-subitem ${path === 'update-note.html'      || path === 'update-note-detail.html'   || path === 'update-note-write.html' ? 'active' : ''}">업데이트</a>
+        <a href="dev-log.html"     class="sidebar-subitem ${path === 'dev-log.html'          || path === 'dev-log-detail.html'       || path === 'dev-log-write.html'     ? 'active' : ''}">개발일지</a>
+        <!-- TODO: 출석 — 개발일지 아래 위치 예정 -->
       </div>
     </div>
 
-    <nav class="sidebar-menu">
-      <a href="guide.html" class="sidebar-item ${path === 'guide.html' || path === 'guide-detail.html' ? 'active' : ''}">가이드</a>
-    </nav>
-
-    <div class="sidebar-divider"></div>
-
-    <div class="sidebar-accordion" id="accSpecies">
-      <button class="sidebar-accordion-btn" id="btnSpecies" onclick="onSpeciesClick(this)">
-        종족<span class="sidebar-accordion-arrow" id="arrSpecies"></span>
+    <!-- ── 리스트 아코디언 ──────────────────────────── -->
+    <div class="sidebar-accordion" id="accList">
+      <button class="sidebar-accordion-btn" onclick="toggleAccordion('accList')">
+        리스트<span class="sidebar-accordion-arrow" id="arrList"></span>
       </button>
-      <div class="sidebar-accordion-body" id="bodySpecies">
-        <p class="sidebar-loading">불러오는 중...</p>
-      </div>
-    </div>
-
-    <a href="character-list.html" class="sidebar-accordion-btn ${path === 'character-list.html' || path === 'character.html' ? 'active' : ''}" style="text-decoration:none; display:flex; align-items:center;">개체</a>
-
-    <a href="adoption.html" class="sidebar-accordion-btn ${path === 'adoption.html' || path === 'adoption-detail.html' || path === 'adoption-write.html' ? 'active' : ''}" style="text-decoration:none; display:flex; align-items:center;">분양</a>
-
-    <a href="users.html" class="sidebar-accordion-btn ${path === 'users.html' || path === 'profile.html' && new URLSearchParams(window.location.search).get('user') ? 'active' : ''}" style="text-decoration:none; display:flex; align-items:center;">유저</a>
-
-    <div class="sidebar-divider"></div>
-
-    <nav class="sidebar-menu">
-      <a href="my-species.html"    class="sidebar-item sidebar-login ${path === 'my-species.html'    ? 'active' : ''}">내 종족</a>
-      <a href="my-characters.html" class="sidebar-item sidebar-login ${path === 'my-characters.html' ? 'active' : ''}">내 캐릭터</a>
-      <a href="my-designs.html"    class="sidebar-item sidebar-login ${path === 'my-designs.html'    ? 'active' : ''}">내 디자인</a>
-      <a href="my-slots.html"      class="sidebar-item sidebar-login ${path === 'my-slots.html'      ? 'active' : ''}">내 디자인권</a>
-      <a href="my-adoptions.html" class="sidebar-item sidebar-login ${path === 'my-adoptions.html' ? 'active' : ''}">내 분양</a>
-      <!-- 메시지: 추후 활성화 예정
-      <a href="messages.html"      class="sidebar-item sidebar-login ${path === 'messages.html' || path === 'chat.html' ? 'active' : ''}">메시지</a>
-      -->
-      <div class="sidebar-accordion sidebar-login" id="accMyInfo">
-        <button class="sidebar-accordion-btn" onclick="toggleAccordion('accMyInfo')">
-          내 정보<span class="sidebar-accordion-arrow" id="arrMyInfo"></span>
+      <div class="sidebar-accordion-body" id="bodyList">
+        <button class="sidebar-subitem" id="btnSpecies" onclick="onSpeciesClick(this)" style="background:none;border:none;width:100%;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
+          종족<span style="font-size:10px;opacity:0.5;">▶</span>
         </button>
-        <div class="sidebar-accordion-body" id="bodyMyInfo">
-          <a href="profile.html"           class="sidebar-subitem ${path === 'profile.html'           ? 'active' : ''}">내 프로필</a>
-          <a href="transfer-history.html" class="sidebar-subitem ${path === 'transfer-history.html' ? 'active' : ''}">캐릭터 이전 내역</a>
-        </div>
+        <div id="bodySpecies" style="display:none;"></div>
+        <a href="character-list.html" class="sidebar-subitem ${path === 'character-list.html' || path === 'character.html'                                                    ? 'active' : ''}">개체</a>
+        <a href="adoption.html"       class="sidebar-subitem ${path === 'adoption.html'       || path === 'adoption-detail.html'   || path === 'adoption-write.html'          ? 'active' : ''}">분양</a>
+        <a href="users.html"          class="sidebar-subitem ${path === 'users.html'          || (path === 'profile.html' && new URLSearchParams(window.location.search).get('user')) ? 'active' : ''}">유저</a>
       </div>
-      <!-- 내 지갑: 개발 중 — 공개 전까지 비활성화
-      <a href="my-wallet.html" class="sidebar-item sidebar-login ${path === 'my-wallet.html' ? 'active' : ''}">내 지갑</a>
-      -->
-      <a href="notifications.html" class="sidebar-item sidebar-login ${path === 'notifications.html' ? 'active' : ''}" style="justify-content:space-between;">
-        알림<span class="sidebar-notif-badge" id="sidebarNotifBadge" style="display:none">0</span>
-      </a>
-    </nav>
+    </div>
 
-    <div class="sidebar-divider"></div>
+    <!-- ── MY 아코디언 (로그인 전용) ────────────────── -->
+    <div class="sidebar-accordion sidebar-login" id="accMy">
+      <button class="sidebar-accordion-btn" onclick="toggleAccordion('accMy')">
+        MY<span class="sidebar-accordion-arrow" id="arrMy"></span>
+      </button>
+      <div class="sidebar-accordion-body" id="bodyMy">
+        <a href="my-species.html"       class="sidebar-subitem ${path === 'my-species.html'       ? 'active' : ''}">내 종족</a>
+        <a href="my-characters.html"    class="sidebar-subitem ${path === 'my-characters.html'    ? 'active' : ''}">내 캐릭터</a>
+        <a href="my-designs.html"       class="sidebar-subitem ${path === 'my-designs.html'       ? 'active' : ''}">내 디자인</a>
+        <a href="my-slots.html"         class="sidebar-subitem ${path === 'my-slots.html'         ? 'active' : ''}">내 디자인권</a>
+        <a href="my-adoptions.html"     class="sidebar-subitem ${path === 'my-adoptions.html'     ? 'active' : ''}">내 분양</a>
+        <div class="sidebar-divider" style="margin:8px 0;"></div>
+        <a href="profile.html"          class="sidebar-subitem ${path === 'profile.html' && !new URLSearchParams(window.location.search).get('user') ? 'active' : ''}">내 프로필</a>
+        <!-- TODO: 내 지갑 — 내 프로필 아래 위치 예정 -->
+        <div class="sidebar-divider" style="margin:8px 0;"></div>
+        <a href="notifications.html"    class="sidebar-subitem ${path === 'notifications.html'    ? 'active' : ''}" style="display:flex;justify-content:space-between;align-items:center;">알림함<span class="sidebar-notif-badge" id="sidebarNotifBadge" style="display:none">0</span></a>
+        <a href="transfer-history.html" class="sidebar-subitem ${path === 'transfer-history.html' ? 'active' : ''}">캐릭터 이전 내역</a>
+      </div>
+    </div>
 
-    <nav class="sidebar-menu">
-      <a href="species-apply.html" class="sidebar-item ${path === 'species-apply.html' || path === 'species-apply-write.html' || path === 'species-apply-detail.html' ? 'active' : ''}" style="justify-content:space-between;">✨종족주 신청✨<span class="sidebar-notif-badge" id="sidebarApplyBadge" style="display:none">0</span></a>
-      <a href="inquiry.html"    class="sidebar-item ${path === 'inquiry.html' || path === 'inquiry-write.html' || path === 'inquiry-detail.html' ? 'active' : ''}" style="justify-content:space-between;">문의<span class="sidebar-notif-badge" id="sidebarInquiryBadge" style="display:none">0</span></a>
-      <a href="bug-report.html" class="sidebar-item ${path === 'bug-report.html' || path === 'bug-report-write.html' || path === 'bug-report-detail.html' ? 'active' : ''}" style="justify-content:space-between;">버그리포트<span class="sidebar-notif-badge" id="sidebarBugBadge" style="display:none">0</span></a>
-    </nav>
+    <!-- TODO: 상점 아코디언 — MY 다음, 지원 전 위치 예정 -->
+    <!--   TODO: 프레임 상점 — 상점 안 하위 메뉴 예정 -->
+
+    <!-- ── 지원 아코디언 ─────────────────────────────── -->
+    <div class="sidebar-accordion" id="accSupport">
+      <button class="sidebar-accordion-btn" onclick="toggleAccordion('accSupport')">
+        지원<span class="sidebar-accordion-arrow" id="arrSupport"></span>
+      </button>
+      <div class="sidebar-accordion-body" id="bodySupport">
+        <a href="inquiry.html"    class="sidebar-subitem ${path === 'inquiry.html'    || path === 'inquiry-write.html'    || path === 'inquiry-detail.html'    ? 'active' : ''}" style="display:flex;justify-content:space-between;align-items:center;">문의<span class="sidebar-notif-badge" id="sidebarInquiryBadge" style="display:none">0</span></a>
+        <a href="bug-report.html" class="sidebar-subitem ${path === 'bug-report.html' || path === 'bug-report-write.html' || path === 'bug-report-detail.html' ? 'active' : ''}" style="display:flex;justify-content:space-between;align-items:center;">버그리포트<span class="sidebar-notif-badge" id="sidebarBugBadge" style="display:none">0</span></a>
+      </div>
+    </div>
   `;
 
-  // 연구소 노트 하위 페이지면 아코디언 자동 열기
-  const notePages = ['update-note.html','update-note-detail.html','update-note-write.html',
-                     'dev-log.html','dev-log-detail.html','dev-log-write.html'];
-  if (notePages.includes(path)) {
-    document.getElementById('bodyNotes').classList.add('open');
-    document.getElementById('arrNotes').style.transform = 'rotate(180deg)';
+  // 현재 페이지에 해당하는 아코디언 자동 열기
+  const homePages    = ['notice.html','notice-detail.html','guide.html','guide-detail.html',
+                        'update-note.html','update-note-detail.html','update-note-write.html',
+                        'dev-log.html','dev-log-detail.html','dev-log-write.html'];
+  const listPages    = ['species.html','species-list.html','character-list.html','character.html',
+                        'adoption.html','adoption-detail.html','adoption-write.html','users.html'];
+  const myPages      = ['my-species.html','my-characters.html','my-designs.html','my-slots.html',
+                        'my-adoptions.html','notifications.html','transfer-history.html'];
+  const supportPages = ['inquiry.html','inquiry-write.html','inquiry-detail.html',
+                        'bug-report.html','bug-report-write.html','bug-report-detail.html'];
+
+  const isUserProfile = path === 'profile.html' && new URLSearchParams(window.location.search).get('user');
+  const isMyProfile   = path === 'profile.html' && !new URLSearchParams(window.location.search).get('user');
+
+  function openAccordion(suffix) {
+    const body  = document.getElementById('body'  + suffix);
+    const arrow = document.getElementById('arr'   + suffix);
+    if (body)  body.classList.add('open');
+    if (arrow) arrow.style.transform = 'rotate(180deg)';
   }
 
-  // 종족 관련 페이지: 버튼 active 표시 (모바일/PC 공통)
+  if (homePages.includes(path))              openAccordion('Home');
+  if (listPages.includes(path) || isUserProfile) openAccordion('List');
+  if (myPages.includes(path)   || isMyProfile)   openAccordion('My');
+  if (supportPages.includes(path))           openAccordion('Support');
+
+  // 종족 관련 페이지: 종족 버튼 active 표시
   if (path === 'species.html' || path === 'species-list.html') {
     document.getElementById('btnSpecies')?.classList.add('active');
-  }
-
-  // 내 정보 하위 페이지면 아코디언 자동 열기
-  if (path === 'profile.html' || path === 'transfer-history.html') {
-    document.getElementById('bodyMyInfo').classList.add('open');
-    document.getElementById('arrMyInfo').style.transform = 'rotate(180deg)';
   }
 
   // 플라이아웃 패널 주입 (PC 전용)
@@ -457,15 +462,13 @@ async function loadAdminBadges() {
   const user = await getUser();
   if (!isAdminOrStaff(user?.user_metadata?.role)) return;
 
-  const [{ count: inquiryCount }, { count: bugCount }, { count: applyCount }] = await Promise.all([
+  const [{ count: inquiryCount }, { count: bugCount }] = await Promise.all([
     sb.from('inquiries').select('*', { count: 'exact', head: true }).eq('status', '접수됨'),
     sb.from('bug_reports').select('*', { count: 'exact', head: true }).eq('status', '접수됨'),
-    sb.from('species_applications').select('*', { count: 'exact', head: true }).in('status', ['접수됨', '검토중']),
   ]);
 
   const iBadge = document.getElementById('sidebarInquiryBadge');
   const bBadge = document.getElementById('sidebarBugBadge');
-  const aBadge = document.getElementById('sidebarApplyBadge');
 
   if (iBadge && inquiryCount > 0) {
     iBadge.textContent  = inquiryCount > 99 ? '99+' : inquiryCount;
@@ -474,10 +477,6 @@ async function loadAdminBadges() {
   if (bBadge && bugCount > 0) {
     bBadge.textContent  = bugCount > 99 ? '99+' : bugCount;
     bBadge.style.display = 'inline-flex';
-  }
-  if (aBadge && applyCount > 0) {
-    aBadge.textContent  = applyCount > 99 ? '99+' : applyCount;
-    aBadge.style.display = 'inline-flex';
   }
 }
 
