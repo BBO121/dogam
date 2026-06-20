@@ -361,14 +361,12 @@ a {
 }
 
 .sidebar-accordion-arrow {
-  font-size: 10px;
+  font-size: 14px;
   transition: transform 0.2s;
   color: var(--text-mute);
   display: inline-block;
-}
-
-.sidebar-accordion-arrow::after {
-  content: "▾";
+  line-height: 1;
+  user-select: none;
 }
 
 .sidebar-accordion-body {

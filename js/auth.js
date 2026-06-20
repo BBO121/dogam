@@ -189,10 +189,11 @@ async function getMyCurrencyLogs(userId) {
   return { data: data ?? [], error };
 }
 
-// 연구기록 전송 RPC
-async function transferResearchRecords(toNickname, amount, note) {
-  const { data, error } = await sb.rpc('transfer_research_records', {
+// 재화 전송 RPC (research_records / keys)
+async function transferCurrency(currencyType, toNickname, amount, note) {
+  const { data, error } = await sb.rpc('transfer_currency', {
     p_to_nickname: toNickname,
+    p_currency:    currencyType,
     p_amount:      amount,
     p_note:        note || null,
   });

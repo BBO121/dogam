@@ -2,6 +2,15 @@ async function initSidebar() {
   const sidebar = document.getElementById('sidebar');
   if (!sidebar) return;
 
+  // Material Symbols 동적 로드 (expand_more 아이콘용)
+  if (!document.getElementById('materialSymbolsLink')) {
+    const link = document.createElement('link');
+    link.id   = 'materialSymbolsLink';
+    link.rel  = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0';
+    document.head.appendChild(link);
+  }
+
   const path = window.location.pathname.split('/').pop();
   const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
 
@@ -11,7 +20,7 @@ async function initSidebar() {
     <!-- ── 홈 아코디언 ─────────────────────────────── -->
     <div class="sidebar-accordion" id="accHome">
       <button class="sidebar-accordion-btn" onclick="toggleAccordion('accHome')">
-        홈<span class="sidebar-accordion-arrow" id="arrHome"></span>
+        홈<span class="material-symbols-outlined sidebar-accordion-arrow" id="arrHome">expand_more</span>
       </button>
       <div class="sidebar-accordion-body" id="bodyHome">
         <a href="notice.html"      class="sidebar-subitem ${path === 'notice.html'           || path === 'notice-detail.html'        ? 'active' : ''}">공지사항</a>
@@ -26,11 +35,11 @@ async function initSidebar() {
     <!-- ── 리스트 아코디언 ──────────────────────────── -->
     <div class="sidebar-accordion" id="accList">
       <button class="sidebar-accordion-btn" onclick="toggleAccordion('accList')">
-        리스트<span class="sidebar-accordion-arrow" id="arrList"></span>
+        리스트<span class="material-symbols-outlined sidebar-accordion-arrow" id="arrList">expand_more</span>
       </button>
       <div class="sidebar-accordion-body" id="bodyList">
         <button class="sidebar-subitem" id="btnSpecies" onclick="onSpeciesClick(this)" style="background:none;border:none;width:100%;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
-          종족<span style="font-size:10px;opacity:0.5;">▶</span>
+          종족<span style="font-size:14px;opacity:0.5;">▶</span>
         </button>
         <div id="bodySpecies" style="display:none;"></div>
         <a href="character-list.html" class="sidebar-subitem ${path === 'character-list.html' || path === 'character.html'                                                    ? 'active' : ''}">개체</a>
@@ -42,7 +51,7 @@ async function initSidebar() {
     <!-- ── MY 아코디언 (로그인 전용) ────────────────── -->
     <div class="sidebar-accordion sidebar-login" id="accMy">
       <button class="sidebar-accordion-btn" onclick="toggleAccordion('accMy')">
-        MY<span class="sidebar-accordion-arrow" id="arrMy"></span>
+        MY<span class="material-symbols-outlined sidebar-accordion-arrow" id="arrMy">expand_more</span>
       </button>
       <div class="sidebar-accordion-body" id="bodyMy">
         <a href="my-species.html"       class="sidebar-subitem ${path === 'my-species.html'       ? 'active' : ''}">내 종족</a>
@@ -65,7 +74,7 @@ async function initSidebar() {
     <!-- ── 지원 아코디언 ─────────────────────────────── -->
     <div class="sidebar-accordion" id="accSupport">
       <button class="sidebar-accordion-btn" onclick="toggleAccordion('accSupport')">
-        지원<span class="sidebar-accordion-arrow" id="arrSupport"></span>
+        지원<span class="material-symbols-outlined sidebar-accordion-arrow" id="arrSupport">expand_more</span>
       </button>
       <div class="sidebar-accordion-body" id="bodySupport">
         <a href="inquiry.html"    class="sidebar-subitem ${path === 'inquiry.html'    || path === 'inquiry-write.html'    || path === 'inquiry-detail.html'    ? 'active' : ''}" style="display:flex;justify-content:space-between;align-items:center;">문의<span class="sidebar-notif-badge" id="sidebarInquiryBadge" style="display:none">0</span></a>

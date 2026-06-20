@@ -572,7 +572,8 @@
     }
 
     async function loadRelChars(speciesSelect, charSelectId) {
-      const charSelect  = document.getElementById(charSelectId);
+      const charSelect  = document.getElementById(charSelectId)
+                       || speciesSelect.closest('.relation-item')?.querySelector('.rel-char-select');
       if (!charSelect) return;
       const speciesName = speciesSelect.options[speciesSelect.selectedIndex]?.dataset?.name;
       const savedId     = charSelect.dataset.savedId;

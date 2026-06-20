@@ -107,4 +107,4 @@ dogam_backup_MMDD_VN_HH-MM
 
 | 파일 | 사유 |
 |---|---|
-| `js/sidebar.js` | 로컬 전용 변경사항 포함 (가이드맵 [DEV] 제거 등) |
+| (현재 없음) | |

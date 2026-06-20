@@ -1,0 +1,21 @@
+{
+  "name": "dogam",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "sass": "sass css/scss/style.scss css/style.css --no-source-map",
+    "sass:watch": "sass --watch css/scss/style.scss:css/style.css --no-source-map"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BBO121/dogam.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/BBO121/dogam/issues"
+  },
+  "homepage": "https://github.com/BBO121/dogam#readme"
+}
