@@ -1,6 +1,12 @@
 -- ============================================
 -- 내 가방 / 프레임 장착 시스템 DB 설정
 -- 작성일: 2026-06-21
+-- 수정일: 2026-06-21 (user_equipment 별도 테이블, user_id 기준)
+--
+-- 설계 원칙:
+--   상점/가방/장착은 전부 user_id(auth.uid()) 기준
+--   nickname은 표시용으로만 사용
+--   user_profiles(PK=nickname) 건드리지 않음
 -- ============================================
 
 -- ── 1. shop_items에 style_key 컬럼 추가 ─────
@@ -10,32 +16,31 @@ ALTER TABLE public.shop_items
 ADD COLUMN IF NOT EXISTS style_key text;
 
 
--- ── 2. user_profiles에 equipped_frame_id 추가 ─
---  현재 장착 중인 프레임 (NULL = 미착용)
-ALTER TABLE public.user_profiles
-ADD COLUMN IF NOT EXISTS equipped_frame_id uuid
-  REFERENCES public.shop_items(id) ON DELETE SET NULL;
+-- ── 2. user_equipment 테이블 ─────────────────
+--  장착 상태 전용 테이블
+--  user_id = PRIMARY KEY → 닉네임 변경 영향 없음
+--  향후 equipped_title_id, equipped_deco_id 등 확장 가능
+CREATE TABLE IF NOT EXISTS public.user_equipment (
+  user_id           uuid        PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  equipped_frame_id uuid        REFERENCES public.shop_items(id) ON DELETE SET NULL,
+  updated_at        timestamptz NOT NULL DEFAULT now()
+);
 
+-- ── 3. RLS 활성화 ────────────────────────────
+ALTER TABLE public.user_equipment ENABLE ROW LEVEL SECURITY;
 
--- ── 3. user_profiles RLS 정책 확인/추가 ──────
---  본인 프로필만 조회·수정 가능
-DROP POLICY IF EXISTS "profiles: select own" ON public.user_profiles;
-CREATE POLICY "profiles: select own"
-  ON public.user_profiles FOR SELECT
+DROP POLICY IF EXISTS "equipment: select own" ON public.user_equipment;
+CREATE POLICY "equipment: select own"
+  ON public.user_equipment FOR SELECT
   USING (auth.uid() = user_id);
 
-DROP POLICY IF EXISTS "profiles: update own" ON public.user_profiles;
-CREATE POLICY "profiles: update own"
-  ON public.user_profiles FOR UPDATE
-  USING (auth.uid() = user_id);
+-- INSERT / UPDATE는 RPC(SECURITY DEFINER)로만 처리
 
 
 -- ── 4. equip_frame RPC ───────────────────────
---  프레임 장착 처리
---  - 로그인 확인
---  - 프레임 아이템인지 확인
---  - 보유 여부 확인
---  - user_profiles.equipped_frame_id 업데이트 (UPSERT)
+--  프레임 장착 — 전 구간 user_id 기준
+--  검증: 로그인 / 아이템 존재 / 프레임 타입 / 보유 여부
+--  처리: user_equipment UPSERT (user_id PK이므로 안전)
 CREATE OR REPLACE FUNCTION equip_frame(p_item_id uuid)
 RETURNS json LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE
@@ -65,8 +70,8 @@ BEGIN
     RETURN json_build_object('success', false, 'error', 'NOT_OWNED');
   END IF;
 
-  -- user_profiles 업데이트 (없으면 INSERT)
-  INSERT INTO public.user_profiles (user_id, equipped_frame_id, updated_at)
+  -- 장착 상태 저장 (user_id PK이므로 UPSERT 안전)
+  INSERT INTO public.user_equipment (user_id, equipped_frame_id, updated_at)
   VALUES (v_user_id, p_item_id, now())
   ON CONFLICT (user_id) DO UPDATE
   SET equipped_frame_id = p_item_id,
@@ -84,6 +89,6 @@ GRANT EXECUTE ON FUNCTION equip_frame(uuid) TO authenticated;
 
 
 -- ── 5. 인덱스 ────────────────────────────────
-CREATE INDEX IF NOT EXISTS idx_user_profiles_equipped_frame
-  ON public.user_profiles (equipped_frame_id)
+CREATE INDEX IF NOT EXISTS idx_user_equipment_frame
+  ON public.user_equipment (equipped_frame_id)
   WHERE equipped_frame_id IS NOT NULL;
