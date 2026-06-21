@@ -1,6 +1,7 @@
 -- ============================================
 -- 출석 시스템 DB 설정
 -- 작성일: 2026-06-21
+-- 수정일: 2026-06-21 (한국 시간 기준, wallet 보장, policy DROP/CREATE, GRANT 추가)
 -- ============================================
 
 -- 1. 출석 기록 테이블
@@ -16,7 +17,7 @@ CREATE TABLE IF NOT EXISTS public.attendance_logs (
 CREATE TABLE IF NOT EXISTS public.attendance_rewards (
   id           uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id      uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  month_key    text        NOT NULL,  -- 예: '2026-06'
+  month_key    text        NOT NULL,  -- 예: '2026-06' (한국 시간 기준)
   reward_step  integer     NOT NULL,  -- 7 / 14 / 21 / 28
   created_at   timestamptz NOT NULL DEFAULT now(),
   UNIQUE(user_id, month_key, reward_step)
@@ -26,14 +27,17 @@ CREATE TABLE IF NOT EXISTS public.attendance_rewards (
 ALTER TABLE public.attendance_logs    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.attendance_rewards ENABLE ROW LEVEL SECURITY;
 
--- 4. attendance_logs RLS 정책
+-- 4. attendance_logs RLS 정책 (DROP 후 CREATE로 재실행 안전)
+DROP POLICY IF EXISTS "attendance_logs: select own" ON public.attendance_logs;
 CREATE POLICY "attendance_logs: select own"
   ON public.attendance_logs FOR SELECT
   USING (auth.uid() = user_id);
 
--- INSERT는 RPC로만 처리 (클라이언트 직접 삽입 불가)
+-- INSERT는 RPC(SECURITY DEFINER)로만 처리 — 클라이언트 직접 삽입 불가
+-- (별도 INSERT 정책 없음)
 
 -- 5. attendance_rewards RLS 정책
+DROP POLICY IF EXISTS "attendance_rewards: select own" ON public.attendance_rewards;
 CREATE POLICY "attendance_rewards: select own"
   ON public.attendance_rewards FOR SELECT
   USING (auth.uid() = user_id);
@@ -41,15 +45,16 @@ CREATE POLICY "attendance_rewards: select own"
 -- ============================================
 -- 6. record_attendance RPC
 --    출석 기록 + 재화 지급 + 보너스 처리를 원자적으로 수행
+--    날짜 기준: 한국 시간 (Asia/Seoul)
 -- ============================================
 CREATE OR REPLACE FUNCTION record_attendance()
 RETURNS json LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE
   v_user_id       uuid    := auth.uid();
-  v_today         date    := CURRENT_DATE;
-  v_month_key     text    := to_char(CURRENT_DATE, 'YYYY-MM');
+  v_today         date    := timezone('Asia/Seoul', now())::date;
+  v_month_key     text    := to_char(timezone('Asia/Seoul', now()), 'YYYY-MM');
   v_count         integer;
-  v_research      integer := 5;   -- 기본 보상
+  v_research      integer := 5;
   v_keys          integer := 0;
   v_bonus_step    integer := 0;
   v_new_research  integer;
@@ -59,11 +64,16 @@ BEGIN
     RETURN json_build_object('success', false, 'error', 'NOT_AUTHENTICATED');
   END IF;
 
-  -- 출석 기록 삽입 (unique 제약으로 중복 방지, 실패 시 unique_violation 예외)
+  -- user_wallets row 보장 (가입 트리거 누락 유저 대비)
+  INSERT INTO public.user_wallets (user_id, research_records, keys)
+  VALUES (v_user_id, 0, 0)
+  ON CONFLICT (user_id) DO NOTHING;
+
+  -- 출석 기록 삽입 (unique 제약으로 중복 방지, 중복 시 unique_violation 예외)
   INSERT INTO public.attendance_logs (user_id, attendance_date)
   VALUES (v_user_id, v_today);
 
-  -- 이번 달 개인 누적 출석 횟수
+  -- 이번 달 개인 누적 출석 횟수 (한국 시간 기준 월)
   SELECT COUNT(*) INTO v_count
   FROM public.attendance_logs
   WHERE user_id = v_user_id
@@ -72,7 +82,7 @@ BEGIN
   -- 7회 단위 보너스 확인 (7 / 14 / 21 / 28)
   IF v_count IN (7, 14, 21, 28) THEN
     v_bonus_step := v_count;
-    -- 보너스 수령 기록 삽입 (이미 받았다면 NOTHING → FOUND = false)
+    -- 중복 수령 방지: 이미 받았으면 NOTHING → FOUND = false
     INSERT INTO public.attendance_rewards (user_id, month_key, reward_step)
     VALUES (v_user_id, v_month_key, v_bonus_step)
     ON CONFLICT (user_id, month_key, reward_step) DO NOTHING;
@@ -81,11 +91,11 @@ BEGIN
       v_research := v_research + 20;
       v_keys     := v_keys + 1;
     ELSE
-      v_bonus_step := 0;  -- 이미 수령한 보너스는 반환 값에서 제외
+      v_bonus_step := 0;  -- 이미 수령한 경우 반환 값에서 제외
     END IF;
   END IF;
 
-  -- 지갑 업데이트
+  -- 지갑 업데이트 및 잔액 스냅샷 취득
   UPDATE public.user_wallets
   SET research_records = research_records + v_research,
       keys             = keys + v_keys,
@@ -139,3 +149,6 @@ EXCEPTION
     RETURN json_build_object('success', false, 'error', 'ALREADY_ATTENDED');
 END;
 $$;
+
+-- 7. RPC 실행 권한 부여
+GRANT EXECUTE ON FUNCTION record_attendance() TO authenticated;
