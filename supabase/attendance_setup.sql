@@ -79,7 +79,8 @@ BEGIN
   WHERE user_id = v_user_id
     AND to_char(attendance_date, 'YYYY-MM') = v_month_key;
 
-  -- 7회 단위 보너스 확인 (7 / 14 / 21 / 28)
+  -- 누적 출석 보너스 확인 (7 / 14 / 21 / 28)
+  -- 보너스 연구기록: 7회 +20 / 14회 +25 / 21회 +30 / 28회 +40
   IF v_count IN (7, 14, 21, 28) THEN
     v_bonus_step := v_count;
     -- 중복 수령 방지: 이미 받았으면 NOTHING → FOUND = false
@@ -88,8 +89,13 @@ BEGIN
     ON CONFLICT (user_id, month_key, reward_step) DO NOTHING;
 
     IF FOUND THEN
-      v_research := v_research + 20;
-      v_keys     := v_keys + 1;
+      v_research := v_research + CASE v_count
+        WHEN  7 THEN 20
+        WHEN 14 THEN 25
+        WHEN 21 THEN 30
+        WHEN 28 THEN 40
+      END;
+      v_keys := v_keys + 1;
     ELSE
       v_bonus_step := 0;  -- 이미 수령한 경우 반환 값에서 제외
     END IF;
