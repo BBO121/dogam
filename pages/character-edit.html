@@ -583,7 +583,7 @@
       charSelect.innerHTML = '<option value="">불러오는 중...</option>';
       const { data } = await sb.from('characters').select('id, name').eq('species_name', speciesName).order('name');
       charSelect.innerHTML = '<option value="">개체 선택</option>' +
-        (data || []).map(c => `<option value="${c.id}" data-name="${c.name}" ${c.id === savedId ? 'selected' : ''}>${c.name}</option>`).join('');
+        (data || []).map(c => `<option value="${c.id}" data-name="${c.name}" ${String(c.id) === savedId ? 'selected' : ''}>${c.name}</option>`).join('');
     }
 
     function collectSections() {
