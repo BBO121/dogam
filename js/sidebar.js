@@ -32,6 +32,9 @@ async function initSidebar() {
       </div>
     </div>
 
+    <!-- ── 출석 단일 메뉴 ───────────────────────────── -->
+    <a href="attendance.html" class="sidebar-top-link ${path === 'attendance.html' ? 'active' : ''}">출석</a>
+
     <!-- ── 리스트 아코디언 ──────────────────────────── -->
     <div class="sidebar-accordion" id="accList">
       <button class="sidebar-accordion-btn" onclick="toggleAccordion('accList')">
@@ -61,7 +64,7 @@ async function initSidebar() {
         <a href="my-adoptions.html"     class="sidebar-subitem ${path === 'my-adoptions.html'     ? 'active' : ''}">내 분양</a>
         <div class="sidebar-divider" style="margin:8px 0;"></div>
         <a href="profile.html"          class="sidebar-subitem ${path === 'profile.html' && !new URLSearchParams(window.location.search).get('user') ? 'active' : ''}">내 프로필</a>
-        <!-- TODO: 내 지갑 — 내 프로필 아래 위치 예정 -->
+        <a href="my-wallet.html"        class="sidebar-subitem ${path === 'my-wallet.html' ? 'active' : ''}">내 지갑</a>
         <div class="sidebar-divider" style="margin:8px 0;"></div>
         <a href="notifications.html"    class="sidebar-subitem ${path === 'notifications.html'    ? 'active' : ''}" style="display:flex;justify-content:space-between;align-items:center;">알림함<span class="sidebar-notif-badge" id="sidebarNotifBadge" style="display:none">0</span></a>
         <a href="transfer-history.html" class="sidebar-subitem ${path === 'transfer-history.html' ? 'active' : ''}">캐릭터 이전 내역</a>
@@ -77,8 +80,9 @@ async function initSidebar() {
         지원<span class="material-symbols-outlined sidebar-accordion-arrow" id="arrSupport">expand_more</span>
       </button>
       <div class="sidebar-accordion-body" id="bodySupport">
-        <a href="inquiry.html"    class="sidebar-subitem ${path === 'inquiry.html'    || path === 'inquiry-write.html'    || path === 'inquiry-detail.html'    ? 'active' : ''}" style="display:flex;justify-content:space-between;align-items:center;">문의<span class="sidebar-notif-badge" id="sidebarInquiryBadge" style="display:none">0</span></a>
-        <a href="bug-report.html" class="sidebar-subitem ${path === 'bug-report.html' || path === 'bug-report-write.html' || path === 'bug-report-detail.html' ? 'active' : ''}" style="display:flex;justify-content:space-between;align-items:center;">버그리포트<span class="sidebar-notif-badge" id="sidebarBugBadge" style="display:none">0</span></a>
+        <a href="species-apply.html" class="sidebar-subitem ${path === 'species-apply.html' || path === 'species-apply-write.html' || path === 'species-apply-detail.html' ? 'active' : ''}" style="display:flex;justify-content:space-between;align-items:center;">✨종족주 신청✨<span class="sidebar-notif-badge" id="sidebarApplyBadge" style="display:none">0</span></a>
+        <a href="inquiry.html"       class="sidebar-subitem ${path === 'inquiry.html'        || path === 'inquiry-write.html'        || path === 'inquiry-detail.html'        ? 'active' : ''}" style="display:flex;justify-content:space-between;align-items:center;">문의<span class="sidebar-notif-badge" id="sidebarInquiryBadge" style="display:none">0</span></a>
+        <a href="bug-report.html"    class="sidebar-subitem ${path === 'bug-report.html'    || path === 'bug-report-write.html'    || path === 'bug-report-detail.html'    ? 'active' : ''}" style="display:flex;justify-content:space-between;align-items:center;">버그리포트<span class="sidebar-notif-badge" id="sidebarBugBadge" style="display:none">0</span></a>
       </div>
     </div>
   `;
@@ -90,9 +94,10 @@ async function initSidebar() {
   const listPages    = ['species.html','species-list.html','character-list.html','character.html',
                         'adoption.html','adoption-detail.html','adoption-write.html','users.html'];
   const myPages      = ['my-species.html','my-characters.html','my-designs.html','my-slots.html',
-                        'my-adoptions.html','notifications.html','transfer-history.html'];
+                        'my-adoptions.html','notifications.html','transfer-history.html','my-wallet.html'];
   const supportPages = ['inquiry.html','inquiry-write.html','inquiry-detail.html',
-                        'bug-report.html','bug-report-write.html','bug-report-detail.html'];
+                        'bug-report.html','bug-report-write.html','bug-report-detail.html',
+                        'species-apply.html','species-apply-write.html','species-apply-detail.html'];
 
   const isUserProfile = path === 'profile.html' && new URLSearchParams(window.location.search).get('user');
   const isMyProfile   = path === 'profile.html' && !new URLSearchParams(window.location.search).get('user');
@@ -308,10 +313,26 @@ async function updateSidebarLogin() {
       if (isSpeciesOwner)                               badges.push(`<span class="badge-role">종족주</span>`);
       if (!admin && !staff && !isTester && !isSpeciesOwner) badges.push(`<span class="badge-user">일반유저</span>`);
 
+      const { data: wallet } = await getMyWallet(user.id).catch(() => ({ data: null }));
+      const researchAmt = (wallet?.research_records ?? 0).toLocaleString();
+      const keysAmt     = (wallet?.keys ?? 0).toLocaleString();
+
       block.innerHTML = `
         <div class="sidebar-user-row">
           <a href="profile.html" class="btn-username">${nickname}</a>
           ${badges.join('')}
+        </div>
+        <div class="sidebar-currencies">
+          <span class="header-currency currency-record">
+            <span class="currency-icon"></span>
+            <span class="currency-amount">${researchAmt}</span>
+            <span class="sidebar-currency-label">연구기록</span>
+          </span>
+          <span class="header-currency currency-key">
+            <span class="currency-icon"></span>
+            <span class="currency-amount">${keysAmt}</span>
+            <span class="sidebar-currency-label">열쇠</span>
+          </span>
         </div>
         <button class="btn-logout" onclick="signOut()">로그아웃</button>
       `;
@@ -471,13 +492,15 @@ async function loadAdminBadges() {
   const user = await getUser();
   if (!isAdminOrStaff(user?.user_metadata?.role)) return;
 
-  const [{ count: inquiryCount }, { count: bugCount }] = await Promise.all([
+  const [{ count: inquiryCount }, { count: bugCount }, { count: applyCount }] = await Promise.all([
     sb.from('inquiries').select('*', { count: 'exact', head: true }).eq('status', '접수됨'),
     sb.from('bug_reports').select('*', { count: 'exact', head: true }).eq('status', '접수됨'),
+    sb.from('species_applications').select('*', { count: 'exact', head: true }).in('status', ['접수됨', '검토중']),
   ]);
 
   const iBadge = document.getElementById('sidebarInquiryBadge');
   const bBadge = document.getElementById('sidebarBugBadge');
+  const aBadge = document.getElementById('sidebarApplyBadge');
 
   if (iBadge && inquiryCount > 0) {
     iBadge.textContent  = inquiryCount > 99 ? '99+' : inquiryCount;
@@ -486,6 +509,10 @@ async function loadAdminBadges() {
   if (bBadge && bugCount > 0) {
     bBadge.textContent  = bugCount > 99 ? '99+' : bugCount;
     bBadge.style.display = 'inline-flex';
+  }
+  if (aBadge && applyCount > 0) {
+    aBadge.textContent  = applyCount > 99 ? '99+' : applyCount;
+    aBadge.style.display = 'inline-flex';
   }
 }
 
