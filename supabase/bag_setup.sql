@@ -88,7 +88,37 @@ $$;
 GRANT EXECUTE ON FUNCTION equip_frame(uuid) TO authenticated;
 
 
--- ── 5. 인덱스 ────────────────────────────────
+-- ── 5. unequip_frame RPC ─────────────────────
+--  프레임 해제 — equipped_frame_id = NULL
+CREATE OR REPLACE FUNCTION unequip_frame()
+RETURNS json LANGUAGE plpgsql SECURITY DEFINER AS $$
+DECLARE
+  v_user_id uuid    := auth.uid();
+  v_rows    integer;
+BEGIN
+  IF v_user_id IS NULL THEN
+    RETURN json_build_object('success', false, 'error', 'NOT_AUTHENTICATED');
+  END IF;
+
+  UPDATE public.user_equipment
+  SET equipped_frame_id = NULL,
+      updated_at        = now()
+  WHERE user_id = v_user_id;
+
+  GET DIAGNOSTICS v_rows = ROW_COUNT;
+  IF v_rows = 0 THEN
+    -- row 없으면 해제 상태와 동일 → 성공으로 처리
+    RETURN json_build_object('success', true, 'equipped_frame_id', null);
+  END IF;
+
+  RETURN json_build_object('success', true, 'equipped_frame_id', null);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION unequip_frame() TO authenticated;
+
+
+-- ── 6. 인덱스 ────────────────────────────────
 CREATE INDEX IF NOT EXISTS idx_user_equipment_frame
   ON public.user_equipment (equipped_frame_id)
   WHERE equipped_frame_id IS NOT NULL;
