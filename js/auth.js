@@ -241,3 +241,16 @@ async function updateHeader() {
 }
 
 document.addEventListener('DOMContentLoaded', updateHeader);
+
+// 상단바 재화 숫자 즉시 갱신 (페이지 새로고침 없이)
+// 사용: updateHeaderCurrencyDisplay({ research_records: N, keys: N })
+function updateHeaderCurrencyDisplay({ research_records, keys } = {}) {
+  const researchEl = document.getElementById('headerResearchAmount');
+  const keysEl     = document.getElementById('headerKeysAmount');
+  if (researchEl && research_records != null) {
+    researchEl.textContent = Number(research_records).toLocaleString();
+  }
+  if (keysEl && keys != null) {
+    keysEl.textContent = Number(keys).toLocaleString();
+  }
+}

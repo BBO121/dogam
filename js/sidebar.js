@@ -311,26 +311,10 @@ async function updateSidebarLogin() {
       if (isSpeciesOwner)                               badges.push(`<span class="badge-role">종족주</span>`);
       if (!admin && !staff && !isTester && !isSpeciesOwner) badges.push(`<span class="badge-user">일반유저</span>`);
 
-      const { data: wallet } = await getMyWallet(user.id).catch(() => ({ data: null }));
-      const researchAmt = (wallet?.research_records ?? 0).toLocaleString();
-      const keysAmt     = (wallet?.keys ?? 0).toLocaleString();
-
       block.innerHTML = `
         <div class="sidebar-user-row">
           <a href="profile.html" class="btn-username">${nickname}</a>
           ${badges.join('')}
-        </div>
-        <div class="sidebar-currencies">
-          <span class="header-currency currency-record">
-            <span class="currency-icon"></span>
-            <span class="currency-amount">${researchAmt}</span>
-            <span class="sidebar-currency-label">연구기록</span>
-          </span>
-          <span class="header-currency currency-key">
-            <span class="currency-icon"></span>
-            <span class="currency-amount">${keysAmt}</span>
-            <span class="sidebar-currency-label">열쇠</span>
-          </span>
         </div>
         <button class="btn-logout" onclick="signOut()">로그아웃</button>
       `;
