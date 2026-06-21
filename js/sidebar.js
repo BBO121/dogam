@@ -32,9 +32,6 @@ async function initSidebar() {
       </div>
     </div>
 
-    <!-- ── 출석 단일 메뉴 ───────────────────────────── -->
-    <a href="attendance.html" class="sidebar-top-link ${path === 'attendance.html' ? 'active' : ''}">출석</a>
-
     <!-- ── 리스트 아코디언 ──────────────────────────── -->
     <div class="sidebar-accordion" id="accList">
       <button class="sidebar-accordion-btn" onclick="toggleAccordion('accList')">
@@ -64,7 +61,6 @@ async function initSidebar() {
         <a href="my-adoptions.html"     class="sidebar-subitem ${path === 'my-adoptions.html'     ? 'active' : ''}">내 분양</a>
         <div class="sidebar-divider" style="margin:8px 0;"></div>
         <a href="profile.html"          class="sidebar-subitem ${path === 'profile.html' && !new URLSearchParams(window.location.search).get('user') ? 'active' : ''}">내 프로필</a>
-        <a href="my-wallet.html"        class="sidebar-subitem ${path === 'my-wallet.html' ? 'active' : ''}">내 지갑</a>
         <div class="sidebar-divider" style="margin:8px 0;"></div>
         <a href="notifications.html"    class="sidebar-subitem ${path === 'notifications.html'    ? 'active' : ''}" style="display:flex;justify-content:space-between;align-items:center;">알림함<span class="sidebar-notif-badge" id="sidebarNotifBadge" style="display:none">0</span></a>
         <a href="transfer-history.html" class="sidebar-subitem ${path === 'transfer-history.html' ? 'active' : ''}">캐릭터 이전 내역</a>
