@@ -1,25 +1,27 @@
 -- ============================================
 -- 상점 시스템 DB 설정
 -- 작성일: 2026-06-21
+-- 수정일: 2026-06-21 (purchase_type / quantity 확장성 추가)
 -- ============================================
--- 설계 메모:
---   is_active(boolean) 대신 status(text)로 설계
---   → active / coming_soon / hidden 3단계로 향후 확장 용이
 
 -- ── 1. shop_items 테이블 ─────────────────────
 CREATE TABLE IF NOT EXISTS public.shop_items (
-  id          uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
-  item_type   text        NOT NULL DEFAULT 'frame',
+  id             uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
+  item_type      text        NOT NULL DEFAULT 'frame',
   -- 1차: frame / 향후: title, profile_deco, event 등
-  name        text        NOT NULL,
-  description text,
-  image_url   text,
-  currency    text        NOT NULL CHECK (currency IN ('research_records', 'keys')),
-  price       integer     NOT NULL CHECK (price > 0),
-  status      text        NOT NULL DEFAULT 'active'
-                          CHECK (status IN ('active', 'coming_soon', 'hidden')),
-  sort_order  integer     NOT NULL DEFAULT 0,
-  created_at  timestamptz NOT NULL DEFAULT now()
+  name           text        NOT NULL,
+  description    text,
+  image_url      text,
+  currency       text        NOT NULL CHECK (currency IN ('research_records', 'keys')),
+  price          integer     NOT NULL CHECK (price > 0),
+  status         text        NOT NULL DEFAULT 'active'
+                             CHECK (status IN ('active', 'coming_soon', 'hidden')),
+  purchase_type  text        NOT NULL DEFAULT 'unique'
+                             CHECK (purchase_type IN ('unique', 'stackable')),
+  -- unique    : 1인 1개 (프레임·칭호 등 영구 소장형)
+  -- stackable : 중복 구매 가능 (소모품·열쇠 꾸러미·이름 변경권 등)
+  sort_order     integer     NOT NULL DEFAULT 0,
+  created_at     timestamptz NOT NULL DEFAULT now()
 );
 
 -- ── 2. user_items 테이블 ─────────────────────
@@ -27,6 +29,9 @@ CREATE TABLE IF NOT EXISTS public.user_items (
   id           uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id      uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   item_id      uuid        NOT NULL REFERENCES public.shop_items(id) ON DELETE CASCADE,
+  quantity     integer     NOT NULL DEFAULT 1 CHECK (quantity >= 1),
+  -- unique 아이템: 항상 1
+  -- stackable 아이템: 구매할 때마다 +1
   purchased_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE(user_id, item_id)
 );
@@ -36,23 +41,19 @@ ALTER TABLE public.shop_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_items ENABLE ROW LEVEL SECURITY;
 
 -- ── 4. RLS 정책 ──────────────────────────────
-
--- shop_items: 로그인 유저면 hidden 제외 모두 조회 가능
 DROP POLICY IF EXISTS "shop_items: select" ON public.shop_items;
 CREATE POLICY "shop_items: select"
   ON public.shop_items FOR SELECT
   USING (auth.uid() IS NOT NULL AND status != 'hidden');
 
--- user_items: 본인 구매 목록만 조회
 DROP POLICY IF EXISTS "user_items: select own" ON public.user_items;
 CREATE POLICY "user_items: select own"
   ON public.user_items FOR SELECT
   USING (auth.uid() = user_id);
 
--- INSERT/UPDATE/DELETE: RPC(SECURITY DEFINER)로만 처리
-
 -- ── 5. purchase_item RPC ─────────────────────
---    검증 → 차감 → 지급 → 로그 원자적 처리
+--    unique    → 중복 구매 차단
+--    stackable → ON CONFLICT DO UPDATE (quantity +1)
 CREATE OR REPLACE FUNCTION purchase_item(p_item_id uuid)
 RETURNS json LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE
@@ -60,6 +61,7 @@ DECLARE
   v_item        record;
   v_balance     integer;
   v_new_balance integer;
+  v_quantity    integer;
 BEGIN
   IF v_user_id IS NULL THEN
     RETURN json_build_object('success', false, 'error', 'NOT_AUTHENTICATED');
@@ -77,12 +79,14 @@ BEGIN
     RETURN json_build_object('success', false, 'error', 'ITEM_NOT_AVAILABLE');
   END IF;
 
-  -- 중복 구매 확인
-  IF EXISTS (
-    SELECT 1 FROM public.user_items
-    WHERE user_id = v_user_id AND item_id = p_item_id
-  ) THEN
-    RETURN json_build_object('success', false, 'error', 'ALREADY_OWNED');
+  -- unique 아이템 중복 구매 차단
+  IF v_item.purchase_type = 'unique' THEN
+    IF EXISTS (
+      SELECT 1 FROM public.user_items
+      WHERE user_id = v_user_id AND item_id = p_item_id
+    ) THEN
+      RETURN json_build_object('success', false, 'error', 'ALREADY_OWNED');
+    END IF;
   END IF;
 
   -- 재화 잔액 확인 (FOR UPDATE로 동시 구매 방지)
@@ -115,9 +119,21 @@ BEGIN
     WHERE user_id = v_user_id;
   END IF;
 
-  -- user_items 지급 (unique 제약으로 중복 방지)
-  INSERT INTO public.user_items (user_id, item_id)
-  VALUES (v_user_id, p_item_id);
+  -- user_items 지급
+  --   unique    : 단순 INSERT (unique 제약으로 중복 방지됨)
+  --   stackable : ON CONFLICT → quantity +1
+  IF v_item.purchase_type = 'unique' THEN
+    INSERT INTO public.user_items (user_id, item_id, quantity)
+    VALUES (v_user_id, p_item_id, 1);
+
+    v_quantity := 1;
+  ELSE
+    INSERT INTO public.user_items (user_id, item_id, quantity)
+    VALUES (v_user_id, p_item_id, 1)
+    ON CONFLICT (user_id, item_id) DO UPDATE
+    SET quantity = public.user_items.quantity + 1
+    RETURNING quantity INTO v_quantity;
+  END IF;
 
   -- currency_logs 기록
   INSERT INTO public.currency_logs
@@ -133,10 +149,12 @@ BEGIN
   );
 
   RETURN json_build_object(
-    'success',     true,
-    'item_id',     p_item_id,
-    'new_balance', v_new_balance,
-    'currency',    v_item.currency
+    'success',       true,
+    'item_id',       p_item_id,
+    'purchase_type', v_item.purchase_type,
+    'quantity',      v_quantity,
+    'new_balance',   v_new_balance,
+    'currency',      v_item.currency
   );
 
 EXCEPTION
@@ -149,6 +167,7 @@ $$;
 GRANT EXECUTE ON FUNCTION purchase_item(uuid) TO authenticated;
 
 -- ── 7. 인덱스 ────────────────────────────────
-CREATE INDEX IF NOT EXISTS idx_shop_items_status    ON public.shop_items (status);
-CREATE INDEX IF NOT EXISTS idx_shop_items_item_type ON public.shop_items (item_type);
-CREATE INDEX IF NOT EXISTS idx_user_items_user_id   ON public.user_items (user_id);
+CREATE INDEX IF NOT EXISTS idx_shop_items_status        ON public.shop_items (status);
+CREATE INDEX IF NOT EXISTS idx_shop_items_item_type     ON public.shop_items (item_type);
+CREATE INDEX IF NOT EXISTS idx_shop_items_purchase_type ON public.shop_items (purchase_type);
+CREATE INDEX IF NOT EXISTS idx_user_items_user_id       ON public.user_items (user_id);
