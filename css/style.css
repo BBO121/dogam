@@ -2100,6 +2100,61 @@ button.btn-more {
 }
 
 /* ═══════════════════════════════════════
+   헤더 재화 표시
+═══════════════════════════════════════ */
+.header-currencies {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 4px 6px;
+  transition: background 0.15s;
+}
+
+.header-currencies:hover {
+  background: var(--bg-sub, #f3f4f6);
+}
+
+.header-currency {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-sub);
+  white-space: nowrap;
+}
+
+.currency-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  background: var(--border);
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.currency-amount {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.3px;
+}
+
+/* 사이드바 재화 (모바일용) */
+.sidebar-currencies {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0 2px;
+}
+
+.sidebar-currency-label {
+  font-size: 11px;
+  color: var(--text-mute);
+  font-weight: 400;
+}
+
+/* ═══════════════════════════════════════
    홈 공지 바
 ═══════════════════════════════════════ */
 .notice-bar {
@@ -6107,4 +6162,349 @@ button.btn-more {
     white-space: nowrap;
     min-width: 0;
   }
+}
+
+/* ═══════════════════════════════════════
+   사이드바 단일 링크 (아코디언 없는 최상위 메뉴)
+═══════════════════════════════════════ */
+.sidebar-top-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--text-sub);
+  transition: background 0.15s, color 0.15s;
+}
+
+.sidebar-top-link:hover {
+  background: var(--sky-pale);
+  color: var(--sky-dark);
+}
+
+.sidebar-top-link.active {
+  background: var(--sky-light);
+  color: var(--sky-deep);
+  font-weight: 700;
+}
+
+/* ═══════════════════════════════════════
+   출석 시스템
+═══════════════════════════════════════ */
+
+/* 요약 카드 그리드 */
+.attn-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.attn-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 16px;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+}
+
+.attn-summary-label {
+  font-size: 11px;
+  color: var(--text-mute);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.attn-summary-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+}
+
+.attn-summary-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--sky-deep);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.attn-summary-value--sm {
+  font-size: 18px;
+}
+
+.attn-summary-unit {
+  font-size: 12px;
+  color: var(--text-sub);
+  font-weight: 500;
+}
+
+/* 출석 버튼 */
+.attn-checkin-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.attn-checkin-btn {
+  padding: 14px 48px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: inherit;
+  background: var(--sky-dark);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.15s, transform 0.1s;
+  letter-spacing: -0.3px;
+}
+
+.attn-checkin-btn:hover:not(:disabled) {
+  background: var(--sky-deep);
+}
+
+.attn-checkin-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.attn-checkin-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.attn-checkin-done {
+  padding: 14px 48px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #16a34a;
+  background: #dcfce7;
+  border-radius: 12px;
+  letter-spacing: -0.3px;
+}
+
+.attn-result-msg {
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.attn-result-msg--success { color: var(--sky-deep); }
+.attn-result-msg--error   { color: #ef4444; }
+
+/* 달력 */
+.attn-month-title {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-sub);
+  margin-bottom: 12px;
+}
+
+.attn-calendar-wrap {
+  max-width: 640px;
+}
+
+.attn-week-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+}
+
+.attn-week-cell {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 0;
+  color: var(--text-mute);
+}
+
+.attn-week-cell--sun { color: #ef4444; }
+.attn-week-cell--sat { color: #3b82f6; }
+
+.attn-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 3px;
+}
+
+.attn-day {
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  padding: 5px 3px 4px;
+  min-height: 64px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--white);
+  box-sizing: border-box;
+}
+
+.attn-day--empty {
+  border-color: transparent;
+  background: transparent;
+  pointer-events: none;
+}
+
+.attn-day--today {
+  border-color: var(--sky-dark);
+  background: var(--sky-pale);
+}
+
+.attn-day--attended {
+  background: var(--sky-pale);
+}
+
+.attn-day-num {
+  font-size: 10px;
+  color: var(--text-mute);
+  align-self: flex-start;
+  line-height: 1.2;
+}
+
+.attn-day--today .attn-day-num {
+  color: var(--sky-deep);
+  font-weight: 700;
+}
+
+/* 도장 — 추후 이미지 교체 시 .attendance-stamp img만 수정 */
+.attendance-stamp {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.attendance-stamp img {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  opacity: 0.85;
+}
+
+/* 보너스 안내 */
+.attn-bonus-subtitle {
+  font-size: 12px;
+  color: var(--text-mute);
+  margin-bottom: 16px;
+}
+
+.attn-bonus-track {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  max-width: 560px;
+}
+
+.attn-bonus-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  width: 80px;
+}
+
+.attn-bonus-line {
+  flex: 1;
+  height: 2px;
+  background: var(--border);
+  margin-top: 15px;
+  transition: background 0.2s;
+}
+
+.attn-bonus-line--done {
+  background: var(--sky-dark);
+}
+
+.attn-bonus-circle {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--white);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-mute);
+  transition: all 0.2s;
+}
+
+.attn-bonus-step--done .attn-bonus-circle {
+  background: var(--sky-dark);
+  border-color: var(--sky-dark);
+  color: #fff;
+}
+
+.attn-bonus-step--current .attn-bonus-circle {
+  border-color: var(--sky-dark);
+  color: var(--sky-dark);
+  box-shadow: 0 0 0 3px var(--sky-light);
+}
+
+.attn-bonus-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.attn-bonus-reward {
+  font-size: 10px;
+  color: var(--text-sub);
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.attn-bonus-step--done .attn-bonus-reward {
+  color: var(--sky-deep);
+}
+
+.attn-bonus-base-note {
+  margin-top: 14px;
+  font-size: 12px;
+  color: var(--text-mute);
+}
+
+@media (max-width: 767px) {
+  .attn-summary-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .attn-summary-card {
+    padding: 12px;
+  }
+  .attn-summary-value { font-size: 20px; }
+  .attn-summary-value--sm { font-size: 16px; }
+
+  .attn-checkin-btn,
+  .attn-checkin-done {
+    padding: 13px 36px;
+    font-size: 15px;
+  }
+
+  .attn-calendar-wrap { max-width: 100%; }
+  .attn-day {
+    min-height: 48px;
+    padding: 4px 2px 3px;
+    border-radius: 5px;
+  }
+  .attendance-stamp img {
+    width: 26px;
+    height: 26px;
+  }
+  .attn-day-num { font-size: 9px; }
+
+  .attn-bonus-step { width: 60px; }
+  .attn-bonus-circle { width: 26px; height: 26px; font-size: 10px; }
+  .attn-bonus-reward { font-size: 9px; }
+  .attn-bonus-line { margin-top: 13px; }
 }

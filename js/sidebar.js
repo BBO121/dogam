@@ -82,7 +82,7 @@ async function initSidebar() {
     </div>
 
     <!-- ── 종족주 신청 단일 메뉴 ─────────────────────── -->
-    <a href="species-apply.html" class="sidebar-top-link ${path === 'species-apply.html' || path === 'species-apply-write.html' || path === 'species-apply-detail.html' ? 'active' : ''}" style="display:flex;justify-content:space-between;align-items:center;">✨종족주 신청✨<span class="sidebar-notif-badge" id="sidebarApplyBadge" style="display:none">0</span></a>
+    <a href="species-apply.html" class="sidebar-top-link ${path === 'species-apply.html' || path === 'species-apply-write.html' || path === 'species-apply-detail.html' ? 'active' : ''}">✨종족주 신청✨<span class="sidebar-notif-badge" id="sidebarApplyBadge" style="display:none">0</span></a>
   `;
 
   // 현재 페이지에 해당하는 아코디언 자동 열기
