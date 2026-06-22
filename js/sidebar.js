@@ -2,14 +2,6 @@ async function initSidebar() {
   const sidebar = document.getElementById('sidebar');
   if (!sidebar) return;
 
-  // Material Symbols 동적 로드 (expand_more 아이콘용)
-  if (!document.getElementById('materialSymbolsLink')) {
-    const link = document.createElement('link');
-    link.id   = 'materialSymbolsLink';
-    link.rel  = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20,400,0,0';
-    document.head.appendChild(link);
-  }
 
   const path = window.location.pathname.split('/').pop();
   const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
@@ -20,7 +12,7 @@ async function initSidebar() {
     <!-- ── 홈 아코디언 ─────────────────────────────── -->
     <div class="sidebar-accordion" id="accHome">
       <button class="sidebar-accordion-btn" onclick="toggleAccordion('accHome')">
-        홈<span class="material-symbols-outlined sidebar-accordion-arrow" id="arrHome">expand_more</span>
+        홈<svg class="sidebar-accordion-arrow" id="arrHome" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
       <div class="sidebar-accordion-body" id="bodyHome">
         <a href="notice.html"      class="sidebar-subitem ${path === 'notice.html'           || path === 'notice-detail.html'        ? 'active' : ''}">공지사항</a>
@@ -38,7 +30,7 @@ async function initSidebar() {
     <!-- ── 리스트 아코디언 ──────────────────────────── -->
     <div class="sidebar-accordion" id="accList">
       <button class="sidebar-accordion-btn" onclick="toggleAccordion('accList')">
-        리스트<span class="material-symbols-outlined sidebar-accordion-arrow" id="arrList">expand_more</span>
+        리스트<svg class="sidebar-accordion-arrow" id="arrList" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
       <div class="sidebar-accordion-body" id="bodyList">
         <button class="sidebar-subitem" id="btnSpecies" onclick="onSpeciesClick(this)" style="background:none;border:none;width:100%;font-family:inherit;cursor:pointer;display:flex;align-items:center;justify-content:space-between;">
@@ -54,7 +46,7 @@ async function initSidebar() {
     <!-- ── MY 아코디언 (로그인 전용) ────────────────── -->
     <div class="sidebar-accordion sidebar-login" id="accMy">
       <button class="sidebar-accordion-btn" onclick="toggleAccordion('accMy')">
-        MY<span class="material-symbols-outlined sidebar-accordion-arrow" id="arrMy">expand_more</span>
+        MY<svg class="sidebar-accordion-arrow" id="arrMy" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
       <div class="sidebar-accordion-body" id="bodyMy">
         <a href="my-species.html"       class="sidebar-subitem ${path === 'my-species.html'       ? 'active' : ''}">내 종족</a>
@@ -78,7 +70,7 @@ async function initSidebar() {
     <!-- ── 지원 아코디언 ─────────────────────────────── -->
     <div class="sidebar-accordion" id="accSupport">
       <button class="sidebar-accordion-btn" onclick="toggleAccordion('accSupport')">
-        지원<span class="material-symbols-outlined sidebar-accordion-arrow" id="arrSupport">expand_more</span>
+        지원<svg class="sidebar-accordion-arrow" id="arrSupport" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
       <div class="sidebar-accordion-body" id="bodySupport">
         <a href="inquiry.html"    class="sidebar-subitem ${path === 'inquiry.html'    || path === 'inquiry-write.html'    || path === 'inquiry-detail.html'    ? 'active' : ''}" style="display:flex;justify-content:space-between;align-items:center;">문의<span class="sidebar-notif-badge" id="sidebarInquiryBadge" style="display:none">0</span></a>

@@ -361,11 +361,11 @@ a {
 }
 
 .sidebar-accordion-arrow {
-  font-size: 14px;
   transition: transform 0.2s;
   color: var(--text-mute);
   display: inline-block;
-  line-height: 1;
+  vertical-align: middle;
+  flex-shrink: 0;
   user-select: none;
 }
 
@@ -1454,9 +1454,9 @@ body.tour-sidebar-step .sidebar {
 .profile-avatar-wrap {
   display: inline-block;
   position: relative;
-  width: 72px;
-  height: 72px;
-  border-radius: 16px;
+  width: 96px;
+  height: 96px;
+  border-radius: 20px;
   line-height: 0;
 }
 
@@ -1465,7 +1465,7 @@ body.tour-sidebar-step .sidebar {
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: 16px;
+  border-radius: 20px;
   border: 4px solid transparent;
   pointer-events: none;
   z-index: 2;
@@ -1483,18 +1483,18 @@ body.tour-sidebar-step .sidebar {
 .profile-avatar-wrap.frame-simple-gray::after     { border-color: #BFC7D5; }
 
 .profile-avatar {
-  width: 72px;
-  height: 72px;
-  border-radius: 16px;
+  width: 96px;
+  height: 96px;
+  border-radius: 20px;
   background: #F8FAFC;
   box-shadow: var(--shadow-md);
   overflow: hidden;
 }
 
-/* 스티커 — grid overlay, 72px 이미지 기준 1.2배 */
+/* 스티커 — grid overlay, 96px 이미지 기준 1.2배 */
 .profile-sticker {
-  width: 86px;
-  height: 86px;
+  width: 116px;
+  height: 116px;
   object-fit: contain;
   z-index: 3;
   pointer-events: none;
@@ -1506,6 +1506,23 @@ body.tour-sidebar-step .sidebar {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* 모바일: 세로 배치 */
+@media (max-width: 640px) {
+  .profile-header {
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    text-align: center;
+  }
+  .profile-header-info {
+    align-items: center;
+    width: 100%;
+  }
+  .profile-name-row {
+    justify-content: center;
+  }
 }
 
 .profile-name {
@@ -6966,10 +6983,10 @@ button.btn-more {
 
 .bag-ep-preview-wrap {
   position: relative;
-  width: 72px;
-  height: 72px;
+  width: 96px;
+  height: 96px;
   flex-shrink: 0;
-  border-radius: 16px;
+  border-radius: 20px;
   background: #f1f5f9;
   overflow: hidden;
 }
@@ -6979,7 +6996,7 @@ button.btn-more {
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: 16px;
+  border-radius: 20px;
   border: 4px solid transparent;
   pointer-events: none;
   z-index: 2;
@@ -6996,10 +7013,10 @@ button.btn-more {
 .bag-ep-preview-wrap.frame-simple-lime::after     { border-color: #A8E66E; }
 .bag-ep-preview-wrap.frame-simple-gray::after     { border-color: #BFC7D5; }
 
-/* 스티커 오버레이 — 72px 이미지 기준 1.2배 */
+/* 스티커 오버레이 — 96px 이미지 기준 1.2배 */
 .bag-ep-sticker-overlay {
-  width: 86px;
-  height: 86px;
+  width: 116px;
+  height: 116px;
   object-fit: contain;
   z-index: 3;
   pointer-events: none;
@@ -7041,10 +7058,10 @@ button.btn-more {
 /* 가방 미리보기 아바타 + 프레임 래퍼 */
 .bag-ep-frame-wrap {
   position: relative;
-  width: 72px;
-  height: 72px;
+  width: 96px;
+  height: 96px;
   flex-shrink: 0;
-  border-radius: 16px;
+  border-radius: 20px;
   overflow: hidden;
   background: #f1f5f9;
 }
@@ -7053,7 +7070,7 @@ button.btn-more {
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: 16px;
+  border-radius: 20px;
   border: 4px solid transparent;
   pointer-events: none;
   z-index: 2;
@@ -7079,10 +7096,10 @@ button.btn-more {
 
 /* 스티커 미리보기 박스 */
 .bag-ep-sticker-box {
-  width: 72px;
-  height: 72px;
+  width: 96px;
+  height: 96px;
   flex-shrink: 0;
-  border-radius: 16px;
+  border-radius: 20px;
   background: #f1f5f9;
   display: flex;
   align-items: center;
