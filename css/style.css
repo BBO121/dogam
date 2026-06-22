@@ -1454,44 +1454,51 @@ body.tour-sidebar-step .sidebar {
 .profile-avatar-wrap {
   display: inline-block;
   position: relative;
-  width: 96px;
-  height: 96px;
-  box-sizing: content-box;
-  border-radius: 20px;
-  border: 4px solid transparent;
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
   line-height: 0;
+}
+
+/* 프레임 — 이미지 위에 overlay */
+.profile-avatar-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  border: 4px solid transparent;
+  pointer-events: none;
+  z-index: 2;
+  box-sizing: border-box;
   transition: border-color 0.2s;
 }
 
-/* 스티커 — grid 레이어로 아바타 위에 겹침 (position: absolute 불필요) */
-/* 1168×1168 이미지, 768×768 프로필 영역, 200px 마진 → 96px 기준 146px */
+.profile-avatar-wrap.frame-mint::after            { border-color: #65D3AC; }
+.profile-avatar-wrap.frame-orange::after          { border-color: #FEB066; }
+.profile-avatar-wrap.frame-simple-sky::after      { border-color: #8FD3FF; }
+.profile-avatar-wrap.frame-simple-lavender::after { border-color: #B9A7FF; }
+.profile-avatar-wrap.frame-simple-rose::after     { border-color: #FF9FBC; }
+.profile-avatar-wrap.frame-simple-lemon::after    { border-color: #FFD966; }
+.profile-avatar-wrap.frame-simple-lime::after     { border-color: #A8E66E; }
+.profile-avatar-wrap.frame-simple-gray::after     { border-color: #BFC7D5; }
+
+.profile-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  background: #F8FAFC;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+}
+
+/* 스티커 — grid overlay, 72px 이미지 기준 1.2배 */
 .profile-sticker {
-  width: 146px;
-  height: 146px;
+  width: 86px;
+  height: 86px;
   object-fit: contain;
   z-index: 3;
   pointer-events: none;
   display: block;
-}
-
-.profile-avatar-wrap.frame-mint   { border-color: #65D3AC; }
-.profile-avatar-wrap.frame-orange          { border-color: #FEB066; }
-.profile-avatar-wrap.frame-simple-sky      { border-color: #8FD3FF; }
-.profile-avatar-wrap.frame-simple-lavender { border-color: #B9A7FF; }
-.profile-avatar-wrap.frame-simple-rose     { border-color: #FF9FBC; }
-.profile-avatar-wrap.frame-simple-lemon    { border-color: #FFD966; }
-.profile-avatar-wrap.frame-simple-lime     { border-color: #A8E66E; }
-.profile-avatar-wrap.frame-simple-gray     { border-color: #BFC7D5; }
-
-.profile-avatar {
-  width: 96px;
-  height: 96px;
-  border-radius: 16px;
-  background: #F8FAFC;
-  border: 3px solid var(--white);
-  box-shadow: var(--shadow-md);
-  position: relative;
-  overflow: hidden;
 }
 
 .profile-header-info {
@@ -6645,19 +6652,15 @@ button.btn-more {
   background: #fff;
 }
 
-/* 공오민트: #65D3AC 단색 */
-.frame-mint   { border: 4px solid #65D3AC; }
-
-/* 공오오렌지: #FEB066 단색 */
-.frame-orange { border: 4px solid #FEB066; }
-
-/* 심플 프레임 6종 */
-.frame-simple-sky      { border: 4px solid #8FD3FF; }
-.frame-simple-lavender { border: 4px solid #B9A7FF; }
-.frame-simple-rose     { border: 4px solid #FF9FBC; }
-.frame-simple-lemon    { border: 4px solid #FFD966; }
-.frame-simple-lime     { border: 4px solid #A8E66E; }
-.frame-simple-gray     { border: 4px solid #BFC7D5; }
+/* 공오민트: #65D3AC 단색 — frame-preview 내에서만 border 적용 */
+.frame-preview.frame-mint            { border: 4px solid #65D3AC; }
+.frame-preview.frame-orange          { border: 4px solid #FEB066; }
+.frame-preview.frame-simple-sky      { border: 4px solid #8FD3FF; }
+.frame-preview.frame-simple-lavender { border: 4px solid #B9A7FF; }
+.frame-preview.frame-simple-rose     { border: 4px solid #FF9FBC; }
+.frame-preview.frame-simple-lemon    { border: 4px solid #FFD966; }
+.frame-preview.frame-simple-lime     { border: 4px solid #A8E66E; }
+.frame-preview.frame-simple-gray     { border: 4px solid #BFC7D5; }
 
 /* 상품 상세 모달 */
 .shop-detail-card {
@@ -6949,31 +6952,6 @@ button.btn-more {
 }
 
 /* 프로필+프레임+스티커 통합 미리보기 박스 */
-.bag-ep-preview-wrap {
-  position: relative;
-  width: 96px;
-  height: 96px;
-  flex-shrink: 0;
-  border-radius: 16px;
-  border: 4px solid transparent;
-  background: #f1f5f9;
-  overflow: visible;
-}
-
-.bag-ep-preview-wrap > .bag-ep-avatar {
-  border-radius: 12px;
-  overflow: hidden;
-}
-
-.bag-ep-preview-wrap.frame-mint            { border-color: #65D3AC; }
-.bag-ep-preview-wrap.frame-orange          { border-color: #FEB066; }
-.bag-ep-preview-wrap.frame-simple-sky      { border-color: #8FD3FF; }
-.bag-ep-preview-wrap.frame-simple-lavender { border-color: #B9A7FF; }
-.bag-ep-preview-wrap.frame-simple-rose     { border-color: #FF9FBC; }
-.bag-ep-preview-wrap.frame-simple-lemon    { border-color: #FFD966; }
-.bag-ep-preview-wrap.frame-simple-lime     { border-color: #A8E66E; }
-.bag-ep-preview-wrap.frame-simple-gray     { border-color: #BFC7D5; }
-
 /* 가방 미리보기 아바타+스티커 grid 컨테이너 (프로필과 동일 구조) */
 .bag-ep-preview-outer {
   display: grid;
@@ -6986,10 +6964,42 @@ button.btn-more {
   grid-area: 1 / 1;
 }
 
-/* 스티커 오버레이 — grid 레이어, position: absolute 불필요 */
+.bag-ep-preview-wrap {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  border-radius: 16px;
+  background: #f1f5f9;
+  overflow: hidden;
+}
+
+/* 프레임 — 이미지 위에 overlay */
+.bag-ep-preview-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  border: 4px solid transparent;
+  pointer-events: none;
+  z-index: 2;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+
+.bag-ep-preview-wrap.frame-mint::after            { border-color: #65D3AC; }
+.bag-ep-preview-wrap.frame-orange::after          { border-color: #FEB066; }
+.bag-ep-preview-wrap.frame-simple-sky::after      { border-color: #8FD3FF; }
+.bag-ep-preview-wrap.frame-simple-lavender::after { border-color: #B9A7FF; }
+.bag-ep-preview-wrap.frame-simple-rose::after     { border-color: #FF9FBC; }
+.bag-ep-preview-wrap.frame-simple-lemon::after    { border-color: #FFD966; }
+.bag-ep-preview-wrap.frame-simple-lime::after     { border-color: #A8E66E; }
+.bag-ep-preview-wrap.frame-simple-gray::after     { border-color: #BFC7D5; }
+
+/* 스티커 오버레이 — 72px 이미지 기준 1.2배 */
 .bag-ep-sticker-overlay {
-  width: 146px;
-  height: 146px;
+  width: 86px;
+  height: 86px;
   object-fit: contain;
   z-index: 3;
   pointer-events: none;
@@ -7030,23 +7040,34 @@ button.btn-more {
 
 /* 가방 미리보기 아바타 + 프레임 래퍼 */
 .bag-ep-frame-wrap {
-  width: 96px;
-  height: 96px;
+  position: relative;
+  width: 72px;
+  height: 72px;
   flex-shrink: 0;
   border-radius: 16px;
-  border: 4px solid transparent;
   overflow: hidden;
   background: #f1f5f9;
 }
 
-.bag-ep-frame-wrap.frame-mint            { border-color: #65D3AC; }
-.bag-ep-frame-wrap.frame-orange          { border-color: #FEB066; }
-.bag-ep-frame-wrap.frame-simple-sky      { border-color: #8FD3FF; }
-.bag-ep-frame-wrap.frame-simple-lavender { border-color: #B9A7FF; }
-.bag-ep-frame-wrap.frame-simple-rose     { border-color: #FF9FBC; }
-.bag-ep-frame-wrap.frame-simple-lemon    { border-color: #FFD966; }
-.bag-ep-frame-wrap.frame-simple-lime     { border-color: #A8E66E; }
-.bag-ep-frame-wrap.frame-simple-gray     { border-color: #BFC7D5; }
+.bag-ep-frame-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  border: 4px solid transparent;
+  pointer-events: none;
+  z-index: 2;
+  box-sizing: border-box;
+}
+
+.bag-ep-frame-wrap.frame-mint::after            { border-color: #65D3AC; }
+.bag-ep-frame-wrap.frame-orange::after          { border-color: #FEB066; }
+.bag-ep-frame-wrap.frame-simple-sky::after      { border-color: #8FD3FF; }
+.bag-ep-frame-wrap.frame-simple-lavender::after { border-color: #B9A7FF; }
+.bag-ep-frame-wrap.frame-simple-rose::after     { border-color: #FF9FBC; }
+.bag-ep-frame-wrap.frame-simple-lemon::after    { border-color: #FFD966; }
+.bag-ep-frame-wrap.frame-simple-lime::after     { border-color: #A8E66E; }
+.bag-ep-frame-wrap.frame-simple-gray::after     { border-color: #BFC7D5; }
 
 .bag-ep-avatar {
   width: 100%;
@@ -7058,19 +7079,20 @@ button.btn-more {
 
 /* 스티커 미리보기 박스 */
 .bag-ep-sticker-box {
-  width: 96px;
-  height: 96px;
+  width: 72px;
+  height: 72px;
   flex-shrink: 0;
   border-radius: 16px;
   background: #f1f5f9;
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: visible;
 }
 
 .bag-ep-sticker-img {
-  width: 78%;
-  height: 78%;
+  width: 120%;
+  height: 120%;
   object-fit: contain;
 }
 

@@ -325,7 +325,7 @@ async function updateSidebarLogin() {
           <a href="profile.html" class="btn-username">${nickname}</a>
           ${badges.join('')}
         </div>
-        <div class="sidebar-currencies">
+        <a href="my-wallet.html" class="sidebar-currencies">
           <span class="header-currency currency-record">
             <img src="../images/icons/currency-record.png" class="currency-icon" alt="연구기록">
             <span class="currency-amount">${researchAmt}</span>
@@ -336,7 +336,7 @@ async function updateSidebarLogin() {
             <span class="currency-amount">${keysAmt}</span>
             <span class="sidebar-currency-label">열쇠</span>
           </span>
-        </div>
+        </a>
         <button class="btn-logout" onclick="signOut()">로그아웃</button>
       `;
     }
