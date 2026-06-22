@@ -14,6 +14,8 @@ const STYLE_KEY_MAP = {
   'frame-simple-lemon':    'frame-simple-lemon',
   'frame-simple-lime':     'frame-simple-lime',
   'frame-simple-gray':     'frame-simple-gray',
+  'frame-simple-blue':     'frame-simple-blue',
+  'frame-simple-red':      'frame-simple-red',
 };
 
 const TYPE_LABEL = {

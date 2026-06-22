@@ -1481,6 +1481,8 @@ body.tour-sidebar-step .sidebar {
 .profile-avatar-wrap.frame-simple-lemon::after    { border-color: #FFD966; }
 .profile-avatar-wrap.frame-simple-lime::after     { border-color: #A8E66E; }
 .profile-avatar-wrap.frame-simple-gray::after     { border-color: #BFC7D5; }
+.profile-avatar-wrap.frame-simple-blue::after     { border-color: #014498; }
+.profile-avatar-wrap.frame-simple-red::after      { border-color: #B74549; }
 
 .profile-avatar {
   width: 96px;
@@ -6719,6 +6721,8 @@ button.btn-more {
 .frame-preview.frame-simple-lemon    { border: 4px solid #FFD966; }
 .frame-preview.frame-simple-lime     { border: 4px solid #A8E66E; }
 .frame-preview.frame-simple-gray     { border: 4px solid #BFC7D5; }
+.frame-preview.frame-simple-blue     { border: 4px solid #014498; }
+.frame-preview.frame-simple-red      { border: 4px solid #B74549; }
 
 /* 상품 상세 모달 */
 .shop-detail-card {
@@ -7053,6 +7057,8 @@ button.btn-more {
 .bag-ep-preview-wrap.frame-simple-lemon::after    { border-color: #FFD966; }
 .bag-ep-preview-wrap.frame-simple-lime::after     { border-color: #A8E66E; }
 .bag-ep-preview-wrap.frame-simple-gray::after     { border-color: #BFC7D5; }
+.bag-ep-preview-wrap.frame-simple-blue::after     { border-color: #014498; }
+.bag-ep-preview-wrap.frame-simple-red::after      { border-color: #B74549; }
 
 /* 스티커 오버레이 — 96px 이미지 기준 1.2배 */
 .bag-ep-sticker-overlay {
@@ -7126,6 +7132,8 @@ button.btn-more {
 .bag-ep-frame-wrap.frame-simple-lemon::after    { border-color: #FFD966; }
 .bag-ep-frame-wrap.frame-simple-lime::after     { border-color: #A8E66E; }
 .bag-ep-frame-wrap.frame-simple-gray::after     { border-color: #BFC7D5; }
+.bag-ep-frame-wrap.frame-simple-blue::after     { border-color: #014498; }
+.bag-ep-frame-wrap.frame-simple-red::after      { border-color: #B74549; }
 
 .bag-ep-avatar {
   width: 100%;
