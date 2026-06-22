@@ -1508,20 +1508,61 @@ body.tour-sidebar-step .sidebar {
   gap: 12px;
 }
 
+/* 모바일 전용 프로필 설정 버튼 — 기본 숨김 (미디어쿼리에서 표시) */
+.profile-settings-btn-mobile {
+  display: none;
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--bg-sub);
+  color: var(--text-sub);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.profile-settings-btn-mobile:hover,
+.profile-settings-btn-mobile.active {
+  background: var(--sky-light);
+  color: var(--sky-deep);
+  border-color: var(--sky-deep);
+}
+
 /* 모바일: 세로 배치 */
 @media (max-width: 640px) {
   .profile-header {
     flex-direction: column;
     align-items: center;
     gap: 16px;
-    text-align: center;
   }
   .profile-header-info {
     align-items: center;
+    text-align: center;
     width: 100%;
   }
   .profile-name-row {
     justify-content: center;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  /* 닉네임: 1줄 */
+  .profile-name-row .profile-name {
+    width: 100%;
+    text-align: center;
+  }
+  /* 뱃지: 2줄 */
+  .profile-name-row #profileRoleBadge {
+    order: 2;
+    width: 100%;
+    text-align: center;
+  }
+  /* 데스크탑 ⚙ 버튼은 모바일에서 숨김 */
+  .profile-name-row .profile-gear-btn {
+    display: none;
+  }
+  /* 모바일 전용 설정 버튼 표시 */
+  .profile-settings-btn-mobile {
+    display: block;
   }
 }
 

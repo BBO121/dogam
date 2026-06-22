@@ -103,6 +103,8 @@
             <div id="sectionBadges" style="display:none;">
               <div class="badge-showcase" id="profileBadgeList"></div>
             </div>
+            <!-- 모바일 전용 프로필 설정 버튼 -->
+            <button class="profile-settings-btn-mobile" id="gearBtnMobile" onclick="toggleSettings()">프로필 설정</button>
           </div>
         </section>
 
@@ -707,7 +709,8 @@
 
     async function initOtherProfile(nick) {
       // 타인 프로필 — 설정/수정 UI 숨기기
-      document.getElementById('gearBtn').style.display  = 'none';
+      document.getElementById('gearBtn').style.display       = 'none';
+      document.getElementById('gearBtnMobile').style.display = 'none';
       document.getElementById('avatarInput').style.display = 'none';
       document.getElementById('profileAvatar').style.cursor = 'default';
       document.getElementById('profileAvatar').onclick = null;
@@ -1208,19 +1211,22 @@
     }
 
     function toggleSettings() {
-      const settingsEl = document.getElementById('tabSettings');
-      const mainEl     = document.getElementById('profileMain');
-      const gearBtn    = document.getElementById('gearBtn');
-      const isOpen     = settingsEl.style.display !== 'none';
+      const settingsEl    = document.getElementById('tabSettings');
+      const mainEl        = document.getElementById('profileMain');
+      const gearBtn       = document.getElementById('gearBtn');
+      const gearBtnMobile = document.getElementById('gearBtnMobile');
+      const isOpen        = settingsEl.style.display !== 'none';
 
       if (isOpen) {
         settingsEl.style.display = 'none';
         mainEl.style.display     = 'block';
         gearBtn.classList.remove('active');
+        gearBtnMobile.classList.remove('active');
       } else {
         settingsEl.style.display = 'block';
         mainEl.style.display     = 'none';
         gearBtn.classList.add('active');
+        gearBtnMobile.classList.add('active');
       }
     }
 
