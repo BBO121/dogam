@@ -7321,27 +7321,58 @@ button.btn-more {
 
 /* 미리보기 반응형: 360px 이하 → 세로 배치 */
 @media (max-width: 360px) {
+  /* 전체 컬럼 → 세로 방향, 가운데 정렬 */
   .bag-ep-tricolumn {
     flex-direction: column;
-    align-items: stretch;
-    gap: 12px;
+    align-items: center;
+    gap: 16px;
   }
 
+  /* 미리보기 이미지 최상단 */
   .bag-ep-preview-center {
     order: -1;
-    justify-content: center;
   }
 
+  /* 각 정보 묶음: grid로 [라벨 full-width / 이름 + 버튼 한 줄] */
   .bag-ep-side {
     flex: none;
     width: 100%;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    column-gap: 10px;
+    row-gap: 4px;
+    align-items: center;
   }
 
+  /* 라벨은 두 열 전체 */
+  .bag-ep-side .bag-ep-item-label {
+    grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  /* 이름은 1열 2행 */
+  .bag-ep-side .bag-ep-name {
+    grid-column: 1;
+    grid-row: 2;
+    margin: 0;
+    font-size: 15px;
+  }
+
+  /* 버튼은 2열 2행 */
+  .bag-ep-side .bag-unequip-btn {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: center;
+  }
+
+  /* 데스크톱 우정렬 리셋 */
   .bag-ep-side--left {
-    align-items: flex-start;
+    align-items: unset;
     text-align: left;
   }
 
+  /* 착용 아이템 없는 빈 side 숨김 */
   .bag-ep-side:empty {
     display: none;
   }
