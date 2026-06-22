@@ -82,3 +82,8 @@ END;
 $$;
 
 GRANT EXECUTE ON FUNCTION unequip_sticker() TO authenticated;
+
+-- ── 6. 인덱스 ──
+CREATE INDEX IF NOT EXISTS idx_user_equipment_sticker
+ON public.user_equipment (equipped_sticker_id)
+WHERE equipped_sticker_id IS NOT NULL;
