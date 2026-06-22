@@ -32,6 +32,9 @@ async function initSidebar() {
       </div>
     </div>
 
+    <!-- ── 출석 단일 메뉴 ───────────────────────────── -->
+    <a href="attendance.html" class="sidebar-top-link ${path === 'attendance.html' ? 'active' : ''}">출석</a>
+
     <!-- ── 리스트 아코디언 ──────────────────────────── -->
     <div class="sidebar-accordion" id="accList">
       <button class="sidebar-accordion-btn" onclick="toggleAccordion('accList')">
@@ -61,14 +64,16 @@ async function initSidebar() {
         <a href="my-adoptions.html"     class="sidebar-subitem ${path === 'my-adoptions.html'     ? 'active' : ''}">내 분양</a>
         <div class="sidebar-divider" style="margin:8px 0;"></div>
         <a href="profile.html"          class="sidebar-subitem ${path === 'profile.html' && !new URLSearchParams(window.location.search).get('user') ? 'active' : ''}">내 프로필</a>
+        <a href="my-wallet.html"        class="sidebar-subitem ${path === 'my-wallet.html' ? 'active' : ''}">내 지갑</a>
+        <a href="my-bag.html"           class="sidebar-subitem ${path === 'my-bag.html'    ? 'active' : ''}">내 가방</a>
         <div class="sidebar-divider" style="margin:8px 0;"></div>
         <a href="notifications.html"    class="sidebar-subitem ${path === 'notifications.html'    ? 'active' : ''}" style="display:flex;justify-content:space-between;align-items:center;">알림함<span class="sidebar-notif-badge" id="sidebarNotifBadge" style="display:none">0</span></a>
         <a href="transfer-history.html" class="sidebar-subitem ${path === 'transfer-history.html' ? 'active' : ''}">캐릭터 이전 내역</a>
       </div>
     </div>
 
-    <!-- TODO: 상점 아코디언 — MY 다음, 지원 전 위치 예정 -->
-    <!--   TODO: 프레임 상점 — 상점 안 하위 메뉴 예정 -->
+    <!-- ── 상점 단일 메뉴 ─────────────────────────── -->
+    <a href="shop.html" class="sidebar-top-link ${path === 'shop.html' ? 'active' : ''}">상점</a>
 
     <!-- ── 지원 아코디언 ─────────────────────────────── -->
     <div class="sidebar-accordion" id="accSupport">
@@ -92,7 +97,7 @@ async function initSidebar() {
   const listPages    = ['species.html','species-list.html','character-list.html','character.html',
                         'adoption.html','adoption-detail.html','adoption-write.html','users.html'];
   const myPages      = ['my-species.html','my-characters.html','my-designs.html','my-slots.html',
-                        'my-adoptions.html','notifications.html','transfer-history.html','my-wallet.html'];
+                        'my-adoptions.html','notifications.html','transfer-history.html','my-wallet.html','my-bag.html'];
   const supportPages = ['inquiry.html','inquiry-write.html','inquiry-detail.html',
                         'bug-report.html','bug-report-write.html','bug-report-detail.html',
                         'species-apply.html','species-apply-write.html','species-apply-detail.html'];
@@ -311,10 +316,26 @@ async function updateSidebarLogin() {
       if (isSpeciesOwner)                               badges.push(`<span class="badge-role">종족주</span>`);
       if (!admin && !staff && !isTester && !isSpeciesOwner) badges.push(`<span class="badge-user">일반유저</span>`);
 
+      const { data: wallet } = await getMyWallet(user.id).catch(() => ({ data: null }));
+      const researchAmt = (wallet?.research_records ?? 0).toLocaleString();
+      const keysAmt     = (wallet?.keys ?? 0).toLocaleString();
+
       block.innerHTML = `
         <div class="sidebar-user-row">
           <a href="profile.html" class="btn-username">${nickname}</a>
           ${badges.join('')}
+        </div>
+        <div class="sidebar-currencies">
+          <span class="header-currency currency-record">
+            <img src="../images/icons/currency-record.png" class="currency-icon" alt="연구기록">
+            <span class="currency-amount">${researchAmt}</span>
+            <span class="sidebar-currency-label">연구기록</span>
+          </span>
+          <span class="header-currency currency-key">
+            <img src="../images/icons/currency-key.png" class="currency-icon" alt="열쇠">
+            <span class="currency-amount">${keysAmt}</span>
+            <span class="sidebar-currency-label">열쇠</span>
+          </span>
         </div>
         <button class="btn-logout" onclick="signOut()">로그아웃</button>
       `;

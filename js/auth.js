@@ -221,6 +221,25 @@ async function updateHeader() {
       loginBtn.classList.remove('btn-login');
       loginBtn.classList.add('btn-username');
 
+      // 재화 잔액 조회 (실패 시 0으로 폴백)
+      const { data: wallet } = await getMyWallet(user.id).catch(() => ({ data: null }));
+      const researchAmt = (wallet?.research_records ?? 0).toLocaleString();
+      const keysAmt     = (wallet?.keys ?? 0).toLocaleString();
+
+      // 재화 표시 — 뱃지보다 앞에 삽입
+      loginBtn.insertAdjacentHTML('beforebegin', `
+        <a href="my-wallet.html" class="header-currencies">
+          <span class="header-currency currency-record">
+            <img src="../images/icons/currency-record.png" class="currency-icon" alt="연구기록">
+            <span class="currency-amount" id="headerResearchAmount">${researchAmt}</span>
+          </span>
+          <span class="header-currency currency-key">
+            <img src="../images/icons/currency-key.png" class="currency-icon" alt="열쇠">
+            <span class="currency-amount" id="headerKeysAmount">${keysAmt}</span>
+          </span>
+        </a>
+      `);
+
       // 뱃지: 관리자 → 테스터 → 종족주 순으로 닉네임 앞에
       const headerBadges = [];
       if (admin)                                        headerBadges.push(`<a href="admin.html" class="badge-admin">관리자</a>`);

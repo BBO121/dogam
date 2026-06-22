@@ -44,13 +44,13 @@
           </div>
           <div class="wallet-currency-row">
             <div class="wallet-currency-item">
-              <div class="wallet-currency-icon"></div>
+              <img src="../images/icons/currency-record.png" class="wallet-currency-icon" alt="연구기록">
               <span class="wallet-currency-name">연구기록</span>
               <span class="wallet-currency-amount" id="researchAmount">—</span>
             </div>
             <div class="wallet-currency-divider"></div>
             <div class="wallet-currency-item">
-              <div class="wallet-currency-icon"></div>
+              <img src="../images/icons/currency-key.png" class="wallet-currency-icon" alt="열쇠">
               <span class="wallet-currency-name">열쇠</span>
               <span class="wallet-currency-amount wallet-currency-amount--muted" id="keysAmount">—</span>
             </div>
@@ -152,20 +152,24 @@
   <script src="../js/main.js"></script>
   <script>
     const TYPE_LABEL = {
-      signup_bonus:     '가입보너스',
-      transfer_receive: '받음',
-      transfer_send:    '보냄',
-      admin_grant:      '지급',
-      admin_deduct:     '차감',
+      signup_bonus:       '가입보너스',
+      attendance_reward:  '일일 출석',
+      transfer_receive:   '받음',
+      transfer_send:      '보냄',
+      admin_grant:        '지급',
+      admin_deduct:       '차감',
+      shop_purchase:      '상점구매',
     };
     const TYPE_CLASS = {
-      signup_bonus:     'wallet-log-type--receive',
-      transfer_receive: 'wallet-log-type--receive',
-      admin_grant:      'wallet-log-type--admin',
-      transfer_send:    'wallet-log-type--send',
-      admin_deduct:     'wallet-log-type--send',
+      signup_bonus:       'wallet-log-type--receive',
+      attendance_reward:  'wallet-log-type--receive',
+      transfer_receive:   'wallet-log-type--receive',
+      admin_grant:        'wallet-log-type--admin',
+      transfer_send:      'wallet-log-type--send',
+      admin_deduct:       'wallet-log-type--send',
+      shop_purchase:      'wallet-log-type--send',
     };
-    const RECEIVE_TYPES = new Set(['signup_bonus', 'transfer_receive', 'admin_grant']);
+    const RECEIVE_TYPES = new Set(['signup_bonus', 'attendance_reward', 'transfer_receive', 'admin_grant']);
 
     let myBalance         = 0;
     let myKeys            = 0;
@@ -194,11 +198,6 @@
       const user = await getUser();
       if (!user) { window.location.href = 'login.html'; return; }
 
-      // 개발 중 — 관리자/스태프만 접근 허용
-      if (!isAdminOrStaff(user.user_metadata?.role)) {
-        window.location.href = 'index.html';
-        return;
-      }
       _myId = user.id;
 
       const [{ data: wallet }, { data: logs }, { data: userData }] = await Promise.all([
