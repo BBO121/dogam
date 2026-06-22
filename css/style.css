@@ -7173,6 +7173,7 @@ button.btn-more {
   font-size: 16px;
   font-weight: 700;
   color: var(--text);
+  word-break: keep-all;
 }
 
 .bag-ep-none {
@@ -7317,6 +7318,34 @@ button.btn-more {
 }
 
 .bag-unequip-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* 미리보기 반응형: 360px 이하 → 세로 배치 */
+@media (max-width: 360px) {
+  .bag-ep-tricolumn {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .bag-ep-preview-center {
+    order: -1;
+    justify-content: center;
+  }
+
+  .bag-ep-side {
+    flex: none;
+    width: 100%;
+  }
+
+  .bag-ep-side--left {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .bag-ep-side:empty {
+    display: none;
+  }
+}
 
 /* 착용중 뱃지 */
 .bag-equip-badge {

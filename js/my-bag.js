@@ -118,7 +118,7 @@ function renderEquippedPreview() {
   const avatarStyle = avatarUrl
     ? `background-image:url('${avatarUrl}');background-size:cover;background-position:center;`
     : '';
-  const frameCss = equippedFrame ? (STYLE_KEY_MAP[equippedFrame.style_key] || '') : '';
+  const frameCss = equippedFrame ? (equippedFrame.style_key || '') : '';
 
   const stickerOverlay = equippedSticker
     ? `<img id="bagEpStickerImg" src="${equippedSticker.image_url}" alt="${equippedSticker.name}"
@@ -146,7 +146,7 @@ function renderEquippedPreview() {
       <h2 class="bag-section-title">미리보기</h2>
       <div class="bag-ep-tricolumn">
         ${leftHtml}
-        <div style="display:grid; place-items:center; flex-shrink:0; line-height:0;">
+        <div class="bag-ep-preview-center" style="display:grid; place-items:center; flex-shrink:0; line-height:0;">
           <div class="bag-ep-preview-wrap ${frameCss}" style="grid-area:1/1;">
             <div class="bag-ep-avatar" style="${avatarStyle}"></div>
           </div>
@@ -207,7 +207,7 @@ function renderBag() {
 // ── 아이템 카드 렌더 (상점과 동일한 크기/구조) ──────────────
 function renderBagItem(item, type) {
   const styleKey   = item.style_key || '';
-  const cssClass   = STYLE_KEY_MAP[styleKey] || '';
+  const cssClass   = styleKey;
   const isEquipped = type === 'frame'
     ? item.id === _equippedFrameId
     : type === 'sticker'
