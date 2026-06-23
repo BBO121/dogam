@@ -1083,13 +1083,21 @@
 
       // 현재 최고 입찰가 체크 (DB 재조회 — 동시 입찰 대응)
       const { data: existingBids } = await sb.from('auction_bids')
-        .select('bid_amount').eq('adoption_id', adoptionId);
+        .select('bid_amount, bidder_name, bidder_id').eq('adoption_id', adoptionId);
       const currentMax = existingBids && existingBids.length > 0
         ? Math.max(...existingBids.map(b => Number(String(b.bid_amount).replace(/,/g, ''))))
         : 0;
       if (currentMax > 0 && bidNum <= currentMax) {
         errorEl.textContent = `현재 최고 입찰가(${currentMax.toLocaleString('ko-KR')}원)보다 높은 금액으로 입찰해주세요.`;
         return;
+      }
+
+      // 기존 최고 입찰자 저장 (outbid 알림용)
+      let prevTopBidder = null;
+      if (existingBids && existingBids.length > 0) {
+        prevTopBidder = existingBids.reduce((a, b) =>
+          Number(String(a.bid_amount).replace(/,/g, '')) >= Number(String(b.bid_amount).replace(/,/g, '')) ? a : b
+        );
       }
 
       const { error } = await sb.from('auction_bids').insert({
@@ -1150,6 +1158,16 @@
         message:       `💰 "${currentAdoption.character_name}" 경매에 새 입찰이 들어왔어요. (${myNick}, ${Number(raw).toLocaleString('ko-KR')}원)`,
         link:          `adoption-detail.html?id=${adoptionId}`,
       });
+
+      // 기존 최고 입찰자에게 outbid 알림 (첫 입찰 제외, 본인 제외)
+      if (prevTopBidder && prevTopBidder.bidder_id !== currentUser.id) {
+        await sb.from('notifications').insert({
+          user_nickname: prevTopBidder.bidder_name,
+          type:          'auction_outbid',
+          message:       `📢 "${currentAdoption.character_name}" 경매에서 더 높은 입찰가가 등록됐어요. 새 금액을 확인해보세요.`,
+          link:          `adoption-detail.html?id=${adoptionId}`,
+        });
+      }
 
       location.reload();
     }
