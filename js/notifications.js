@@ -47,6 +47,45 @@ function insertNotifBell() {
       panel.style.display = 'none';
     }
   });
+
+  // 모바일 헤더 알림 벨 주입 (.header-inner 우측)
+  const headerInner = document.querySelector('.header-inner');
+  if (headerInner && !document.getElementById('mobileNotifBell')) {
+    const mobileBell = document.createElement('a');
+    mobileBell.id = 'mobileNotifBell';
+    mobileBell.href = 'notifications.html';
+    mobileBell.className = 'mobile-notif-bell';
+    mobileBell.setAttribute('aria-label', '알림');
+    mobileBell.innerHTML = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+      </svg>
+      <span class="notif-badge" id="mobileNotifBadge" style="display:none">0</span>
+    `;
+    headerInner.appendChild(mobileBell);
+  }
+}
+
+async function toggleNotifPanel(e) {
+  if (e) e.stopPropagation();
+  const panel = document.getElementById('notifPanel');
+  if (!panel) return;
+  const isOpen = panel.style.display === 'block';
+  panel.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    const user = await getUser();
+    const myNick = user?.user_metadata?.display_name || user?.user_metadata?.nickname;
+    if (myNick) {
+      loadNotifList(myNick);
+      markAllReadSilent(myNick);
+    }
+  }
+}
+
+async function markAllReadSilent(myNick) {
+  await sb.from('notifications').update({ is_read: true })
+    .eq('user_nickname', myNick).eq('is_read', false);
+  refreshNotifCount(myNick);
 }
 
 async function refreshNotifCount(myNick) {
@@ -67,18 +106,10 @@ async function refreshNotifCount(myNick) {
     sidebarBadge.textContent  = n > 99 ? '99+' : n;
     sidebarBadge.style.display = n > 0 ? 'inline-flex' : 'none';
   }
-}
-
-async function toggleNotifPanel(e) {
-  if (e) e.stopPropagation();
-  const panel = document.getElementById('notifPanel');
-  if (!panel) return;
-  const isOpen = panel.style.display === 'block';
-  panel.style.display = isOpen ? 'none' : 'block';
-  if (!isOpen) {
-    const user = await getUser();
-    const myNick = user?.user_metadata?.display_name || user?.user_metadata?.nickname;
-    if (myNick) loadNotifList(myNick);
+  const mobileBadge = document.getElementById('mobileNotifBadge');
+  if (mobileBadge) {
+    mobileBadge.textContent  = n > 99 ? '99+' : n;
+    mobileBadge.style.display = n > 0 ? 'flex' : 'none';
   }
 }
 

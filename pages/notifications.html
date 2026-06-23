@@ -74,6 +74,7 @@
       document.getElementById('pageContent').style.display = 'block';
 
       await loadNotifications();
+      markAllReadSilent(myNick);
     }
 
     async function loadNotifications() {

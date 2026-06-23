@@ -56,6 +56,7 @@ async function initSidebar() {
         <a href="my-adoptions.html"     class="sidebar-subitem ${path === 'my-adoptions.html'     ? 'active' : ''}">내 분양</a>
         <div class="sidebar-divider" style="margin:8px 0;"></div>
         <a href="profile.html"          class="sidebar-subitem ${path === 'profile.html' && !new URLSearchParams(window.location.search).get('user') ? 'active' : ''}">내 프로필</a>
+        <a href="achievements.html"     class="sidebar-subitem ${path === 'achievements.html' ? 'active' : ''}">내 업적</a>
         <a href="my-wallet.html"        class="sidebar-subitem ${path === 'my-wallet.html' ? 'active' : ''}">내 지갑</a>
         <a href="my-bag.html"           class="sidebar-subitem ${path === 'my-bag.html'    ? 'active' : ''}">내 가방</a>
         <div class="sidebar-divider" style="margin:8px 0;"></div>
