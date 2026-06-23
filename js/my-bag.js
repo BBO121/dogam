@@ -156,15 +156,14 @@ function renderEquippedPreview() {
       </div>
     </div>`;
 
-  // 렌더 후 실제 아바타 크기 측정 → 스티커 비율 계산 (1168×1168, 프로필영역 768, 마진 200)
+  // 렌더 후 실제 아바타 크기 측정 → 프로필과 동일한 비율(116/96) 적용
   if (equippedSticker) {
     requestAnimationFrame(() => {
       const wrap = el.querySelector('.bag-ep-preview-wrap');
       const img  = document.getElementById('bagEpStickerImg');
       if (!wrap || !img) return;
-      // clientWidth = 콘텐츠 너비만 (border 제외) → 96px → 146px (프로필과 동일 비율)
       const avatarPx  = wrap.clientWidth;
-      const stickerPx = Math.round(avatarPx * 1168 / 768);
+      const stickerPx = Math.round(avatarPx * 116 / 96);
       img.style.width  = stickerPx + 'px';
       img.style.height = stickerPx + 'px';
     });
