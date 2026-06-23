@@ -1483,7 +1483,7 @@ body.tour-sidebar-step .sidebar {
 .profile-avatar-wrap.frame-simple-gray::after     { border-color: #BFC7D5; }
 .profile-avatar-wrap.frame-simple-blue::after     { border-color: #014498; }
 .profile-avatar-wrap.frame-simple-red::after      { border-color: #B74549; }
-.profile-avatar-wrap.frame-ai-moon::after         { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_ai_moon.png'); background-size: 100% 100%; border-radius: 0; }
+.profile-avatar-wrap.frame-ai-moon::after         { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_ai_moon_2.png'); background-size: 100% 100%; border-radius: 0; }
 
 .profile-avatar {
   width: 96px;
@@ -6740,7 +6740,7 @@ button.btn-more {
 .frame-preview.frame-simple-gray     { border: 4px solid #BFC7D5; }
 .frame-preview.frame-simple-blue     { border: 4px solid #014498; }
 .frame-preview.frame-simple-red      { border: 4px solid #B74549; }
-.frame-preview.frame-ai-moon         { border: none; background-image: url('../images/shop/frame_ai_moon.png'); background-size: cover; background-position: center; }
+.frame-preview.frame-ai-moon         { border: none; background-image: url('../images/shop/frame_ai_moon_2.png'); background-size: cover; background-position: center; }
 
 /* 상품 상세 모달 */
 .shop-detail-card {
@@ -7095,7 +7095,7 @@ button.btn-more {
 .bag-ep-preview-wrap.frame-simple-red::after      { border-color: #B74549; }
 .bag-ep-preview-wrap.frame-ai-moon               { overflow: visible; }
 .bag-ep-preview-wrap.frame-ai-moon .bag-ep-avatar { border-radius: 20px; overflow: hidden; }
-.bag-ep-preview-wrap.frame-ai-moon::after         { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_ai_moon.png'); background-size: 100% 100%; border-radius: 0; }
+.bag-ep-preview-wrap.frame-ai-moon::after         { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_ai_moon_2.png'); background-size: 100% 100%; border-radius: 0; }
 
 /* 스티커 오버레이 — 96px 이미지 기준 1.2배 */
 .bag-ep-sticker-overlay {
@@ -7171,7 +7171,7 @@ button.btn-more {
 .bag-ep-frame-wrap.frame-simple-gray::after     { border-color: #BFC7D5; }
 .bag-ep-frame-wrap.frame-simple-blue::after     { border-color: #014498; }
 .bag-ep-frame-wrap.frame-simple-red::after      { border-color: #B74549; }
-.bag-ep-frame-wrap.frame-ai-moon::after         { border: none; background-image: url('../images/shop/frame_ai_moon.png'); background-size: cover; background-position: center; }
+.bag-ep-frame-wrap.frame-ai-moon::after         { border: none; background-image: url('../images/shop/frame_ai_moon_2.png'); background-size: cover; background-position: center; }
 
 .bag-ep-avatar {
   width: 100%;
