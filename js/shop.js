@@ -167,6 +167,12 @@ function openDetailModal(item) {
 
   document.getElementById('detailName').textContent  = item.name;
   document.getElementById('detailDesc').textContent  = item.description || '';
+
+  const creditEl = document.getElementById('detailCredit');
+  if (creditEl) {
+    creditEl.textContent    = item.credit ? `Design by ${item.credit}` : '';
+    creditEl.style.display  = item.credit ? '' : 'none';
+  }
   document.getElementById('detailPrice').innerHTML =
     state === 'insufficient'
       ? `<span style="color:#ef4444;">${curIcon} ${item.price.toLocaleString()}</span>`
