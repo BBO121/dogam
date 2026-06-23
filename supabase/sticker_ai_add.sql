@@ -11,8 +11,8 @@ UPDATE public.shop_items
 SET
   name         = '공오',
   description  = '내 뿔이랑 날개 뺏어가지마!',
-  sub_category = '일러스트',
-  credit       = '아요'
+  sub_category = '기본',
+  credit       = '뽀'
 WHERE style_key = 'sticker-free-05';
 
 -- ── 3. 일러스트 스티커 7종 추가 ──
