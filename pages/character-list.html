@@ -79,7 +79,8 @@
       const [{ data, error }, { data: userList }] = await Promise.all([
         sb.from('characters')
           .select('id, name, species_name, owner_nickname, owner_user_id, image_url, thumbnail_url, created_at, is_sensitive, sensitive_note')
-          .order('created_at', { ascending: false }),
+          .order('created_at', { ascending: false })
+          .limit(10000),
         sb.rpc('get_all_users'),
       ]);
 
@@ -137,7 +138,7 @@
 
       const qLow = q.toLowerCase();
       let list = allChars.filter(c =>
-        (!q          || c.name.toLowerCase().includes(qLow)) &&
+        (!q          || (c.name || '').toLowerCase().includes(qLow)) &&
         (!sp         || c.species_name === sp) &&
         (!(ownerParam || ownerIdParam) || (ownerParamId ? c.owner_user_id === ownerParamId : c.owner_nickname === ownerParam))
       );
