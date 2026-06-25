@@ -194,9 +194,9 @@ function openDetailModal(item) {
   const saleEndEl = document.getElementById('detailSaleEnd');
   if (saleEndEl) {
     if (item.sale_end_at) {
-      const endDate = new Date(item.sale_end_at);
-      const formatted = `${endDate.getFullYear()}년 ${endDate.getMonth() + 1}월 ${endDate.getDate()}일까지 판매`;
-      saleEndEl.textContent = '⏰ ' + formatted;
+      const endDate = new Date(new Date(item.sale_end_at).getTime() - 1);
+      const formatted = `${endDate.getFullYear()}년 ${endDate.getMonth() + 1}월 ${endDate.getDate()}일까지`;
+      saleEndEl.textContent = '판매기간 ' + formatted;
       saleEndEl.style.display = '';
     } else {
       saleEndEl.style.display = 'none';
