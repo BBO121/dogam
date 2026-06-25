@@ -680,7 +680,16 @@
 
       renderUserList([]);
 
-      if (myName) selectUser(myName);
+      // display_name ≠ nickname 계정 대응: ID 기준으로 현재 유저를 찾아 자동 선택
+      const myEntry = allUsers.find(u => u.id === currentUser.id);
+      if (myEntry) {
+        selectedNick   = myName || myEntry.nickname;
+        selectedNickId = myEntry.id;
+        const disp = document.getElementById('ownerSelectedDisplay');
+        if (disp) { disp.textContent = `선택됨: ${selectedNick}`; disp.style.display = 'block'; }
+      } else if (myName) {
+        selectUser(myName);
+      }
     }
 
     function renderUserList(list) {

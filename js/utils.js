@@ -100,7 +100,7 @@ function applyWatermark(imageBlob, watermarkUrl) {
   return new Promise((resolve, reject) => {
     const blobUrl = URL.createObjectURL(imageBlob);
     const img = new Image();
-    const wm  = new Image();
+    let wm = new Image();
     let imgReady = false, wmReady = false;
 
     function tryCompose() {
@@ -111,7 +111,7 @@ function applyWatermark(imageBlob, watermarkUrl) {
         canvas.height = img.naturalHeight;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
-        ctx.drawImage(wm, 0, 0, canvas.width, canvas.height);
+        if (wm.naturalWidth > 0) ctx.drawImage(wm, 0, 0, canvas.width, canvas.height);
         canvas.toBlob(blob => {
           URL.revokeObjectURL(blobUrl);
           if (!blob) { reject(new Error('워터마크 합성에 실패했어요. (canvas tainted 또는 메모리 부족)')); return; }
@@ -127,12 +127,22 @@ function applyWatermark(imageBlob, watermarkUrl) {
     img.onerror = () => { URL.revokeObjectURL(blobUrl); reject(new Error('이미지 로드에 실패했어요.')); };
     img.src = blobUrl;
 
-    // 캐시버스팅으로 crossOrigin 캐시 충돌 방지
-    const wmSrcWithBust = watermarkUrl + (watermarkUrl.includes('?') ? '&' : '?') + '_wm=' + Date.now();
-    wm.crossOrigin = 'anonymous';
-    wm.onload  = () => { wmReady = true; tryCompose(); };
-    wm.onerror = () => { URL.revokeObjectURL(blobUrl); reject(new Error('워터마크 이미지를 불러오는 데 실패했어요: ' + watermarkUrl)); };
-    wm.src = wmSrcWithBust;
+    function loadWatermark(src) {
+      wm = new Image();
+      wm.crossOrigin = 'anonymous';
+      wm.onload = () => { wmReady = true; tryCompose(); };
+      wm.onerror = () => {
+        // 커스텀 워터마크 실패 시 기본 워터마크로 대체, 기본도 실패하면 워터마크 없이 진행
+        if (src !== '../images/watermark.png') {
+          loadWatermark('../images/watermark.png');
+        } else {
+          wmReady = true;
+          tryCompose();
+        }
+      };
+      wm.src = src + (src.includes('?') ? '&' : '?') + '_wm=' + Date.now();
+    }
+    loadWatermark(watermarkUrl);
   });
 }
 
