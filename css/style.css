@@ -6852,6 +6852,13 @@ button.btn-more {
   line-height: 1.5;
 }
 
+.shop-detail-sale-end {
+  font-size: 12px;
+  color: #e06b00;
+  font-weight: 600;
+  margin-top: 6px;
+}
+
 .shop-detail-footer {
   display: flex;
   align-items: center;

@@ -191,6 +191,18 @@ function openDetailModal(item) {
   document.getElementById('detailName').textContent  = item.name;
   document.getElementById('detailDesc').textContent  = item.description || '';
 
+  const saleEndEl = document.getElementById('detailSaleEnd');
+  if (saleEndEl) {
+    if (item.sale_end_at) {
+      const endDate = new Date(item.sale_end_at);
+      const formatted = `${endDate.getFullYear()}년 ${endDate.getMonth() + 1}월 ${endDate.getDate()}일까지 판매`;
+      saleEndEl.textContent = '⏰ ' + formatted;
+      saleEndEl.style.display = '';
+    } else {
+      saleEndEl.style.display = 'none';
+    }
+  }
+
   const creditEl = document.getElementById('detailCredit');
   if (creditEl) {
     creditEl.textContent    = item.credit ? `Design by ${item.credit}` : '';
