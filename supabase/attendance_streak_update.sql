@@ -83,7 +83,7 @@ BEGIN
   FROM ranked r
   JOIN today_grp g ON r.grp = g.grp;
 
-  -- 7일 배수마다 보너스 (무한 반복)
+  -- 7일 배수마다 보너스 (28일 주기로 20→25→30→40 반복)
   IF v_streak % 7 = 0 THEN
     SELECT COUNT(*) INTO v_already
     FROM public.attendance_rewards
@@ -98,9 +98,15 @@ BEGIN
          v_streak,
          v_today);
 
-      v_research := v_research + 20;
-      v_keys     := v_keys + 1;
-      v_bonus    := true;
+      -- 28일 주기 내 위치: 7→+20, 14→+25, 21→+30, 0(=28)→+40
+      v_research := v_research + CASE (v_streak % 28)
+        WHEN 7  THEN 20
+        WHEN 14 THEN 25
+        WHEN 21 THEN 30
+        WHEN 0  THEN 40
+      END;
+      v_keys  := v_keys + 1;
+      v_bonus := true;
     END IF;
   END IF;
 
