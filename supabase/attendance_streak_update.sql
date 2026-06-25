@@ -7,14 +7,19 @@
 ALTER TABLE public.attendance_rewards
   ADD COLUMN IF NOT EXISTS achieved_date date;
 
--- 2. 새로운 중복 방지 partial unique index (achieved_date 기반)
---    기존 (user_id, month_key, reward_step) unique 제약은 그대로 두고,
---    신규 행은 achieved_date 로만 중복 체크
+-- 2. 기존 (user_id, month_key, reward_step) unique 제약 제거
+--    같은 달에 연속 출석이 끊겼다가 다시 7일 달성하면 reward_step이 동일해서 중복 차단됨
+--    새 로직은 achieved_date 기반으로만 중복 방지하므로 기존 제약 불필요
+ALTER TABLE public.attendance_rewards
+  DROP CONSTRAINT IF EXISTS attendance_rewards_user_id_month_key_reward_step_key;
+
+-- 3. 새로운 중복 방지 partial unique index (achieved_date 기반)
+--    신규 행(achieved_date IS NOT NULL)만 대상으로 하루 1회 보너스 보장
 CREATE UNIQUE INDEX IF NOT EXISTS attendance_rewards_user_achieved_date_key
   ON public.attendance_rewards (user_id, achieved_date)
   WHERE achieved_date IS NOT NULL;
 
--- 3. 연속 출석 기반 record_attendance() 함수 교체
+-- 4. 연속 출석 기반 record_attendance() 함수 교체
 --    보너스: 연속 7일마다 연구기록 +20, 열쇠 +1 (무한 반복)
 CREATE OR REPLACE FUNCTION record_attendance()
 RETURNS json LANGUAGE plpgsql SECURITY DEFINER AS $$
