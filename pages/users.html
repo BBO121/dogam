@@ -199,7 +199,7 @@
 
     async function loadUsers() {
       const [{ data, error }, { data: spData }] = await Promise.all([
-        sb.rpc('get_all_users'),
+        sb.rpc('get_all_users_full'),
         sb.from('species').select('owner_nickname'),
       ]);
       document.getElementById('loadingMsg').style.display = 'none';
@@ -211,7 +211,7 @@
 
       (spData || []).forEach(s => { if (s.owner_nickname) speciesOwnerNicks.add(s.owner_nickname); });
 
-      allUsers = sortUsers(data.filter(u => u.nickname || u.login_id));
+      allUsers = sortUsers(data);
       document.getElementById('usersCount').textContent = `총 ${allUsers.length}명`;
       pager.load(allUsers);
     }
