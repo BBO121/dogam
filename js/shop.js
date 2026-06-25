@@ -111,7 +111,7 @@ function buildPriceHtml(item, discountHtml = '') {
   let html = `${curIcon} ${discountHtml}${item.price.toLocaleString()}`;
   if (item.secondary_currency && item.secondary_price) {
     const secIcon = CURRENCY_ICON[item.secondary_currency] ?? CURRENCY_LABEL[item.secondary_currency] ?? item.secondary_currency;
-    html += ` + ${secIcon} ${item.secondary_price.toLocaleString()}`;
+    html += ` ${secIcon} ${item.secondary_price.toLocaleString()}`;
   }
   return html;
 }
