@@ -14,6 +14,7 @@ SET sale_end_at = '2026-08-01 00:00:00+09'
 WHERE style_key = 'frame-li-bbo';
 
 -- ── 3. purchase_item RPC 만료일 체크 추가 ─────
+--    기존 RPC에 ITEM_SALE_ENDED 체크만 추가, 나머지 로직은 원본 그대로 유지
 CREATE OR REPLACE FUNCTION purchase_item(p_item_id uuid)
 RETURNS json LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE
@@ -39,7 +40,7 @@ BEGIN
     RETURN json_build_object('success', false, 'error', 'ITEM_NOT_AVAILABLE');
   END IF;
 
-  -- 판매 기간 확인
+  -- ★ 판매 기간 확인 (추가된 부분)
   IF v_item.sale_end_at IS NOT NULL AND v_item.sale_end_at < now() THEN
     RETURN json_build_object('success', false, 'error', 'ITEM_SALE_ENDED');
   END IF;
@@ -75,35 +76,55 @@ BEGIN
 
   -- 재화 차감
   IF v_item.currency = 'research_records' THEN
-    UPDATE public.user_wallets SET research_records = v_new_balance WHERE user_id = v_user_id;
+    UPDATE public.user_wallets
+    SET research_records = v_new_balance, updated_at = now()
+    WHERE user_id = v_user_id;
   ELSE
-    UPDATE public.user_wallets SET keys = v_new_balance WHERE user_id = v_user_id;
+    UPDATE public.user_wallets
+    SET keys = v_new_balance, updated_at = now()
+    WHERE user_id = v_user_id;
   END IF;
 
-  -- 아이템 지급
-  v_quantity := 1;
+  -- user_items 지급
   IF v_item.purchase_type = 'unique' THEN
     INSERT INTO public.user_items (user_id, item_id, quantity)
     VALUES (v_user_id, p_item_id, 1);
+
+    v_quantity := 1;
   ELSE
     INSERT INTO public.user_items (user_id, item_id, quantity)
     VALUES (v_user_id, p_item_id, 1)
-    ON CONFLICT (user_id, item_id)
-    DO UPDATE SET quantity = public.user_items.quantity + 1
+    ON CONFLICT (user_id, item_id) DO UPDATE
+    SET quantity = public.user_items.quantity + 1
     RETURNING quantity INTO v_quantity;
   END IF;
 
-  -- 거래 내역 기록
+  -- currency_logs 기록
   INSERT INTO public.currency_logs
-    (user_id, currency, amount, type, label)
-  VALUES
-    (v_user_id, v_item.currency, -v_item.price, 'shop_purchase', v_item.name);
+    (user_id, type, source, currency, amount, balance_after, note)
+  VALUES (
+    v_user_id,
+    'shop_purchase',
+    'shop',
+    v_item.currency,
+    v_item.price,
+    v_new_balance,
+    v_item.name || ' 구매'
+  );
 
   RETURN json_build_object(
-    'success',      true,
-    'new_balance',  v_new_balance,
-    'currency',     v_item.currency,
-    'quantity',     v_quantity
+    'success',       true,
+    'item_id',       p_item_id,
+    'purchase_type', v_item.purchase_type,
+    'quantity',      v_quantity,
+    'new_balance',   v_new_balance,
+    'currency',      v_item.currency
   );
+
+EXCEPTION
+  WHEN unique_violation THEN
+    RETURN json_build_object('success', false, 'error', 'ALREADY_OWNED');
 END;
 $$;
+
+GRANT EXECUTE ON FUNCTION purchase_item(uuid) TO authenticated;
