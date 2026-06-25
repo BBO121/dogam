@@ -132,27 +132,51 @@
     }
 
     async function applyFilter() {
-      const q      = document.getElementById('searchInput').value.trim();
-      const sp     = document.getElementById('speciesFilter').value;
-      const sort   = document.getElementById('sortSelect').value;
+      const q    = document.getElementById('searchInput').value.trim();
+      const sp   = document.getElementById('speciesFilter').value;
+      const sort = document.getElementById('sortSelect').value;
 
-      const qLow = q.toLowerCase();
-      let list = allChars.filter(c =>
-        (!q          || (c.name || '').toLowerCase().includes(qLow)) &&
-        (!sp         || c.species_name === sp) &&
-        (!(ownerParam || ownerIdParam) || (ownerParamId ? c.owner_user_id === ownerParamId : c.owner_nickname === ownerParam))
-      );
+      let list;
 
-      if (sort === 'name') list = [...list].sort((a,b) => a.name.localeCompare(b.name,'ko'));
+      if (q) {
+        // 검색어 있을 때: 전체 DB 서버 검색 (1000개 제한 우회)
+        let listQuery = sb.from('characters')
+          .select('id, name, species_name, owner_nickname, owner_user_id, image_url, thumbnail_url, created_at, is_sensitive, sensitive_note')
+          .or(`name.ilike.%${q}%,owner_nickname.ilike.%${q}%,species_name.ilike.%${q}%`);
+        if (sp)   listQuery = listQuery.eq('species_name', sp);
+        if (ownerIdParam && ownerParamId) listQuery = listQuery.eq('owner_user_id', ownerParamId);
+        else if (ownerParam)              listQuery = listQuery.eq('owner_nickname', ownerParam);
+        listQuery = sort === 'name'
+          ? listQuery.order('name', { ascending: true })
+          : listQuery.order('created_at', { ascending: false });
 
-      // 정확한 총 개수: 클라이언트 length 대신 서버 count 쿼리 사용 (1000개 제한 우회)
-      let countQuery = sb.from('characters').select('id', { count: 'exact', head: true });
-      if (q)  countQuery = countQuery.ilike('name', `%${q}%`);
-      if (sp) countQuery = countQuery.eq('species_name', sp);
-      if (ownerIdParam && ownerParamId) countQuery = countQuery.eq('owner_user_id', ownerParamId);
-      else if (ownerParam)              countQuery = countQuery.eq('owner_nickname', ownerParam);
-      const { count: exactCount } = await countQuery;
-      document.getElementById('charCount').textContent = `총 ${exactCount ?? list.length}개의 개체`;
+        let countQuery = sb.from('characters').select('id', { count: 'exact', head: true })
+          .or(`name.ilike.%${q}%,owner_nickname.ilike.%${q}%,species_name.ilike.%${q}%`);
+        if (sp)   countQuery = countQuery.eq('species_name', sp);
+        if (ownerIdParam && ownerParamId) countQuery = countQuery.eq('owner_user_id', ownerParamId);
+        else if (ownerParam)              countQuery = countQuery.eq('owner_nickname', ownerParam);
+
+        const [{ data: searchData }, { count: exactCount }] = await Promise.all([
+          listQuery.limit(2000),
+          countQuery,
+        ]);
+        list = searchData || [];
+        document.getElementById('charCount').textContent = `총 ${exactCount ?? list.length}개의 개체`;
+      } else {
+        // 검색어 없을 때: 로드된 목록 클라이언트 필터 + 서버 카운트
+        list = allChars.filter(c =>
+          (!sp || c.species_name === sp) &&
+          (!(ownerParam || ownerIdParam) || (ownerParamId ? c.owner_user_id === ownerParamId : c.owner_nickname === ownerParam))
+        );
+        if (sort === 'name') list = [...list].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+
+        let countQuery = sb.from('characters').select('id', { count: 'exact', head: true });
+        if (sp) countQuery = countQuery.eq('species_name', sp);
+        if (ownerIdParam && ownerParamId) countQuery = countQuery.eq('owner_user_id', ownerParamId);
+        else if (ownerParam)              countQuery = countQuery.eq('owner_nickname', ownerParam);
+        const { count: exactCount } = await countQuery;
+        document.getElementById('charCount').textContent = `총 ${exactCount ?? list.length}개의 개체`;
+      }
       document.getElementById('noResult').style.display = list.length ? 'none' : 'block';
 
       if (!list.length) {
