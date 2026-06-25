@@ -941,8 +941,7 @@
       }
 
       if (data.length > 0) countEl.textContent = data.length;
-      const preview = data.slice(0, 6);
-      gridEl.innerHTML = preview.map(s => `
+      gridEl.innerHTML = data.map(s => `
         <a href="species.html?id=${s.id}" class="species-card">
           ${s.is_sensitive && s.image_url ? `
           <div style="position:relative; overflow:hidden; border-radius:var(--radius);">
