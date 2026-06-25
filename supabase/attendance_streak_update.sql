@@ -9,9 +9,29 @@ ALTER TABLE public.attendance_rewards
 
 -- 2. 기존 (user_id, month_key, reward_step) unique 제약 제거
 --    같은 달에 연속 출석이 끊겼다가 다시 7일 달성하면 reward_step이 동일해서 중복 차단됨
---    새 로직은 achieved_date 기반으로만 중복 방지하므로 기존 제약 불필요
-ALTER TABLE public.attendance_rewards
-  DROP CONSTRAINT IF EXISTS attendance_rewards_user_id_month_key_reward_step_key;
+--    제약 이름이 환경마다 다를 수 있으므로 pg_constraint 조회 후 동적 삭제
+DO $$
+DECLARE r record;
+BEGIN
+  FOR r IN
+    SELECT c.conname
+    FROM pg_constraint c
+    JOIN pg_class t ON t.oid = c.conrelid
+    JOIN pg_namespace n ON n.oid = t.relnamespace
+    WHERE t.relname = 'attendance_rewards'
+      AND n.nspname  = 'public'
+      AND c.contype  = 'u'
+      AND EXISTS (
+        SELECT 1 FROM pg_attribute a
+        WHERE a.attrelid = c.conrelid
+          AND a.attnum   = ANY(c.conkey)
+          AND a.attname  = 'month_key'
+      )
+  LOOP
+    EXECUTE format('ALTER TABLE public.attendance_rewards DROP CONSTRAINT %I', r.conname);
+    RAISE NOTICE '제거된 unique 제약: %', r.conname;
+  END LOOP;
+END $$;
 
 -- 3. 새로운 중복 방지 partial unique index (achieved_date 기반)
 --    신규 행(achieved_date IS NOT NULL)만 대상으로 하루 1회 보너스 보장
