@@ -4533,8 +4533,8 @@ button.btn-more {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
-  /* 홈 종족 섹션: 12개(2×6)만 표시, 전체보기 페이지는 제외 */
-  .species-grid:not(.species-grid--large) .species-card:nth-child(n+13) {
+  /* 홈 종족 섹션: 12개(2×6)만 표시, 전체보기·프로필 페이지는 제외 */
+  .species-grid:not(.species-grid--large):not(#mySpeciesPreview) .species-card:nth-child(n+13) {
     display: none;
   }
   /* 더 좁은 화면 (< 400px) — 종족 2열 */
