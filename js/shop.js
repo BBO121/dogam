@@ -21,6 +21,7 @@ const ERROR_MSG = {
   NOT_AUTHENTICATED:    '로그인이 필요합니다.',
   ITEM_NOT_FOUND:       '존재하지 않는 상품입니다.',
   ITEM_NOT_AVAILABLE:   '현재 판매하지 않는 상품입니다.',
+  ITEM_SALE_ENDED:      '판매가 종료된 상품입니다.',
   ALREADY_OWNED:        '이미 보유한 상품입니다.',
   WALLET_NOT_FOUND:     '지갑 정보를 찾을 수 없습니다.',
   INSUFFICIENT_BALANCE: '재화가 부족합니다.',
@@ -48,6 +49,7 @@ async function loadData() {
     sb.from('shop_items')
       .select('*')
       .neq('status', 'hidden')
+      .or(`sale_end_at.is.null,sale_end_at.gt.${new Date().toISOString()}`)
       .order('sort_order', { ascending: true })
       .order('created_at',  { ascending: true }),
     getMyWallet(_user.id),
