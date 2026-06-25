@@ -139,8 +139,23 @@
       }
 
       document.getElementById('adoptionCount').textContent = `총 ${filtered.length}개`;
-      if (_firstLoad) { _firstLoad = false; pager.init(filtered); }
-      else            { pager.load(filtered); }
+
+      if (_firstLoad) {
+        _firstLoad = false;
+        pager.init(filtered);
+      } else {
+        // 필터 변경 시 URL에 상태 반영 (뒤로가기 복원용)
+        const url = new URL(location.href);
+        if (activeStatus !== 'open') url.searchParams.set('status', activeStatus);
+        else url.searchParams.delete('status');
+        if (activeType !== 'all') url.searchParams.set('type', activeType);
+        else url.searchParams.delete('type');
+        if (searchQuery) url.searchParams.set('q', searchQuery);
+        else url.searchParams.delete('q');
+        url.searchParams.delete('page');
+        history.replaceState(null, '', url);
+        pager.load(filtered);
+      }
     }
 
     // ── 카드 렌더링 ────────────────────────────────
@@ -230,6 +245,26 @@
       if (error || !data || data.length === 0) {
         document.getElementById('emptyState').style.display = 'flex';
         return;
+      }
+
+      // URL에서 이전 상태 복원
+      const _p = new URLSearchParams(location.search);
+      const _status = _p.get('status');
+      const _type   = _p.get('type');
+      const _q      = _p.get('q');
+      if (_status) {
+        activeStatus = _status;
+        document.querySelectorAll('#statusFilterRow .filter-btn').forEach(b =>
+          b.classList.toggle('active', b.dataset.status === _status));
+      }
+      if (_type) {
+        activeType = _type;
+        document.querySelectorAll('#typeFilterRow .filter-btn').forEach(b =>
+          b.classList.toggle('active', b.dataset.type === _type));
+      }
+      if (_q) {
+        searchQuery = _q;
+        document.getElementById('adoptionSearch').value = _q;
       }
 
       rawData = data;

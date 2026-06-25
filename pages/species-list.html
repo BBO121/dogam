@@ -97,9 +97,16 @@
       allSpecies = data;
       if (isInitialLoad) {
         const p = new URLSearchParams(location.search);
-        const q = p.get('q'); const sort = p.get('sort');
-        if (q)    document.getElementById('searchInput').value = q;
-        if (sort) document.getElementById('sortSelect').value  = sort;
+        const q      = p.get('q');
+        const sort   = p.get('sort');
+        const filter = p.get('filter');
+        if (q)      document.getElementById('searchInput').value = q;
+        if (sort)   document.getElementById('sortSelect').value  = sort;
+        if (filter) {
+          openFilter = filter;
+          document.querySelectorAll('#openFilterChips .species-filter-chip').forEach(b =>
+            b.classList.toggle('active', b.dataset.filter === filter));
+        }
       }
       applyFilter();
     }
@@ -145,8 +152,10 @@
         const url = new URL(location.href);
         const q    = document.getElementById('searchInput').value.trim();
         const sort = document.getElementById('sortSelect').value;
-        if (q)    url.searchParams.set('q', q);       else url.searchParams.delete('q');
-        if (sort) url.searchParams.set('sort', sort); else url.searchParams.delete('sort');
+        if (q)    url.searchParams.set('q', q);             else url.searchParams.delete('q');
+        if (sort) url.searchParams.set('sort', sort);       else url.searchParams.delete('sort');
+        if (openFilter !== 'all') url.searchParams.set('filter', openFilter);
+        else url.searchParams.delete('filter');
         url.searchParams.delete('page');
         history.replaceState(null, '', url);
         pager.load(list);
