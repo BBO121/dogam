@@ -6874,6 +6874,13 @@ button.btn-more {
   white-space: nowrap;
 }
 
+.shop-price-original {
+  font-weight: 400;
+  color: var(--text-mute);
+  text-decoration: line-through;
+  margin-right: 1px;
+}
+
 /* 상세 모달 상태 */
 .shop-detail-status {
   display: inline-block;

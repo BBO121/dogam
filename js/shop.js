@@ -132,11 +132,15 @@ function renderThumb(item) {
       ? `<img src="${item.image_url}" alt="${item.name}"${item.item_type === 'sticker' ? ' class="shop-sticker-img"' : ''}>`
       : '';
 
+  const hasDiscount = item.original_price && item.original_price > item.price;
+  const discountHtml = hasDiscount
+    ? `<s class="shop-price-original">${item.original_price.toLocaleString()}</s> `
+    : '';
   const statusHtml = {
     owned:        `<span class="shop-thumb-status shop-status--owned">보유중</span>`,
     coming:       `<span class="shop-thumb-status shop-status--coming">준비중</span>`,
-    available:    `<span class="shop-thumb-status shop-status--available">${`${curIcon} ${item.price.toLocaleString()}`}</span>`,
-    insufficient: `<span class="shop-thumb-status shop-status--insufficient">${curIcon} ${item.price.toLocaleString()}</span>`,
+    available:    `<span class="shop-thumb-status shop-status--available">${curIcon} ${discountHtml}${item.price.toLocaleString()}</span>`,
+    insufficient: `<span class="shop-thumb-status shop-status--insufficient">${curIcon} ${discountHtml}${item.price.toLocaleString()}</span>`,
   }[state];
 
   // item 전달 시 실제 DB UUID 사용
@@ -175,10 +179,13 @@ function openDetailModal(item) {
     creditEl.textContent    = item.credit ? `Design by ${item.credit}` : '';
     creditEl.style.display  = item.credit ? '' : 'none';
   }
+  const detailDiscount = item.original_price && item.original_price > item.price
+    ? `<s class="shop-price-original">${item.original_price.toLocaleString()}</s> `
+    : '';
   document.getElementById('detailPrice').innerHTML =
     state === 'insufficient'
-      ? `<span style="color:#ef4444;">${curIcon} ${item.price.toLocaleString()}</span>`
-      : `${curIcon} ${item.price.toLocaleString()}`;
+      ? `<span style="color:#ef4444;">${curIcon} ${detailDiscount}${item.price.toLocaleString()}</span>`
+      : `${curIcon} ${detailDiscount}${item.price.toLocaleString()}`;
 
   const actionEl = document.getElementById('detailAction');
   if (state === 'owned') {
