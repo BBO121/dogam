@@ -54,9 +54,9 @@
         <div class="filter-group">
           <span class="filter-label">상태</span>
           <div class="filter-row" id="statusFilterRow">
-            <button class="filter-btn active" data-status="all">전체</button>
-            <button class="filter-btn" data-status="open">분양중</button>
+            <button class="filter-btn active" data-status="open">분양중</button>
             <button class="filter-btn" data-status="closed">분양완료</button>
+            <button class="filter-btn" data-status="all">전체</button>
           </div>
         </div>
         <div class="filter-group">
@@ -101,7 +101,7 @@
     const OPEN_STATUSES = ['분양중', '확인 대기중', '즉분 대기중'];
 
     let rawData     = [];
-    let activeStatus = 'all';
+    let activeStatus = 'open';
     let activeType   = 'all';
     let searchQuery  = '';
 

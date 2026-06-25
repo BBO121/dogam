@@ -121,7 +121,7 @@
         { data: updateNoteList },
       ] = await Promise.all([
         sb.from('species').select('id, name, image_url, is_sensitive, sensitive_note').order('created_at', { ascending: false }).limit(18),
-        sb.from('adoptions').select('id, character_name, species_name, adoption_type, status, image_url, thumbnail_url, characters(is_sensitive, sensitive_note)').order('created_at', { ascending: false }).limit(8),
+        sb.from('adoptions').select('id, character_name, species_name, adoption_type, status, image_url, thumbnail_url, characters(is_sensitive, sensitive_note)').or('status.is.null,status.neq.완료').order('created_at', { ascending: false }).limit(8),
         sb.from('notices').select('id, title').order('is_pinned', { ascending: false }).order('created_at', { ascending: false }).limit(1),
         sb.from('update_notes').select('id, title').eq('is_pinned', true).order('created_at', { ascending: false }).limit(2),
       ]);
