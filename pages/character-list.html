@@ -145,7 +145,14 @@
 
       if (sort === 'name') list = [...list].sort((a,b) => a.name.localeCompare(b.name,'ko'));
 
-      document.getElementById('charCount').textContent = `총 ${list.length}개의 개체`;
+      // 정확한 총 개수: 클라이언트 length 대신 서버 count 쿼리 사용 (1000개 제한 우회)
+      let countQuery = sb.from('characters').select('id', { count: 'exact', head: true });
+      if (q)  countQuery = countQuery.ilike('name', `%${q}%`);
+      if (sp) countQuery = countQuery.eq('species_name', sp);
+      if (ownerIdParam && ownerParamId) countQuery = countQuery.eq('owner_user_id', ownerParamId);
+      else if (ownerParam)              countQuery = countQuery.eq('owner_nickname', ownerParam);
+      const { count: exactCount } = await countQuery;
+      document.getElementById('charCount').textContent = `총 ${exactCount ?? list.length}개의 개체`;
       document.getElementById('noResult').style.display = list.length ? 'none' : 'block';
 
       if (!list.length) {
