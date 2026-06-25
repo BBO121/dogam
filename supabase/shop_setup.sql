@@ -1,7 +1,7 @@
 -- ============================================
 -- 상점 시스템 DB 설정
 -- 작성일: 2026-06-21
--- 수정일: 2026-06-21 (purchase_type / quantity 확장성 추가)
+-- 수정일: 2026-06-25 (quantity 제거 — unique 보유형만 지원)
 -- ============================================
 
 -- ── 1. shop_items 테이블 ─────────────────────
@@ -29,9 +29,6 @@ CREATE TABLE IF NOT EXISTS public.user_items (
   id           uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id      uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   item_id      uuid        NOT NULL REFERENCES public.shop_items(id) ON DELETE CASCADE,
-  quantity     integer     NOT NULL DEFAULT 1 CHECK (quantity >= 1),
-  -- unique 아이템: 항상 1
-  -- stackable 아이템: 구매할 때마다 +1
   purchased_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE(user_id, item_id)
 );
@@ -53,7 +50,7 @@ CREATE POLICY "user_items: select own"
 
 -- ── 5. purchase_item RPC ─────────────────────
 --    unique    → 중복 구매 차단
---    stackable → ON CONFLICT DO UPDATE (quantity +1)
+--    stackable → ON CONFLICT DO NOTHING (quantity 미지원, 향후 확장)
 CREATE OR REPLACE FUNCTION purchase_item(p_item_id uuid)
 RETURNS json LANGUAGE plpgsql SECURITY DEFINER AS $$
 DECLARE
@@ -61,7 +58,6 @@ DECLARE
   v_item        record;
   v_balance     integer;
   v_new_balance integer;
-  v_quantity    integer;
 BEGIN
   IF v_user_id IS NULL THEN
     RETURN json_build_object('success', false, 'error', 'NOT_AUTHENTICATED');
@@ -79,14 +75,12 @@ BEGIN
     RETURN json_build_object('success', false, 'error', 'ITEM_NOT_AVAILABLE');
   END IF;
 
-  -- unique 아이템 중복 구매 차단
-  IF v_item.purchase_type = 'unique' THEN
-    IF EXISTS (
-      SELECT 1 FROM public.user_items
-      WHERE user_id = v_user_id AND item_id = p_item_id
-    ) THEN
-      RETURN json_build_object('success', false, 'error', 'ALREADY_OWNED');
-    END IF;
+  -- 중복 보유 차단 (unique / stackable 공통 — quantity 미지원 단계)
+  IF EXISTS (
+    SELECT 1 FROM public.user_items
+    WHERE user_id = v_user_id AND item_id = p_item_id
+  ) THEN
+    RETURN json_build_object('success', false, 'error', 'ALREADY_OWNED');
   END IF;
 
   -- 재화 잔액 확인 (FOR UPDATE로 동시 구매 방지)
@@ -120,20 +114,8 @@ BEGIN
   END IF;
 
   -- user_items 지급
-  --   unique    : 단순 INSERT (unique 제약으로 중복 방지됨)
-  --   stackable : ON CONFLICT → quantity +1
-  IF v_item.purchase_type = 'unique' THEN
-    INSERT INTO public.user_items (user_id, item_id, quantity)
-    VALUES (v_user_id, p_item_id, 1);
-
-    v_quantity := 1;
-  ELSE
-    INSERT INTO public.user_items (user_id, item_id, quantity)
-    VALUES (v_user_id, p_item_id, 1)
-    ON CONFLICT (user_id, item_id) DO UPDATE
-    SET quantity = public.user_items.quantity + 1
-    RETURNING quantity INTO v_quantity;
-  END IF;
+  INSERT INTO public.user_items (user_id, item_id)
+  VALUES (v_user_id, p_item_id);
 
   -- currency_logs 기록
   INSERT INTO public.currency_logs
@@ -152,7 +134,6 @@ BEGIN
     'success',       true,
     'item_id',       p_item_id,
     'purchase_type', v_item.purchase_type,
-    'quantity',      v_quantity,
     'new_balance',   v_new_balance,
     'currency',      v_item.currency
   );
