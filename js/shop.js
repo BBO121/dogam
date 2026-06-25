@@ -105,14 +105,30 @@ function renderCategories() {
   }).join('');
 }
 
+// ── 가격 HTML 생성 (이중 통화 지원) ────────────────────────
+function buildPriceHtml(item, discountHtml = '') {
+  const curIcon = CURRENCY_ICON[item.currency] ?? CURRENCY_LABEL[item.currency] ?? item.currency;
+  let html = `${curIcon} ${discountHtml}${item.price.toLocaleString()}`;
+  if (item.secondary_currency && item.secondary_price) {
+    const secIcon = CURRENCY_ICON[item.secondary_currency] ?? CURRENCY_LABEL[item.secondary_currency] ?? item.secondary_currency;
+    html += ` + ${secIcon} ${item.secondary_price.toLocaleString()}`;
+  }
+  return html;
+}
+
 // ── 썸네일 렌더 ──────────────────────────────────────────
 function getItemState(item) {
   if (_ownedSet.has(item.id))        return 'owned';
   if (item.status === 'coming_soon') return 'coming';
   const balance = item.currency === 'research_records'
     ? (_wallet?.research_records ?? 0) : (_wallet?.keys ?? 0);
-  if (item.price === 0 || balance >= item.price) return 'available';
-  return 'insufficient';
+  if (item.price > 0 && balance < item.price) return 'insufficient';
+  if (item.secondary_currency && item.secondary_price) {
+    const secBalance = item.secondary_currency === 'research_records'
+      ? (_wallet?.research_records ?? 0) : (_wallet?.keys ?? 0);
+    if (secBalance < item.secondary_price) return 'insufficient';
+  }
+  return 'available';
 }
 
 function renderThumb(item) {
@@ -136,11 +152,12 @@ function renderThumb(item) {
   const discountHtml = hasDiscount
     ? `<s class="shop-price-original">${item.original_price.toLocaleString()}</s> `
     : '';
+  const priceHtml = buildPriceHtml(item, discountHtml);
   const statusHtml = {
     owned:        `<span class="shop-thumb-status shop-status--owned">보유중</span>`,
     coming:       `<span class="shop-thumb-status shop-status--coming">준비중</span>`,
-    available:    `<span class="shop-thumb-status shop-status--available">${curIcon} ${discountHtml}${item.price.toLocaleString()}</span>`,
-    insufficient: `<span class="shop-thumb-status shop-status--insufficient">${curIcon} ${discountHtml}${item.price.toLocaleString()}</span>`,
+    available:    `<span class="shop-thumb-status shop-status--available">${priceHtml}</span>`,
+    insufficient: `<span class="shop-thumb-status shop-status--insufficient">${priceHtml}</span>`,
   }[state];
 
   // item 전달 시 실제 DB UUID 사용
@@ -182,10 +199,11 @@ function openDetailModal(item) {
   const detailDiscount = item.original_price && item.original_price > item.price
     ? `<s class="shop-price-original">${item.original_price.toLocaleString()}</s> `
     : '';
+  const detailPriceHtml = buildPriceHtml(item, detailDiscount);
   document.getElementById('detailPrice').innerHTML =
     state === 'insufficient'
-      ? `<span style="color:#ef4444;">${curIcon} ${detailDiscount}${item.price.toLocaleString()}</span>`
-      : `${curIcon} ${detailDiscount}${item.price.toLocaleString()}`;
+      ? `<span style="color:#ef4444;">${detailPriceHtml}</span>`
+      : detailPriceHtml;
 
   const actionEl = document.getElementById('detailAction');
   if (state === 'owned') {
@@ -211,8 +229,7 @@ function closeDetailModal() {
 // ── 구매 확인 모달 ────────────────────────────────────────
 function openShopModal(item) {
   _pendingItem = typeof item === 'string' ? JSON.parse(item) : item;
-  const isFree   = _pendingItem.price === 0;
-  const curIcon  = CURRENCY_ICON[_pendingItem.currency] ?? CURRENCY_LABEL[_pendingItem.currency] ?? _pendingItem.currency;
+  const confirmPriceHtml = buildPriceHtml(_pendingItem);
 
   document.getElementById('shopModalDesc').innerHTML = `
     <div class="wallet-confirm-row">
@@ -221,9 +238,7 @@ function openShopModal(item) {
     </div>
     <div class="wallet-confirm-row">
       <span class="wallet-confirm-label">가격</span>
-      <span class="wallet-confirm-value wallet-confirm-amount">
-        ${curIcon} ${_pendingItem.price.toLocaleString()}
-      </span>
+      <span class="wallet-confirm-value wallet-confirm-amount">${confirmPriceHtml}</span>
     </div>`;
 
   const btn = document.getElementById('shopModalBtn');
@@ -258,6 +273,10 @@ async function doPurchase() {
   if (_wallet) {
     if (data.currency === 'research_records') _wallet.research_records = data.new_balance;
     else _wallet.keys = data.new_balance;
+    if (data.sec_new_balance !== undefined && _pendingItem.secondary_currency) {
+      if (_pendingItem.secondary_currency === 'research_records') _wallet.research_records = data.sec_new_balance;
+      else _wallet.keys = data.sec_new_balance;
+    }
   }
   if (typeof updateHeaderCurrencyDisplay === 'function') {
     updateHeaderCurrencyDisplay({ research_records: _wallet?.research_records, keys: _wallet?.keys });
