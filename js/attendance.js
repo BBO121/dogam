@@ -25,9 +25,9 @@ async function initPage() {
 }
 
 async function loadData() {
-  const now = new Date();
-  _year     = now.getFullYear();
-  _month    = now.getMonth();
+  const now = new Date(new Date().getTime() + 9 * 60 * 60 * 1000); // KST 기준
+  _year     = now.getUTCFullYear();
+  _month    = now.getUTCMonth();
 
   // 연속 출석 계산을 위해 충분한 기간 로드 (최대 400일)
   const [logsRes, walletRes] = await Promise.all([
@@ -44,19 +44,17 @@ async function loadData() {
   _streak        = calcStreak(_attendedDates);
 }
 
-// 연속 출석일 계산: 오늘부터 하루씩 뒤로 가며 count
+// 연속 출석일 계산: KST 오늘부터 하루씩 뒤로 가며 count
 function calcStreak(dates) {
   let streak = 0;
-  let d      = new Date();
-  // 한국 시간 기준 오늘
-  const kstOffset = 9 * 60;
-  d = new Date(d.getTime() + (kstOffset - d.getTimezoneOffset()) * 60000);
+  // KST 기준 오늘을 UTC ms로 계산
+  let kstMs  = new Date().getTime() + 9 * 60 * 60 * 1000;
 
   while (true) {
-    const dateStr = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    const dateStr = new Date(kstMs).toISOString().slice(0, 10);
     if (!dates.has(dateStr)) break;
     streak++;
-    d.setDate(d.getDate() - 1);
+    kstMs -= 24 * 60 * 60 * 1000; // 하루 전
   }
   return streak;
 }
@@ -217,11 +215,15 @@ async function checkIn() {
 // ── 유틸 ─────────────────────────────────────────────────
 function pad(n) { return String(n).padStart(2, '0'); }
 
+// KST 기준 날짜 문자열 반환 (UTC+9 고정)
+// .getTime()은 항상 UTC ms, .toISOString()은 항상 UTC 포맷이므로
+// +9시간 더한 뒤 ISO slice하면 정확히 KST 날짜를 얻음
+function getKSTDateString(date = new Date()) {
+  return new Date(date.getTime() + 9 * 60 * 60 * 1000).toISOString().slice(0, 10);
+}
+
 function todayStr() {
-  // 한국 시간 기준 오늘 날짜
-  const d   = new Date();
-  const kst = new Date(d.getTime() + (9 * 60 - d.getTimezoneOffset()) * 60000);
-  return `${kst.getFullYear()}-${pad(kst.getMonth() + 1)}-${pad(kst.getDate())}`;
+  return getKSTDateString();
 }
 
 function showResultMsg(text, type) {
