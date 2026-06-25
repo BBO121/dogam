@@ -81,6 +81,11 @@ async function initSidebar() {
 
     <!-- ── 종족주 신청 단일 메뉴 ─────────────────────── -->
     <a href="species-apply.html" class="sidebar-top-link ${path === 'species-apply.html' || path === 'species-apply-write.html' || path === 'species-apply-detail.html' ? 'active' : ''}">✨종족주 신청✨<span class="sidebar-notif-badge" id="sidebarApplyBadge" style="display:none">0</span></a>
+
+    <!-- ── 서버 시간 ────────────────────────────────── -->
+    <div class="sidebar-server-clock-wrap">
+      <span class="server-clock server-clock--sidebar">서버시간 --:--:--</span>
+    </div>
   `;
 
   // 현재 페이지에 해당하는 아코디언 자동 열기
@@ -512,7 +517,10 @@ async function loadAdminBadges() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', initSidebar);
+document.addEventListener('DOMContentLoaded', () => {
+  initSidebar();
+  initServerClock();
+});
 
 // ── 가이드맵 동적 로드 (미구현, 추후 연결 예정) ────────────────────────────────
 // function _loadGuideTour() {

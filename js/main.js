@@ -1,3 +1,34 @@
+/* ── 서버 시간 유틸 ────────────────────────── */
+let _serverTimerInterval = null;
+let _serverResyncInterval = null;
+
+async function initServerClock() {
+  if (typeof sb === 'undefined') return;
+
+  async function fetchAndTick() {
+    const { data, error } = await sb.rpc('get_server_time');
+    if (error || !data) return;
+
+    // UTC → KST (+9)
+    let serverMs = new Date(data).getTime() + 9 * 60 * 60 * 1000;
+
+    clearInterval(_serverTimerInterval);
+    _serverTimerInterval = setInterval(() => {
+      serverMs += 1000;
+      const d   = new Date(serverMs);
+      const hh  = String(d.getUTCHours()).padStart(2, '0');
+      const mm  = String(d.getUTCMinutes()).padStart(2, '0');
+      const ss  = String(d.getUTCSeconds()).padStart(2, '0');
+      const txt = `KST ${hh}:${mm}:${ss}`;
+      document.querySelectorAll('.server-clock').forEach(el => el.textContent = txt);
+    }, 1000);
+  }
+
+  await fetchAndTick();
+  clearInterval(_serverResyncInterval);
+  _serverResyncInterval = setInterval(fetchAndTick, 5 * 60 * 1000); // 5분마다 재동기화
+}
+
 /* ── 페이지네이션 유틸 ─────────────────────── */
 const PER_PAGE = 30;
 

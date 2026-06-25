@@ -3884,6 +3884,20 @@ button.btn-more {
 /* ═══════════════════════════════════════
    알림 — 헤더 벨
 ═══════════════════════════════════════ */
+/* 서버 시간 — 사이드바 최하단 우측 */
+.sidebar-server-clock-wrap {
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.server-clock--sidebar {
+  display: block;
+  text-align: right;
+  font-size: 11px;
+  color: var(--text-mute);
+  font-variant-numeric: tabular-nums;
+}
+
 .notif-bell-wrap {
   position: relative;
   display: flex;
@@ -4475,6 +4489,8 @@ button.btn-more {
     padding: 70px 16px 40px;
     transition: left 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     box-shadow: none;
+    display: flex;
+    flex-direction: column;
   }
   .sidebar--open {
     left: 0;

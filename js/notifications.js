@@ -18,6 +18,7 @@ function insertNotifBell() {
   const nav = document.querySelector('.header-nav');
   if (!nav || document.getElementById('notifBellWrap')) return;
 
+
   const wrap = document.createElement('div');
   wrap.className = 'notif-bell-wrap';
   wrap.id = 'notifBellWrap';
@@ -39,6 +40,7 @@ function insertNotifBell() {
     </div>
   `;
   nav.prepend(wrap);
+
 
   document.addEventListener('click', (e) => {
     const panel   = document.getElementById('notifPanel');
