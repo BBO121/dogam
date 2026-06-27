@@ -7552,6 +7552,14 @@ button.btn-more {
   flex: none;
 }
 
+@media (max-width: 767px) {
+  .bag-ep-tricolumn--left {
+    justify-content: center;
+  }
+  .bag-ep-tricolumn--left .bag-ep-side {
+    flex: 1;
+  }
+}
 
 /* ── 프로필 꾸미기 변경 모달 ── */
 .deco-modal-card {
