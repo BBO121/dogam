@@ -181,6 +181,40 @@
             </div>
           </section>
 
+          <!-- 프로필 꾸미기 -->
+          <section class="section">
+            <h2 class="settings-section-title">프로필 꾸미기</h2>
+            <div class="settings-form">
+              <div class="bag-ep-tricolumn bag-ep-tricolumn--left">
+
+                <!-- 좌측: 프레임 -->
+                <div class="bag-ep-side bag-ep-side--left">
+                  <span class="bag-ep-item-label">프레임</span>
+                  <p class="bag-ep-name" id="settingsFrameName">없음</p>
+                  <button class="bag-equip-btn-sm" type="button" onclick="openDecoModal('frame')">변경</button>
+                  <button class="bag-unequip-btn" id="settingsFrameUnequipBtn" type="button" onclick="settingsUnequipFrame()" style="display:none;">해제하기</button>
+                </div>
+
+                <!-- 가운데: 아바타 미리보기 -->
+                <div style="display:grid; place-items:center; flex-shrink:0; line-height:0;">
+                  <div class="bag-ep-preview-wrap" id="settingsDecoFrameWrap" style="grid-area:1/1;">
+                    <div class="bag-ep-avatar" id="settingsDecoAvatar"></div>
+                  </div>
+                  <img id="settingsDecoStickerImg" class="bag-ep-sticker-overlay" src="" alt="" style="grid-area:1/1; display:none;">
+                </div>
+
+                <!-- 우측: 스티커 -->
+                <div class="bag-ep-side bag-ep-side--right">
+                  <span class="bag-ep-item-label">스티커</span>
+                  <p class="bag-ep-name" id="settingsStickerName">없음</p>
+                  <button class="bag-equip-btn-sm" type="button" onclick="openDecoModal('sticker')">변경</button>
+                  <button class="bag-unequip-btn" id="settingsStickerUnequipBtn" type="button" onclick="settingsUnequipSticker()" style="display:none;">해제하기</button>
+                </div>
+
+              </div>
+            </div>
+          </section>
+
           <!-- 개인 워터마크 -->
           <section class="section">
             <h2 class="settings-section-title">개인 워터마크</h2>
@@ -300,6 +334,24 @@
       <p class="badge-modal-obtainable" id="badgeModalObtainable" style="display:none;"></p>
       <p class="badge-modal-desc" id="badgeModalDesc"></p>
       <p class="badge-modal-date" id="badgeModalDate"></p>
+    </div>
+  </div>
+
+  <!-- 프로필 꾸미기 변경 모달 -->
+  <div class="modal-overlay" id="decoModal" style="display:none;" onclick="closeDecoModal(event)">
+    <div class="modal-card deco-modal-card">
+      <div class="deco-modal-header">
+        <h3 class="deco-modal-title" id="decoModalTitle">프레임 변경</h3>
+        <button class="badge-modal-close" onclick="closeDecoModal()" aria-label="닫기">✕</button>
+      </div>
+      <div id="decoModalGrid" class="deco-modal-grid"></div>
+      <div class="deco-modal-footer">
+        <a href="my-bag.html" class="deco-modal-bag-link">내 가방 바로가기</a>
+        <div class="deco-modal-footer-actions">
+          <button class="btn-ghost" type="button" onclick="closeDecoModal()">취소</button>
+          <button class="btn-secondary" type="button" id="decoApplyBtn" onclick="applyDecoSelection()" disabled>적용</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -912,6 +964,7 @@
 
       // 프레임·스티커까지 준비된 뒤 한 번에 표시 (myEquip은 초기 Promise.all에서 이미 fetch)
       await applyProfileFrame(user.id, myEquip);
+      initSettingsDeco(myEquip);
 
       document.getElementById('profileLoading').style.display = 'none';
       document.getElementById('profileContent').style.display = 'block';
@@ -1426,6 +1479,225 @@
       }
 
       await deleteAccount();
+    }
+
+    // ── 프로필 꾸미기 (설정 탭) ─────────────────────────────
+    let _settingsEquipFrameId   = null;
+    let _settingsEquipStickerId = null;
+    let _decoModalType          = null;
+    let _decoSelectedItemId     = null;
+    let _decoItemsCache         = {};
+
+    function initSettingsDeco(equip) {
+      _settingsEquipFrameId   = equip?.equipped_frame_id   ?? null;
+      _settingsEquipStickerId = equip?.equipped_sticker_id ?? null;
+      renderSettingsDeco();
+    }
+
+    async function renderSettingsDeco() {
+      const avatarUrl   = currentUser?.user_metadata?.avatar_url || '';
+      const avatarStyle = avatarUrl
+        ? `background-image:url('${avatarUrl}');background-size:cover;background-position:center;`
+        : '';
+
+      const avatarEl     = document.getElementById('settingsDecoAvatar');
+      const frameWrapEl  = document.getElementById('settingsDecoFrameWrap');
+      const stickerImgEl = document.getElementById('settingsDecoStickerImg');
+
+      if (avatarEl) avatarEl.style.cssText = avatarStyle;
+
+      // 프레임
+      const frameNameEl    = document.getElementById('settingsFrameName');
+      const frameUnequipEl = document.getElementById('settingsFrameUnequipBtn');
+
+      if (frameWrapEl) {
+        [...frameWrapEl.classList].filter(c => c.startsWith('frame-')).forEach(c => frameWrapEl.classList.remove(c));
+      }
+
+      if (_settingsEquipFrameId) {
+        const { data: frameItem } = await sb.from('shop_items')
+          .select('name, style_key')
+          .eq('id', _settingsEquipFrameId)
+          .maybeSingle();
+        if (frameItem) {
+          if (frameNameEl)                        frameNameEl.textContent      = frameItem.name;
+          if (frameWrapEl && frameItem.style_key)  frameWrapEl.classList.add(frameItem.style_key);
+          if (frameUnequipEl)                     frameUnequipEl.style.display = '';
+        }
+      } else {
+        if (frameNameEl)    frameNameEl.textContent      = '없음';
+        if (frameUnequipEl) frameUnequipEl.style.display = 'none';
+      }
+
+      // 스티커
+      const stickerNameEl    = document.getElementById('settingsStickerName');
+      const stickerUnequipEl = document.getElementById('settingsStickerUnequipBtn');
+
+      if (_settingsEquipStickerId) {
+        const { data: stickerItem } = await sb.from('shop_items')
+          .select('name, image_url')
+          .eq('id', _settingsEquipStickerId)
+          .maybeSingle();
+        if (stickerItem) {
+          if (stickerNameEl)    stickerNameEl.textContent   = stickerItem.name;
+          if (stickerImgEl) {
+            stickerImgEl.src           = stickerItem.image_url;
+            stickerImgEl.alt           = stickerItem.name;
+            stickerImgEl.style.display = '';
+          }
+          if (stickerUnequipEl) stickerUnequipEl.style.display = '';
+        }
+      } else {
+        if (stickerNameEl)    stickerNameEl.textContent      = '없음';
+        if (stickerImgEl)     stickerImgEl.style.display     = 'none';
+        if (stickerUnequipEl) stickerUnequipEl.style.display = 'none';
+      }
+    }
+
+    async function openDecoModal(type) {
+      _decoModalType      = type;
+      _decoSelectedItemId = null;
+
+      const titleEl  = document.getElementById('decoModalTitle');
+      const applyBtn = document.getElementById('decoApplyBtn');
+      const gridEl   = document.getElementById('decoModalGrid');
+
+      titleEl.textContent = type === 'frame' ? '프레임 변경' : '스티커 변경';
+      applyBtn.disabled   = true;
+      gridEl.innerHTML    = '<p class="empty-state" style="padding:24px 0; text-align:center;">불러오는 중...</p>';
+      document.getElementById('decoModal').style.display = 'flex';
+
+      if (!_decoItemsCache[type]) {
+        const { data: myItems } = await sb.from('user_items')
+          .select('item_id')
+          .eq('user_id', currentUser.id);
+
+        if (!myItems?.length) {
+          gridEl.innerHTML = '<p class="empty-state" style="padding:24px 0; text-align:center;">보유한 아이템이 없어요.</p>';
+          return;
+        }
+
+        const itemIds = myItems.map(r => r.item_id);
+        const { data: shopItems } = await sb.from('shop_items')
+          .select('id, name, item_type, style_key, image_url, sort_order')
+          .in('id', itemIds)
+          .eq('item_type', type)
+          .order('sort_order', { ascending: true });
+
+        _decoItemsCache[type] = shopItems || [];
+      }
+
+      const items     = _decoItemsCache[type];
+      const typeLabel = type === 'frame' ? '프레임' : '스티커';
+      if (!items.length) {
+        gridEl.innerHTML = `<p class="empty-state" style="padding:24px 0; text-align:center;">보유한 ${typeLabel}이 없어요.</p>`;
+        return;
+      }
+
+      const currentId = type === 'frame' ? _settingsEquipFrameId : _settingsEquipStickerId;
+      gridEl.innerHTML = items.map(item => {
+        const isEquipped = item.id === currentId;
+        const previewHtml = type === 'frame'
+          ? `<div class="deco-modal-frame-preview ${item.style_key || ''}"></div>`
+          : item.image_url
+            ? `<img src="${item.image_url}" alt="${item.name}" class="deco-modal-sticker-img">`
+            : '';
+        return `
+          <div class="deco-modal-item${isEquipped ? ' deco-modal-item--equipped' : ''}"
+               data-item-id="${item.id}" onclick="selectDecoItem('${item.id}')">
+            <div class="deco-modal-item-preview">
+              ${previewHtml}
+              ${isEquipped ? '<span class="deco-modal-equipped-badge">착용중</span>' : ''}
+            </div>
+            <p class="deco-modal-item-name">${item.name}</p>
+          </div>`;
+      }).join('');
+    }
+
+    function selectDecoItem(itemId) {
+      _decoSelectedItemId = itemId;
+      document.querySelectorAll('.deco-modal-item').forEach(el => {
+        el.classList.toggle('deco-modal-item--selected', el.dataset.itemId === itemId);
+      });
+      document.getElementById('decoApplyBtn').disabled = false;
+    }
+
+    async function applyDecoSelection() {
+      if (!_decoSelectedItemId || !_decoModalType) return;
+      const btn = document.getElementById('decoApplyBtn');
+      btn.disabled    = true;
+      btn.textContent = '적용 중...';
+
+      const rpcName = _decoModalType === 'frame' ? 'equip_frame' : 'equip_sticker';
+      const { data, error } = await sb.rpc(rpcName, { p_item_id: _decoSelectedItemId });
+
+      if (error || !data?.success) {
+        btn.disabled    = false;
+        btn.textContent = '적용';
+        alert('장착 중 오류가 발생했습니다.');
+        return;
+      }
+
+      if (_decoModalType === 'frame') {
+        _settingsEquipFrameId = data.equipped_frame_id;
+      } else {
+        _settingsEquipStickerId = data.equipped_sticker_id;
+      }
+
+      _decoItemsCache = {};
+      closeDecoModal();
+      btn.textContent = '적용';
+      await renderSettingsDeco();
+      await applyProfileFrame(currentUser.id);
+    }
+
+    function closeDecoModal(e) {
+      if (e && e.target !== document.getElementById('decoModal')) return;
+      document.getElementById('decoModal').style.display = 'none';
+      _decoSelectedItemId = null;
+      _decoModalType      = null;
+    }
+
+    async function settingsUnequipFrame() {
+      const btn = document.getElementById('settingsFrameUnequipBtn');
+      btn.disabled    = true;
+      btn.textContent = '처리 중...';
+
+      const { data, error } = await sb.rpc('unequip_frame');
+
+      if (error || !data?.success) {
+        btn.disabled    = false;
+        btn.textContent = '해제하기';
+        alert('해제 중 오류가 발생했습니다.');
+        return;
+      }
+
+      _settingsEquipFrameId = null;
+      _decoItemsCache       = {};
+      btn.textContent       = '해제하기';
+      await renderSettingsDeco();
+      await applyProfileFrame(currentUser.id);
+    }
+
+    async function settingsUnequipSticker() {
+      const btn = document.getElementById('settingsStickerUnequipBtn');
+      btn.disabled    = true;
+      btn.textContent = '처리 중...';
+
+      const { data, error } = await sb.rpc('unequip_sticker');
+
+      if (error || !data?.success) {
+        btn.disabled    = false;
+        btn.textContent = '해제하기';
+        alert('해제 중 오류가 발생했습니다.');
+        return;
+      }
+
+      _settingsEquipStickerId = null;
+      _decoItemsCache         = {};
+      btn.textContent         = '해제하기';
+      await renderSettingsDeco();
+      await applyProfileFrame(currentUser.id);
     }
 
     initProfile();

@@ -15,6 +15,7 @@ AS $$
 DECLARE
   v_user_id     uuid;
   v_nickname    text;
+  v_ach_name    text;
   v_is_hidden   boolean;
   v_amount      integer;
   v_new_balance integer;
@@ -42,25 +43,25 @@ BEGIN
     );
   END IF;
 
-  -- 중복 보상 방지 (같은 업적 코드로 이미 지급 기록이 있으면 스킵)
+  -- 업적 이름 + is_hidden 조회
+  SELECT name, is_hidden
+  INTO   v_ach_name, v_is_hidden
+  FROM   achievements
+  WHERE  code = p_achievement_code;
+
+  -- 중복 보상 방지 (같은 업적 이름으로 이미 지급 기록이 있으면 스킵)
   IF EXISTS (
     SELECT 1
     FROM currency_logs
     WHERE user_id = v_user_id
       AND type    = 'achievement_reward'
-      AND note    = p_achievement_code
+      AND note    = v_ach_name
   ) THEN
     RETURN jsonb_build_object(
       'success', false,
       'error',   'ALREADY_REWARDED'
     );
   END IF;
-
-  -- is_hidden 조회
-  SELECT is_hidden
-  INTO   v_is_hidden
-  FROM   achievements
-  WHERE  code = p_achievement_code;
 
   -- 지급액 결정
   v_amount := CASE WHEN v_is_hidden THEN 10 ELSE 5 END;
@@ -82,14 +83,15 @@ BEGIN
   RETURNING research_records INTO v_new_balance;
 
   -- 거래 로그 기록
-  INSERT INTO currency_logs (user_id, type, currency, amount, balance_after, note)
+  INSERT INTO currency_logs (user_id, type, source, currency, amount, balance_after, note)
   VALUES (
     v_user_id,
     'achievement_reward',
+    'achievement',
     'research_records',
     v_amount,
     v_new_balance,
-    p_achievement_code
+    v_ach_name
   );
 
   -- 알림 생성 (user_id 기준 — 닉네임 없는 유저도 수신 가능)

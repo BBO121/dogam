@@ -83,10 +83,11 @@ BEGIN
   RETURNING research_records INTO v_new_balance;
 
   -- 거래 로그 기록 (유저당 1건)
-  INSERT INTO currency_logs (user_id, type, currency, amount, balance_after, note)
+  INSERT INTO currency_logs (user_id, type, source, currency, amount, balance_after, note)
   VALUES (
     p_user_id,
     'achievement_backfill',
+    'achievement',
     'research_records',
     v_total,
     v_new_balance,
