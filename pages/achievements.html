@@ -273,7 +273,13 @@
               <p class="achievement-item-name">${a.name}</p>
               <p class="achievement-item-desc">${a.description || ''}</p>
             </div>
-            <span class="achievement-item-date">${date}</span>
+            <div class="achievement-item-right">
+              <span class="achievement-item-reward">
+                <img src="../images/icons/currency-record.png" class="ach-reward-icon" alt="연구기록">
+                +${a.is_hidden ? 10 : 5}
+              </span>
+              <span class="achievement-item-date">${date}</span>
+            </div>
           </div>`;
       }
       if (a.is_hidden) {
