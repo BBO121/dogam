@@ -301,6 +301,8 @@
       const rows = slice.map(log => {
         const isPlus      = RECEIVE_TYPES.has(log.type);
         const curLabel    = CURRENCY_LABEL[log.currency] ?? log.currency;
+        const iconFile    = log.currency === 'keys' ? 'currency-key' : 'currency-record';
+        const curIconHtml = `<img src="../images/icons/${iconFile}.png" class="wlog-currency-icon-sm" alt="${curLabel}" title="${curLabel}">`;
         const amtHtml     = isPlus
           ? `<span class="wallet-log-amount--plus">+${fmt(log.amount)}</span>`
           : `<span class="wallet-log-amount--minus">-${fmt(log.amount)}</span>`;
@@ -325,7 +327,7 @@
             <div class="transfer-table-cell wlog-type">
               <span class="wallet-log-type-badge ${typeClass}">${typeLabel}</span>
             </div>
-            <div class="transfer-table-cell wlog-amount">${amtHtml}</div>
+            <div class="transfer-table-cell wlog-amount">${amtHtml}${curIconHtml}</div>
             <div class="transfer-table-cell wlog-balance" style="color:var(--text-sub);">${fmt(log.balance_after)}</div>
             <div class="transfer-table-cell wlog-counterpart">${counterpart}</div>
             <div class="transfer-table-cell wlog-note" style="color:var(--text-mute);">${log.note ?? '—'}</div>
@@ -333,7 +335,7 @@
               <div class="wlog-mobile-left">
                 <span class="wallet-log-type-badge ${typeClass} wlog-badge-mobile">${typeLabel}</span>
                 ${amtHtml}
-                <span class="wlog-currency-label">${curLabel}</span>
+                <span class="wlog-currency-label">${curIconHtml}</span>
               </div>
               <div class="wlog-mobile-right">${mobileRight}</div>
             </div>

@@ -6233,6 +6233,17 @@ button.btn-more {
 .wlog-note-label     { display: none; }
 .wlog-note-text      { display: none; }
 .wlog-currency-label { display: none; }
+.wlog-currency-icon-sm {
+  width: 14px;
+  height: 14px;
+  opacity: 0.75;
+  flex-shrink: 0;
+}
+.wlog-amount {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
 
 /* 내 지갑 — 모바일 */
 @media (max-width: 767px) {
