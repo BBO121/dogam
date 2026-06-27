@@ -1,5 +1,5 @@
 -- ============================================================
--- grant_achievement_backfill
+-- [STEP 3] grant_achievement_backfill
 -- 기존 업적 보유 유저 1회 필백: 연구기록 지급 + currency_logs + notifications
 -- 호출: sb.rpc('grant_achievement_backfill', { p_user_id: userId })
 -- 중복 실행 안전: currency_logs에 achievement_backfill 기록이 있으면 스킵
@@ -66,7 +66,7 @@ BEGIN
     );
   END IF;
 
-  -- 닉네임 조회 (알림용)
+  -- 닉네임 조회 (알림 user_nickname 용 — 없어도 user_id로 알림 전달)
   SELECT COALESCE(
     raw_user_meta_data->>'display_name',
     raw_user_meta_data->>'nickname'
@@ -93,16 +93,15 @@ BEGIN
     '업적 보상 필백'
   );
 
-  -- 알림 생성 (유저당 1개)
-  IF v_nickname IS NOT NULL THEN
-    INSERT INTO notifications (user_nickname, type, message, link)
-    VALUES (
-      v_nickname,
-      'achievement',
-      '기존 업적 보상으로 연구기록 +' || v_total || '을 획득했습니다!',
-      'my-wallet.html'
-    );
-  END IF;
+  -- 알림 생성 (user_id 기준 — 닉네임 없는 유저도 수신 가능, 유저당 1개)
+  INSERT INTO notifications (user_id, user_nickname, type, message, link)
+  VALUES (
+    p_user_id,
+    v_nickname,
+    'achievement',
+    '기존 업적 보상으로 연구기록 +' || v_total || '을 획득했습니다!',
+    'my-wallet.html'
+  );
 
   RETURN jsonb_build_object(
     'success',     true,

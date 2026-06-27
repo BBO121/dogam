@@ -1,5 +1,5 @@
 -- ============================================================
--- grant_achievement_reward
+-- [STEP 2] grant_achievement_reward
 -- 업적 신규 획득 시 연구기록 지급 + currency_logs + notifications
 -- 호출: sb.rpc('grant_achievement_reward', { p_achievement_code: code })
 -- ============================================================
@@ -65,7 +65,7 @@ BEGIN
   -- 지급액 결정
   v_amount := CASE WHEN v_is_hidden THEN 10 ELSE 5 END;
 
-  -- 닉네임 조회 (알림용)
+  -- 닉네임 조회 (알림 user_nickname 용 — 없어도 user_id로 알림 전달)
   SELECT COALESCE(
     raw_user_meta_data->>'display_name',
     raw_user_meta_data->>'nickname'
@@ -92,16 +92,15 @@ BEGIN
     p_achievement_code
   );
 
-  -- 알림 생성
-  IF v_nickname IS NOT NULL THEN
-    INSERT INTO notifications (user_nickname, type, message, link)
-    VALUES (
-      v_nickname,
-      'achievement',
-      '업적 보상으로 연구기록 +' || v_amount || '를 획득했습니다!',
-      'my-wallet.html'
-    );
-  END IF;
+  -- 알림 생성 (user_id 기준 — 닉네임 없는 유저도 수신 가능)
+  INSERT INTO notifications (user_id, user_nickname, type, message, link)
+  VALUES (
+    v_user_id,
+    v_nickname,
+    'achievement',
+    '업적 보상으로 연구기록 +' || v_amount || '를 획득했습니다!',
+    'my-wallet.html'
+  );
 
   RETURN jsonb_build_object(
     'success',     true,
