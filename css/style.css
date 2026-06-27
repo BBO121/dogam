@@ -4735,7 +4735,8 @@ button.btn-more {
     max-width: 100%;
   }
   #badgeModal,
-  #shopDetailModal {
+  #shopDetailModal,
+  #decoModal {
     align-items: center;
   }
   /* 공지사항 */
