@@ -46,7 +46,7 @@ window.awardAchievement = async function(code, { pending = false } = {}) {
 
     // 업적 정보 조회
     const { data: ach, error: achErr } = await sb.from('achievements')
-      .select('name, description')
+      .select('name, description, is_hidden')
       .eq('code', code)
       .single();
     console.log('[업적DBG] achievements select — ach:', ach, '/ achErr:', achErr);
@@ -68,6 +68,7 @@ window.awardAchievement = async function(code, { pending = false } = {}) {
       const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname;
       if (nickname) {
         await sb.from('notifications').insert({
+          user_id:       user.id,
           user_nickname: nickname,
           type:          'achievement',
           message:       `[${ach.name}] 업적을 달성했습니다.`,
@@ -76,6 +77,27 @@ window.awardAchievement = async function(code, { pending = false } = {}) {
       }
     } catch (notifErr) {
       console.warn('[업적] 알림 생성 실패:', code, notifErr);
+    }
+
+    // 재화 보상 지급 — 알림/로그는 RPC 내부에서 처리
+    try {
+      const { data: reward, error: rewardErr } = await sb.rpc('grant_achievement_reward', { p_achievement_code: code });
+      console.log('[업적DBG] grant_achievement_reward — reward:', reward, '/ error:', rewardErr);
+      if (rewardErr) {
+        console.error('[업적] RPC 오류', rewardErr);
+        console.error(rewardErr.message);
+        console.error(rewardErr.details);
+        console.error(rewardErr.hint);
+        console.error(rewardErr.code);
+      } else if (reward?.success) {
+        if (typeof updateHeaderCurrencyDisplay === 'function') {
+          updateHeaderCurrencyDisplay({ research_records: reward.new_balance });
+        }
+      } else {
+        console.warn('[업적] 재화 지급 실패 (success=false):', code, reward);
+      }
+    } catch (rewardErr) {
+      console.warn('[업적] 재화 지급 예외:', code, rewardErr);
     }
   } catch (e) {
     console.error('[업적DBG] 예외 발생 — code:', code, '/ e:', e);

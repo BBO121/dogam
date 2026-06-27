@@ -62,25 +62,34 @@
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
   <script>
-    let myNick = null;
+    let myUserId = null;
+    let myNick   = null;
+
+    // user_id 기준 필터 (기존 데이터는 user_nickname fallback)
+    function notifFilter() {
+      return myNick
+        ? `user_id.eq.${myUserId},user_nickname.eq.${myNick}`
+        : `user_id.eq.${myUserId}`;
+    }
 
     async function initPage() {
       const user = await getUser();
       if (!user) { window.location.href = 'login.html'; return; }
 
-      myNick = user.user_metadata?.display_name || user.user_metadata?.nickname;
+      myUserId = user.id;
+      myNick   = user.user_metadata?.display_name || user.user_metadata?.nickname;
 
       document.getElementById('pageLoading').style.display = 'none';
       document.getElementById('pageContent').style.display = 'block';
 
       await loadNotifications();
-      markAllReadSilent(myNick);
+      markAllReadSilent(myUserId, myNick);
     }
 
     async function loadNotifications() {
       const { data } = await sb.from('notifications')
         .select('*')
-        .eq('user_nickname', myNick)
+        .or(notifFilter())
         .order('created_at', { ascending: false });
 
       const listEl   = document.getElementById('notifList');
@@ -122,7 +131,7 @@
       await sb.from('notifications').update({ is_read: true }).eq('id', id);
       const el = document.getElementById(`notif-${id}`);
       if (el) el.classList.remove('notif-item--unread');
-      refreshNotifCount(myNick);
+      refreshNotifCount(myUserId, myNick);
       updateUnreadCount();
       if (link) window.location.href = link;
     }
@@ -130,23 +139,23 @@
     async function markAllReadPage() {
       await sb.from('notifications')
         .update({ is_read: true })
-        .eq('user_nickname', myNick)
+        .or(notifFilter())
         .eq('is_read', false);
-      refreshNotifCount(myNick);
+      refreshNotifCount(myUserId, myNick);
       await loadNotifications();
     }
 
     async function deleteAllPage() {
       if (!confirm('알림을 모두 삭제할까요?')) return;
-      await sb.from('notifications').delete().eq('user_nickname', myNick);
-      refreshNotifCount(myNick);
+      await sb.from('notifications').delete().or(notifFilter());
+      refreshNotifCount(myUserId, myNick);
       await loadNotifications();
     }
 
     async function updateUnreadCount() {
       const { count } = await sb.from('notifications')
         .select('*', { count: 'exact', head: true })
-        .eq('user_nickname', myNick)
+        .or(notifFilter())
         .eq('is_read', false);
       const n = count || 0;
       document.getElementById('unreadCount').textContent = n > 0 ? `읽지 않은 알림 ${n}개` : '모두 읽었어요';

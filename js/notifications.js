@@ -1,16 +1,19 @@
+// 알림 조회·구독 기준: user_id (primary) + user_nickname (기존 데이터 fallback)
+// 닉네임 미설정 유저도 user_id로 알림 수신 가능
+
 async function initNotifications() {
   const user = await getUser();
   if (!user) return;
   const myNick = user.user_metadata?.display_name || user.user_metadata?.nickname;
-  if (!myNick) return;
 
-  refreshNotifCount(myNick);
+  refreshNotifCount(user.id, myNick);
 
-  sb.channel(`notif_${myNick.replace(/\W/g, '_')}`)
+  // realtime 구독: user_id 기준 (새 알림은 항상 user_id 포함)
+  sb.channel(`notif_uid_${user.id}`)
     .on('postgres_changes', {
       event: 'INSERT', schema: 'public', table: 'notifications',
-      filter: `user_nickname=eq.${myNick}`
-    }, () => refreshNotifCount(myNick))
+      filter: `user_id=eq.${user.id}`
+    }, () => refreshNotifCount(user.id, myNick))
     .subscribe();
 }
 
@@ -76,25 +79,37 @@ async function toggleNotifPanel(e) {
   panel.style.display = isOpen ? 'none' : 'block';
   if (!isOpen) {
     const user = await getUser();
-    const myNick = user?.user_metadata?.display_name || user?.user_metadata?.nickname;
-    if (myNick) {
-      loadNotifList(myNick);
-      markAllReadSilent(myNick);
+    if (user) {
+      const myNick = user.user_metadata?.display_name || user.user_metadata?.nickname;
+      loadNotifList(user.id, myNick);
+      markAllReadSilent(user.id, myNick);
     }
   }
 }
 
-async function markAllReadSilent(myNick) {
-  await sb.from('notifications').update({ is_read: true })
-    .eq('user_nickname', myNick).eq('is_read', false);
-  refreshNotifCount(myNick);
+async function markAllReadSilent(userId, myNick) {
+  let query = sb.from('notifications').update({ is_read: true }).eq('is_read', false);
+  if (myNick) {
+    query = query.or(`user_id.eq.${userId},user_nickname.eq.${myNick}`);
+  } else {
+    query = query.eq('user_id', userId);
+  }
+  await query;
+  refreshNotifCount(userId, myNick);
 }
 
-async function refreshNotifCount(myNick) {
-  const { count } = await sb.from('notifications')
+async function refreshNotifCount(userId, myNick) {
+  let query = sb.from('notifications')
     .select('*', { count: 'exact', head: true })
-    .eq('user_nickname', myNick)
     .eq('is_read', false);
+
+  if (myNick) {
+    query = query.or(`user_id.eq.${userId},user_nickname.eq.${myNick}`);
+  } else {
+    query = query.eq('user_id', userId);
+  }
+
+  const { count } = await query;
 
   const n = count || 0;
   const badge        = document.getElementById('notifBadge');
@@ -120,15 +135,21 @@ function openNotifFromSidebar() {
   if (!panel) return;
   panel.style.display = 'block';
   getUser().then(user => {
-    const myNick = user?.user_metadata?.display_name || user?.user_metadata?.nickname;
-    if (myNick) loadNotifList(myNick);
+    if (user) {
+      const myNick = user.user_metadata?.display_name || user.user_metadata?.nickname;
+      loadNotifList(user.id, myNick);
+    }
   });
 }
 
-async function loadNotifList(myNick) {
-  const { data } = await sb.from('notifications')
-    .select('*')
-    .eq('user_nickname', myNick)
+async function loadNotifList(userId, myNick) {
+  let query = sb.from('notifications').select('*');
+  if (myNick) {
+    query = query.or(`user_id.eq.${userId},user_nickname.eq.${myNick}`);
+  } else {
+    query = query.eq('user_id', userId);
+  }
+  const { data } = await query
     .order('created_at', { ascending: false })
     .limit(30);
 
@@ -158,17 +179,26 @@ async function loadNotifList(myNick) {
 async function markRead(id) {
   await sb.from('notifications').update({ is_read: true }).eq('id', id);
   const user = await getUser();
-  const myNick = user?.user_metadata?.display_name || user?.user_metadata?.nickname;
-  if (myNick) refreshNotifCount(myNick);
+  if (user) {
+    const myNick = user.user_metadata?.display_name || user.user_metadata?.nickname;
+    refreshNotifCount(user.id, myNick);
+  }
 }
 
 async function markAllRead() {
   const user = await getUser();
-  const myNick = user?.user_metadata?.display_name || user?.user_metadata?.nickname;
-  if (!myNick) return;
-  await sb.from('notifications').update({ is_read: true })
-    .eq('user_nickname', myNick).eq('is_read', false);
-  refreshNotifCount(myNick);
+  if (!user) return;
+  const myNick = user.user_metadata?.display_name || user.user_metadata?.nickname;
+
+  let query = sb.from('notifications').update({ is_read: true }).eq('is_read', false);
+  if (myNick) {
+    query = query.or(`user_id.eq.${user.id},user_nickname.eq.${myNick}`);
+  } else {
+    query = query.eq('user_id', user.id);
+  }
+  await query;
+
+  refreshNotifCount(user.id, myNick);
   const listEl = document.getElementById('notifPanelList');
   if (listEl) listEl.innerHTML = '<p class="notif-empty">알림이 없어요</p>';
 }

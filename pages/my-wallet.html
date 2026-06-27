@@ -152,24 +152,28 @@
   <script src="../js/main.js"></script>
   <script>
     const TYPE_LABEL = {
-      signup_bonus:       '가입보너스',
-      attendance_reward:  '일일 출석',
-      transfer_receive:   '받음',
-      transfer_send:      '보냄',
-      admin_grant:        '지급',
-      admin_deduct:       '차감',
-      shop_purchase:      '상점구매',
+      signup_bonus:         '가입보너스',
+      attendance_reward:    '일일 출석',
+      transfer_receive:     '받음',
+      transfer_send:        '보냄',
+      admin_grant:          '지급',
+      admin_deduct:         '차감',
+      shop_purchase:        '상점구매',
+      achievement_reward:   '업적보상',
+      achievement_backfill: '업적보상(필백)',
     };
     const TYPE_CLASS = {
-      signup_bonus:       'wallet-log-type--receive',
-      attendance_reward:  'wallet-log-type--receive',
-      transfer_receive:   'wallet-log-type--receive',
-      admin_grant:        'wallet-log-type--admin',
-      transfer_send:      'wallet-log-type--send',
-      admin_deduct:       'wallet-log-type--send',
-      shop_purchase:      'wallet-log-type--send',
+      signup_bonus:         'wallet-log-type--receive',
+      attendance_reward:    'wallet-log-type--receive',
+      transfer_receive:     'wallet-log-type--receive',
+      admin_grant:          'wallet-log-type--admin',
+      transfer_send:        'wallet-log-type--send',
+      admin_deduct:         'wallet-log-type--send',
+      shop_purchase:        'wallet-log-type--send',
+      achievement_reward:   'wallet-log-type--receive',
+      achievement_backfill: 'wallet-log-type--admin',
     };
-    const RECEIVE_TYPES = new Set(['signup_bonus', 'attendance_reward', 'transfer_receive', 'admin_grant']);
+    const RECEIVE_TYPES = new Set(['signup_bonus', 'attendance_reward', 'transfer_receive', 'admin_grant', 'achievement_reward', 'achievement_backfill']);
 
     let myBalance         = 0;
     let myKeys            = 0;

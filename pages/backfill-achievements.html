@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>업적 보상 필백 — 종족연구소 관리자</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .backfill-wrap { max-width: 640px; margin: 40px auto; padding: 0 20px; }
+    .backfill-log  { background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; font-size: 12px; font-family: monospace; max-height: 480px; overflow-y: auto; line-height: 1.7; white-space: pre-wrap; word-break: break-all; }
+    .log-ok   { color: #16a34a; }
+    .log-skip { color: #64748b; }
+    .log-err  { color: #dc2626; }
+    .log-info { color: #0284c7; }
+    .log-step { color: #9333ea; }
+    .progress-bar-wrap { background: #e2e8f0; border-radius: 6px; height: 8px; margin: 12px 0; overflow: hidden; }
+    .progress-bar      { background: var(--sky); height: 100%; transition: width 0.3s; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">종족연구소</a>
+    </div>
+  </header>
+
+  <div class="backfill-wrap">
+    <h1 class="register-title" style="margin-bottom:6px;">업적 보상 필백</h1>
+    <p style="font-size:13px; color:var(--text-mute); margin-bottom:24px;">기존 업적 보유 유저에게 연구기록을 일괄 지급합니다. 관리자 전용 도구입니다.</p>
+
+    <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:14px 16px; font-size:13px; color:#92400e; margin-bottom:20px; line-height:1.6;">
+      <strong>지급 기준</strong><br>
+      • 일반 업적 (<code>is_hidden = false</code>) → 연구기록 <strong>+5</strong><br>
+      • 숨겨진 업적 (<code>is_hidden = true</code>) → 연구기록 <strong>+10</strong><br>
+      <br>
+      <strong>안전 장치</strong><br>
+      • 이미 필백을 받은 유저는 자동으로 건너뜁니다 (중복 실행 안전).<br>
+      • 업적이 없는 유저도 건너뜁니다.<br>
+      • 유저당 <code>currency_logs</code> 1건, 알림 1개만 생성합니다.
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+      <button id="btnRun"  class="btn-secondary" onclick="startBackfill()">필백 실행</button>
+      <button id="btnStop" class="btn-ghost"     onclick="stopBackfill()" style="display:none;">중단</button>
+    </div>
+
+    <div id="progressWrap" style="display:none;">
+      <p id="progressText" style="font-size:13px; color:var(--text-mute); margin-bottom:6px;">준비 중...</p>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="progressBar" style="width:0%"></div></div>
+    </div>
+
+    <div id="logBox" class="backfill-log" style="display:none;"></div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/main.js"></script>
+  <script>
+    let _stop    = false;
+    let _running = false;
+
+    function log(msg, cls = '') {
+      const box = document.getElementById('logBox');
+      box.style.display = '';
+      const line = document.createElement('span');
+      if (cls) line.className = cls;
+      line.textContent = msg + '\n';
+      box.appendChild(line);
+      box.scrollTop = box.scrollHeight;
+      console.log(`[ach-backfill${cls ? ':' + cls : ''}]`, msg);
+    }
+
+    function setProgress(done, total) {
+      const pct = total ? Math.round(done / total * 100) : 0;
+      document.getElementById('progressBar').style.width = pct + '%';
+      document.getElementById('progressText').textContent = `처리 중: ${done} / ${total} (${pct}%)`;
+    }
+
+    function stopBackfill() { _stop = true; log('[중단 요청됨]', 'log-info'); }
+
+    async function startBackfill() {
+      if (_running) { alert('이미 실행 중이에요.'); return; }
+      if (!confirm(
+        '기존 업적 보유 유저 전체에게 연구기록을 지급합니다.\n' +
+        '이미 필백을 받은 유저는 자동으로 건너뜁니다.\n\n계속할까요?'
+      )) return;
+
+      _stop    = false;
+      _running = true;
+      document.getElementById('btnRun').disabled  = true;
+      document.getElementById('btnStop').style.display = '';
+      document.getElementById('progressWrap').style.display = '';
+      document.getElementById('logBox').innerHTML  = '';
+      document.getElementById('logBox').style.display = '';
+
+      try {
+        const user = await getUser();
+        if (!user || (user.user_metadata?.role !== 'admin' && user.user_metadata?.role !== 'staff')) {
+          log('관리자/스태프만 사용할 수 있어요.', 'log-err');
+          return;
+        }
+
+        log('[1] 유저 목록 조회 중...', 'log-info');
+        const { data: allUsers, error: usersErr } = await sb.rpc('get_all_users');
+        if (usersErr || !allUsers) {
+          log('유저 목록 조회 실패: ' + (usersErr?.message ?? 'no data'), 'log-err');
+          return;
+        }
+
+        log('[2] 업적 보유 유저 조회 중...', 'log-info');
+        const { data: achRows, error: achErr } = await sb
+          .from('user_achievements')
+          .select('user_id');
+        if (achErr) {
+          log('업적 조회 실패: ' + achErr.message, 'log-err');
+          return;
+        }
+
+        const achUserIds   = new Set((achRows || []).map(r => r.user_id));
+        const targetUsers  = allUsers.filter(u => achUserIds.has(u.id));
+
+        log(`\n대상 유저: ${targetUsers.length}명 (전체 ${allUsers.length}명 중 업적 보유자)`, 'log-info');
+        if (targetUsers.length === 0) {
+          log('처리할 유저가 없어요.', 'log-skip');
+          return;
+        }
+
+        let done = 0, skipped = 0, failed = 0, totalGranted = 0;
+        setProgress(0, targetUsers.length);
+
+        for (const u of targetUsers) {
+          if (_stop) { log('\n[중단됨]', 'log-info'); break; }
+
+          const nick = u.nickname || u.login_id || String(u.id).slice(0, 8);
+          log(`→ ${nick}`, 'log-step');
+
+          try {
+            const { data: result, error: rpcErr } = await sb.rpc('grant_achievement_backfill', {
+              p_user_id: u.id,
+            });
+
+            if (rpcErr) {
+              log(`  ✗ RPC 오류: ${rpcErr.message}`, 'log-err');
+              failed++;
+            } else if (!result?.success) {
+              const reason = result?.error === 'ALREADY_DONE'
+                ? '이미 필백 완료'
+                : result?.error === 'NOT_AUTHORIZED'
+                  ? '권한 없음'
+                  : (result?.error ?? '실패');
+              log(`  ↷ 건너뜀: ${reason}`, 'log-skip');
+              skipped++;
+            } else if (result.skipped || result.amount === 0) {
+              log(`  ↷ 업적 없음 — 건너뜀`, 'log-skip');
+              skipped++;
+            } else {
+              // 알림/로그는 RPC 내부에서 처리 완료
+              log(`  ✓ 지급 완료: +${result.amount} 연구기록 (잔액 ${result.new_balance})`, 'log-ok');
+              totalGranted += result.amount;
+              done++;
+            }
+          } catch (e) {
+            log(`  ✗ 예외: ${e.message}`, 'log-err');
+            failed++;
+          }
+
+          setProgress(done + skipped + failed, targetUsers.length);
+          await new Promise(r => setTimeout(r, 200));
+        }
+
+        log(
+          `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+          `완료  지급: ${done}명 · 건너뜀: ${skipped}명 · 실패: ${failed}명\n` +
+          `총 지급 연구기록: ${totalGranted}`,
+          'log-info'
+        );
+
+      } catch (e) {
+        log('예상치 못한 오류: ' + e.message, 'log-err');
+        console.error('[ach-backfill]', e);
+      } finally {
+        _running = false;
+        document.getElementById('btnRun').disabled  = false;
+        document.getElementById('btnStop').style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>
