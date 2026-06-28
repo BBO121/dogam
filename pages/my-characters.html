@@ -302,9 +302,17 @@
       filterCards();
     }
 
+    // ── 미분류 판단 헬퍼 ─────────────────────────────
+    // folder_id가 없거나, 현재 유저의 폴더에 존재하지 않으면 미분류로 간주
+    // (이전받은 캐릭터의 folder_id가 이전 소유자 폴더를 가리킬 수 있음)
+    function isUnclassified(c) {
+      if (!c.folder_id) return true;
+      return !allFolders.some(f => f.id === c.folder_id);
+    }
+
     // ── 폴더 칩 ───────────────────────────────────────
     function renderFolderChips() {
-      const noneCount = allChars.filter(c => !c.folder_id).length;
+      const noneCount = allChars.filter(isUnclassified).length;
       document.getElementById('folderChips').innerHTML = `
         <button class="folder-chip ${activeFolder === 'all' ? 'active' : ''}" onclick="setFolderFilter('all')">
           전체<span class="folder-chip-count">${allChars.length}</span>
@@ -372,7 +380,7 @@
                     onclick="event.preventDefault(); event.stopPropagation(); toggleCardMenu(${c.id})">⋮</button>
                   <div class="card-menu-dropdown" id="cmenu_${c.id}" style="display:none;">
                     <div class="card-menu-item" onclick="event.preventDefault(); event.stopPropagation(); openFolderSelectModal(${c.id})">폴더 변경</div>
-                    ${c.folder_id ? `<div class="card-menu-item danger" onclick="event.preventDefault(); event.stopPropagation(); removeFromFolder(${c.id})">미분류로 이동</div>` : ''}
+                    ${!isUnclassified(c) ? `<div class="card-menu-item danger" onclick="event.preventDefault(); event.stopPropagation(); removeFromFolder(${c.id})">미분류로 이동</div>` : ''}
                   </div>
                 </div>
               </div>
@@ -514,7 +522,7 @@
       const species = document.getElementById('speciesFilter').value;
 
       const filtered = allChars.filter(c => {
-        if (activeFolder === 'none' && c.folder_id)                           return false;
+        if (activeFolder === 'none' && !isUnclassified(c))                    return false;
         if (typeof activeFolder === 'number' && c.folder_id !== activeFolder) return false;
         const matchName    = !q || c.name.toLowerCase().includes(q);
         const matchSpecies = !species || c.species_name === species;
