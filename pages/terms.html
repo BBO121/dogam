@@ -10,7 +10,7 @@
     .terms-wrap {
       max-width: 720px;
       margin: 0 auto;
-      padding: 32px 0 60px;
+      padding: 32px 0 80px;
     }
     .terms-title {
       font-size: 22px;
@@ -21,46 +21,52 @@
     .terms-updated {
       font-size: 13px;
       color: var(--text-mute);
-      margin-bottom: 40px;
+      margin-bottom: 48px;
     }
     .terms-section {
-      margin-bottom: 36px;
+      margin-bottom: 52px;
     }
     .terms-section-title {
       font-size: 15px;
       font-weight: 700;
       color: var(--text);
-      margin-bottom: 12px;
-      padding-bottom: 8px;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
       border-bottom: 1.5px solid var(--border);
     }
     .terms-body {
       font-size: 14px;
-      line-height: 1.85;
+      line-height: 2.0;
       color: var(--text-sub);
     }
-    .terms-body p { margin-bottom: 8px; }
-    .terms-body ul { padding-left: 20px; margin: 8px 0; }
-    .terms-body li { margin-bottom: 6px; }
+    .terms-body p { margin-bottom: 12px; }
+    .terms-body p:last-child { margin-bottom: 0; }
+    .terms-body ul {
+      padding-left: 20px;
+      margin: 12px 0 16px;
+    }
+    .terms-body li { margin-bottom: 10px; }
+    .terms-body li:last-child { margin-bottom: 0; }
+    .terms-body strong { color: var(--text); font-weight: 700; }
     .terms-highlight {
       background: #F0F9FF;
       border-left: 3px solid var(--sky);
-      padding: 12px 16px;
+      padding: 14px 18px;
       border-radius: 0 8px 8px 0;
-      margin: 12px 0;
+      margin: 16px 0 4px;
       font-size: 13px;
       color: var(--text-sub);
-      line-height: 1.7;
+      line-height: 1.85;
     }
 
     /* ── DB 로드 약관 (Quill 출력) 스타일 ── */
     #termsDbContent {
       font-size: 14px;
-      line-height: 1.85;
+      line-height: 2.0;
       color: var(--text-sub);
     }
     #termsDbContent p {
-      margin-bottom: 8px;
+      margin-bottom: 12px;
     }
     #termsDbContent p:empty {
       margin-bottom: 6px;
@@ -78,16 +84,16 @@
     #termsDbContent ul,
     #termsDbContent ol {
       padding-left: 20px;
-      margin: 8px 0;
+      margin: 12px 0 16px;
     }
-    #termsDbContent li { margin-bottom: 6px; }
+    #termsDbContent li { margin-bottom: 10px; }
 
     /* Quill 정렬 클래스 */
     #termsDbContent .ql-align-center  { text-align: center; }
     #termsDbContent .ql-align-right   { text-align: right; }
     #termsDbContent .ql-align-justify { text-align: justify; }
 
-    /* 섹션 타이틀 (Quill에서 큰 폰트로 지정된 텍스트) → .terms-section-title과 동일 스타일 */
+    /* 섹션 타이틀 (Quill에서 큰 폰트로 지정된 텍스트) */
     #termsDbContent [style*="font-size: 18px"],
     #termsDbContent [style*="font-size: 20px"],
     #termsDbContent [style*="font-size: 24px"],
@@ -96,10 +102,17 @@
       font-size: 15px !important;
       color: var(--text);
       font-weight: 700;
-      margin: 36px 0 12px;
-      padding-bottom: 8px;
+      margin: 40px 0 16px;
+      padding-bottom: 10px;
       border-bottom: 1.5px solid var(--border);
       line-height: 1.5;
+    }
+
+    @media (max-width: 600px) {
+      .terms-wrap { padding: 24px 0 60px; }
+      .terms-section { margin-bottom: 40px; }
+      .terms-body { font-size: 13.5px; }
+      #termsDbContent { font-size: 13.5px; }
     }
   </style>
 </head>
@@ -133,14 +146,14 @@
         <!-- DB에서 로드된 약관 내용 (있을 때만 표시) -->
         <div id="termsDbContent" style="display:none; font-size:14px; line-height:1.85; color:var(--text-sub);"></div>
 
-        <!-- 정적 폴백 약관 내용 -->
-        <div id="termsStaticContent">
+        <!-- 정적 폴백 약관 내용 (JS에서 DB 내용 없을 때만 표시) -->
+        <div id="termsStaticContent" style="display:none">
 
           <div class="terms-section">
             <h2 class="terms-section-title">제1조 목적</h2>
             <div class="terms-body">
               <p>본 약관은 종족연구소(이하 "서비스")가 제공하는 서비스의 이용 조건 및 절차, 이용자와 서비스 간의 권리·의무 관계를 규정함을 목적으로 합니다.</p>
-              <p>서비스에 가입하거나 이용함으로써 이용자는 본 약관에 동의한 것으로 간주됩니다.</p>
+              <p><strong>서비스에 가입하거나 이용함으로써 이용자는 본 약관에 동의한 것으로 간주됩니다.</strong></p>
             </div>
           </div>
 
@@ -173,7 +186,7 @@
                 <li>관련 법령을 위반하는 행위</li>
               </ul>
               <div class="terms-highlight">
-                타인의 종족 또는 개체는 해당 권리자의 명시적인 허가 없이 등록할 수 없습니다.<br>
+                <strong>타인의 종족 또는 개체는 해당 권리자의 명시적인 허가 없이 등록할 수 없습니다.</strong><br>
                 무단 등록 또는 도용이 확인될 경우 운영자는 해당 콘텐츠를 삭제하거나 계정을 제한할 수 있습니다.
               </div>
             </div>
@@ -183,7 +196,7 @@
             <h2 class="terms-section-title">제4조 연령 제한 콘텐츠</h2>
             <div class="terms-body">
               <p>종족연구소는 전체 이용가를 지향하는 서비스입니다.</p>
-              <p>성인(19세 이상) 전용 종족, 개체, 이미지, 설정 또는 이에 준하는 콘텐츠는 등록할 수 없습니다.</p>
+              <p><strong>성인(19세 이상) 전용 종족, 개체, 이미지, 설정 또는 이에 준하는 콘텐츠는 등록할 수 없습니다.</strong></p>
               <p>운영자는 부적절하다고 판단되는 콘텐츠를 사전 통보 없이 수정, 비공개 처리 또는 삭제할 수 있습니다.</p>
             </div>
           </div>
@@ -191,7 +204,7 @@
           <div class="terms-section">
             <h2 class="terms-section-title">제5조 콘텐츠의 권리</h2>
             <div class="terms-body">
-              <p>이용자가 등록한 종족, 개체, 이미지 및 기타 창작물의 저작권은 해당 창작자에게 있습니다.</p>
+              <p><strong>이용자가 등록한 종족, 개체, 이미지 및 기타 창작물의 저작권은 해당 창작자에게 있습니다.</strong></p>
               <p>서비스는 이용자가 등록한 콘텐츠를 서비스 내에서 표시, 검색, 공유하기 위한 범위 내에서만 사용하며, 별도의 동의 없이 이를 상업적으로 이용하지 않습니다.</p>
               <p>이용자는 자신이 등록하는 콘텐츠에 대해 정당한 권리를 보유하고 있음을 보증합니다.</p>
             </div>
@@ -201,7 +214,7 @@
             <h2 class="terms-section-title">제6조 분양 및 거래</h2>
             <div class="terms-body">
               <p>서비스는 개체의 분양 및 이전 기능을 지원합니다.</p>
-              <p>다만 이용자 간 분양, 거래, 교환 과정에서 발생하는 분쟁, 사기, 약속 불이행 등에 대해 서비스는 책임을 지지 않습니다.</p>
+              <p><strong>이용자 간 분양, 거래, 교환 과정에서 발생하는 분쟁, 사기, 약속 불이행 등에 대해 서비스는 책임을 지지 않습니다.</strong></p>
               <p>거래 전에는 반드시 당사자 간 조건을 충분히 확인하시기 바랍니다.</p>
             </div>
           </div>
@@ -230,7 +243,7 @@
                 <li>기타 운영상 필요하다고 판단되는 경우</li>
               </ul>
               <div class="terms-highlight">
-                운영자는 도용, 저작권 침해, 약관 위반 또는 서비스 운영상 필요하다고 판단되는 경우 콘텐츠를 수정, 비공개 처리 또는 삭제할 수 있습니다.
+                <strong>운영자는 도용, 저작권 침해, 약관 위반 또는 서비스 운영상 필요하다고 판단되는 경우 콘텐츠를 수정, 비공개 처리 또는 삭제할 수 있습니다.</strong>
               </div>
             </div>
           </div>
@@ -248,7 +261,7 @@
             <div class="terms-body">
               <p>서비스는 이용자가 등록한 콘텐츠의 정확성, 적법성 또는 완전성에 대해 책임을 지지 않습니다.</p>
               <p>서비스는 이용자 간 발생하는 분쟁에 개입할 의무가 없으며, 이에 대한 법적 책임을 지지 않습니다.</p>
-              <p>또한 천재지변, 서버 장애, 해킹, 데이터 손실 등 서비스 제공자가 통제할 수 없는 사유로 발생한 손해에 대해 책임을 지지 않습니다.</p>
+              <p>천재지변, 서버 장애, 해킹, 데이터 손실 등 서비스 제공자가 통제할 수 없는 사유로 발생한 손해에 대해 책임을 지지 않습니다.</p>
             </div>
           </div>
 
@@ -256,7 +269,7 @@
             <h2 class="terms-section-title">제11조 약관의 변경</h2>
             <div class="terms-body">
               <p>본 약관은 서비스 운영에 따라 변경될 수 있습니다.</p>
-              <p>약관이 변경될 경우 공지사항을 통해 사전에 안내하며, 변경 이후 서비스를 계속 이용하는 경우 변경된 약관에 동의한 것으로 간주됩니다.</p>
+              <p>약관이 변경될 경우 공지사항을 통해 사전에 안내하며, <strong>변경 이후 서비스를 계속 이용하는 경우 변경된 약관에 동의한 것으로 간주됩니다.</strong></p>
             </div>
           </div>
 
@@ -297,12 +310,13 @@
       if (data && data.content && data.content.trim().length > 0) {
         document.getElementById('termsDbContent').innerHTML = DOMPurify.sanitize(data.content);
         document.getElementById('termsDbContent').style.display = 'block';
-        document.getElementById('termsStaticContent').style.display = 'none';
 
         const updated = new Date(data.updated_at).toLocaleDateString('ko-KR', {
           year: 'numeric', month: 'long', day: 'numeric'
         });
         document.getElementById('termsUpdated').textContent = `최종 업데이트: ${updated}`;
+      } else {
+        document.getElementById('termsStaticContent').style.display = 'block';
       }
 
       const _tc = await window.incrementAchCounter?.('terms_view') || 0;
