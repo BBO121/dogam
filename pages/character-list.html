@@ -163,18 +163,32 @@
         ]);
         list = searchData || [];
         document.getElementById('charCount').textContent = `총 ${exactCount ?? list.length}개의 개체`;
+      } else if (ownerParam || ownerIdParam) {
+        // 소유자 필터 있을 때: 서버 직접 조회 (allChars는 최신 일부만 캐시되므로 누락 방지)
+        let ownerListQ = sb.from('characters')
+          .select('id, name, species_name, owner_nickname, owner_user_id, image_url, thumbnail_url, created_at, is_sensitive, sensitive_note');
+        if (sp)              ownerListQ = ownerListQ.eq('species_name', sp);
+        if (ownerParamId)    ownerListQ = ownerListQ.eq('owner_user_id', ownerParamId);
+        else if (ownerParam) ownerListQ = ownerListQ.eq('owner_nickname', ownerParam);
+        ownerListQ = sort === 'name'
+          ? ownerListQ.order('name', { ascending: true })
+          : ownerListQ.order('created_at', { ascending: false });
+
+        let ownerCountQ = sb.from('characters').select('id', { count: 'exact', head: true });
+        if (sp)              ownerCountQ = ownerCountQ.eq('species_name', sp);
+        if (ownerParamId)    ownerCountQ = ownerCountQ.eq('owner_user_id', ownerParamId);
+        else if (ownerParam) ownerCountQ = ownerCountQ.eq('owner_nickname', ownerParam);
+
+        const [{ data: ownerData }, { count: exactCount }] = await Promise.all([ownerListQ, ownerCountQ]);
+        list = ownerData || [];
+        document.getElementById('charCount').textContent = `총 ${exactCount ?? list.length}개의 개체`;
       } else {
-        // 검색어 없을 때: 로드된 목록 클라이언트 필터 + 서버 카운트
-        list = allChars.filter(c =>
-          (!sp || c.species_name === sp) &&
-          (!(ownerParam || ownerIdParam) || (ownerParamId ? c.owner_user_id === ownerParamId : c.owner_nickname === ownerParam))
-        );
+        // 소유자 필터 없을 때: 캐시된 allChars 클라이언트 필터
+        list = allChars.filter(c => (!sp || c.species_name === sp));
         if (sort === 'name') list = [...list].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
 
         let countQuery = sb.from('characters').select('id', { count: 'exact', head: true });
         if (sp) countQuery = countQuery.eq('species_name', sp);
-        if (ownerIdParam && ownerParamId) countQuery = countQuery.eq('owner_user_id', ownerParamId);
-        else if (ownerParam)              countQuery = countQuery.eq('owner_nickname', ownerParam);
         const { count: exactCount } = await countQuery;
         document.getElementById('charCount').textContent = `총 ${exactCount ?? list.length}개의 개체`;
       }
