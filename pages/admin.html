@@ -426,7 +426,8 @@
 
     async function deleteNotice(id) {
       if (!confirm('정말 삭제할까요?')) return;
-      await sb.from('notices').delete().eq('id', id);
+      const { error } = await sb.from('notices').delete().eq('id', id);
+      if (error) { console.error('[deleteNotice]', error); alert('삭제에 실패했어요.\n' + error.message); return; }
       loadNotices();
     }
 
@@ -472,7 +473,8 @@
 
     async function deleteGuide(id) {
       if (!confirm('정말 삭제할까요?')) return;
-      await sb.from('guides').delete().eq('id', id);
+      const { error } = await sb.from('guides').delete().eq('id', id);
+      if (error) { console.error('[deleteGuide]', error); alert('삭제에 실패했어요.\n' + error.message); return; }
       loadGuides();
     }
 
@@ -515,7 +517,8 @@
 
     async function deleteUpdateNote(id) {
       if (!confirm('정말 삭제할까요?')) return;
-      await sb.from('update_notes').delete().eq('id', id);
+      const { error } = await sb.from('update_notes').delete().eq('id', id);
+      if (error) { console.error('[deleteUpdateNote]', error); alert('삭제에 실패했어요.\n' + error.message); return; }
       loadUpdateNotes();
     }
 
@@ -558,7 +561,8 @@
 
     async function deleteDevLog(id) {
       if (!confirm('정말 삭제할까요?')) return;
-      await sb.from('dev_logs').delete().eq('id', id);
+      const { error } = await sb.from('dev_logs').delete().eq('id', id);
+      if (error) { console.error('[deleteDevLog]', error); alert('삭제에 실패했어요.\n' + error.message); return; }
       loadDevLogs();
     }
 
@@ -669,30 +673,61 @@
     }
 
     async function deleteUser(userId, nickname) {
-      if (!confirm(`"${nickname}" 유저를 삭제할까요?\n개체·종족·이전 내역의 닉네임은 (알수없음)으로 바뀌어요.`)) return;
+      // ① 소유 개체 확인
+      const { count: charCount, error: charErr } = await sb
+        .from('characters').select('id', { count: 'exact', head: true }).eq('owner_user_id', userId);
+      if (charErr) {
+        console.error('[deleteUser] 개체 확인 실패', charErr);
+        alert('삭제 전 검증에 실패했어요.\n' + charErr.message);
+        return;
+      }
+      if (charCount > 0) {
+        alert(`삭제 불가: "${nickname}" 유저가 소유 중인 개체가 ${charCount}개 있어요.\n먼저 개체를 다른 유저에게 이전하거나 삭제해주세요.`);
+        return;
+      }
 
-      await Promise.all([
-        sb.from('characters').update({ owner_nickname: '(알수없음)', owner_user_id: null }).eq('owner_user_id', userId),
-        // 디자이너 삭제 처리: UUID 제거 + display string 갱신
-        (async () => {
-          const { data: uuidDesigns } = await sb.from('characters')
-            .select('id, designer_nickname, designer_user_ids')
-            .filter('designer_user_ids', 'cs', `{${userId}}`);
-          await Promise.all((uuidDesigns || []).map(c => {
-            const updatedNick = c.designer_nickname.split(' / ')
-              .map(n => n.trim() === nickname ? '(알수없음)' : n).join(' / ');
-            const updatedIds  = (c.designer_user_ids || []).filter(id => id !== userId);
-            return sb.from('characters').update({ designer_nickname: updatedNick, designer_user_ids: updatedIds }).eq('id', c.id);
-          }));
-          await sb.from('characters').update({ designer_nickname: '(알수없음)' }).eq('designer_nickname', nickname);
-        })(),
-        sb.from('species').update({ owner_nickname: '(알수없음)', owner_user_id: null }).eq('owner_user_id', userId),
-        sb.from('character_transfers').update({ from_nickname: '(알수없음)' }).eq('from_nickname', nickname),
-        sb.from('character_transfers').update({ to_nickname: '(알수없음)' }).eq('to_nickname', nickname),
-      ]);
+      // ② 소유 종족 확인
+      const { count: spCount, error: spErr } = await sb
+        .from('species').select('id', { count: 'exact', head: true }).eq('owner_user_id', userId);
+      if (spErr) {
+        console.error('[deleteUser] 종족 확인 실패', spErr);
+        alert('삭제 전 검증에 실패했어요.\n' + spErr.message);
+        return;
+      }
+      if (spCount > 0) {
+        alert(`삭제 불가: "${nickname}" 유저가 종족주인 종족이 ${spCount}개 있어요.\n먼저 종족주를 다른 유저에게 이전해주세요.`);
+        return;
+      }
 
+      if (!confirm(`"${nickname}" 유저를 정말 삭제할까요?\n분양·문의·이전 내역의 닉네임은 (알수없음)으로 바뀌어요.`)) return;
+
+      // ③ 연관 데이터 정리 (디자이너 정보, 거래 내역)
+      try {
+        const { data: uuidDesigns } = await sb.from('characters')
+          .select('id, designer_nickname, designer_user_ids')
+          .filter('designer_user_ids', 'cs', `{${userId}}`);
+        await Promise.all((uuidDesigns || []).map(c => {
+          const updatedNick = c.designer_nickname.split(' / ')
+            .map(n => n.trim() === nickname ? '(알수없음)' : n).join(' / ');
+          const updatedIds  = (c.designer_user_ids || []).filter(id => id !== userId);
+          return sb.from('characters').update({ designer_nickname: updatedNick, designer_user_ids: updatedIds }).eq('id', c.id);
+        }));
+        await Promise.all([
+          sb.from('characters').update({ designer_nickname: '(알수없음)' }).eq('designer_nickname', nickname),
+          sb.from('character_transfers').update({ from_nickname: '(알수없음)' }).eq('from_nickname', nickname),
+          sb.from('character_transfers').update({ to_nickname: '(알수없음)' }).eq('to_nickname', nickname),
+        ]);
+      } catch (cleanupErr) {
+        console.error('[deleteUser] 연관 데이터 정리 실패', cleanupErr);
+      }
+
+      // ④ 계정 삭제
       const { error } = await sb.rpc('delete_user', { target_id: userId });
-      if (error) { alert('계정 삭제에 실패했어요.'); return; }
+      if (error) {
+        console.error('[deleteUser] RPC 실패', error);
+        alert(`계정 삭제에 실패했어요.\n${error.message}`);
+        return;
+      }
       await logAdminAction('user_delete', 'user', userId, nickname);
       loadUsers();
     }
@@ -773,12 +808,13 @@
           year: 'numeric', month: '2-digit', day: '2-digit'
         }).replace(/\. /g, '.').replace(/\.$/, '');
         const safeName = c.name.replace(/'/g, "\\'");
-        const safeNick = (c.owner_nickname || '').replace(/'/g, "\\'");
+        const ownerDisplay = c.owner_nickname || (c.owner_user_id ? '—' : '(알수없음)');
+        const safeNick = ownerDisplay.replace(/'/g, "\\'");
         return `
           <div class="admin-card-row" id="char-row-${c.id}">
             <div class="admin-card-left">
               <a href="character.html?id=${c.id}" class="admin-card-name">${c.name}</a>
-              <span class="admin-card-meta">${[c.species_name, c.owner_nickname].filter(Boolean).join(' · ')}</span>
+              <span class="admin-card-meta">${[c.species_name, ownerDisplay].filter(Boolean).join(' · ')}</span>
             </div>
             <div class="admin-card-right">
               <span class="admin-card-date">${date}</span>
@@ -823,7 +859,7 @@
     async function deleteChar(id, name) {
       if (!confirm(`"${name}" 개체를 삭제할까요?`)) return;
       const { error } = await sb.from('characters').delete().eq('id', id);
-      if (error) { alert('삭제에 실패했어요.'); return; }
+      if (error) { console.error('[deleteChar]', error); alert('삭제에 실패했어요.\n' + error.message); return; }
       await logAdminAction('character_delete', 'character', id, name);
       allAdminChars = allAdminChars.filter(c => String(c.id) !== String(id));
       charPager.load(allAdminChars);

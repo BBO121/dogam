@@ -4743,11 +4743,17 @@ button.btn-more {
   .notice-date {
     display: none;
   }
-  /* 어드민 탭 — 균등 배분 */
+  /* 어드민 탭 — 가로 스크롤 (탭 수 많을 때) */
+  .profile-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    flex-wrap: nowrap;
+  }
   .profile-tab {
-    flex: 1;
+    flex: none;
+    white-space: nowrap;
     text-align: center;
-    padding: 10px 6px;
+    padding: 10px 14px;
     font-size: 13px;
   }
   /* 어드민 개체 검색창 */
@@ -4757,6 +4763,15 @@ button.btn-more {
   /* 어드민 카드 — 모바일에서 날짜 숨김 (버튼 공간 확보) */
   .admin-card-date {
     display: none;
+  }
+  /* 유저 관리 카드 — 버튼이 많을 때 줄바꿈 */
+  #tabUsers .admin-card-row {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+  #tabUsers .admin-card-right {
+    width: 100%;
+    justify-content: flex-end;
   }
   /* 어드민 테이블 → 카드형 */
   .admin-table thead {
