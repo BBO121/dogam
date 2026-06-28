@@ -40,10 +40,11 @@ BEGIN
     END IF;
   END IF;
 
-  -- characters 소유권 이전
+  -- characters 소유권 이전 (folder_id 초기화 — 이전 소유자 폴더 참조 방지)
   UPDATE characters
-     SET owner_user_id = p_new_owner_id,
-         owner_nickname = p_new_owner_nick
+     SET owner_user_id  = p_new_owner_id,
+         owner_nickname = p_new_owner_nick,
+         folder_id      = NULL
    WHERE id = v_character_id;
 
   -- adoptions 완료 처리
