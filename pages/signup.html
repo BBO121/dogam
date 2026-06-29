@@ -78,6 +78,14 @@
       btn.textContent = '가입 중...';
       btn.disabled = true;
 
+      const isAvailable = await checkNicknameAvailable(nickname);
+      if (!isAvailable) {
+        errorEl.textContent = '이미 사용 중인 닉네임입니다.';
+        btn.textContent = '회원가입';
+        btn.disabled = false;
+        return;
+      }
+
       const { data: signUpData, error } = await signUp(nickname, password);
 
       if (error) {

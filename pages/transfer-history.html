@@ -144,7 +144,7 @@
     function nickLink(userId, storedNick) {
       const displayNick = (userId && idToNick[userId]) || storedNick;
       if (!displayNick) return '—';
-      if (userId) return `<a href="profile.html?user=${encodeURIComponent(displayNick)}" style="${linkStyle}">${displayNick}</a>`;
+      if (userId) return `<a href="profile.html?user=${userId}" style="${linkStyle}">${displayNick}</a>`;
       return displayNick;
     }
     function charLink(name) {

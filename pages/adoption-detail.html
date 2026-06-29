@@ -476,8 +476,9 @@
       }
 
       const authorNick = (a.user_id && idToNick[a.user_id]) || a.author || '익명';
-      document.getElementById('detailAuthor').innerHTML =
-        `<a href="profile.html?user=${encodeURIComponent(authorNick)}" class="detail-link">${authorNick}</a>`;
+      document.getElementById('detailAuthor').innerHTML = a.user_id
+        ? `<a href="profile.html?user=${a.user_id}" class="detail-link">${authorNick}</a>`
+        : authorNick;
 
       const date = new Date(a.created_at).toLocaleDateString('ko-KR', {
         year: 'numeric', month: '2-digit', day: '2-digit'
@@ -786,46 +787,64 @@
 
       // 당첨자 알림 — notify_user_by_id RPC (UUID 기반)
       if (winnerApp.applicant_id) {
-        sb.rpc('notify_user_by_id', {
+        const { error: winErr } = await sb.rpc('notify_user_by_id', {
           p_user_id: winnerApp.applicant_id,
           p_type:    'raffle_win',
           p_message: `🎲 "${currentAdoption.character_name}" 랜덤 추첨에 당첨됐어요! 분양자가 확정을 처리할 예정이에요.`,
           p_link:    raffleLink,
-        }).catch(e => console.error('[알림] raffle_win RPC 실패:', e));
+        });
+        if (winErr) console.error('[알림] raffle_win RPC 실패:', winErr);
+        else        console.log('[알림] raffle_win 성공 →', winnerApp.applicant_nickname);
       }
 
       // 분양자(작성자) 알림 — notify_user_by_id RPC (UUID 기반)
       if (currentAdoption.user_id) {
-        sb.rpc('notify_user_by_id', {
+        const { error: doneErr } = await sb.rpc('notify_user_by_id', {
           p_user_id: currentAdoption.user_id,
           p_type:    'raffle_done',
           p_message: `🎲 "${currentAdoption.character_name}" 추첨 결과: ${winner}님 당첨!`,
           p_link:    raffleLink,
-        }).catch(e => console.error('[알림] raffle_done RPC 실패:', e));
+        });
+        if (doneErr) console.error('[알림] raffle_done RPC 실패:', doneErr);
+        else         console.log('[알림] raffle_done 성공 → 분양자');
       }
 
-      // 낙첨자 알림 — UUID 있는 경우 RPC, 없으면 닉네임 직접 insert
-      const loserApps = apps.filter(ap => ap.applicant_nickname !== winner && ap.applicant_nickname !== currentAdoption.author);
-      const loserById = loserApps.filter(ap => ap.applicant_id);
+      // 낙첨자 알림
+      const loserApps   = apps.filter(ap => ap.applicant_nickname !== winner && ap.applicant_nickname !== currentAdoption.author);
+      const loserById   = loserApps.filter(ap =>  ap.applicant_id);
       const loserByNick = [...new Set(loserApps.filter(ap => !ap.applicant_id).map(ap => ap.applicant_nickname))];
+      console.log(`[알림] 낙첨자 ${loserApps.length}명 (UUID: ${loserById.length}, 닉네임 fallback: ${loserByNick.length})`);
 
-      loserById.forEach(ap => {
-        sb.rpc('notify_user_by_id', {
-          p_user_id: ap.applicant_id,
-          p_type:    'raffle_lose',
-          p_message: `🎲 참여한 "${currentAdoption.character_name}" 추첨이 완료됐어요. 이번엔 아쉽지만 다음 기회에!`,
-          p_link:    raffleLink,
-        }).catch(() => {});
+      // UUID 있는 낙첨자 → RPC (SECURITY DEFINER, RLS 우회)
+      const loserRpcResults = await Promise.allSettled(
+        loserById.map(ap =>
+          sb.rpc('notify_user_by_id', {
+            p_user_id: ap.applicant_id,
+            p_type:    'raffle_lose',
+            p_message: `🎲 참여한 "${currentAdoption.character_name}" 추첨이 완료됐어요. 이번엔 아쉽지만 다음 기회에!`,
+            p_link:    raffleLink,
+          })
+        )
+      );
+      loserRpcResults.forEach((r, i) => {
+        if (r.status === 'rejected' || r.value?.error)
+          console.error(`[알림] raffle_lose RPC 실패 (${loserById[i].applicant_nickname}):`, r.reason ?? r.value.error);
+        else
+          console.log(`[알림] raffle_lose RPC 성공 → ${loserById[i].applicant_nickname}`);
       });
+
+      // UUID 없는 낙첨자 → 닉네임 직접 INSERT (구데이터 fallback)
       if (loserByNick.length > 0) {
-        sb.from('notifications').insert(
+        const { error: loserNickErr } = await sb.from('notifications').insert(
           loserByNick.map(nick => ({
             user_nickname: nick,
             type:          'raffle_lose',
             message:       `🎲 참여한 "${currentAdoption.character_name}" 추첨이 완료됐어요. 이번엔 아쉽지만 다음 기회에!`,
             link:          raffleLink,
           }))
-        ).catch(() => {});
+        );
+        if (loserNickErr) console.error('[알림] raffle_lose 닉네임 INSERT 실패:', loserNickErr);
+        else              console.log(`[알림] raffle_lose 닉네임 INSERT 성공 (${loserByNick.length}명)`);
       }
 
       alert('추첨 완료!');

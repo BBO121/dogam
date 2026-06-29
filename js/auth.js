@@ -189,6 +189,14 @@ async function getMyCurrencyLogs(userId) {
   return { data: data ?? [], error };
 }
 
+// 닉네임 중복 체크 RPC
+// 사용 가능하면 true, 중복이면 false, 오류 시 true (저장 단계에서 재확인)
+async function checkNicknameAvailable(nickname) {
+  const { data, error } = await sb.rpc('check_nickname_available', { p_nickname: nickname });
+  if (error) { console.warn('[닉네임 체크] RPC 오류:', error); return true; }
+  return data === true;
+}
+
 // 재화 전송 RPC (research_records / keys)
 async function transferCurrency(currencyType, toNickname, amount, note) {
   const { data, error } = await sb.rpc('transfer_currency', {

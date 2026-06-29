@@ -309,10 +309,10 @@
           : `<span class="wallet-log-amount--minus">-${fmt(log.amount)}</span>`;
         const typeLabel   = TYPE_LABEL[log.type] ?? log.type;
         const typeClass   = TYPE_CLASS[log.type] ?? '';
-        const nick        = log.counterpart_nickname;
-        const counterpart = nick
-          ? `<a href="profile.html?user=${encodeURIComponent(nick)}" style="color:inherit;">${nick}</a>`
-          : '—';
+        const nick = log.counterpart_nickname;
+        const counterpart = (nick && log.counterpart_user_id)
+          ? `<a href="profile.html?user=${log.counterpart_user_id}" style="color:inherit;">${nick}</a>`
+          : (nick || '—');
 
         // 모바일: 우측 텍스트 (상대방 · 시간)
         const mobileRight = nick

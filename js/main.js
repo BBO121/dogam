@@ -155,6 +155,7 @@ async function loadSearchData() {
       .filter(u => u.login_id !== 'admin')
       .map(u => ({
         name:           u.nickname  || '',
+        id:             u.id        || '',
         loginId:        u.login_id || u.nickname || '',
         role:           u.role     || '',
         isSpeciesOwner: u.role === 'species_owner' || speciesOwnerNicksSet.has(u.nickname || ''),
@@ -244,7 +245,7 @@ function renderDropdown(q, matchedUsers, matchedSpecies, matchedChars) {
 
   const userHtml = p.users.map(u => `
     <li>
-      <a href="profile.html?user=${encodeURIComponent(u.name)}">
+      <a href="profile.html?user=${u.id || encodeURIComponent(u.name)}">
         ${getUserBadgesHtml(u)}
         <span class="dd-label">${highlight(u.name, q)}</span>
       </a>

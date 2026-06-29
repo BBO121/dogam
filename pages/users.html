@@ -152,7 +152,7 @@
         }).replace(/\. /g, '.').replace(/\.$/, '');
 
         return `
-          <a href="profile.html?user=${encodeURIComponent(displayName)}" class="user-row">
+          <a href="profile.html?user=${u.id}" class="user-row">
             <div class="user-row-badges">${getBadgesHtml(u)}</div>
             <span class="user-row-name">${displayName}</span>
             <span class="user-row-date">${joinDate}</span>

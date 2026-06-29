@@ -371,7 +371,7 @@
   <script src="../js/main.js"></script>
   <script src="../js/utils.js"></script>
   <script>
-    const viewNick = new URLSearchParams(window.location.search).get('user');
+    const viewUserId = new URLSearchParams(window.location.search).get('user');
     let currentUser = null;
 
     // ── 업적 카테고리 상수 ────────────────────────
@@ -542,8 +542,8 @@
       currentUser.user_metadata.avatar_url = avatarUrl;
       const displayName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
       await sb.from('user_profiles').upsert(
-        { nickname: displayName, avatar_url: avatarUrl },
-        { onConflict: 'nickname' }
+        { nickname: displayName, user_id: currentUser.id, avatar_url: avatarUrl },
+        { onConflict: 'user_id' }
       );
 
       avatarEl.style.backgroundImage = `url('${avatarUrl}')`;
@@ -600,7 +600,7 @@
         if (upErr) throw upErr;
         const wmUrl = sb.storage.from('images').getPublicUrl(fileName).data.publicUrl + '?v=' + Date.now();
         const displayName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
-        await sb.from('user_profiles').upsert({ nickname: displayName, watermark_url: wmUrl }, { onConflict: 'nickname' });
+        await sb.from('user_profiles').upsert({ nickname: displayName, user_id: currentUser.id, watermark_url: wmUrl }, { onConflict: 'user_id' });
         _setWmPreview(wmUrl);
         _currentWmUrl = wmUrl;
         document.getElementById('wmReapplySection').style.display = '';
@@ -619,7 +619,7 @@
       _wmMsg('삭제 중...');
       try {
         const displayName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
-        await sb.from('user_profiles').upsert({ nickname: displayName, watermark_url: null }, { onConflict: 'nickname' });
+        await sb.from('user_profiles').upsert({ nickname: displayName, user_id: currentUser.id, watermark_url: null }, { onConflict: 'user_id' });
         _setWmPreview(null);
         _currentWmUrl = null;
         document.getElementById('wmReapplySection').style.display = '';
@@ -753,14 +753,14 @@
       if (!user) { window.location.href = 'login.html'; return; }
       currentUser = user;
 
-      if (viewNick) {
-        await initOtherProfile(viewNick);
+      if (viewUserId) {
+        await initOtherProfile(viewUserId);
       } else {
         await initMyProfile(user);
       }
     }
 
-    async function initOtherProfile(nick) {
+    async function initOtherProfile(userId) {
       // 타인 프로필 — 설정/수정 UI 숨기기
       document.getElementById('gearBtn').style.display       = 'none';
       document.getElementById('gearBtnMobile').style.display = 'none';
@@ -768,29 +768,25 @@
       document.getElementById('profileAvatar').style.cursor = 'default';
       document.getElementById('profileAvatar').onclick = null;
 
-      // get_all_users + user_profiles 병렬 조회
+      // get_all_users + user_profiles(user_id 기준) 병렬 조회
       const [{ data: userList }, { data: profile }] = await Promise.all([
         sb.rpc('get_all_users'),
-        sb.from('user_profiles').select('*').eq('nickname', nick).single(),
+        sb.from('user_profiles').select('*').eq('user_id', userId).single(),
       ]);
-      const found = (userList || []).find(u =>
-        (u.nickname || '') === nick || (u.login_id || '') === nick
-      );
+      const found = (userList || []).find(u => u.id === userId);
 
-      const displayName = found?.nickname || nick;
-      const { data: otherOwnedSp } = found?.id
-        ? await sb.from('species').select('id').eq('owner_user_id', found.id).limit(1)
-        : { data: null };
+      const displayName = found?.nickname || profile?.nickname || userId;
+      const { data: otherOwnedSp } = await sb.from('species').select('id').eq('owner_user_id', userId).limit(1);
       const isSpeciesOwner = found?.role === 'species_owner' || (otherOwnedSp && otherOwnedSp.length > 0);
       const bio            = profile?.bio        || '';
       const tos            = profile?.tos        || '';
       let   avatarUrl      = profile?.avatar_url || '';
       // user_profiles에 avatar_url 없으면 스토리지에서 직접 폴백
-      if (!avatarUrl && found?.id) {
-        const { data: stData } = sb.storage.from('images').getPublicUrl(`avatar_${found.id}.jpg`);
+      if (!avatarUrl) {
+        const { data: stData } = sb.storage.from('images').getPublicUrl(`avatar_${userId}.jpg`);
         if (stData?.publicUrl) avatarUrl = stData.publicUrl;
       }
-      const joinDate       = profile?.joined_at
+      const joinDate = profile?.joined_at
         ? new Date(profile.joined_at).toLocaleDateString('ko-KR', {
             year: 'numeric', month: '2-digit', day: '2-digit'
           }).replace(/\. /g, '.').replace(/\.$/, '')
@@ -825,29 +821,24 @@
         el.style.backgroundPosition = 'center';
       }
 
-      // 더보기 링크 → 해당 유저 필터
+      // 더보기 링크 → UUID 기반
       const speciesMoreEl = document.getElementById('speciesMoreLink');
       const charMoreEl    = document.getElementById('charMoreLink');
-      if (speciesMoreEl) speciesMoreEl.href = found?.login_id
-        ? `my-species.html?owner_id=${encodeURIComponent(found.login_id)}`
-        : `my-species.html?owner=${encodeURIComponent(displayName)}`;
-      if (charMoreEl)    charMoreEl.href    = found?.login_id
-        ? `character-list.html?owner_id=${encodeURIComponent(found.login_id)}`
-        : `character-list.html?owner=${encodeURIComponent(displayName)}`;
+      if (speciesMoreEl) speciesMoreEl.href = `my-species.html?owner_id=${userId}`;
+      if (charMoreEl)    charMoreEl.href    = `character-list.html?owner_id=${userId}`;
 
-      const profileOwnerId = found?.id || null;
-      console.log('[initOtherProfile] profileOwnerId:', profileOwnerId, '/ displayName:', displayName);
+      console.log('[initOtherProfile] userId:', userId, '/ displayName:', displayName);
 
       // 프레임·스티커까지 준비된 뒤 한 번에 표시
-      if (profileOwnerId) await applyProfileFrame(profileOwnerId);
+      await applyProfileFrame(userId);
 
       document.getElementById('profileLoading').style.display = 'none';
       document.getElementById('profileContent').style.display = 'block';
 
-      loadBadges(profileOwnerId);
-      loadMySpecies(profileOwnerId, displayName);
-      loadMyCharacters(profileOwnerId, displayName);
-      loadAchievements(profileOwnerId, displayName);
+      loadBadges(userId);
+      loadMySpecies(userId, displayName);
+      loadMyCharacters(userId, displayName);
+      loadAchievements(userId, displayName);
     }
 
     async function applyProfileFrame(userId, prefetchedEquip = null) {
@@ -898,7 +889,7 @@
 
       const [{ data: mySpById }, { data: myProfile }, { data: myEquip }] = await Promise.all([
         sb.from('species').select('id').eq('owner_user_id', user.id).limit(1),
-        sb.from('user_profiles').select('bio, tos, watermark_url').eq('nickname', displayName).single(),
+        sb.from('user_profiles').select('bio, tos, watermark_url').eq('user_id', user.id).single(),
         sb.from('user_equipment').select('equipped_frame_id, equipped_sticker_id').eq('user_id', user.id).maybeSingle(),
       ]);
 
@@ -918,8 +909,8 @@
           bio = metaBio;
           tos = metaTos;
           await sb.from('user_profiles').upsert(
-            { nickname: displayName, bio, tos, joined_at: user.created_at },
-            { onConflict: 'nickname' }
+            { nickname: displayName, user_id: user.id, bio, tos, joined_at: user.created_at },
+            { onConflict: 'user_id' }
           );
         }
         // user_metadata에서 제거 (null로 덮어쓰기)
@@ -971,10 +962,10 @@
       document.getElementById('profileContent').style.display = 'block';
 
       // joined_at + avatar_url 백그라운드 동기화 (타인이 내 프로필 볼 때 표시용)
-      const _syncData = { nickname: displayName, joined_at: user.created_at };
+      const _syncData = { nickname: displayName, user_id: user.id, joined_at: user.created_at };
       const _avatarUrl = user.user_metadata?.avatar_url;
       if (_avatarUrl) _syncData.avatar_url = _avatarUrl;
-      sb.from('user_profiles').upsert(_syncData, { onConflict: 'nickname' });
+      sb.from('user_profiles').upsert(_syncData, { onConflict: 'user_id' });
 
       console.log('[initMyProfile] user.id:', user.id, '/ displayName:', displayName);
       loadBadges(user.id);
@@ -1146,9 +1137,6 @@
         return;
       }
       try {
-        const profileNickname = viewNickname ||
-          (currentUser?.user_metadata?.display_name || currentUser?.user_metadata?.nickname);
-
         const [{ data: allAch }, { data: myAch }, { data: profileData }] = await Promise.all([
           sb.from('achievements').select('id, code'),
           sb.from('user_achievements')
@@ -1157,7 +1145,7 @@
             .order('unlocked_at', { ascending: false }),
           sb.from('user_profiles')
             .select('featured_achievements')
-            .eq('nickname', profileNickname)
+            .eq('user_id', userId)
             .single(),
         ]);
 
@@ -1342,6 +1330,16 @@
 
       const oldDisplayName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
 
+      if (newDisplayName !== oldDisplayName) {
+        const isAvailable = await checkNicknameAvailable(newDisplayName);
+        if (!isAvailable) {
+          errorEl.textContent = '이미 사용 중인 닉네임입니다.';
+          btn.textContent = '저장';
+          btn.disabled = false;
+          return;
+        }
+      }
+
       const { error } = await updateProfile({ display_name: newDisplayName, avatar_url: currentUser.user_metadata?.avatar_url });
 
       if (error) {
@@ -1373,16 +1371,15 @@
             sb.from('character_transfers').update({ from_nickname: newDisplayName }).eq('from_nickname', oldDisplayName),
             sb.from('character_transfers').update({ to_nickname: newDisplayName }).eq('to_nickname', oldDisplayName),
             sb.from('notifications').update({ user_nickname: newDisplayName }).eq('user_nickname', oldDisplayName),
-            sb.from('user_profiles').delete().eq('nickname', oldDisplayName),
           ]);
           currentUser.user_metadata.display_name = newDisplayName;
           document.getElementById('profileName').textContent = newDisplayName;
           document.getElementById('breadcrumbName').textContent = newDisplayName;
           window.awardAchievement?.('nickname_set');
         }
-        const _profileUpsert = { nickname: newDisplayName, bio, tos, joined_at: currentUser.created_at };
+        const _profileUpsert = { nickname: newDisplayName, user_id: currentUser.id, bio, tos, joined_at: currentUser.created_at };
         if (currentUser.user_metadata?.avatar_url) _profileUpsert.avatar_url = currentUser.user_metadata.avatar_url;
-        await sb.from('user_profiles').upsert(_profileUpsert, { onConflict: 'nickname' });
+        await sb.from('user_profiles').upsert(_profileUpsert, { onConflict: 'user_id' });
         successEl.textContent = '저장됐어요!';
         window.awardAchievement?.('profile_setup');
         document.getElementById('profileBio').innerHTML = DOMPurify.sanitize(bio);
