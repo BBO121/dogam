@@ -93,12 +93,10 @@
       if (userList) userList.forEach(u => { if (u.id && u.nickname) idToNick[u.id] = u.nickname; });
 
       if (ownerIdParam) {
-        // login_id → UUID 조회 (URL에 UUID 비노출)
-        const foundUser = (userList || []).find(u =>
-          u.login_id?.toLowerCase() === ownerIdParam.toLowerCase()
-        );
-        ownerParamId = foundUser?.id || null;
-        const displayLabel = foundUser?.nickname || ownerIdParam;
+        // ownerIdParam은 UUID — id 기준으로 유저 조회
+        const foundUser = (userList || []).find(u => u.id === ownerIdParam);
+        ownerParamId = ownerIdParam; // 이미 UUID이므로 그대로 사용
+        const displayLabel = foundUser?.nickname || '(닉네임 미설정)';
         document.querySelector('.list-page-title').textContent = `${displayLabel}의 개체`;
       } else if (ownerParam && userList) {
         const found = userList.find(u => u.nickname === ownerParam);
