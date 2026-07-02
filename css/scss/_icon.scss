@@ -1,0 +1,13 @@
+.ico {
+    display: inline-block;
+    vertical-align: middle;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 100%;
+
+    &-close {
+        width: 20px;
+        height: 20px;
+        background-image: url(../images/icons/ic-close.svg);
+    }
+}

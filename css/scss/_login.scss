@@ -1,0 +1,142 @@
+/* ═══════════════════════════════════════
+   로그인 / 회원가입
+═══════════════════════════════════════ */
+.auth-wrap {
+  min-height: calc(100vh - 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px;
+  background: var(--sky-pale);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--white);
+  border-radius: 20px;
+  padding: 40px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.auth-title {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--text);
+}
+
+.auth-subtitle {
+  font-size: 14px;
+  color: var(--text-mute);
+  margin-top: -12px;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.btn-submit {
+  width: 100%;
+  padding: 13px;
+  background: var(--sky-dark);
+  color: var(--white);
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 4px;
+  font-family: inherit;
+  transition: background 0.15s;
+}
+
+.btn-submit:hover {
+  background: var(--sky-deep);
+}
+
+.auth-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--border);
+  font-size: 12px;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.auth-switch {
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-mute);
+}
+
+.auth-switch a {
+  color: var(--sky-dark);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.auth-error {
+  font-size: 13px;
+  color: #EF4444;
+  min-height: 18px;
+}
+
+.btn-username {
+  color: var(--sky-deep);
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.badge-admin {
+  display: inline-block;
+  padding: 3px 8px;
+  background: #FEF3C7;
+  color: #D97706;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 6px;
+}
+
+.badge-staff {
+  display: inline-block;
+  padding: 3px 8px;
+  background: #DCFCE7;
+  color: #16A34A;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 6px;
+}
+
+.btn-logout {
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 13px;
+  color: var(--text-mute);
+  cursor: pointer;
+  font-family: inherit;
+  margin-left: 8px;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.btn-logout:hover {
+  border-color: #EF4444;
+  color: #EF4444;
+}

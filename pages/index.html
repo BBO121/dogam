@@ -38,8 +38,21 @@
     </div>
   </header>
 
-  <div class="layout">
+  <!-- 상단 배너 -->
+  <div class="top-banner">
+    <ul class="banner-list">
+      <li>
+        8월 15,16일 코믹월드 종족종합부스 위탁 및 ARPG 카탈로그 모집중!
+        <a href="#none" id="copyText" class="hover-link" title="클릭하면 아이디가 복사됩니다.">
+          [문의 : discord <span id="copyTarget">@gyeoeon</span>]
+        </a>
+      </li>
+    </ul>
+    <button class="close-btn"><i class="ico ico-close"></i></button>
+  </div>
 
+
+  <div class="layout">
     <aside class="sidebar" id="sidebar"></aside>
 
     <!-- 메인 콘텐츠 -->
@@ -224,7 +237,33 @@
     }
 
     loadIndex();
-  </script>
+
+    // 텍스트 클릭 시 복사
+    const copyLink = document.getElementById('copyText');
+    const copyTarget = document.getElementById('copyTarget');
+
+    copyLink.addEventListener('click', (e) => {
+      e.preventDefault();
+
+      const textToCopy = copyTarget.textContent;
+
+      navigator.clipboard.writeText(textToCopy)
+        .then(() => {
+          alert(`복사되었습니다!`);
+        })
+        .catch(() => {
+          alert('복사에 실패했습니다');
+        });
+    });
+
+    // 배너 닫기 기능
+    const closeBtn = document.querySelector('.close-btn');
+    const topBanner = document.querySelector('.top-banner');
+
+    closeBtn.addEventListener('click', () => {
+      topBanner.classList.add('hidden');
+    });
+</script>
 </body>
 </html>
 
