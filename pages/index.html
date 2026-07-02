@@ -242,19 +242,52 @@
     const copyLink = document.getElementById('copyText');
     const copyTarget = document.getElementById('copyTarget');
 
-    copyLink.addEventListener('click', (e) => {
+    function fallbackCopyTextToClipboard(text) {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';  
+      textArea.style.top = '-9999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      try {
+        const successful = document.execCommand('copy');
+        document.body.removeChild(textArea);
+        return successful;
+      } catch {
+        document.body.removeChild(textArea);
+        return false;
+      }
+    }
+
+    function copyText(e) {
       e.preventDefault();
 
       const textToCopy = copyTarget.textContent;
 
-      navigator.clipboard.writeText(textToCopy)
-        .then(() => {
-          alert(`복사되었습니다!`);
-        })
-        .catch(() => {
-          alert('복사에 실패했습니다');
-        });
-    });
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(textToCopy)
+          .then(() => alert('복사되었습니다!'))
+          .catch(() => {
+            if (fallbackCopyTextToClipboard(textToCopy)) {
+              alert('복사되었습니다!');
+            } else {
+              alert('복사에 실패했습니다.');
+            }
+          });
+      } else {
+        if (fallbackCopyTextToClipboard(textToCopy)) {
+          alert('복사되었습니다!');
+        } else {
+          alert('복사에 실패했습니다.');
+        }
+      }
+    }
+
+    copyLink.addEventListener('click', copyText);
+    copyLink.addEventListener('touchend', copyText);
+
 
     // 배너 닫기 기능
     const closeBtn = document.querySelector('.close-btn');
