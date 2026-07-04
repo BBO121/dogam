@@ -38,6 +38,37 @@ async function signOut() {
   window.location.href = 'index.html';
 }
 
+// 로그아웃 확인 모달 (공통 .modal-overlay/.modal-card 스타일 재사용)
+// 헤더/사이드바 등 로그아웃 버튼이 있는 모든 곳에서 공용으로 사용
+function ensureLogoutModal() {
+  if (document.getElementById('logoutConfirmModal')) return;
+  const overlay = document.createElement('div');
+  overlay.className = 'modal-overlay';
+  overlay.id = 'logoutConfirmModal';
+  overlay.style.display = 'none';
+  overlay.innerHTML = `
+    <div class="modal-card">
+      <h3 class="modal-title">로그아웃</h3>
+      <p class="modal-desc">로그아웃하시겠습니까?</p>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="closeLogoutConfirm()">취소</button>
+        <button class="btn-danger" onclick="signOut()">로그아웃</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(overlay);
+}
+
+function showLogoutConfirm() {
+  ensureLogoutModal();
+  document.getElementById('logoutConfirmModal').style.display = 'flex';
+}
+
+function closeLogoutConfirm() {
+  const modal = document.getElementById('logoutConfirmModal');
+  if (modal) modal.style.display = 'none';
+}
+
 // 스크립트 파싱 즉시 fetch 시작 — DOMContentLoaded 대기 없이 최대한 일찍 실행
 const _userPromise = sb.auth.getUser().then(({ data: { user } }) => user);
 async function getUser() { return _userPromise; }
@@ -261,7 +292,7 @@ async function updateHeader() {
 
       // 로그아웃은 닉네임 뒤에
       loginBtn.insertAdjacentHTML('afterend',
-        `<button class="btn-logout" onclick="signOut()">로그아웃</button>`
+        `<button class="btn-logout" onclick="showLogoutConfirm()">로그아웃</button>`
       );
     }
   }

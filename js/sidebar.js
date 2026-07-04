@@ -335,7 +335,7 @@ async function updateSidebarLogin() {
             <span class="sidebar-currency-label">열쇠</span>
           </span>
         </a>
-        <button class="btn-logout" onclick="signOut()">로그아웃</button>
+        <button class="btn-logout" onclick="showLogoutConfirm()">로그아웃</button>
       `;
     }
   } else {
