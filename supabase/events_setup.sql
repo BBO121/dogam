@@ -14,45 +14,85 @@ CREATE TABLE IF NOT EXISTS public.events (
 );
 
 -- 고정 우선 + 최신순 조회 인덱스
-CREATE INDEX IF NOT EXISTS events_pinned_created_idx ON public.events (is_pinned DESC, created_at DESC);
+CREATE INDEX IF NOT EXISTS events_pinned_created_idx
+ON public.events (is_pinned DESC, created_at DESC);
 
 -- RLS 활성화
 ALTER TABLE public.events ENABLE ROW LEVEL SECURITY;
 
--- 기존 정책 제거 후 재생성 (중복 에러 방지)
+-- =============================================
+-- 기존 정책 삭제 (중복 방지)
+-- =============================================
+
 DROP POLICY IF EXISTS "events_public_select" ON public.events;
 DROP POLICY IF EXISTS "events_admin_insert" ON public.events;
 DROP POLICY IF EXISTS "events_admin_update" ON public.events;
 DROP POLICY IF EXISTS "events_admin_delete" ON public.events;
 
--- 읽기: 비로그인 포함 전체 공개
-CREATE POLICY "events_public_select" ON public.events
-  FOR SELECT USING (true);
+-- =============================================
+-- 조회 : 누구나 가능
+-- =============================================
 
--- 쓰기/수정/삭제: 관리자·스태프만 (notices 정책과 동일 기준)
-CREATE POLICY "events_admin_insert" ON public.events
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM auth.users
-      WHERE auth.users.id = auth.uid()
-        AND auth.users.raw_user_meta_data->>'role' IN ('admin', 'staff')
-    )
-  );
+CREATE POLICY "events_public_select"
+ON public.events
+FOR SELECT
+USING (true);
 
-CREATE POLICY "events_admin_update" ON public.events
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM auth.users
-      WHERE auth.users.id = auth.uid()
-        AND auth.users.raw_user_meta_data->>'role' IN ('admin', 'staff')
-    )
-  );
+-- =============================================
+-- 작성 : 관리자만
+-- =============================================
 
-CREATE POLICY "events_admin_delete" ON public.events
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM auth.users
-      WHERE auth.users.id = auth.uid()
-        AND auth.users.raw_user_meta_data->>'role' IN ('admin', 'staff')
-    )
-  );
+CREATE POLICY "events_admin_insert"
+ON public.events
+FOR INSERT
+WITH CHECK (
+  ((auth.jwt() -> 'user_metadata'::text) ->> 'role'::text) = 'admin'::text
+);
+
+-- =============================================
+-- 수정 : 관리자만
+-- =============================================
+
+CREATE POLICY "events_admin_update"
+ON public.events
+FOR UPDATE
+USING (
+  ((auth.jwt() -> 'user_metadata'::text) ->> 'role'::text) = 'admin'::text
+)
+WITH CHECK (
+  ((auth.jwt() -> 'user_metadata'::text) ->> 'role'::text) = 'admin'::text
+);
+
+-- =============================================
+-- 삭제 : 관리자만
+-- =============================================
+
+CREATE POLICY "events_admin_delete"
+ON public.events
+FOR DELETE
+USING (
+  ((auth.jwt() -> 'user_metadata'::text) ->> 'role'::text) = 'admin'::text
+);
+
+-- =============================================
+-- updated_at 자동 갱신 트리거
+-- =============================================
+
+CREATE OR REPLACE FUNCTION public.set_events_updated_at()
+RETURNS trigger
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_events_updated_at
+ON public.events;
+
+CREATE TRIGGER trg_events_updated_at
+BEFORE UPDATE
+ON public.events
+FOR EACH ROW
+EXECUTE FUNCTION public.set_events_updated_at();
