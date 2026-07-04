@@ -2612,6 +2612,47 @@ button.btn-more {
   gap: 14px;
 }
 
+/* 이벤트 배너 등록 폼: 관련 항목끼리 묶되, 항목 사이 여백은 충분히 확보 */
+.banner-form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+/* 한 줄 정렬 항목 (노출 활성화/순서, 노출 시작/종료 등) — 두 줄 모두 동일 기준 사용 */
+.banner-form-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 6px;
+}
+
+.banner-form-field {
+  flex: 1;
+  min-width: 160px;
+}
+
+.banner-form-inline-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.banner-form-number {
+  width: 80px;
+}
+
+/* 등록/취소 버튼: 위쪽에 구분선을 두어 폼 하단임을 명확히 함 */
+.banner-form-actions {
+  gap: 8px;
+  margin-top: 6px;
+  padding-top: 16px;
+  border-top: 1px solid var(--sky-light);
+}
+
 .admin-table {
   width: 100%;
   border-collapse: collapse;

@@ -16,6 +16,7 @@ async function initSidebar() {
       </button>
       <div class="sidebar-accordion-body" id="bodyHome">
         <a href="notice.html"      class="sidebar-subitem ${path === 'notice.html'           || path === 'notice-detail.html'        ? 'active' : ''}">공지사항</a>
+        <a href="events.html"      class="sidebar-subitem ${path === 'events.html'           || path === 'event-detail.html'         ? 'active' : ''}">이벤트</a>
         <a href="guide.html"       class="sidebar-subitem ${path === 'guide.html'            || path === 'guide-detail.html'         ? 'active' : ''}">가이드</a>
         <div class="sidebar-divider" style="margin:8px 0;"></div>
         <a href="update-note.html" class="sidebar-subitem ${path === 'update-note.html'      || path === 'update-note-detail.html'   || path === 'update-note-write.html' ? 'active' : ''}">업데이트</a>
@@ -89,7 +90,7 @@ async function initSidebar() {
   `;
 
   // 현재 페이지에 해당하는 아코디언 자동 열기
-  const homePages    = ['notice.html','notice-detail.html','guide.html','guide-detail.html',
+  const homePages    = ['notice.html','notice-detail.html','events.html','event-detail.html','guide.html','guide-detail.html',
                         'update-note.html','update-note-detail.html','update-note-write.html',
                         'dev-log.html','dev-log-detail.html','dev-log-write.html'];
   const listPages    = ['species.html','species-list.html','character-list.html','character.html',

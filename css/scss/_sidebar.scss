@@ -291,6 +291,18 @@ body.tour-sidebar-step .sidebar {
 
 
 /* 상단 배너 */
+@keyframes bannerSlideUp {
+  0% { transform: translateY(100%); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+// 모바일에서 문구가 배너 폭보다 길 때 왼쪽으로 흐르는 marquee
+// 문구를 2벌 이어붙인 뒤 절반(-50%)만 이동시켜 뉴스 티커처럼 공백 없이 반복됨
+@keyframes bannerMarquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
 .top-banner {
   position: relative;
   overflow: hidden;
@@ -327,8 +339,39 @@ body.tour-sidebar-step .sidebar {
       color: #d6d6d6;
       word-break: keep-all;
       transition: .5s ease-in-out;
-      a:hover {
+
+      // 배너 2개 이상일 때 위로 올라오는 롤링 애니메이션
+      &.banner-rolling {
+        animation: bannerSlideUp .5s ease-in-out;
+      }
+
+      // a(연결 있음)/span(연결안함) 둘 다 동일 레이아웃, hover 강조는 a에만 적용
+      .banner-link {
+        display: block;
+        color: inherit;
+        text-decoration: none;
+      }
+      .banner-track {
+        display: inline-block;
+      }
+      a.banner-link:hover {
         color: #fff;
+
+        .banner-cta {
+          color: #fff;
+          text-decoration: underline;
+        }
+      }
+
+      .banner-cta {
+        display: inline;
+        margin-left: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--sky);
+        white-space: nowrap;
+        text-decoration: none;
+        transition: color .2s ease-in-out;
       }
     }
   }
@@ -345,6 +388,30 @@ body.tour-sidebar-step .sidebar {
       li {
         font-size: 13px;
         padding: 5px 40px 5px 15px;
+
+        // 모바일: 한 줄 유지, 넘치는 문구는 marquee로 흐르게
+        .banner-link {
+          overflow: hidden;
+          white-space: nowrap;
+        }
+        .banner-track {
+          display: inline-flex;
+          align-items: center;
+          gap: 40px;
+          white-space: nowrap;
+
+          &.banner-marquee {
+            animation: bannerMarquee 18s linear infinite;
+          }
+        }
+        .banner-marquee-item {
+          flex: 0 0 auto;
+        }
+
+        .banner-cta {
+          margin-left: 5px;
+          font-size: 11px;
+        }
       }
     }
     .close-btn {

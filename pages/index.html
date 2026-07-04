@@ -38,16 +38,9 @@
     </div>
   </header>
 
-  <!-- 상단 배너 -->
-  <div class="top-banner">
-    <ul class="banner-list">
-      <li>
-        8월 15,16일 코믹월드 종족종합부스 위탁 및 ARPG 카탈로그 모집중!
-        <a href="#none" id="copyText" class="hover-link" title="클릭하면 아이디가 복사됩니다.">
-          [문의 : discord <span id="copyTarget">@gyeoeon</span>]
-        </a>
-      </li>
-    </ul>
+  <!-- 상단 이벤트 배너 -->
+  <div class="top-banner" id="topBanner" style="display:none;">
+    <ul class="banner-list" id="bannerList"></ul>
     <button class="close-btn"><i class="ico ico-close"></i></button>
   </div>
 
@@ -238,63 +231,172 @@
 
     loadIndex();
 
-    // 텍스트 클릭 시 복사
-    const copyLink = document.getElementById('copyText');
-    const copyTarget = document.getElementById('copyTarget');
+    // ── 상단 이벤트 배너 (롤링 티커) ──────────────────
+    const BANNER_ROLL_INTERVAL = 4000;
+    const EVENT_BANNER_HIDE_UNTIL_KEY = 'eventBannerHiddenUntil';
+    const EVENT_BANNER_HIDE_IDS_KEY   = 'eventBannerHiddenIds';
+    let currentBannerIds = [];
 
-    function fallbackCopyTextToClipboard(text) {
-      const textArea = document.createElement('textarea');
-      textArea.value = text;
-      textArea.style.position = 'fixed';  
-      textArea.style.top = '-9999px';
-      document.body.appendChild(textArea);
-      textArea.focus();
-      textArea.select();
+    // 다음 KST(UTC+9) 자정의 실제 epoch(ms) 타임스탬프
+    function getNextKstMidnightMs() {
+      const KST_OFFSET_MS = 9 * 60 * 60 * 1000;
+      const shifted = new Date(Date.now() + KST_OFFSET_MS);
+      const nextMidnightShifted = Date.UTC(
+        shifted.getUTCFullYear(),
+        shifted.getUTCMonth(),
+        shifted.getUTCDate() + 1,
+        0, 0, 0
+      );
+      return nextMidnightShifted - KST_OFFSET_MS;
+    }
 
+    function readHiddenBannerState() {
       try {
-        const successful = document.execCommand('copy');
-        document.body.removeChild(textArea);
-        return successful;
+        const until = Number(localStorage.getItem(EVENT_BANNER_HIDE_UNTIL_KEY));
+        return {
+          until: Number.isFinite(until) ? until : 0,
+          ids: localStorage.getItem(EVENT_BANNER_HIDE_IDS_KEY) || '',
+        };
       } catch {
-        document.body.removeChild(textArea);
-        return false;
+        return { until: 0, ids: '' };
       }
     }
 
-    function copyText(e) {
-      e.preventDefault();
+    function clearHiddenBannerState() {
+      try {
+        localStorage.removeItem(EVENT_BANNER_HIDE_UNTIL_KEY);
+        localStorage.removeItem(EVENT_BANNER_HIDE_IDS_KEY);
+      } catch {}
+    }
 
-      const textToCopy = copyTarget.textContent;
+    function saveHiddenBannerState(ids) {
+      try {
+        localStorage.setItem(EVENT_BANNER_HIDE_UNTIL_KEY, String(getNextKstMidnightMs()));
+        localStorage.setItem(EVENT_BANNER_HIDE_IDS_KEY, ids.join(','));
+      } catch {}
+    }
 
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(textToCopy)
-          .then(() => alert('복사되었습니다!'))
-          .catch(() => {
-            if (fallbackCopyTextToClipboard(textToCopy)) {
-              alert('복사되었습니다!');
-            } else {
-              alert('복사에 실패했습니다.');
-            }
-          });
-      } else {
-        if (fallbackCopyTextToClipboard(textToCopy)) {
-          alert('복사되었습니다!');
-        } else {
-          alert('복사에 실패했습니다.');
-        }
+    function bannerHref(b) {
+      if (b.link_url) return b.link_url;
+      if (b.event_id) return `event-detail.html?id=${b.event_id}`;
+      return null; // 연결안함 — 클릭 비활성화
+    }
+
+    function buildBannerMarqueeItem(banner, hasLink) {
+      const item = document.createElement('span');
+      item.className = 'banner-marquee-item';
+
+      const mainText = document.createElement('span');
+      mainText.className = 'banner-main-text';
+      mainText.textContent = banner.text;
+      item.appendChild(mainText);
+
+      // 연결이 없으면 show_cta가 true여도 CTA를 표시하지 않음
+      if (banner.show_cta && hasLink) {
+        const cta = document.createElement('span');
+        cta.className = 'banner-cta';
+        cta.textContent = banner.cta_text || '자세히 보기 ▶';
+        item.appendChild(cta);
+      }
+
+      return item;
+    }
+
+    function applyBannerMarquee(link, track) {
+      // 이전에 붙였던 복제본 제거 후 원본 1벌 폭으로 재측정
+      while (track.children.length > 1) track.removeChild(track.lastChild);
+      track.classList.remove('banner-marquee');
+
+      // 문구가 배너 폭보다 길 때만 marquee 적용 (모바일 CSS에서만 실제로 흐름)
+      if (track.scrollWidth > link.clientWidth) {
+        track.classList.add('banner-marquee');
+        // 뉴스 티커처럼 공백 없이 이어지도록 동일 문구를 1벌 더 복제
+        track.appendChild(track.firstChild.cloneNode(true));
       }
     }
 
-    copyLink.addEventListener('click', copyText);
-    copyLink.addEventListener('touchend', copyText);
+    function renderBannerItem(bannerList, banner, animate) {
+      const li = document.createElement('li');
+      if (animate) li.classList.add('banner-rolling');
 
+      const href = bannerHref(banner);
+      const hasLink = !!href;
+      // 연결이 없으면 클릭 불가능한 span으로, 있으면 a로 렌더링
+      const wrapper = document.createElement(hasLink ? 'a' : 'span');
+      if (hasLink) wrapper.href = href;
+      wrapper.className = 'banner-link';
+
+      const track = document.createElement('span');
+      track.className = 'banner-track';
+      track.appendChild(buildBannerMarqueeItem(banner, hasLink));
+
+      wrapper.appendChild(track);
+      li.appendChild(wrapper);
+      bannerList.innerHTML = '';
+      bannerList.appendChild(li);
+
+      requestAnimationFrame(() => applyBannerMarquee(wrapper, track));
+    }
+
+    async function initEventBanner() {
+      const topBanner  = document.getElementById('topBanner');
+      const bannerList = document.getElementById('bannerList');
+
+      const { data, error } = await sb
+        .from('event_banners')
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: false });
+
+      if (error || !data) return;
+
+      const nowMs = Date.now();
+      const banners = data.filter(b => {
+        if (b.starts_at && new Date(b.starts_at).getTime() > nowMs) return false;
+        if (b.ends_at && new Date(b.ends_at).getTime() < nowMs) return false;
+        return true;
+      });
+
+      if (banners.length === 0) return;
+
+      currentBannerIds = banners.map(b => b.id);
+
+      const hidden = readHiddenBannerState();
+      const idsMatch = hidden.ids === currentBannerIds.join(',');
+      if (hidden.until && nowMs < hidden.until && idsMatch) {
+        return; // 사용자가 오늘 숨김 처리했고, 그 사이 배너 구성도 안 바뀜
+      }
+      if (hidden.until) clearHiddenBannerState(); // 만료됐거나 배너 구성이 바뀌었으면 정리
+
+      topBanner.style.display = 'flex';
+      let idx = 0;
+      renderBannerItem(bannerList, banners[idx], false);
+
+      if (banners.length > 1) {
+        setInterval(() => {
+          idx = (idx + 1) % banners.length;
+          renderBannerItem(bannerList, banners[idx], true);
+        }, BANNER_ROLL_INTERVAL);
+      }
+    }
+
+    initEventBanner();
+
+    // 창 크기/orientation 변경 시 marquee 재판정
+    window.addEventListener('resize', () => {
+      const link = document.querySelector('#bannerList .banner-link');
+      const track = link?.querySelector('.banner-track');
+      if (link && track) applyBannerMarquee(link, track);
+    });
 
     // 배너 닫기 기능
     const closeBtn = document.querySelector('.close-btn');
-    const topBanner = document.querySelector('.top-banner');
+    const topBannerEl = document.getElementById('topBanner');
 
     closeBtn.addEventListener('click', () => {
-      topBanner.classList.add('hidden');
+      topBannerEl.classList.add('hidden');
+      saveHiddenBannerState(currentBannerIds);
     });
 </script>
 </body>

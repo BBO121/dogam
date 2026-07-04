@@ -36,6 +36,7 @@
         <!-- 탭 -->
         <div class="profile-tabs">
           <button class="profile-tab active" data-tab="Notices">공지 관리</button>
+          <button class="profile-tab" data-tab="Events">이벤트 관리</button>
           <button class="profile-tab" data-tab="UpdateNotes">업데이트노트</button>
           <button class="profile-tab" data-tab="DevLogs">개발일지</button>
           <button class="profile-tab" data-tab="Users">유저 관리</button>
@@ -84,6 +85,127 @@
               <p id="noticeEmpty" class="empty-state" style="display:none;">등록된 공지가 없어요.</p>
             </div>
             <div id="pgNotices"></div>
+          </section>
+
+        </div>
+
+        <!-- 이벤트 관리 탭 -->
+        <div id="tabEvents" class="tab-content" style="display:none;">
+
+          <section class="section">
+            <!-- 작성 버튼 -->
+            <div class="section-header">
+              <h2 class="settings-section-title" style="margin-bottom:0;">이벤트 목록</h2>
+              <button class="btn-secondary" onclick="toggleWriteFormEvent()">+ 새 이벤트 작성</button>
+            </div>
+
+            <!-- 인라인 작성 폼 -->
+            <div id="writeFormEvent" class="admin-write-form" style="display:none;">
+              <div class="form-group">
+                <label class="notice-pin-label">
+                  <input type="checkbox" id="isPinnedEvent" class="notice-pin-check">
+                  <span>상단 고정</span>
+                </label>
+              </div>
+              <div class="form-group">
+                <label class="form-label">제목 <span class="required">*</span></label>
+                <input type="text" id="eventTitle" class="form-input" placeholder="이벤트 제목">
+              </div>
+              <div class="form-group">
+                <label class="form-label">내용 <span class="required">*</span></label>
+                <textarea id="eventContent" class="form-textarea" rows="6" placeholder="이벤트 내용"></textarea>
+              </div>
+              <p class="auth-error" id="writeErrorEvent"></p>
+              <div class="form-actions" style="gap:8px; display:flex; justify-content:flex-end;">
+                <button class="btn-ghost" onclick="toggleWriteFormEvent()">취소</button>
+                <button class="btn-secondary" id="writeSubmitBtnEvent" onclick="submitEvent()">등록</button>
+              </div>
+            </div>
+
+            <!-- 이벤트 목록 -->
+            <div id="eventTableWrap" style="margin-top: 16px;">
+              <div class="admin-card-list" id="eventTableBody"></div>
+              <p id="eventEmpty" class="empty-state" style="display:none;">등록된 이벤트가 없어요.</p>
+            </div>
+            <div id="pgEvents"></div>
+          </section>
+
+          <!-- 이벤트 배너 관리 -->
+          <section class="section" style="margin-top:24px;">
+            <div class="section-header">
+              <h2 class="settings-section-title" style="margin-bottom:0;">상단 이벤트 배너</h2>
+              <button class="btn-secondary" onclick="toggleWriteFormBanner()">+ 새 배너 추가</button>
+            </div>
+
+            <!-- 인라인 작성 폼 -->
+            <div id="writeFormBanner" class="admin-write-form" style="display:none;">
+              <div class="form-group">
+                <label class="form-label">배너 문구 <span class="required">*</span></label>
+                <input type="text" id="bannerText" class="form-input" placeholder="배너에 표시할 문구">
+              </div>
+              <div class="banner-form-section">
+                <div class="form-group">
+                  <label class="form-label">연결 방식</label>
+                  <select id="bannerLinkType" class="form-input" onchange="onBannerLinkTypeChange()">
+                    <option value="none">연결안함</option>
+                    <option value="event">이벤트 연결</option>
+                    <option value="link">직접 링크 입력</option>
+                  </select>
+                </div>
+                <div class="form-group" id="bannerEventSelectGroup" style="display:none;">
+                  <label class="form-label">연결할 이벤트 <span class="required">*</span></label>
+                  <select id="bannerEventSelect" class="form-input">
+                    <option value="">이벤트를 선택하세요</option>
+                  </select>
+                </div>
+                <div class="form-group" id="bannerLinkUrlGroup" style="display:none;">
+                  <label class="form-label">링크 URL <span class="required">*</span></label>
+                  <input type="text" id="bannerLinkUrl" class="form-input" placeholder="예: events.html 또는 https://...">
+                </div>
+                <div class="form-group">
+                  <label class="notice-pin-label">
+                    <input type="checkbox" id="bannerShowCta" class="notice-pin-check" onchange="onBannerCtaToggle()">
+                    <span>CTA 문구 표시</span>
+                  </label>
+                  <p class="form-hint" id="bannerCtaHint">연결이 없으면 CTA는 표시되지 않아요.</p>
+                </div>
+                <div class="form-group" id="bannerCtaTextGroup" style="display:none;">
+                  <label class="form-label">CTA 문구</label>
+                  <input type="text" id="bannerCtaText" class="form-input" placeholder="자세히 보기 ▶" value="자세히 보기 ▶">
+                </div>
+              </div>
+              <div class="banner-form-row">
+                <label class="notice-pin-label">
+                  <input type="checkbox" id="bannerIsActive" class="notice-pin-check" checked>
+                  <span>노출 활성화</span>
+                </label>
+                <label class="form-label banner-form-inline-label">
+                  노출 순서
+                  <input type="number" id="bannerSortOrder" class="form-input banner-form-number" value="0">
+                </label>
+              </div>
+              <div class="banner-form-row">
+                <div class="form-group banner-form-field">
+                  <label class="form-label">노출 시작 (선택)</label>
+                  <input type="datetime-local" id="bannerStartsAt" class="form-input">
+                </div>
+                <div class="form-group banner-form-field">
+                  <label class="form-label">노출 종료 (선택)</label>
+                  <input type="datetime-local" id="bannerEndsAt" class="form-input">
+                </div>
+              </div>
+              <p class="auth-error" id="writeErrorBanner"></p>
+              <div class="form-actions banner-form-actions">
+                <button class="btn-ghost" onclick="toggleWriteFormBanner()">취소</button>
+                <button class="btn-secondary" id="writeSubmitBtnBanner" onclick="submitBanner()">등록</button>
+              </div>
+            </div>
+
+            <!-- 배너 목록 -->
+            <div id="bannerTableWrap" style="margin-top: 16px;">
+              <div class="admin-card-list" id="bannerTableBody"></div>
+              <p id="bannerEmpty" class="empty-state" style="display:none;">등록된 배너가 없어요.</p>
+            </div>
           </section>
 
         </div>
@@ -255,6 +377,7 @@
     let adminUser = null;
 
     const noticePager      = createPager(renderNoticeRows,      'pgNotices');
+    const eventPager       = createPager(renderEventRows,       'pgEvents');
     const updateNotePager  = createPager(renderUpdateNoteRows,  'pgUpdateNotes');
     const devLogPager      = createPager(renderDevLogRows,      'pgDevLogs');
     const userPager        = createPager(renderUserRows,        'pgUsers');
@@ -295,6 +418,9 @@
         btn.classList.add('active');
         document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
         document.getElementById('tab' + btn.dataset.tab).style.display = 'block';
+        if (btn.dataset.tab === 'Events' && !tabLoaded.Events) {
+          tabLoaded.Events = true; loadEvents(); loadBanners();
+        }
         if (btn.dataset.tab === 'UpdateNotes' && !tabLoaded.UpdateNotes) {
           tabLoaded.UpdateNotes = true; loadUpdateNotes();
         }
@@ -405,6 +531,310 @@
       const { error } = await sb.from('notices').delete().eq('id', id);
       if (error) { console.error('[deleteNotice]', error); alert('삭제에 실패했어요.\n' + error.message); return; }
       loadNotices();
+    }
+
+    // ── 이벤트 관리 ────────────────────────────
+    function renderEventRows(slice) {
+      document.getElementById('eventTableBody').innerHTML = slice.map(n => {
+        const date = new Date(n.created_at).toLocaleDateString('ko-KR', {
+          year: 'numeric', month: '2-digit', day: '2-digit'
+        }).replace(/\. /g, '.').replace(/\.$/, '');
+        return `
+          <div class="admin-card-row">
+            <div class="admin-card-left">
+              ${n.is_pinned ? '<span class="notice-pin" style="flex-shrink:0;">고정</span>' : ''}
+              <a href="event-detail.html?id=${n.id}" class="admin-card-name">${n.title}</a>
+            </div>
+            <div class="admin-card-right">
+              <span class="admin-card-date">${date}</span>
+              <button class="admin-btn-edit" onclick="location.href='event-write.html?edit=${n.id}'">수정</button>
+              <button class="admin-btn-delete" onclick="deleteEvent(${n.id})">삭제</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function loadEvents() {
+      const { data, error } = await sb
+        .from('events')
+        .select('*')
+        .order('is_pinned', { ascending: false })
+        .order('created_at', { ascending: false });
+
+      const empty = document.getElementById('eventEmpty');
+
+      if (error || !data || data.length === 0) {
+        document.getElementById('eventTableBody').innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+
+      empty.style.display = 'none';
+      eventPager.load(data);
+    }
+
+    function toggleWriteFormEvent() {
+      const form = document.getElementById('writeFormEvent');
+      const isOpen = form.style.display === 'none';
+      form.style.display = isOpen ? 'block' : 'none';
+      if (!isOpen) {
+        document.getElementById('eventTitle').value = '';
+        document.getElementById('eventContent').value = '';
+        document.getElementById('isPinnedEvent').checked = false;
+        document.getElementById('writeErrorEvent').textContent = '';
+      }
+    }
+
+    async function submitEvent() {
+      const title    = document.getElementById('eventTitle').value.trim();
+      const content  = document.getElementById('eventContent').value.trim();
+      const isPinned = document.getElementById('isPinnedEvent').checked;
+      const errorEl  = document.getElementById('writeErrorEvent');
+      const btn      = document.getElementById('writeSubmitBtnEvent');
+
+      errorEl.textContent = '';
+      if (!title)   { errorEl.textContent = '제목을 입력해주세요.'; return; }
+      if (!content) { errorEl.textContent = '내용을 입력해주세요.'; return; }
+
+      btn.textContent = '등록 중...';
+      btn.disabled = true;
+
+      const { error } = await sb.from('events').insert({
+        title, content,
+        is_pinned: isPinned,
+        author: adminUser?.user_metadata?.nickname || '관리자',
+      });
+
+      if (error) {
+        console.error('[event insert error]', error);
+        errorEl.textContent = `등록에 실패했어요. (${error.message})`;
+      } else {
+        toggleWriteFormEvent();
+        loadEvents();
+      }
+
+      btn.textContent = '등록';
+      btn.disabled = false;
+    }
+
+    async function deleteEvent(id) {
+      if (!confirm('정말 삭제할까요?')) return;
+      const { error } = await sb.from('events').delete().eq('id', id);
+      if (error) { console.error('[deleteEvent]', error); alert('삭제에 실패했어요.\n' + error.message); return; }
+      loadEvents();
+    }
+
+    // ── 이벤트 배너 관리 ────────────────────────────
+    let allEventsForBanner = [];
+    let allBanners = [];
+    let editingBannerId = null;
+
+    function toDatetimeLocal(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      const pad = n => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    async function loadEventsForBannerSelect() {
+      const { data } = await sb.from('events').select('id, title').order('created_at', { ascending: false });
+      allEventsForBanner = data || [];
+      const select = document.getElementById('bannerEventSelect');
+      if (!select) return;
+      const current = select.value;
+      select.innerHTML = '<option value="">이벤트를 선택하세요</option>' +
+        allEventsForBanner.map(e => `<option value="${e.id}">${e.title}</option>`).join('');
+      select.value = current;
+    }
+
+    function onBannerLinkTypeChange() {
+      const type = document.getElementById('bannerLinkType').value;
+      document.getElementById('bannerEventSelectGroup').style.display = type === 'event' ? 'block' : 'none';
+      document.getElementById('bannerLinkUrlGroup').style.display = type === 'link' ? 'block' : 'none';
+
+      const ctaCheckbox = document.getElementById('bannerShowCta');
+      const ctaHint = document.getElementById('bannerCtaHint');
+      if (type === 'none') {
+        ctaCheckbox.checked = false;
+        ctaCheckbox.disabled = true;
+        document.getElementById('bannerCtaTextGroup').style.display = 'none';
+        ctaHint.textContent = '연결이 없으면 CTA는 표시되지 않아요.';
+      } else {
+        ctaCheckbox.disabled = false;
+        ctaHint.textContent = '배너 문구 뒤에 작은 강조 문구를 붙여요. 예: "자세히 보기 ▶"';
+      }
+    }
+
+    function onBannerCtaToggle() {
+      const checked = document.getElementById('bannerShowCta').checked;
+      document.getElementById('bannerCtaTextGroup').style.display = checked ? 'block' : 'none';
+    }
+
+    function toggleWriteFormBanner() {
+      const form = document.getElementById('writeFormBanner');
+      const isOpen = form.style.display === 'none';
+      form.style.display = isOpen ? 'block' : 'none';
+      if (isOpen) {
+        loadEventsForBannerSelect();
+        onBannerLinkTypeChange();
+      } else {
+        editingBannerId = null;
+        document.getElementById('bannerText').value = '';
+        document.getElementById('bannerLinkType').value = 'none';
+        document.getElementById('bannerEventSelect').value = '';
+        document.getElementById('bannerLinkUrl').value = '';
+        document.getElementById('bannerIsActive').checked = true;
+        document.getElementById('bannerSortOrder').value = '0';
+        document.getElementById('bannerStartsAt').value = '';
+        document.getElementById('bannerEndsAt').value = '';
+        document.getElementById('bannerCtaText').value = '자세히 보기 ▶';
+        document.getElementById('writeErrorBanner').textContent = '';
+        document.getElementById('writeSubmitBtnBanner').textContent = '등록';
+        onBannerLinkTypeChange();
+      }
+    }
+
+    async function editBanner(id) {
+      const banner = allBanners.find(b => String(b.id) === String(id));
+      if (!banner) return;
+
+      editingBannerId = id;
+      await loadEventsForBannerSelect();
+
+      const linkType = banner.event_id ? 'event' : (banner.link_url ? 'link' : 'none');
+
+      document.getElementById('writeFormBanner').style.display = 'block';
+      document.getElementById('bannerText').value = banner.text || '';
+      document.getElementById('bannerLinkType').value = linkType;
+      document.getElementById('bannerEventSelect').value = banner.event_id ? String(banner.event_id) : '';
+      document.getElementById('bannerLinkUrl').value = banner.link_url || '';
+      onBannerLinkTypeChange();
+
+      if (linkType !== 'none') {
+        document.getElementById('bannerShowCta').checked = !!banner.show_cta;
+        document.getElementById('bannerCtaTextGroup').style.display = banner.show_cta ? 'block' : 'none';
+      }
+      document.getElementById('bannerCtaText').value = banner.cta_text || '자세히 보기 ▶';
+
+      document.getElementById('bannerIsActive').checked = !!banner.is_active;
+      document.getElementById('bannerSortOrder').value = banner.sort_order ?? 0;
+      document.getElementById('bannerStartsAt').value = toDatetimeLocal(banner.starts_at);
+      document.getElementById('bannerEndsAt').value = toDatetimeLocal(banner.ends_at);
+      document.getElementById('writeErrorBanner').textContent = '';
+      document.getElementById('writeSubmitBtnBanner').textContent = '수정';
+      document.getElementById('writeFormBanner').scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    function renderBannerRows(list) {
+      document.getElementById('bannerTableBody').innerHTML = list.map(b => {
+        const target = b.event_id
+          ? (allEventsForBanner.find(e => String(e.id) === String(b.event_id))?.title || `이벤트 #${b.event_id}`)
+          : (b.link_url || '연결안함');
+        return `
+          <div class="admin-card-row">
+            <div class="admin-card-left">
+              <span class="admin-card-meta">#${b.sort_order ?? 0}</span>
+              <span class="admin-card-name">${b.text}</span>
+              <span class="admin-card-meta">→ ${target}</span>
+              ${b.show_cta ? `<span class="admin-card-meta">CTA: ${b.cta_text || '자세히 보기 ▶'}</span>` : ''}
+            </div>
+            <div class="admin-card-right">
+              <label class="notice-pin-label" style="margin:0;">
+                <input type="checkbox" ${b.is_active ? 'checked' : ''} onchange="toggleBannerActive(${b.id}, this.checked)">
+                <span>노출</span>
+              </label>
+              <button class="admin-btn-edit" onclick="editBanner(${b.id})">수정</button>
+              <button class="admin-btn-delete" onclick="deleteBanner(${b.id})">삭제</button>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    async function loadBanners() {
+      await loadEventsForBannerSelect();
+      const { data, error } = await sb
+        .from('event_banners')
+        .select('*')
+        .order('sort_order', { ascending: true })
+        .order('created_at', { ascending: false });
+
+      const empty = document.getElementById('bannerEmpty');
+      if (error || !data || data.length === 0) {
+        document.getElementById('bannerTableBody').innerHTML = '';
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+      allBanners = data;
+      renderBannerRows(data);
+    }
+
+    async function submitBanner() {
+      const text      = document.getElementById('bannerText').value.trim();
+      const linkType  = document.getElementById('bannerLinkType').value;
+      const eventId   = document.getElementById('bannerEventSelect').value;
+      const linkUrl   = document.getElementById('bannerLinkUrl').value.trim();
+      const isActive  = document.getElementById('bannerIsActive').checked;
+      const sortOrder = parseInt(document.getElementById('bannerSortOrder').value, 10) || 0;
+      const startsAt  = document.getElementById('bannerStartsAt').value;
+      const endsAt    = document.getElementById('bannerEndsAt').value;
+      const showCta   = document.getElementById('bannerShowCta').checked;
+      const ctaText   = document.getElementById('bannerCtaText').value.trim();
+      const errorEl   = document.getElementById('writeErrorBanner');
+      const btn       = document.getElementById('writeSubmitBtnBanner');
+
+      errorEl.textContent = '';
+      if (!text) { errorEl.textContent = '배너 문구를 입력해주세요.'; return; }
+      if (linkType === 'event' && !eventId) { errorEl.textContent = '연결할 이벤트를 선택해주세요.'; return; }
+      if (linkType === 'link' && !linkUrl) { errorEl.textContent = '링크 URL을 입력해주세요.'; return; }
+
+      const hasLink = linkType !== 'none';
+
+      const payload = {
+        text,
+        event_id: linkType === 'event' ? Number(eventId) : null,
+        link_url: linkType === 'link' ? linkUrl : null,
+        is_active: isActive,
+        sort_order: sortOrder,
+        starts_at: startsAt ? new Date(startsAt).toISOString() : null,
+        ends_at: endsAt ? new Date(endsAt).toISOString() : null,
+        show_cta: hasLink ? showCta : false,
+        cta_text: ctaText || '자세히 보기 ▶',
+      };
+
+      btn.textContent = editingBannerId ? '수정 중...' : '등록 중...';
+      btn.disabled = true;
+
+      const { error } = editingBannerId
+        ? await sb.from('event_banners').update(payload).eq('id', editingBannerId)
+        : await sb.from('event_banners').insert(payload);
+
+      if (error) {
+        console.error('[banner submit error]', error);
+        errorEl.textContent = `저장에 실패했어요. (${error.message})`;
+        btn.textContent = editingBannerId ? '수정' : '등록';
+        btn.disabled = false;
+        return;
+      }
+
+      toggleWriteFormBanner();
+      loadBanners();
+    }
+
+    async function toggleBannerActive(id, checked) {
+      const { error } = await sb.from('event_banners').update({ is_active: checked }).eq('id', id);
+      if (error) {
+        console.error('[toggleBannerActive]', error);
+        alert('변경에 실패했어요.\n' + error.message);
+        loadBanners();
+      }
+    }
+
+    async function deleteBanner(id) {
+      if (!confirm('정말 삭제할까요?')) return;
+      const { error } = await sb.from('event_banners').delete().eq('id', id);
+      if (error) { console.error('[deleteBanner]', error); alert('삭제에 실패했어요.\n' + error.message); return; }
+      loadBanners();
     }
 
     // ── 업데이트노트 관리 ────────────────────────────
