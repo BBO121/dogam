@@ -78,6 +78,15 @@
             <p class="form-hint" id="raffleAtHint"></p>
           </div>
 
+          <!-- 랜덤 추첨: 리추첨 안내문 (기존 안내 박스 스타일 재사용) -->
+          <div id="redrawNotice" style="display:none; margin:-4px 0 16px; background:#F0F9FF; border:1.5px solid #BAE6FD; border-radius:var(--radius); padding:14px 16px;">
+            <p style="font-size:13px; font-weight:700; color:#0369A1; margin:0 0 4px;">안내</p>
+            <p style="font-size:13px; color:#0369A1; margin:0; line-height:1.6; word-break:keep-all; overflow-wrap:break-word;">
+              당첨자가 <strong>14일 동안 당첨 확인을 하지 않을 경우</strong>, 분양자는 <strong>리추첨</strong>을 진행할 수 있습니다.<br>
+              리추첨 시 기존 당첨은 자동으로 취소되며, 새로운 당첨자가 선정됩니다.
+            </p>
+          </div>
+
           <!-- 유료: 가격 -->
           <div class="form-group" id="paidFields" style="display:none;">
             <label class="form-label" id="priceLabel">가격 <span class="required">*</span></label>
@@ -267,19 +276,23 @@
       const raffleHint  = document.getElementById('raffleAtHint');
 
       const normalNotice = document.getElementById('freeNormalNotice');
+      const redrawNotice = document.getElementById('redrawNotice');
       if (freeType === 'random') {
         raffleField.style.display  = 'block';
         normalNotice.style.display = 'none';
+        redrawNotice.style.display = 'block';
         raffleLabel.innerHTML      = '추첨 날짜/시간 <span class="required">*</span>';
         raffleHint.textContent     = '이 날짜/시간이 지나면 신청이 마감되고 분양자에게 추첨 버튼이 활성화돼요.';
       } else if (freeType === 'first_come') {
         raffleField.style.display  = 'block';
         normalNotice.style.display = 'none';
+        redrawNotice.style.display = 'none';
         raffleLabel.innerHTML      = '선착순 시작 날짜/시간 <span class="required">*</span>';
         raffleHint.textContent     = '이 날짜/시간이 지나면 [분양받기] 버튼이 활성화돼요.';
       } else {
         raffleField.style.display  = 'none';
         normalNotice.style.display = 'block';
+        redrawNotice.style.display = 'none';
       }
     }
 

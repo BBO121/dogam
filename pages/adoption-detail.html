@@ -320,6 +320,19 @@
     </div>
   </div>
 
+  <!-- 리추첨 확인 모달 -->
+  <div class="modal-overlay" id="redrawModal" style="display:none;">
+    <div class="modal-card">
+      <h3 class="modal-title">리추첨</h3>
+      <p class="modal-desc">당첨자가 14일 동안 당첨을 확인하지 않았습니다.<br>리추첨을 진행하시겠습니까?<br><br>기존 당첨은 취소되며, 기존 당첨자에게 취소 알림이 발송됩니다.</p>
+      <p class="auth-error" id="redrawError"></p>
+      <div class="modal-actions" style="margin-top:20px;">
+        <button class="btn-ghost" onclick="closeRedrawModal()">취소</button>
+        <button class="btn-secondary" id="confirmRedrawBtn" onclick="confirmRedraw()">리추첨</button>
+      </div>
+    </div>
+  </div>
+
   <footer class="footer"><p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; <a href="credits.html">운영진</a> &nbsp;·&nbsp; ver.2.0</p></footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -647,6 +660,25 @@
           if (currentUser && myNick && a.winner_name && normalizeNick(myNick) === normalizeNick(a.winner_name) && a.status === '확인 대기중') {
             area.innerHTML = `<div class="raffle-info-box">🎉 추첨에 당첨됐어요! 아래 확인하기 버튼을 눌러 소유권을 받으세요.</div>`;
           }
+
+          // 작성자 전용 — 리추첨 (당첨자가 14일간 확인 안 한 경우)
+          if (isAuthor && a.status === '확인 대기중' && a.winner_name) {
+            const drawnAt     = a.winner_drawn_at ? new Date(a.winner_drawn_at) : null;
+            const daysElapsed = drawnAt ? (Date.now() - drawnAt.getTime()) / (1000 * 60 * 60 * 24) : 0;
+            const remainCount = applicantList.filter(ap => a.winner_user_id
+              ? ap.applicant_id !== a.winner_user_id
+              : normalizeNick(ap.applicant_nickname) !== normalizeNick(a.winner_name)
+            ).length;
+
+            if (drawnAt && daysElapsed >= 14 && remainCount > 0) {
+              area.innerHTML += `<button class="apply-btn" style="margin-top:10px;" onclick="openRedrawModal()">리추첨하기</button>`;
+            } else if (drawnAt && daysElapsed < 14) {
+              const daysLeft = Math.max(1, Math.ceil(14 - daysElapsed));
+              area.innerHTML += `<div class="adoption-notice" style="margin-top:8px;">당첨 확인 대기중이에요. (${daysLeft}일 후 리추첨 가능)</div>`;
+            } else if (drawnAt && remainCount === 0) {
+              area.innerHTML += `<div class="adoption-notice" style="margin-top:8px;">남은 신청자가 없어 리추첨할 수 없어요.</div>`;
+            }
+          }
           return;
         }
 
@@ -654,14 +686,25 @@
           // 신청 가능 기간
           const myApp = currentUser ? applicantList.find(ap => ap.applicant_id === currentUser.id) : null;
           if (currentUser && !isAuthor) {
+            let html = '';
             if (myApp) {
-              area.innerHTML = `<div class="raffle-info-box">✅ 추첨 신청이 완료됐어요!</div>`;
+              html = `<div class="raffle-info-box">✅ 추첨 신청이 완료됐어요!</div>`;
             } else {
-              area.innerHTML = `
+              html = `
                 <div class="raffle-info-box">🎲 추첨에 신청하려면 버튼을 눌러주세요.</div>
                 <button class="apply-btn" onclick="applyRaffle()">추첨 신청하기</button>
               `;
             }
+            html += `
+              <div style="margin-top:10px; background:#F0F9FF; border:1.5px solid #BAE6FD; border-radius:var(--radius); padding:14px 16px;">
+                <p style="font-size:13px; font-weight:700; color:#0369A1; margin:0 0 4px;">안내</p>
+                <p style="font-size:13px; color:#0369A1; margin:0; line-height:1.6; word-break:keep-all; overflow-wrap:break-word;">
+                  당첨자가 <strong>14일 동안 당첨 확인을 하지 않을 경우</strong>, 분양자는 <strong>리추첨</strong>을 진행할 수 있습니다.<br>
+                  리추첨 시 기존 당첨은 자동으로 취소되며, 새로운 당첨자가 선정됩니다.
+                </p>
+              </div>
+            `;
+            area.innerHTML = html;
           }
         } else {
           // 추첨 시간 경과 — 분양자에게 추첨 버튼
@@ -776,9 +819,10 @@
       const winnerUserId = winnerApp.applicant_id || null;
 
       const { error: updateErr } = await sb.from('adoptions').update({
-        winner_name:    winner,
-        winner_user_id: winnerUserId,
-        status:         '확인 대기중',
+        winner_name:     winner,
+        winner_user_id:  winnerUserId,
+        winner_drawn_at: new Date().toISOString(),
+        status:          '확인 대기중',
       }).eq('id', adoptionId);
 
       if (updateErr) { alert('오류가 발생했어요.'); return; }
@@ -848,6 +892,36 @@
       }
 
       alert('추첨 완료!');
+      location.reload();
+    }
+
+    function openRedrawModal() {
+      document.getElementById('redrawError').textContent = '';
+      document.getElementById('redrawModal').style.display = 'flex';
+    }
+
+    function closeRedrawModal() {
+      document.getElementById('redrawModal').style.display = 'none';
+    }
+
+    async function confirmRedraw() {
+      const btn = document.getElementById('confirmRedrawBtn');
+      const errEl = document.getElementById('redrawError');
+      errEl.textContent = '';
+      btn.disabled = true;
+      btn.textContent = '처리 중...';
+
+      const { data, error } = await sb.rpc('redraw_adoption_raffle', { p_adoption_id: adoptionId });
+
+      if (error || !data?.ok) {
+        errEl.textContent = data?.error || '리추첨에 실패했어요. 다시 시도해주세요.';
+        btn.disabled = false;
+        btn.textContent = '리추첨';
+        return;
+      }
+
+      closeRedrawModal();
+      alert(`리추첨 완료! 새 당첨자: ${data.winner_name}`);
       location.reload();
     }
 
