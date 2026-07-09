@@ -216,7 +216,8 @@ function renderBag() {
     const subs      = _itemsByType[type];
     const label     = TYPE_LABEL[type] || type;
     const subEntries = Object.entries(subs);
-    const multiSub  = subEntries.length > 1;
+    // sub_category가 기본값('기본')뿐이면 굳이 소제목을 안 띄우고, 의미 있는 이름(예: '티켓')이면 하나뿐이어도 표시
+    const multiSub  = subEntries.length > 1 || subEntries[0]?.[0] !== '기본';
 
     return `
       <div class="bag-section">
