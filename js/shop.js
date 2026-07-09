@@ -182,14 +182,12 @@ function renderThumb(item) {
         ? `<span class="shop-thumb-badge shop-badge--owned shop-badge--right">보유 ${_qtyByKey[item.item_key] ?? 0}장</span>`
         : '';
 
-  // 좌측 상단 배지 — 보유/준비중 배지(우측 상단)와 겹치지 않게 별도 위치.
-  // hidden 상품은 RLS 예외로 admin/staff에게만 조회되는 미리보기 상태이므로,
-  // 실사용자에게는 안 보인다는 걸 명확히 알리는 배지를 할인 배지보다 우선 표시.
-  const discountBadge = item.status === 'hidden'
-    ? `<span class="shop-thumb-badge shop-badge--coming">관리자 전용(비공개)</span>`
-    : item.discount_note
-      ? `<span class="shop-thumb-badge shop-badge--discount">${item.discount_note}</span>`
-      : '';
+  // 이미지 아래(상품명 위) 배지 — hidden 상품은 RLS 예외로 admin/staff에게만
+  // 조회되는 미리보기 상태이므로, 실사용자에게는 안 보인다는 걸 명확히 알림.
+  // 할인 배지는 취소선 정가 + 할인가로 이미 충분히 전달되므로 별도 표시하지 않음.
+  const adminOnlyBadge = item.status === 'hidden'
+    ? `<span class="shop-thumb-badge shop-badge--coming shop-thumb-badge--static">관리자 전용(비공개)</span>`
+    : '';
 
   const previewHtml = item.style_key && item.item_type !== 'sticker'
     ? `<div class="frame-preview ${item.style_key}"></div>`
@@ -216,10 +214,10 @@ function renderThumb(item) {
     <div class="shop-thumb shop-thumb--${state}"
          onclick='openDetailModal(${itemJson})'>
       <div class="shop-thumb-img">
-        ${discountBadge}
         ${imgOverlay}
         ${previewHtml}
       </div>
+      ${adminOnlyBadge ? `<div class="shop-thumb-badge-row">${adminOnlyBadge}</div>` : ''}
       <p class="shop-thumb-name">${formatShopName(item.name)}</p>
       ${statusHtml}
     </div>`;
@@ -269,7 +267,11 @@ function openDetailModal(item) {
   const detailDiscount = item.original_price && item.original_price > item.price
     ? `<s class="shop-price-original">${item.original_price.toLocaleString()}</s> `
     : '';
-  const detailPriceHtml = buildPriceHtml(item, detailDiscount);
+  // 목록에서는 뺀 할인 배지를 상세 모달에서는 가격 옆에 표시 (원가/할인가로 이미 전달되는 정보를 보강)
+  const detailDiscountBadge = item.discount_note
+    ? `<span class="shop-thumb-badge shop-badge--discount shop-thumb-badge--static shop-detail-price-badge">${item.discount_note}</span>`
+    : '';
+  const detailPriceHtml = buildPriceHtml(item, detailDiscount) + detailDiscountBadge;
   document.getElementById('detailPrice').innerHTML =
     state === 'insufficient'
       ? `<span style="color:#ef4444;">${detailPriceHtml}</span>`

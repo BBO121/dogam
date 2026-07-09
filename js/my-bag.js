@@ -234,8 +234,24 @@ function renderBag() {
   }).join('');
 }
 
+// 가방은 구매 상품(SKU)이 아니라 실제 보유 수량 기준으로 표시 — 묶음 이름/이미지로
+// 오해(예: "5장 묶음 / 보유 3장" → 15장으로 착각)하지 않도록 통일된 이름/이미지로 덮어씀
+function getTicketBumpDisplay(quantity) {
+  const qty = quantity ?? 0;
+  const image_url = qty >= 10
+    ? '../images/shop/ticket_bump_3.png'
+    : qty >= 5
+      ? '../images/shop/ticket_bump_2.png'
+      : '../images/shop/ticket_bump_1.png';
+  return { name: '분양 끌올 티켓', image_url };
+}
+
 // ── 아이템 카드 렌더 (상점과 동일한 크기/구조) ──────────────
 function renderBagItem(item, type) {
+  if (type === 'consumable' && item.item_key === 'ticket-bump') {
+    item = { ...item, ...getTicketBumpDisplay(item.quantity) };
+  }
+
   const styleKey   = item.style_key || '';
   const cssClass   = styleKey;
   const isEquipped = type === 'frame'

@@ -6355,6 +6355,23 @@ button.btn-more {
   right: 5px;
 }
 
+/* 보유 수량 배지(이미지 위 오버레이)와 겹치지 않도록 이미지 밖(하단, 상품명 위)으로 분리 */
+.shop-thumb-badge-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 4px;
+}
+
+/* 오버레이가 아닌 일반 흐름(이미지 아래 줄, 상세 모달 가격 옆 등)에 쓰는 배지 */
+.shop-thumb-badge--static {
+  position: static;
+}
+
+/* 상세 모달 가격 옆 할인 배지 — 가격 텍스트와 간격 확보 */
+.shop-detail-price-badge {
+  margin-left: 8px;
+}
+
 .shop-badge--discount {
   background: #ef4444;
   color: #fff;
