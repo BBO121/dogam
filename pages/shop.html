@@ -38,8 +38,16 @@
           </div>
         </div>
 
+        <!-- 상점 탭 -->
+        <div class="shop-tab-row" id="shopTabRow">
+          <button class="shop-tab-btn active" data-tab="item">아이템</button>
+          <button class="shop-tab-btn" data-tab="decorate">꾸미기</button>
+        </div>
+
         <!-- 카테고리 목록 (JS 렌더) -->
-        <div id="shopCategories" style="padding-bottom:40px;"></div>
+        <div class="shop-tab-panel">
+          <div id="shopCategories"></div>
+        </div>
 
       </div>
     </main>
@@ -58,6 +66,7 @@
           <span class="shop-detail-credit" id="detailCredit"></span>
         </div>
         <p class="shop-detail-desc" id="detailDesc"></p>
+        <p class="shop-detail-condition" id="detailCondition" style="display:none;"></p>
         <p class="shop-detail-sale-end" id="detailSaleEnd" style="display:none;"></p>
         <div class="shop-detail-footer">
           <span class="shop-detail-price" id="detailPrice"></span>

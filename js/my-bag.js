@@ -2,6 +2,11 @@ let _user              = null;
 let _equippedFrameId   = null;
 let _equippedStickerId = null;
 let _itemsByType       = {};
+let _activeTab         = 'item'; // 'item' | 'decorate'
+
+const TAB_ITEM_TYPES = {
+  item: ['consumable'],
+};
 
 // DB의 style_key → CSS 클래스 매핑
 // (DB 연동 전 로컬 더미 대비 폴백)
@@ -23,6 +28,7 @@ const TYPE_LABEL = {
   sticker:      '스티커',
   title:        '칭호',
   profile_deco: '프로필 꾸미기',
+  consumable:   '아이템',
 };
 
 // ── 초기화 ──────────────────────────────────────────────
@@ -33,6 +39,15 @@ async function initPage() {
 
     await loadData();
     renderBag();
+
+    document.getElementById('bagTabRow').addEventListener('click', e => {
+      const btn = e.target.closest('[data-tab]');
+      if (!btn) return;
+      document.querySelectorAll('#bagTabRow .shop-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      _activeTab = btn.dataset.tab;
+      renderBag();
+    });
 
     document.getElementById('pageLoading').style.display = 'none';
     document.getElementById('pageContent').style.display = '';
@@ -47,7 +62,7 @@ async function loadData() {
 
   const [userItemsRes, equipRes] = await Promise.all([
     sb.from('user_items')
-      .select('item_id, purchased_at')
+      .select('item_id, purchased_at, item_key, quantity')
       .eq('user_id', _user.id),
     sb.from('user_equipment')
       .select('equipped_frame_id, equipped_sticker_id')
@@ -91,7 +106,7 @@ async function loadData() {
     const sub  = item.sub_category || '기본';
     if (!_itemsByType[type])      _itemsByType[type] = {};
     if (!_itemsByType[type][sub]) _itemsByType[type][sub] = [];
-    _itemsByType[type][sub].push({ ...item });
+    _itemsByType[type][sub].push({ ...item, quantity: row.quantity, item_key: row.item_key });
   });
 }
 
@@ -99,6 +114,17 @@ async function loadData() {
 function renderEquippedPreview() {
   const el = document.getElementById('equippedPreview');
   if (!el) return;
+
+  // 아이템 탭에서는 프레임/스티커 미리보기 대신 안내 문구만 표시
+  // (탭 전환 시 화면 출렁임을 막기 위해 .bag-ep-section 틀 자체는 그대로 유지)
+  if (_activeTab === 'item') {
+    el.innerHTML = `
+      <div class="bag-ep-section">
+        <h2 class="bag-section-title">미리보기</h2>
+        <p class="bag-ep-item-notice">아이템은 미리보기에 적용되지 않습니다.</p>
+      </div>`;
+    return;
+  }
 
   const frames        = Object.values(_itemsByType['frame']   || {}).flat();
   const stickers      = Object.values(_itemsByType['sticker'] || {}).flat();
@@ -175,10 +201,14 @@ function renderBag() {
   renderEquippedPreview();
 
   const wrap = document.getElementById('bagSections');
-  const types = Object.keys(_itemsByType);
+  const itemTabTypes = TAB_ITEM_TYPES.item;
+  const types = Object.keys(_itemsByType).filter(t =>
+    _activeTab === 'item' ? itemTabTypes.includes(t) : !itemTabTypes.includes(t)
+  );
 
   if (!types.length) {
-    wrap.innerHTML = `<p class="empty-state" style="padding:60px 0; text-align:center;">보유한 아이템이 없어요.<br><a href="shop.html" style="color:var(--sky-dark); font-weight:700;">상점 바로가기</a></p>`;
+    const emptyMsg = _activeTab === 'item' ? '보유한 아이템이 없어요.' : '보유한 꾸미기 아이템이 없어요.';
+    wrap.innerHTML = `<p class="empty-state" style="padding:60px 0; text-align:center;">${emptyMsg}<br><a href="shop.html" style="color:var(--sky-dark); font-weight:700;">상점 바로가기</a></p>`;
     return;
   }
 
@@ -232,12 +262,18 @@ function renderBagItem(item, type) {
     actionHtml = isEquipped
       ? `<span class="shop-thumb-status shop-status--owned">착용중</span>`
       : `<button class="bag-equip-btn-sm" data-item-id="${item.id}" onclick="equipSticker('${item.id}')">착용하기</button>`;
+  } else if (type === 'consumable') {
+    actionHtml = `<span class="shop-thumb-status shop-status--owned">보유 ${item.quantity ?? 0}장</span>`;
   } else {
     actionHtml = `<span class="shop-thumb-status shop-status--owned">보유중</span>`;
   }
 
+  // 소모품(범프 티켓 등)은 카드 클릭 시 상세 모달 오픈
+  const itemJson = JSON.stringify(item).replace(/'/g, "\\'");
+  const clickAttr = type === 'consumable' ? ` onclick='openItemDetailModal(${itemJson})'` : '';
+
   return `
-    <div class="bag-item-card${isEquipped ? ' bag-item-card--equipped' : ''}">
+    <div class="bag-item-card${isEquipped ? ' bag-item-card--equipped' : ''}"${clickAttr}>
       <div class="bag-item-preview">
         ${badgeHtml}
         ${previewHtml}
@@ -245,6 +281,35 @@ function renderBagItem(item, type) {
       <p class="bag-item-name">${item.name}</p>
       <div class="bag-item-action">${actionHtml}</div>
     </div>`;
+}
+
+const TICKET_BUMP_CONDITION_HTML =
+  '<strong>※ 사용 조건</strong><br>' +
+  '내 분양글보다 최신 분양글이 20개 이상 등록되어 있을 때 사용할 수 있습니다.<br>' +
+  '사용 시 해당 분양글이 분양 목록 최상단으로 이동합니다.';
+
+// ── 아이템 상세 모달 (소모품 전용 — 프레임/스티커는 카드 내 버튼으로 바로 처리) ──
+function openItemDetailModal(item) {
+  document.getElementById('bagDetailName').textContent = item.name;
+  document.getElementById('bagDetailDesc').textContent = item.description || '';
+  document.getElementById('bagDetailQty').textContent  = `보유 ${item.quantity ?? 0}장`;
+  document.getElementById('bagDetailPreview').innerHTML = item.image_url
+    ? `<img src="${item.image_url}" alt="${item.name}" style="width:100%;height:100%;object-fit:cover;">`
+    : '';
+
+  const conditionEl = document.getElementById('bagDetailCondition');
+  if (item.item_key === 'ticket-bump') {
+    conditionEl.innerHTML     = TICKET_BUMP_CONDITION_HTML;
+    conditionEl.style.display = '';
+  } else {
+    conditionEl.style.display = 'none';
+  }
+
+  document.getElementById('bagDetailModal').style.display = 'flex';
+}
+
+function closeItemDetailModal() {
+  document.getElementById('bagDetailModal').style.display = 'none';
 }
 
 // ── 프레임 해제 ──────────────────────────────────────────

@@ -38,17 +38,44 @@
           </div>
         </div>
 
-        <!-- 현재 착용 프레임 미리보기 (JS 렌더) -->
-        <div id="equippedPreview"></div>
+        <!-- 현재 착용 프레임 미리보기 (JS 렌더) — 탭 전환과 무관하게 항상 고정 표시 -->
+        <div id="equippedPreview" style="margin-bottom:20px;"></div>
+
+        <!-- 가방 탭 -->
+        <div class="shop-tab-row" id="bagTabRow">
+          <button class="shop-tab-btn active" data-tab="item">아이템</button>
+          <button class="shop-tab-btn" data-tab="decorate">꾸미기</button>
+        </div>
 
         <!-- 아이템 섹션 (JS 렌더) -->
-        <div id="bagSections" style="padding-bottom:40px;"></div>
+        <div class="shop-tab-panel">
+          <div id="bagSections"></div>
+        </div>
 
       </div>
     </main>
   </div>
 
   <footer class="footer"><p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; <a href="credits.html">운영진</a> &nbsp;·&nbsp; ver.2.1</p></footer>
+
+  <!-- 아이템 상세 모달 (소모품 전용) -->
+  <div class="modal-overlay" id="bagDetailModal" style="display:none;" onclick="if(event.target===this)closeItemDetailModal()">
+    <div class="shop-detail-card">
+      <button class="shop-detail-close" onclick="closeItemDetailModal()">×</button>
+      <div class="shop-detail-preview" id="bagDetailPreview"></div>
+      <div class="shop-detail-info">
+        <div class="shop-detail-name-row">
+          <p class="shop-detail-name" id="bagDetailName"></p>
+        </div>
+        <p class="shop-detail-desc" id="bagDetailDesc"></p>
+        <p class="shop-detail-condition" id="bagDetailCondition" style="display:none;"></p>
+        <div class="shop-detail-footer">
+          <span class="shop-detail-price" id="bagDetailQty"></span>
+          <a href="my-adoptions.html" class="shop-buy-btn-lg">내 분양에서 사용하기</a>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/auth.js"></script>

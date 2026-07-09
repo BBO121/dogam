@@ -1,8 +1,24 @@
 let _user        = null;
 let _wallet      = null;
 let _ownedSet    = new Set();
+let _qtyByKey    = {};   // item_key → 보유 수량 (stackable 아이템 잔고)
 let _pendingItem = null;
 let _allItems    = [];
+let _activeTab   = 'item'; // 'item' | 'decorate'
+
+const TAB_ITEM_TYPES = {
+  item:     ['consumable'],
+};
+
+// "분양 끌올 티켓 1장/5장 묶음/10장 묶음" 표시 시 "분양 끌올 티켓" 다음 줄바꿈
+function formatShopName(name) {
+  return name.replace(/^(분양 끌올 티켓) /, '$1<br>');
+}
+
+const TICKET_BUMP_CONDITION_HTML =
+  '<strong>※ 사용 조건</strong><br>' +
+  '내 분양글보다 최신 분양글이 20개 이상 등록되어 있을 때 사용할 수 있습니다.<br>' +
+  '사용 시 해당 분양글이 분양 목록 최상단으로 이동합니다.';
 
 const CURRENCY_LABEL = { research_records: '연구기록', keys: '열쇠' };
 const CURRENCY_ICON  = {
@@ -15,6 +31,7 @@ const TYPE_LABEL = {
   sticker:      '스티커',
   title:        '칭호',
   profile_deco: '프로필 꾸미기',
+  consumable:   '아이템',
 };
 
 const ERROR_MSG = {
@@ -36,6 +53,15 @@ async function initPage() {
     await loadData();
     renderCategories();
 
+    document.getElementById('shopTabRow').addEventListener('click', e => {
+      const btn = e.target.closest('[data-tab]');
+      if (!btn) return;
+      document.querySelectorAll('#shopTabRow .shop-tab-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      _activeTab = btn.dataset.tab;
+      renderCategories();
+    });
+
     document.getElementById('pageLoading').style.display = 'none';
     document.getElementById('pageContent').style.display = '';
   } catch (e) {
@@ -48,28 +74,40 @@ async function loadData() {
   const [itemsRes, walletRes, ownedRes] = await Promise.all([
     sb.from('shop_items')
       .select('*')
-      .neq('status', 'hidden')
+      // status='hidden' 필터링은 하지 않음 — RLS가 일반 사용자에게는 이미 걸러주고,
+      // admin/staff 계정은 RLS 예외로 hidden 상품도 미리보기용으로 받아옴 (renderThumb에서 배지 표시)
       .or(`sale_end_at.is.null,sale_end_at.gt.${new Date().toISOString()}`)
       .order('sort_order', { ascending: true })
       .order('created_at',  { ascending: true }),
     getMyWallet(_user.id),
     sb.from('user_items')
-      .select('item_id')
+      .select('item_id, item_key, quantity')
       .eq('user_id', _user.id),
   ]);
 
   _allItems = itemsRes.data  || [];
   _wallet   = walletRes.data;
   _ownedSet = new Set((ownedRes.data || []).map(r => r.item_id));
+
+  _qtyByKey = {};
+  (ownedRes.data || []).forEach(r => {
+    if (r.item_key) _qtyByKey[r.item_key] = r.quantity ?? 0;
+  });
 }
 
 // ── 카테고리 렌더 ────────────────────────────────────────
 function renderCategories() {
   const wrap = document.getElementById('shopCategories');
 
-  // item_type 기준으로 그룹핑
+  // 탭(아이템/꾸미기) 기준으로 먼저 걸러낸 뒤 item_type 기준으로 그룹핑
+  const itemTabTypes = TAB_ITEM_TYPES.item;
+  const tabItems = _allItems.filter(item => {
+    const isItemTab = itemTabTypes.includes(item.item_type || 'etc');
+    return _activeTab === 'item' ? isItemTab : !isItemTab;
+  });
+
   const grouped = {};
-  _allItems.forEach(item => {
+  tabItems.forEach(item => {
     const t = item.item_type || 'etc';
     if (!grouped[t]) grouped[t] = {};
 
@@ -118,7 +156,7 @@ function buildPriceHtml(item, discountHtml = '') {
 
 // ── 썸네일 렌더 ──────────────────────────────────────────
 function getItemState(item) {
-  if (_ownedSet.has(item.id))        return 'owned';
+  if (item.purchase_type !== 'stackable' && _ownedSet.has(item.id)) return 'owned';
   if (item.status === 'coming_soon') return 'coming';
   const balance = item.currency === 'research_records'
     ? (_wallet?.research_records ?? 0) : (_wallet?.keys ?? 0);
@@ -140,6 +178,17 @@ function renderThumb(item) {
     ? `<span class="shop-thumb-badge shop-badge--owned shop-badge--right">보유중</span>`
     : state === 'coming'
       ? `<span class="shop-thumb-badge shop-badge--coming">준비중</span>`
+      : item.purchase_type === 'stackable' && item.item_key
+        ? `<span class="shop-thumb-badge shop-badge--owned shop-badge--right">보유 ${_qtyByKey[item.item_key] ?? 0}장</span>`
+        : '';
+
+  // 좌측 상단 배지 — 보유/준비중 배지(우측 상단)와 겹치지 않게 별도 위치.
+  // hidden 상품은 RLS 예외로 admin/staff에게만 조회되는 미리보기 상태이므로,
+  // 실사용자에게는 안 보인다는 걸 명확히 알리는 배지를 할인 배지보다 우선 표시.
+  const discountBadge = item.status === 'hidden'
+    ? `<span class="shop-thumb-badge shop-badge--coming">관리자 전용(비공개)</span>`
+    : item.discount_note
+      ? `<span class="shop-thumb-badge shop-badge--discount">${item.discount_note}</span>`
       : '';
 
   const previewHtml = item.style_key && item.item_type !== 'sticker'
@@ -167,10 +216,11 @@ function renderThumb(item) {
     <div class="shop-thumb shop-thumb--${state}"
          onclick='openDetailModal(${itemJson})'>
       <div class="shop-thumb-img">
+        ${discountBadge}
         ${imgOverlay}
         ${previewHtml}
       </div>
-      <p class="shop-thumb-name">${item.name}</p>
+      <p class="shop-thumb-name">${formatShopName(item.name)}</p>
       ${statusHtml}
     </div>`;
 }
@@ -188,8 +238,16 @@ function openDetailModal(item) {
       ? `<img src="${item.image_url}" alt="${item.name}" style="width:100%;height:100%;object-fit:${item.item_type === 'sticker' ? 'contain' : 'cover'};">`
       : '';
 
-  document.getElementById('detailName').textContent  = item.name;
+  document.getElementById('detailName').innerHTML    = formatShopName(item.name);
   document.getElementById('detailDesc').textContent  = item.description || '';
+
+  const conditionEl = document.getElementById('detailCondition');
+  if (item.item_key === 'ticket-bump') {
+    conditionEl.innerHTML     = TICKET_BUMP_CONDITION_HTML;
+    conditionEl.style.display = '';
+  } else {
+    conditionEl.style.display = 'none';
+  }
 
   const saleEndEl = document.getElementById('detailSaleEnd');
   if (saleEndEl) {
@@ -282,6 +340,9 @@ async function doPurchase() {
   }
 
   _ownedSet.add(_pendingItem.id);
+  if (_pendingItem.purchase_type === 'stackable' && _pendingItem.item_key) {
+    _qtyByKey[_pendingItem.item_key] = data.quantity ?? ((_qtyByKey[_pendingItem.item_key] ?? 0) + _pendingItem.grant_qty);
+  }
   if (_wallet) {
     if (data.currency === 'research_records') _wallet.research_records = data.new_balance;
     else _wallet.keys = data.new_balance;
