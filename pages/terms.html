@@ -118,55 +118,6 @@
       flex-shrink: 0;
     }
 
-    /* ── DB 약관 (Quill 출력) ── */
-    #termsDbContent {
-      font-size: 14px;
-      line-height: 2.0;
-      color: var(--text-sub);
-    }
-    #termsDbContent p { margin-bottom: 12px; }
-    #termsDbContent p:empty { margin-bottom: 6px; }
-    #termsDbContent br { display: block; content: ''; margin-bottom: 4px; }
-    #termsDbContent strong { color: var(--text); font-weight: 700; }
-    #termsDbContent em     { font-style: italic; }
-    #termsDbContent u      { text-decoration: underline; text-underline-offset: 2px; }
-    #termsDbContent a      { color: var(--sky-dark); text-decoration: underline; }
-    #termsDbContent ul,
-    #termsDbContent ol { list-style: none; padding: 0; margin: 10px 0 14px; }
-    #termsDbContent li {
-      position: relative;
-      padding-left: 18px;
-      margin-bottom: 8px;
-    }
-    #termsDbContent li::before {
-      content: '·';
-      position: absolute;
-      left: 4px;
-      color: var(--sky-dark);
-      font-size: 20px;
-      line-height: 1.4;
-      font-weight: 700;
-    }
-    #termsDbContent .ql-align-center  { text-align: center; }
-    #termsDbContent .ql-align-right   { text-align: right; }
-    #termsDbContent .ql-align-justify { text-align: justify; }
-
-    /* JS가 자동 감지해서 붙여주는 섹션 제목 스타일 */
-    #termsDbContent .db-section-title {
-      font-size: 15px !important;
-      font-weight: 700 !important;
-      color: var(--text) !important;
-      padding-bottom: 10px !important;
-      margin-bottom: 18px !important;
-      border-bottom: 2px solid var(--sky-dark) !important;
-    }
-    /* JS가 삽입하는 섹션 구분선 */
-    #termsDbContent .db-section-divider {
-      border: none;
-      border-top: 1px dashed var(--border);
-      margin: 44px 0;
-    }
-
     @media (max-width: 600px) {
       .terms-wrap { padding: 20px 0 60px; }
       .terms-title { font-size: 20px; }
@@ -204,14 +155,10 @@
         <div class="terms-title-area">
           <h1 class="terms-title">이용 약관</h1>
           <div class="terms-title-accent"></div>
-          <p class="terms-updated" id="termsUpdated">최종 업데이트: 2026년 1월 1일</p>
+          <p class="terms-updated" id="termsUpdated">최종 업데이트: 2026년 7월 12일</p>
         </div>
 
-        <!-- DB에서 로드된 약관 내용 (있을 때만 표시) -->
-        <div id="termsDbContent" style="display:none;"></div>
-
-        <!-- 정적 폴백 약관 내용 (JS에서 DB 내용 없을 때만 표시) -->
-        <div id="termsStaticContent" style="display:none;">
+        <div id="termsStaticContent">
 
           <div class="terms-section">
             <h2 class="terms-section-title">제1조 목적</h2>
@@ -260,9 +207,22 @@
           <div class="terms-section">
             <h2 class="terms-section-title">제4조 연령 제한 콘텐츠</h2>
             <div class="terms-body">
-              <p>종족연구소는 전체 이용가를 지향하는 서비스입니다.</p>
-              <p><strong>성인(19세 이상) 전용 종족, 개체, 이미지, 설정 또는 이에 준하는 콘텐츠는 등록할 수 없습니다.</strong></p>
-              <p>운영자는 부적절하다고 판단되는 콘텐츠를 사전 통보 없이 수정, 비공개 처리 또는 삭제할 수 있습니다.</p>
+              <p>종족연구소는 전체이용가를 지향하는 서비스입니다.</p>
+              <p>종족주는 자신의 종족에 최소 이용 연령(예: 12세 이상, 15세 이상, 17세 이상, 19세 이상)을 설정할 수 있습니다. 해당 기능은 종족의 연령 제한을 안내하기 위한 표시이며, 연구소는 이용자의 실제 연령을 확인하거나 보증하지 않습니다.</p>
+              <p>연령 제한 설정 여부와 관계없이 연구소에 등록되는 모든 이미지, 설정 및 게시물은 전체이용가 기준을 준수해야 합니다.</p>
+              <p>다음과 같은 콘텐츠는 등록할 수 없습니다.</p>
+              <ul>
+                <li>노골적인 성적 행위가 묘사된 이미지 또는 콘텐츠</li>
+                <li>성기, 유두 등 성적 부위가 노출된 이미지</li>
+                <li>성행위를 연상시키는 자세 또는 표현을 중심으로 하는 이미지</li>
+                <li>성인 콘텐츠를 홍보하거나 유도하는 내용</li>
+                <li>기타 운영진이 전체이용가 기준에 부합하지 않는다고 판단하는 콘텐츠</li>
+              </ul>
+              <p><strong>종족주가 '19세 이상만 분양' 등의 분양 조건을 설정하는 것은 허용됩니다.</strong> 다만 이는 종족주의 자체 분양 조건일 뿐이며, 연구소는 해당 조건을 검증하거나 보증하지 않습니다.</p>
+              <div class="terms-highlight">
+                <span class="terms-highlight-icon">!</span>
+                <span>운영자는 운영 정책에 맞지 않는 콘텐츠에 대해 사전 통보 없이 수정, 비공개 처리 또는 삭제할 수 있습니다.</span>
+              </div>
             </div>
           </div>
 
@@ -357,7 +317,6 @@
   </footer>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="https://cdn.jsdelivr.net/npm/dompurify@3/dist/purify.min.js"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
@@ -366,39 +325,6 @@
   <script>
     async function initPage() {
       await getUser();
-
-      const { data } = await sb
-        .from('site_content')
-        .select('content, updated_at')
-        .eq('key', 'terms')
-        .single();
-
-      if (data && data.content && data.content.trim().length > 0) {
-        const container = document.getElementById('termsDbContent');
-        container.innerHTML = DOMPurify.sanitize(data.content);
-        container.style.display = 'block';
-
-        // 제N조로 시작하는 단락을 섹션 제목으로 자동 감지
-        let firstSection = true;
-        Array.from(container.children).forEach(el => {
-          if (/^제\s*\d+\s*조/.test(el.textContent.trim())) {
-            if (!firstSection) {
-              const divider = document.createElement('hr');
-              divider.className = 'db-section-divider';
-              container.insertBefore(divider, el);
-            }
-            el.classList.add('db-section-title');
-            firstSection = false;
-          }
-        });
-
-        const updated = new Date(data.updated_at).toLocaleDateString('ko-KR', {
-          year: 'numeric', month: 'long', day: 'numeric'
-        });
-        document.getElementById('termsUpdated').textContent = `최종 업데이트: ${updated}`;
-      } else {
-        document.getElementById('termsStaticContent').style.display = 'block';
-      }
 
       const _tc = await window.incrementAchCounter?.('terms_view') || 0;
       if (_tc >= 1)  window.awardAchievement?.('first_terms');
