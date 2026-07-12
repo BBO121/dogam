@@ -40,6 +40,13 @@
           <button class="species-filter-chip" data-filter="closed">닫힌종족</button>
         </div>
 
+        <!-- 연령 제한 필터 -->
+        <div class="species-filter-chips" id="ageFilterChips">
+          <button class="species-filter-chip active" data-age-filter="all">전체</button>
+          <button class="species-filter-chip" data-age-filter="none">전체 이용 가능만</button>
+          <button class="species-filter-chip" data-age-filter="restricted">연령 제한 종족만</button>
+        </div>
+
         <!-- 검색 + 정렬 -->
         <div class="list-controls">
           <input type="text" class="list-search" id="searchInput" placeholder="종족 이름으로 검색">
@@ -82,12 +89,13 @@
     let allSpecies    = [];
     let isInitialLoad = true;
     let openFilter    = 'all';
+    let ageFilter     = 'all';
     const pager = createPager(render);
 
     async function loadSpecies() {
       const { data, error } = await sb
         .from('species')
-        .select('id, name, image_url, created_at, is_sensitive, sensitive_note, open_type')
+        .select('id, name, image_url, created_at, is_sensitive, sensitive_note, open_type, age_limit')
         .order('created_at', { ascending: false });
 
       if (error || !data) {
@@ -101,12 +109,18 @@
         const q      = p.get('q');
         const sort   = p.get('sort');
         const filter = p.get('filter');
+        const ageF   = p.get('ageFilter');
         if (q)      document.getElementById('searchInput').value = q;
         if (sort)   document.getElementById('sortSelect').value  = sort;
         if (filter) {
           openFilter = filter;
           document.querySelectorAll('#openFilterChips .species-filter-chip').forEach(b =>
             b.classList.toggle('active', b.dataset.filter === filter));
+        }
+        if (ageF) {
+          ageFilter = ageF;
+          document.querySelectorAll('#ageFilterChips .species-filter-chip').forEach(b =>
+            b.classList.toggle('active', b.dataset.ageFilter === ageF));
         }
       }
       applyFilter();
@@ -120,6 +134,8 @@
       let list = allSpecies.filter(s => {
         if (openFilter === 'open'   && s.open_type !== 'open')   return false;
         if (openFilter === 'closed' && s.open_type !== 'closed') return false;
+        if (ageFilter === 'none'       && s.age_limit > 0)  return false;
+        if (ageFilter === 'restricted' && !(s.age_limit > 0)) return false;
         return !q || s.name.toLowerCase().includes(qLow);
       });
 
@@ -157,22 +173,34 @@
         if (sort) url.searchParams.set('sort', sort);       else url.searchParams.delete('sort');
         if (openFilter !== 'all') url.searchParams.set('filter', openFilter);
         else url.searchParams.delete('filter');
+        if (ageFilter !== 'all') url.searchParams.set('ageFilter', ageFilter);
+        else url.searchParams.delete('ageFilter');
         url.searchParams.delete('page');
         history.replaceState(null, '', url);
         pager.load(list);
       }
     }
 
+    function speciesImgHtml(s) {
+      if (s.is_sensitive && s.image_url) {
+        const ageBadge = s.age_limit > 0 ? `<span class="species-age-badge">${s.age_limit}세 이상</span>` : '';
+        return `
+          <div style="position:relative; overflow:hidden; border-radius:var(--radius);">
+            <div class="species-img blurred" style="background-image:url('${s.image_url}'); background-size:cover; background-position:center;"></div>
+            <div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span>${ageBadge}${s.sensitive_note ? '<span class="sensitive-overlay-note">' + s.sensitive_note + '</span>' : ''}<span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div>
+          </div>`;
+      }
+      if (s.age_limit > 0) {
+        return `<div class="species-img species-img--restricted"><span class="species-age-badge">${s.age_limit}세 이상</span></div>`;
+      }
+      return `<div class="species-img" ${s.image_url ? `style="background-image:url('${s.image_url}'); background-size:cover; background-position:center;"` : ''}></div>`;
+    }
+
     function render(data) {
       const grid = document.getElementById('speciesGrid');
       grid.innerHTML = data.map(s => `
         <a href="species.html?id=${s.id}" class="species-card">
-          ${s.is_sensitive && s.image_url ? `
-          <div style="position:relative; overflow:hidden; border-radius:var(--radius);">
-            <div class="species-img blurred" style="background-image:url('${s.image_url}'); background-size:cover; background-position:center;"></div>
-            <div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span>${s.sensitive_note ? '<span class="sensitive-overlay-note">' + s.sensitive_note + '</span>' : ''}<span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div>
-          </div>` : `
-          <div class="species-img" ${s.image_url ? `style="background-image:url('${s.image_url}'); background-size:cover; background-position:center;"` : ''}></div>`}
+          ${speciesImgHtml(s)}
           <div class="species-info">
             <p class="species-name">${s.name}</p>
           </div>
@@ -193,6 +221,17 @@
       if (!btn) return;
       openFilter = btn.dataset.filter;
       document.querySelectorAll('#openFilterChips .species-filter-chip').forEach(el =>
+        el.classList.toggle('active', el === btn)
+      );
+      isInitialLoad = false;
+      applyFilter();
+    });
+
+    document.getElementById('ageFilterChips').addEventListener('click', e => {
+      const btn = e.target.closest('[data-age-filter]');
+      if (!btn) return;
+      ageFilter = btn.dataset.ageFilter;
+      document.querySelectorAll('#ageFilterChips .species-filter-chip').forEach(el =>
         el.classList.toggle('active', el === btn)
       );
       isInitialLoad = false;

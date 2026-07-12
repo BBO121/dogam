@@ -204,7 +204,23 @@
                 종족의 민감 요소 설정은 종족 페이지에만 적용됩니다.소속 개체는 개별적으로 설정해 주세요.
             </p>
           </div>
-          
+
+          <!-- 연령 제한 -->
+          <div class="form-group">
+            <label class="form-label">연령 제한</label>
+            <select id="ageLimit" class="form-input">
+              <option value="0">전체 이용 가능</option>
+              <option value="12">12세 이상</option>
+              <option value="15">15세 이상</option>
+              <option value="17">17세 이상</option>
+              <option value="19">19세 이상</option>
+            </select>
+            <p class="form-hint" style="margin-top:6px;">
+              종족의 연령 제한을 표시합니다.<br>
+              종족연구소는 전체이용가 플랫폼으로, 해당 기능은 종족의 권장 이용 연령을 안내하기 위한 표시입니다. 연령 제한과 관계없이 전체이용가 기준을 벗어나는 콘텐츠 및 이미지는 등록할 수 없습니다.
+            </p>
+          </div>
+
           <!-- 분양 규칙 -->
           <div class="form-group">
             <label class="form-label">분양 규칙</label>
@@ -441,6 +457,7 @@
 
       document.getElementById('isSensitive').checked      = !!s.is_sensitive;
       document.getElementById('sensitiveNote').value       = s.sensitive_note || '';
+      document.getElementById('ageLimit').value            = s.age_limit || 0;
       document.getElementById('allowFreeAdoption').checked  = s.allow_free_adoption  !== false;
       document.getElementById('allowResale').checked         = s.allow_resale          !== false;
       document.getElementById('allowPaidAdoption').checked   = s.allow_paid_adoption   !== false;
@@ -688,6 +705,7 @@
         const guide        = await collectGuide();
         const isSensitive  = document.getElementById('isSensitive').checked;
         const sensitiveNote = document.getElementById('sensitiveNote').value.trim();
+        const ageLimit     = parseInt(document.getElementById('ageLimit').value, 10) || 0;
         const openTypeVal  = document.querySelector('input[name="openType"]:checked')?.value || null;
         const affiliated   = affiliatedSpecies.map(item =>
           item.type === 'internal'
@@ -705,6 +723,7 @@
           guide:          guide.length ? guide : null,
           is_sensitive:        isSensitive,
           sensitive_note:      isSensitive ? (sensitiveNote || null) : null,
+          age_limit:           ageLimit,
           open_type:           openTypeVal || null,
           allow_free_adoption:  document.getElementById('allowFreeAdoption').checked,
           allow_resale:         document.getElementById('allowResale').checked,
