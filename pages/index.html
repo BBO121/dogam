@@ -44,6 +44,25 @@
     <button class="close-btn"><i class="ico ico-close"></i></button>
   </div>
 
+  <!-- 굿즈 홍보 팝업 -->
+  <div class="goods-popup-overlay" id="goodsPopupOverlay" style="display:none;">
+    <div class="goods-popup-card" role="dialog" aria-modal="true" aria-labelledby="goodsPopupTitle">
+      <img src="../images/popup_image_goods.png" alt="종족연구소 굿즈" class="goods-popup-img">
+      <p class="goods-popup-title" id="goodsPopupTitle">🎉 종족연구소 굿즈가 찾아왔어요!</p>
+      <p class="goods-popup-desc">코믹월드에서 판매되는 굿즈의
+선입금이 시작되었습니다!
+
+현장 수령과 택배 배송 모두 가능합니다!
+
+현장 판매분이 매우 적으니, 구매를 원하신다면 이벤트에서 자세한 내용을 확인해주세요! ❤️</p>
+      <a href="event-detail.html?id=4" class="goods-popup-cta">이벤트 자세히 보기</a>
+      <div class="goods-popup-footer">
+        <button type="button" class="goods-popup-minor" id="goodsPopupHideToday">오늘 하루 보지 않기</button>
+        <button type="button" class="goods-popup-minor" id="goodsPopupCloseBtn">닫기</button>
+      </div>
+    </div>
+  </div>
+
 
   <div class="layout">
     <aside class="sidebar" id="sidebar"></aside>
@@ -392,6 +411,52 @@
     }
 
     initEventBanner();
+
+    // ── 굿즈 홍보 팝업 ──────────────────
+    const GOODS_POPUP_HIDE_UNTIL_KEY = 'goodsPopupHiddenUntil';
+
+    function initGoodsPopup() {
+      const overlay = document.getElementById('goodsPopupOverlay');
+      if (!overlay) return;
+
+      try {
+        const until = Number(localStorage.getItem(GOODS_POPUP_HIDE_UNTIL_KEY));
+        if (Number.isFinite(until) && until > 0 && Date.now() < until) return;
+      } catch {}
+
+      function openGoodsPopup() {
+        overlay.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        document.addEventListener('keydown', onGoodsPopupKeydown);
+      }
+
+      function closeGoodsPopup() {
+        overlay.style.display = 'none';
+        document.body.style.overflow = '';
+        document.removeEventListener('keydown', onGoodsPopupKeydown);
+      }
+
+      function onGoodsPopupKeydown(e) {
+        if (e.key === 'Escape') closeGoodsPopup();
+      }
+
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeGoodsPopup();
+      });
+
+      document.getElementById('goodsPopupCloseBtn').addEventListener('click', closeGoodsPopup);
+
+      document.getElementById('goodsPopupHideToday').addEventListener('click', () => {
+        try {
+          localStorage.setItem(GOODS_POPUP_HIDE_UNTIL_KEY, String(getNextKstMidnightMs()));
+        } catch {}
+        closeGoodsPopup();
+      });
+
+      openGoodsPopup();
+    }
+
+    initGoodsPopup();
 
     // 창 크기/orientation 변경 시 marquee 재판정
     window.addEventListener('resize', () => {

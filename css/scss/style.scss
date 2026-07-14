@@ -2573,6 +2573,113 @@ button.btn-more {
 }
 
 /* ═══════════════════════════════════════
+   굿즈 홍보 팝업
+═══════════════════════════════════════ */
+.goods-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1200;
+  padding: 20px;
+}
+
+.goods-popup-card {
+  background: var(--white);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 360px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  padding: 24px;
+  text-align: center;
+}
+
+.goods-popup-img {
+  display: block;
+  width: 100%;
+  max-width: 320px;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  margin: 0 auto 16px;
+  border-radius: 12px;
+}
+
+.goods-popup-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 10px;
+}
+
+.goods-popup-desc {
+  font-size: 14px;
+  color: var(--text-sub);
+  line-height: 1.65;
+  margin-bottom: 20px;
+  text-align: center;
+  white-space: pre-line;
+}
+
+.goods-popup-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 13px 20px;
+  background: var(--sky-dark);
+  color: var(--white);
+  border: none;
+  border-radius: 9px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.15s, transform 0.15s;
+}
+
+.goods-popup-cta:hover {
+  background: var(--sky-deep);
+  transform: translateY(-1px);
+}
+
+.goods-popup-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+.goods-popup-minor {
+  background: none;
+  border: none;
+  padding: 4px;
+  font-size: 12px;
+  color: var(--text-mute);
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: underline;
+}
+
+.goods-popup-minor:hover {
+  color: var(--sky-dark);
+}
+
+@media (max-width: 640px) {
+  .goods-popup-card {
+    max-width: 100%;
+    padding: 20px;
+  }
+  .goods-popup-img {
+    max-width: 100%;
+  }
+}
+
+/* ═══════════════════════════════════════
    빈 상태
 ═══════════════════════════════════════ */
 .empty-state {
