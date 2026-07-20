@@ -208,7 +208,7 @@
         const internalIds = s.affiliated_species.filter(a => a.type === 'internal').map(a => a.species_id);
         const internalMap = {};
         if (internalIds.length) {
-          const { data: spData } = await sb.from('species').select('id, name, image_url, age_limit').in('id', internalIds);
+          const { data: spData } = await sb.from('species').select('id, name, image_url, thumbnail_url, age_limit').in('id', internalIds);
           (spData || []).forEach(sp => { internalMap[sp.id] = sp; });
         }
         const items = s.affiliated_species.map(item => {
@@ -219,7 +219,7 @@
               <div style="width:56px; height:56px; border-radius:10px; overflow:hidden; border:1px solid var(--border); background:#f1f5f9; flex-shrink:0; display:flex; align-items:center; justify-content:center;">
                 ${sp.age_limit > 0
                   ? `<span class="species-age-badge" style="font-size:10px; padding:2px 5px; line-height:1.3; white-space:normal;">${sp.age_limit}세</span>`
-                  : (sp.image_url ? `<img src="${sp.image_url}" style="width:100%; height:100%; object-fit:cover;">` : '')}
+                  : ((sp.thumbnail_url || sp.image_url) ? `<img src="${sp.thumbnail_url || sp.image_url}" style="width:100%; height:100%; object-fit:cover;">` : '')}
               </div>
               <span style="font-size:12px; color:var(--text); font-weight:500; text-align:center; word-break:break-all; line-height:1.4;">${sp.name}</span>
             </a>`;

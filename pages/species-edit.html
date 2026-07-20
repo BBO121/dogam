@@ -294,6 +294,7 @@
   <script>
     const speciesId = new URLSearchParams(window.location.search).get('id');
     let currentImageUrl  = null;
+    let currentThumbnailUrl = null;
     let originalName     = null;
     let isAdminEditor    = false;
     let affiliatedSpecies = [];
@@ -444,6 +445,7 @@
 
       if (s.image_url) {
         currentImageUrl = s.image_url;
+        currentThumbnailUrl = s.thumbnail_url || null;
         document.getElementById('imgPreview').src = s.image_url;
         document.getElementById('imgPreview').style.display = 'block';
         document.getElementById('imgPlaceholder').style.display = 'none';
@@ -507,6 +509,16 @@
       hidden.className = 'guide-img-url';
       hidden.value = imageUrl;
       fileInput.after(hidden);
+    }
+
+    function getImageDimensions(file) {
+      return new Promise((resolve, reject) => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload  = () => { URL.revokeObjectURL(url); resolve({ width: img.naturalWidth, height: img.naturalHeight }); };
+        img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('이미지 크기를 확인할 수 없어요.')); };
+        img.src = url;
+      });
     }
 
     function previewImage(input) {
@@ -688,6 +700,7 @@
         const fields = [...document.querySelectorAll('.field-input')].map(i => i.value.trim()).filter(v => v);
 
         let imageUrl = currentImageUrl;
+        let thumbnailUrl = currentThumbnailUrl;
         const imgFile = document.getElementById('imgInput').files[0];
         if (imgFile) {
           const blob     = await compressImage(imgFile);
@@ -698,6 +711,19 @@
           if (uploadError) throw new Error(`이미지 업로드 실패: ${uploadError.message}`);
           const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);
           imageUrl = urlData.publicUrl;
+
+          // 리스트/카드용 정사각 썸네일 (캐릭터 썸네일과 동일 기준: 600px · quality 0.85)
+          // 원본이 이미 600px보다 작으면 업스케일로 용량만 커지므로 건너뛰고 원본을 그대로 사용
+          const dims = await getImageDimensions(imgFile);
+          if (Math.min(dims.width, dims.height) > 600) {
+            const thumbBlob = await autoCenterCropToBlob(imgFile, 1, 600, 0.85);
+            const thumbName = `species_${Date.now()}_thumb.jpg`;
+            const { error: thumbErr } = await sb.storage.from('images').upload(thumbName, thumbBlob, { contentType: 'image/jpeg' });
+            if (thumbErr) throw new Error(`썸네일 업로드 실패: ${thumbErr.message}`);
+            thumbnailUrl = sb.storage.from('images').getPublicUrl(thumbName).data.publicUrl;
+          } else {
+            thumbnailUrl = null;
+          }
         }
 
         const link         = document.getElementById('speciesLink').value.trim();
@@ -717,6 +743,7 @@
           name,
           description:    desc || null,
           image_url:      imageUrl,
+          thumbnail_url:  thumbnailUrl,
           custom_fields:  fields.length ? fields : null,
           link:           link || null,
           design_rights:  designRights || null,

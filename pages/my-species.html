@@ -111,7 +111,7 @@
       }
 
       const { data, error } = await sb
-        .from('species').select('id, name, image_url, is_sensitive, sensitive_note, age_limit')
+        .from('species').select('id, name, image_url, thumbnail_url, is_sensitive, sensitive_note, age_limit')
         .eq('owner_user_id', targetUserId).order('name');
 
       document.getElementById('pageLoading').style.display = 'none';
@@ -138,18 +138,19 @@
     }
 
     function speciesImgHtml(s) {
-      if (s.is_sensitive && s.image_url) {
+      const imgSrc = s.thumbnail_url || s.image_url;
+      if (s.is_sensitive && imgSrc) {
         const ageBadge = s.age_limit > 0 ? `<span class="species-age-badge">${s.age_limit}세 이상</span>` : '';
         return `
         <div style="position:relative; overflow:hidden; border-radius:var(--radius);">
-          <div class="species-img blurred" style="background-image:url('${s.image_url}');background-size:cover;background-position:center;"></div>
+          <div class="species-img blurred" style="background-image:url('${imgSrc}');background-size:cover;background-position:center;"></div>
           <div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span>${ageBadge}${s.sensitive_note ? '<span class="sensitive-overlay-note">' + s.sensitive_note + '</span>' : ''}<span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div>
         </div>`;
       }
       if (s.age_limit > 0) {
         return `<div class="species-img species-img--restricted"><span class="species-age-badge">${s.age_limit}세 이상</span></div>`;
       }
-      return `<div class="species-img"${s.image_url ? ` style="background-image:url('${s.image_url}');background-size:cover;background-position:center;"` : ''}></div>`;
+      return `<div class="species-img"${imgSrc ? ` style="background-image:url('${imgSrc}');background-size:cover;background-position:center;"` : ''}></div>`;
     }
 
     function renderItems(list) {
