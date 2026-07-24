@@ -414,9 +414,12 @@
     initEventBanner();
 
     // ── 굿즈 홍보 팝업 ──────────────────
+    const GOODS_POPUP_ENABLED = false; // 선입금 종료로 비활성화. 재사용 시 true로 변경
     const GOODS_POPUP_HIDE_UNTIL_KEY = 'goodsPopupHiddenUntil';
 
     function initGoodsPopup() {
+      if (!GOODS_POPUP_ENABLED) return;
+
       const overlay = document.getElementById('goodsPopupOverlay');
       if (!overlay) return;
 
