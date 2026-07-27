@@ -71,6 +71,14 @@
             <button type="button" class="btn-field-add" onclick="addField()">+ 항목 추가</button>
           </div>
 
+          <!-- 성장 Step 설정 -->
+          <div class="form-group">
+            <label class="form-label">성장 Step 설정</label>
+            <p class="form-hint" id="stepEmptyHint">대표 이미지는 기본 Step 1로 사용됩니다.<br>성장 단계를 추가하려면 아래 버튼을 눌러주세요.</p>
+            <div id="stepFieldList" style="display:flex; flex-direction:column; gap:12px; margin-bottom:10px;"></div>
+            <button type="button" class="btn-field-add" onclick="addExtraStep()">+ Step 추가</button>
+          </div>
+
           <!-- 연관링크 -->
           <div class="form-group">
             <label class="form-label">연관링크 <span class="form-hint-inline">비워두면 상세페이지에 표시되지 않아요</span></label>
@@ -360,6 +368,7 @@
       if (!currentUser) { window.location.href = 'login.html'; return; }
       const role = currentUser.user_metadata?.role;
       if (!isAdminOrStaff(role) && role !== 'species_owner') { window.location.href = 'index.html'; return; }
+      renderStepFields();
       await loadAllSpecies();
     }
 
@@ -401,6 +410,76 @@
         <button type="button" class="btn-field-remove" onclick="this.parentElement.remove()">✕</button>
       `;
       list.appendChild(row);
+    }
+
+    // 성장 Step 설정 — 대표 이미지(기존 characters 이미지)와 순서를 분리해서 관리한다.
+    // stepConfig 배열의 인덱스가 곧 순서(step_order = idx+1)이며, 정확히 하나의 항목만 isMain=true를 가진다.
+    // Step이 2개 미만이면(=추가 성장 단계 없음) 기본 상태(Step 기능 미사용)로 취급한다.
+    let stepConfig = []; // [{name, isMain}]
+
+    function syncStepConfigFromDOM() {
+      document.querySelectorAll('.step-field-input').forEach(input => {
+        const idx = parseInt(input.dataset.stepIdx, 10);
+        if (stepConfig[idx]) stepConfig[idx].name = input.value.trim();
+      });
+    }
+
+    function renderStepFields() {
+      const hint = document.getElementById('stepEmptyHint');
+      const list = document.getElementById('stepFieldList');
+      if (stepConfig.length < 2) {
+        hint.style.display = '';
+        list.innerHTML = '';
+        return;
+      }
+      hint.style.display = 'none';
+      list.innerHTML = stepConfig.map((s, idx) => {
+        const order = idx + 1;
+        return `
+        <div class="form-group" style="margin-bottom:0; border:1.5px solid var(--border); border-radius:10px; padding:14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+            <div style="display:flex; align-items:center; gap:4px;">
+              <button type="button" class="btn-field-remove" style="width:26px; height:26px; padding:0;" onclick="moveStepField(${idx}, -1)" ${idx === 0 ? 'disabled' : ''}>▲</button>
+              <button type="button" class="btn-field-remove" style="width:26px; height:26px; padding:0;" onclick="moveStepField(${idx}, 1)" ${idx === stepConfig.length - 1 ? 'disabled' : ''}>▼</button>
+              <label class="form-label" style="font-size:13px; margin:0 0 0 4px;">Step ${order}${s.isMain ? ' · 대표 이미지' : ''}</label>
+            </div>
+            ${s.isMain ? '' : `<button type="button" class="btn-field-remove" onclick="removeExtraStep(${idx})">✕</button>`}
+          </div>
+          <input type="text" class="form-input step-field-input" data-step-idx="${idx}" placeholder="Step ${order}${s.isMain ? ' (예: 성체)' : ' (예: 알)'}" value="${s.name}" style="margin-top:8px;">
+          <p class="form-hint" style="margin:6px 0 0;">${s.isMain ? '이 단계는 개체의 대표 이미지를 그대로 사용합니다.' : '개체 등록·수정페이지에서 이 단계의 이미지를 별도로 등록합니다.'}</p>
+        </div>`;
+      }).join('');
+    }
+
+    function moveStepField(idx, dir) {
+      syncStepConfigFromDOM();
+      const target = idx + dir;
+      if (target < 0 || target >= stepConfig.length) return;
+      [stepConfig[idx], stepConfig[target]] = [stepConfig[target], stepConfig[idx]];
+      renderStepFields();
+    }
+
+    function addExtraStep() {
+      syncStepConfigFromDOM();
+      if (!stepConfig.length) {
+        stepConfig.push({ name: '', isMain: true });
+        stepConfig.push({ name: '', isMain: false });
+      } else {
+        stepConfig.push({ name: '', isMain: false });
+      }
+      renderStepFields();
+    }
+
+    function removeExtraStep(idx) {
+      syncStepConfigFromDOM();
+      if (stepConfig[idx]?.isMain) {
+        alert('이 Step은 현재 대표 이미지와 연결되어 있습니다.\n다른 Step을 대표 이미지로 지정한 후 삭제해주세요.');
+        return;
+      }
+      stepConfig.splice(idx, 1);
+      // 추가 성장 단계가 하나도 남지 않으면 기본 상태로 초기화
+      if (stepConfig.length < 2) stepConfig = [];
+      renderStepFields();
     }
 
     function toggleGuideBlock(type, checked) {
@@ -614,6 +693,29 @@
         }).select('id').single();
 
         if (error) throw new Error(`등록에 실패했어요: ${error.message}`);
+
+        // 성장 Step 설정 저장 — Step을 하나도 추가하지 않은 기본 상태면 아무것도 저장하지 않음(하위 호환)
+        syncStepConfigFromDOM();
+        if (stepConfig.length >= 2) {
+          const { data: insertedSteps, error: stepErr } = await sb.from('species_steps')
+            .insert(stepConfig.map((s, idx) => ({
+              species_id: data.id,
+              step_order: idx + 1,
+              name:       s.name || null,
+            })))
+            .select('id, step_order');
+          if (stepErr) {
+            console.warn('성장 Step 저장 실패(종족 등록은 완료됨):', stepErr.message);
+          } else {
+            const mainIdx     = stepConfig.findIndex(s => s.isMain);
+            const mainStepRow = insertedSteps.find(r => r.step_order === mainIdx + 1);
+            if (mainStepRow) {
+              const { error: mainErr } = await sb.from('species')
+                .update({ main_image_step_id: mainStepRow.id }).eq('id', data.id);
+              if (mainErr) console.warn('대표 이미지 Step 지정 실패:', mainErr.message);
+            }
+          }
+        }
 
         await window.awardAchievement?.('first_species', { pending: true });
         const { count: _spCount } = await sb.from('species')

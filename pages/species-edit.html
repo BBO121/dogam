@@ -90,6 +90,14 @@
             <button type="button" class="btn-field-add" id="addFieldBtn" onclick="addField()">+ 항목 추가</button>
           </div>
 
+          <!-- 성장 Step 설정 -->
+          <div class="form-group">
+            <label class="form-label">성장 Step 설정</label>
+            <p class="form-hint" id="stepEmptyHint">대표 이미지는 기본 Step 1로 사용됩니다.<br>성장 단계를 추가하려면 아래 버튼을 눌러주세요.</p>
+            <div id="stepFieldList" style="display:flex; flex-direction:column; gap:12px; margin-bottom:10px;"></div>
+            <button type="button" class="btn-field-add" id="addStepBtn" onclick="addExtraStep()">+ Step 추가</button>
+          </div>
+
           <!-- 연관링크 -->
           <div class="form-group">
             <label class="form-label">연관링크 <span class="form-hint-inline">비워두면 상세페이지에 표시되지 않아요</span></label>
@@ -279,6 +287,22 @@
     </main>
   </div>
 
+  <!-- Step 삭제 확인 모달 -->
+  <div id="stepDeleteModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:600; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:#fff; border-radius:16px; padding:28px 24px; width:min(100%, 440px); max-height:85vh; overflow-y:auto; box-shadow:0 8px 40px rgba(0,0,0,0.22);">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:18px;">
+        <svg width="26" height="24" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2.2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.3" fill="#b91c1c"/></svg>
+        <h3 style="margin:0; font-size:17px; font-weight:700; color:#b91c1c;">Step 삭제 안내</h3>
+      </div>
+      <p id="stepDeleteMessage" style="margin:0 0 20px; font-size:14px; line-height:1.75; color:var(--text); white-space:pre-line;"></p>
+      <p id="stepDeleteError" style="display:none; margin:0 0 14px; font-size:13px; color:#ef4444; background:#fef2f2; border-radius:8px; padding:10px 12px;"></p>
+      <div style="display:flex; gap:8px; justify-content:flex-end;">
+        <button class="btn-ghost" onclick="closeStepDeleteModal()">취소</button>
+        <button id="stepDeleteConfirmBtn" style="padding:10px 20px; border:none; border-radius:10px; background:#ef4444; color:#fff; font-size:14px; font-weight:600; cursor:pointer; font-family:inherit;">삭제</button>
+      </div>
+    </div>
+  </div>
+
   <footer class="footer">
     <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; <a href="credits.html">운영진</a> &nbsp;·&nbsp; ver.2.1</p>
   </footer>
@@ -453,6 +477,18 @@
 
       if (s.custom_fields?.length) s.custom_fields.forEach(f => addField(f));
       if (s.guide?.length) s.guide.forEach(g => loadGuideData(g));
+
+      const { data: steps } = await sb.from('species_steps').select('id, step_order, name').eq('species_id', speciesId).order('step_order');
+      stepConfig = (steps || []).map(st => ({ id: st.id, name: st.name || '', isMain: false }));
+      if (stepConfig.length) {
+        // 하위 호환: main_image_step_id가 없으면 step_order가 가장 낮은(첫) Step을 대표 이미지 Step으로 처리
+        const mainId    = s.main_image_step_id || stepConfig[0].id;
+        const mainEntry = stepConfig.find(x => x.id === mainId) || stepConfig[0];
+        mainEntry.isMain = true;
+      }
+      // 추가 성장 단계가 하나도 없으면 기본 상태(안내문)로 표시되지만, 대표 이미지 Step에 실제 DB id가
+      // 있다면 stepConfig에서 지우지 않는다 — 지우면 "+ Step 추가" 시 그 행과 중복되는 새 행이 생긴다.
+      renderStepFields();
 
       const openTypeRadio = document.querySelector(`input[name="openType"][value="${s.open_type || ''}"]`);
       if (openTypeRadio) openTypeRadio.checked = true;
@@ -684,6 +720,259 @@
       list.appendChild(row);
     }
 
+    // 성장 Step 설정 — 대표 이미지(기존 characters 이미지)와 순서를 분리해서 관리한다.
+    // stepConfig 배열의 인덱스가 곧 순서(step_order = idx+1)이며, 정확히 하나의 항목만 isMain=true를 가진다.
+    // 순서 변경·대표 이미지 지정은 "저장" 시 반영되고, 삭제는 즉시(라이브) 반영된다.
+    let stepConfig = []; // [{id, name, isMain}] — id는 이미 저장된 species_steps 행의 id (없으면 아직 미저장)
+
+    function syncStepConfigFromDOM() {
+      document.querySelectorAll('.step-field-input').forEach(input => {
+        const idx = parseInt(input.dataset.stepIdx, 10);
+        if (stepConfig[idx]) stepConfig[idx].name = input.value.trim();
+      });
+    }
+
+    function renderStepFields() {
+      const hint = document.getElementById('stepEmptyHint');
+      const list = document.getElementById('stepFieldList');
+      if (stepConfig.length < 2) {
+        hint.style.display = '';
+        list.innerHTML = '';
+        return;
+      }
+      hint.style.display = 'none';
+      list.innerHTML = stepConfig.map((s, idx) => {
+        const order = idx + 1;
+        return `
+        <div class="form-group" style="margin-bottom:0; border:1.5px solid var(--border); border-radius:10px; padding:14px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:8px;">
+            <div style="display:flex; align-items:center; gap:4px;">
+              <button type="button" class="btn-field-remove" style="width:26px; height:26px; padding:0;" onclick="moveStepField(${idx}, -1)" ${idx === 0 ? 'disabled' : ''}>▲</button>
+              <button type="button" class="btn-field-remove" style="width:26px; height:26px; padding:0;" onclick="moveStepField(${idx}, 1)" ${idx === stepConfig.length - 1 ? 'disabled' : ''}>▼</button>
+              <label class="form-label" style="font-size:13px; margin:0 0 0 4px;">Step ${order}${s.isMain ? ' · 대표 이미지' : ''}</label>
+            </div>
+            ${s.isMain ? '' : `<button type="button" class="btn-field-remove" onclick="deleteExtraStep(${idx})">✕</button>`}
+          </div>
+          <input type="text" class="form-input step-field-input" data-step-idx="${idx}" placeholder="Step ${order}${s.isMain ? ' (예: 성체)' : ' (예: 알)'}" value="${s.name}" style="margin-top:8px;">
+          <p class="form-hint" style="margin:6px 0 0;">${s.isMain ? '이 단계는 개체의 대표 이미지를 그대로 사용합니다.' : '개체 등록·수정페이지에서 이 단계의 이미지를 별도로 등록합니다.'}</p>
+        </div>`;
+      }).join('');
+    }
+
+    function moveStepField(idx, dir) {
+      syncStepConfigFromDOM();
+      const target = idx + dir;
+      if (target < 0 || target >= stepConfig.length) return;
+      [stepConfig[idx], stepConfig[target]] = [stepConfig[target], stepConfig[idx]];
+      renderStepFields();
+    }
+
+    function addExtraStep() {
+      syncStepConfigFromDOM();
+      if (!stepConfig.length) {
+        stepConfig.push({ id: null, name: '', isMain: true });
+        stepConfig.push({ id: null, name: '', isMain: false });
+      } else {
+        stepConfig.push({ id: null, name: '', isMain: false });
+      }
+      renderStepFields();
+    }
+
+    // storagePathFromUrl()은 js/utils.js 공통 함수 재사용
+
+    async function deleteExtraStep(idx) {
+      syncStepConfigFromDOM();
+      const entry = stepConfig[idx];
+      if (!entry) return;
+
+      if (entry.isMain) {
+        alert('이 Step은 현재 대표 이미지와 연결되어 있습니다.\n다른 Step을 대표 이미지로 지정한 후 삭제해주세요.');
+        return;
+      }
+
+      if (!entry.id) {
+        // 아직 저장 안 된(이번 세션에서 추가만 한) Step — 로컬에서만 제거
+        stepConfig.splice(idx, 1);
+        // 남은 대표 이미지 Step에 실제 DB id가 없을 때(둘 다 이번 세션의 임시 상태)만 완전히 비운다.
+        // 이미 저장된 대표 이미지 Step까지 화면에서 지워버리면 다음 "+ Step 추가" 때 중복 행이 생긴다.
+        if (stepConfig.length < 2 && !stepConfig[0]?.id) stepConfig = [];
+        renderStepFields();
+        return;
+      }
+
+      const { count, error } = await sb.from('character_step_images')
+        .select('id', { count: 'exact', head: true })
+        .eq('species_step_id', entry.id);
+      if (error) { alert('사용 여부 확인에 실패했어요: ' + error.message); return; }
+
+      document.getElementById('stepDeleteError').style.display = 'none';
+      document.getElementById('stepDeleteError').textContent = '';
+      document.getElementById('stepDeleteMessage').textContent = count > 0
+        ? `이 Step을 사용하는 개체 이미지가 ${count}개 있습니다.\nStep을 삭제하면 등록된 성장 이미지도 모두 함께 삭제됩니다.\n삭제된 정보는 복구할 수 없습니다. 계속할까요?`
+        : '이 Step을 삭제할까요?';
+      const confirmBtn = document.getElementById('stepDeleteConfirmBtn');
+      confirmBtn.textContent = count > 0 ? 'Step과 이미지 모두 삭제' : '삭제';
+      confirmBtn.disabled = false;
+      confirmBtn.onclick = () => confirmStepDelete(idx, count > 0);
+      document.getElementById('stepDeleteModal').style.display = 'flex';
+    }
+
+    function closeStepDeleteModal() {
+      document.getElementById('stepDeleteModal').style.display = 'none';
+    }
+
+    async function confirmStepDelete(idx, hasImages) {
+      const entry = stepConfig[idx];
+      if (!entry) { closeStepDeleteModal(); return; }
+
+      const errEl = document.getElementById('stepDeleteError');
+      const btn   = document.getElementById('stepDeleteConfirmBtn');
+      errEl.style.display = 'none';
+      btn.textContent = '삭제 중...';
+      btn.disabled = true;
+
+      try {
+        if (hasImages) {
+          const { data: imgs, error: imgErr } = await sb.from('character_step_images')
+            .select('image_url, original_image_url, thumbnail_url')
+            .eq('species_step_id', entry.id);
+          if (imgErr) throw new Error('이미지 목록 조회에 실패했어요: ' + imgErr.message);
+
+          const paths = [];
+          (imgs || []).forEach(row => {
+            [row.image_url, row.original_image_url, row.thumbnail_url].forEach(url => {
+              const p = storagePathFromUrl(url);
+              if (p) paths.push(p);
+            });
+          });
+          if (paths.length) {
+            const { error: storageErr } = await sb.storage.from('images').remove(paths);
+            if (storageErr) throw new Error('Storage 파일 삭제에 실패했어요: ' + storageErr.message + ' — Step은 삭제되지 않았습니다.');
+          }
+
+          const { error: imgDelErr } = await sb.from('character_step_images').delete().eq('species_step_id', entry.id);
+          if (imgDelErr) throw new Error('개체 이미지 데이터 삭제에 실패했어요: ' + imgDelErr.message);
+        }
+
+        const { error: stepDelErr } = await sb.from('species_steps').delete().eq('id', entry.id);
+        if (stepDelErr) throw new Error('Step 삭제에 실패했어요: ' + stepDelErr.message);
+
+        stepConfig.splice(idx, 1);
+        // 추가 성장 단계가 하나도 남지 않으면 대표 이미지 Step 설정 자체(species_steps 행 + main_image_step_id)를
+        // 완전히 정리해 기본 상태로 되돌린다. DB에 삭제하지 않고 로컬 배열만 비우면 대표 이미지 Step 행이
+        // 고아로 남아, 다음에 "+ Step 추가"를 누를 때 새 행과 중복돼 저장 시 충돌이 났었다.
+        if (stepConfig.length < 2) {
+          const remaining = stepConfig[0];
+          if (remaining?.id) {
+            const { error: mainDelErr } = await sb.from('species_steps').delete().eq('id', remaining.id);
+            if (mainDelErr) console.warn('대표 이미지 Step 정리 실패:', mainDelErr.message);
+            const { error: mainClearErr } = await sb.from('species').update({ main_image_step_id: null }).eq('id', speciesId);
+            if (mainClearErr) console.warn('대표 이미지 Step 지정 해제 실패:', mainClearErr.message);
+          }
+          stepConfig = [];
+        }
+
+        closeStepDeleteModal();
+        renderStepFields();
+      } catch (err) {
+        errEl.textContent = err.message;
+        errEl.style.display = '';
+        btn.textContent = hasImages ? 'Step과 이미지 모두 삭제' : '삭제';
+        btn.disabled = false;
+      }
+    }
+
+    // 저장 시 성장 Step 반영: 신규 Step insert(임시 음수 step_order로 충돌 방지) →
+    // reorder_species_steps RPC로 전체 순서 확정 → 이름 갱신 → 대표 이미지 Step 지정
+    // species_steps + species.main_image_step_id를 DB에서 다시 읽어 stepConfig/화면을 최신 상태로 재동기화한다.
+    // 저장이 부분 실패했을 때 "이미 생성된 Step을 계속 신규 Step으로 취급"하는 것을 막기 위한 용도.
+    async function resyncStepConfig(speciesId) {
+      const [{ data: sp }, { data: steps }] = await Promise.all([
+        sb.from('species').select('main_image_step_id').eq('id', speciesId).single(),
+        sb.from('species_steps').select('id, step_order, name').eq('species_id', speciesId).order('step_order'),
+      ]);
+      const rawSteps = steps || [];
+      stepConfig = rawSteps.map(st => ({ id: st.id, name: st.name || '', isMain: false }));
+      if (stepConfig.length) {
+        const mainId    = sp?.main_image_step_id || stepConfig[0].id;
+        const mainEntry = stepConfig.find(x => x.id === mainId) || stepConfig[0];
+        mainEntry.isMain = true;
+      }
+      // 대표 이미지 Step에 실제 DB id가 있다면 지우지 않는다 — length<2일 때 안내문을 보여줄지는
+      // renderStepFields()가 알아서 판단하며, 여기서 배열 자체를 비우면 다음 "+ Step 추가" 시 중복 행이 생긴다.
+      renderStepFields();
+    }
+
+    // 반환값: 저장 중 발생한 오류 메시지 배열(있으면 호출부에서 사용자에게 알림) — 빈 배열이면 전부 성공
+    async function saveStepConfig(speciesId) {
+      syncStepConfigFromDOM();
+      if (stepConfig.length < 2) return []; // 기본 상태 — 이미 삭제 시점에 DB도 비어 있음
+
+      const errs = [];
+
+      // 신규(미저장) Step 먼저 insert — 임시 step_order는 화면 배열 길이가 아니라
+      // DB의 실제 현재 MAX(step_order)를 기준으로 계산해, 이전 저장이 부분 실패해 남아있을 수 있는
+      // 값과도 충돌하지 않게 한다. INSERT가 하나라도 실패하면 즉시 중단하고 reorder는 호출하지 않는다.
+      if (stepConfig.some(s => !s.id)) {
+        const { data: maxRows, error: maxErr } = await sb.from('species_steps')
+          .select('step_order').eq('species_id', speciesId).order('step_order', { ascending: false }).limit(1);
+        if (maxErr) {
+          errs.push(`Step 최대 순서 조회 실패: ${maxErr.message}`);
+          await resyncStepConfig(speciesId);
+          return errs;
+        }
+        let nextTemp = (maxRows?.[0]?.step_order || 0) + 1;
+
+        for (const s of stepConfig) {
+          if (s.id) continue;
+          const { data: inserted, error: insErr } = await sb.from('species_steps')
+            .insert({ species_id: speciesId, step_order: nextTemp, name: s.name || null })
+            .select('id').single();
+          if (insErr) {
+            errs.push(`Step 추가 실패: ${insErr.message}`);
+            await resyncStepConfig(speciesId);
+            return errs; // 실패한 Step 이후 단계(순서 저장 등) 전부 중단
+          }
+          s.id = inserted.id; // 성공 즉시 반영 — 다음 저장 시 같은 Step을 다시 insert하지 않음
+          nextTemp++;
+        }
+      }
+
+      // 방금 이 저장 안에서 처리한 신규 추가·이름 변경·순서 변경은 "정상적인 편집 결과"이므로,
+      // DB를 다시 조회해서 화면 배열과 비교하는 방식으로 재검증하지 않는다(그 비교 자체가 임시 id →
+      // 실제 id 전환을 외부 충돌로 오판해 저장을 반복 실패시켰다). 로컬 상태만으로 충분히 확인 가능한
+      // "모든 Step이 이제 실제 DB id를 가지고 있는가"만 확인한다.
+      if (stepConfig.some(s => !s.id)) {
+        errs.push('일부 Step 저장에 실패해 순서를 저장하지 못했어요.');
+        await resyncStepConfig(speciesId);
+        return errs;
+      }
+      const uiIds = stepConfig.map(s => s.id);
+
+      const { error: reorderErr } = await sb.rpc('reorder_species_steps', {
+        p_species_id: speciesId,
+        p_step_ids: uiIds,
+      });
+      if (reorderErr) {
+        errs.push(`Step 순서 저장 실패: ${reorderErr.message}`);
+        await resyncStepConfig(speciesId);
+        return errs;
+      }
+
+      for (const s of stepConfig) {
+        const { error: nameErr } = await sb.from('species_steps')
+          .update({ name: s.name || null, updated_at: new Date().toISOString() }).eq('id', s.id);
+        if (nameErr) errs.push(`Step 이름 저장 실패: ${nameErr.message}`);
+      }
+
+      const mainStep = stepConfig.find(s => s.isMain);
+      const { error: mainErr } = await sb.from('species')
+        .update({ main_image_step_id: mainStep?.id || null }).eq('id', speciesId);
+      if (mainErr) errs.push(`대표 이미지 Step 지정 실패: ${mainErr.message}`);
+
+      return errs;
+    }
+
     async function submitEdit() {
       const name    = document.getElementById('speciesName').value.trim();
       const desc    = descQuill.getLength() > 1 ? descQuill.root.innerHTML : '';
@@ -761,6 +1050,12 @@
 
         if (error) throw new Error(`저장에 실패했어요: ${error.message}`);
         if (!data || data.length === 0) throw new Error('저장 권한이 없거나 변경할 수 없는 종족입니다.');
+
+        // 성장 Step 설정 저장 — 순서·이름·대표 이미지 지정 (삭제는 deleteExtraStep에서 즉시 처리됨)
+        const stepSaveErrs = await saveStepConfig(speciesId);
+        if (stepSaveErrs.length) {
+          alert('종족 정보는 저장됐지만 성장 Step 저장 중 일부 오류가 있었어요:\n' + stepSaveErrs.join('\n'));
+        }
 
         if (isAdminEditor) {
           await logAdminAction('species_edit', 'species', speciesId, name, { species_name: name }).catch(() => {});

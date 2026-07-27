@@ -6,6 +6,27 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>개체 — 종족연구소</title>
   <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .step-btn {
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1.5px solid var(--border);
+      background: #fff;
+      color: var(--text-sub);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      max-width: 100%;
+      overflow-wrap: break-word;
+      transition: background .15s, border-color .15s, color .15s;
+    }
+    .step-btn.active {
+      background: var(--sky-deep);
+      border-color: var(--sky-deep);
+      color: #fff;
+    }
+  </style>
 </head>
 <body>
 
@@ -69,11 +90,72 @@
     let _wmImgUrl               = null;
     let _origAdditionalUrls     = null;  // original_additional_images (on-demand 로드)
 
+    // 성장 Step 버튼 클릭 — 이미지 있는 Step만 버튼으로 존재하므로 항상 안전하게 전환 가능
+    function selectCharStep(order) {
+      _currentStep     = order;
+      _showingOriginal = false;
+
+      document.querySelectorAll('.step-btn').forEach(b => {
+        b.classList.toggle('active', parseInt(b.dataset.stepOrder, 10) === order);
+      });
+
+      const imgEl = document.getElementById('charMainImg');
+      if (imgEl) {
+        if (order === _mainStepOrder) {
+          imgEl.src = _charData.image_url;
+        } else {
+          const info = _stepImageMap[order];
+          imgEl.src = info?.imageUrl || '';
+        }
+      }
+
+      const label = document.getElementById('imgStateLabel');
+      const btn   = document.getElementById('imgToggleBtn');
+      if (label) label.textContent = '워터마크 이미지를 보고 있습니다.';
+      if (btn)   { btn.textContent = '원본 이미지 보기'; btn.disabled = false; }
+    }
+
     async function toggleOriginalImage() {
       const btn   = document.getElementById('imgToggleBtn');
       const label = document.getElementById('imgStateLabel');
       const imgEl = document.getElementById('charMainImg');
       if (!imgEl) return;
+
+      // 대표 이미지 Step이 아니면: 해당 Step의 원본을 최초 클릭 시에만 온디맨드 조회 후 캐시
+      if (_currentStep !== _mainStepOrder) {
+        const stepInfo = _stepImageMap[_currentStep];
+        if (!stepInfo) return;
+
+        if (!_showingOriginal) {
+          if (!_stepOriginalCache[_currentStep]) {
+            btn.textContent = '불러오는 중...';
+            btn.disabled    = true;
+            const { data, error } = await sb.from('character_step_images')
+              .select('original_image_url, image_url')
+              .eq('character_id', charId)
+              .eq('species_step_id', stepInfo.speciesStepId)
+              .single();
+            const origUrl = data?.original_image_url || data?.image_url || null;
+            if (error || !origUrl) {
+              btn.textContent = '원본 이미지 없음';
+              return;
+            }
+            _stepOriginalCache[_currentStep] = origUrl;
+          }
+          _stepWmUrl        = imgEl.src;
+          imgEl.src         = _stepOriginalCache[_currentStep];
+          label.textContent = '원본 이미지를 보고 있습니다.';
+          btn.textContent   = '워터마크 이미지 보기';
+          btn.disabled      = false;
+          _showingOriginal  = true;
+        } else {
+          imgEl.src         = _stepWmUrl || stepInfo.imageUrl;
+          label.textContent = '워터마크 이미지를 보고 있습니다.';
+          btn.textContent   = '원본 이미지 보기';
+          _showingOriginal  = false;
+        }
+        return;
+      }
 
       if (!_showingOriginal) {
         if (!_origImgUrl) {
@@ -126,6 +208,17 @@
     let _idToNick       = {};
     let _charData       = null;
     let _transferToNick = null;
+
+    // 성장 Step 이미지 상태 — 상세페이지 메인 이미지는 항상 image_url(워터마크 적용, 크롭 안 됨) 사용.
+    // thumbnail_url은 카드/목록 전용이라 상세페이지에서는 아예 조회하지 않는다.
+    // 대표 이미지(characters 기존 이미지)는 species.main_image_step_id로 지정된 Step에서 사용하며,
+    // 이 Step은 항상 step_order 1이 아닐 수 있다(성장 순서와 대표 이미지 지정이 분리됨).
+    let _stepImageMap      = {}; // step_order -> { speciesStepId, imageUrl, label } — 대표 이미지 Step 제외
+    let _mainStepOrder     = 1;  // 대표 이미지(characters 기존 이미지)를 사용하는 step_order
+    let _mainStepLabel     = 'Step 1';
+    let _currentStep       = 1;
+    let _stepOriginalCache = {}; // step_order -> original_image_url (온디맨드 캐시)
+    let _stepWmUrl         = null;
 
     // 디자이너 표시 HTML 생성
     // 연구소 디자이너: designer_user_ids(uuid)로만 식별해 현재 닉네임을 실시간으로 링크 표시
@@ -317,7 +410,7 @@
       console.log('[DEBUG] c.owner_user_id:', c.owner_user_id);
       console.log('[DEBUG] c.species_name:', c.species_name);
       if (c.species_name && c.species_name !== '(알 수 없음)') {
-        const { data: spData } = await sb.from('species').select('id, owner_nickname, owner_user_id, allow_free_adoption, allow_resale, allow_paid_adoption, allow_other_adoption, custom_fields').eq('name', c.species_name).single();
+        const { data: spData } = await sb.from('species').select('id, owner_nickname, owner_user_id, allow_free_adoption, allow_resale, allow_paid_adoption, allow_other_adoption, custom_fields, main_image_step_id').eq('name', c.species_name).single();
         sp = spData;
         console.log('[DEBUG] sp:', sp);
         if (sp) {
@@ -353,6 +446,46 @@
       const isMainGif        = /\.gif(\?|$)/i.test(c.image_url || '');
       const canViewOriginal  = !isMainGif && (isOwner || isSpeciesOwner); // GIF는 워터마크 없으므로 토글 미표시
       const autoShowOriginal = !isMainGif && (isOwner || isSpeciesOwner);
+
+      // 성장 Step 이미지 — 대표 이미지 Step은 characters 기존 이미지를 그대로 쓰고,
+      // 나머지 Step 중 실제로 image_url이 등록된 것만 버튼으로 표시.
+      // 여기서는 URL 등 메타데이터만 조회하며, 실제 이미지 바이트는 버튼 클릭 시(image_url을 img.src에 대입할 때)에만 요청된다.
+      _stepImageMap  = {};
+      _mainStepOrder = 1;
+      _mainStepLabel = 'Step 1';
+      if (sp?.id) {
+        const { data: steps } = await sb.from('species_steps').select('id, step_order, name').eq('species_id', sp.id).order('step_order');
+        const allSteps = steps || [];
+        if (allSteps.length >= 2) {
+          // 하위 호환: main_image_step_id가 없으면 step_order가 가장 낮은 Step을 대표 이미지 Step으로 처리
+          const mainStepId = sp.main_image_step_id || allSteps[0].id;
+          const mainStep   = allSteps.find(s => s.id === mainStepId) || allSteps[0];
+          _mainStepOrder = mainStep.step_order;
+          _mainStepLabel = mainStep.name || `Step ${mainStep.step_order}`;
+
+          const otherSteps = allSteps.filter(s => s.id !== mainStep.id);
+          if (otherSteps.length) {
+            const { data: stepImgs } = await sb.from('character_step_images')
+              .select('species_step_id, image_url')
+              .eq('character_id', charId)
+              .in('species_step_id', otherSteps.map(s => s.id));
+            const imgByStepId = {};
+            (stepImgs || []).forEach(row => { imgByStepId[row.species_step_id] = row; });
+            otherSteps.forEach(s => {
+              const row = imgByStepId[s.id];
+              if (row?.image_url) {
+                _stepImageMap[s.step_order] = {
+                  speciesStepId: s.id,
+                  imageUrl:      row.image_url,
+                  label:         s.name || `Step ${s.step_order}`,
+                };
+              }
+            });
+          }
+        }
+      }
+      _currentStep = _mainStepOrder;
+      const hasStepButtons = Object.keys(_stepImageMap).length > 0;
 
       const registeredDate = new Date(c.created_at).toLocaleDateString('ko-KR', {
         year: 'numeric', month: '2-digit', day: '2-digit'
@@ -395,6 +528,14 @@
 
         <div class="char-body">
           <div class="char-img-wrap">
+            ${hasStepButtons ? `
+            <div id="stepButtonRow" style="display:flex; flex-wrap:wrap; gap:8px; margin:20px 0 14px; max-width:100%;">
+              ${[_mainStepOrder, ...Object.keys(_stepImageMap).map(Number)].sort((a,b) => a-b).map(order => {
+                const isMain = order === _mainStepOrder;
+                const label  = isMain ? _mainStepLabel : _stepImageMap[order].label;
+                return `<button type="button" class="step-btn ${isMain ? 'active' : ''}" data-step-order="${order}" onclick="selectCharStep(${order})">${label}</button>`;
+              }).join('')}
+            </div>` : ''}
             <div class="char-img-area">
               ${c.image_url
                 ? (c.is_sensitive

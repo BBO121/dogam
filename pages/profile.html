@@ -729,10 +729,38 @@
             }
             if (extraCount > 0) dbUpdate.additional_images = wmAdditional;
 
+            // 성장 Step 2 이상 이미지: character_step_images.original_image_url 기준 재합성
+            // (thumbnail_url은 워터마크 미적용 정책이라 재생성 대상 아님)
+            const { data: stepImgs } = await sb.from('character_step_images')
+              .select('id, original_image_url')
+              .eq('character_id', char.id)
+              .not('original_image_url', 'is', null);
+            let stepCount = 0;
+            for (const si of (stepImgs || [])) {
+              if (/\.gif(\?|$)/i.test(si.original_image_url)) continue; // GIF는 원본 그대로 유지
+              try {
+                const res = await fetch(si.original_image_url);
+                if (!res.ok) { reLog(`  ↳ 성장 Step 이미지 다운로드 실패 (${res.status})`); continue; }
+                const blob   = await res.blob();
+                const wmBlob = await applyWatermark(blob, wmSrc);
+                const name   = `${Date.now()}_rewm_step_${si.id}.jpg`;
+                const { error: upErr } = await sb.storage.from('images').upload(name, wmBlob, { contentType: 'image/jpeg' });
+                if (upErr) { reLog(`  ↳ 성장 Step 이미지 업로드 실패: ${upErr.message}`); continue; }
+                const newUrl = sb.storage.from('images').getPublicUrl(name).data.publicUrl;
+                const { error: stepUpdErr } = await sb.from('character_step_images')
+                  .update({ image_url: newUrl, updated_at: new Date().toISOString() }).eq('id', si.id);
+                if (stepUpdErr) { reLog(`  ↳ 성장 Step 이미지 DB 갱신 실패: ${stepUpdErr.message}`); continue; }
+                stepCount++;
+              } catch (stepErr) {
+                reLog(`  ↳ 성장 Step 이미지 처리 실패: ${stepErr.message}`);
+              }
+              await new Promise(r => setTimeout(r, 200));
+            }
+
             const { error: dbErr } = await sb.from('characters').update(dbUpdate).eq('id', char.id);
             if (dbErr) throw new Error(dbErr.message);
             done++;
-            reLog(`✓ ${char.name}${extraCount > 0 ? ` (추가 이미지 ${extraCount}장 포함)` : ''}`);
+            reLog(`✓ ${char.name}${extraCount > 0 ? ` (추가 이미지 ${extraCount}장 포함)` : ''}${stepCount > 0 ? ` (성장 Step 이미지 ${stepCount}장 포함)` : ''}`);
           } catch (e) {
             failed++;
             reLog(`✗ ${char.name}: ${e.message}`);

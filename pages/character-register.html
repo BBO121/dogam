@@ -316,10 +316,9 @@
     let cropperInstance      = null;
     let sectionDragSrc       = null;
     let userWatermarkUrl     = null;
-    let speciesSteps         = [];   // [{id, step_order, name}] — step_order>=2만 업로드 UI 표시
-    let cropTargetStep       = null; // null=메인 이미지, 숫자면 해당 step_order
-    const stepFiles          = {};   // step_order -> File
-    const stepPendingThumb   = {};   // step_order -> Blob(크롭 확정본)
+    let speciesSteps         = [];   // [{id, step_order, name}] — 대표 이미지 Step 포함 전체
+    let mainImageStepId      = null; // 대표 이미지(characters 기존 이미지)로 쓰는 species_steps.id
+    const stepFiles          = {};   // step_order -> File (대표 이미지 Step 제외)
     const quillInstances     = new Map();
 
     const params      = new URLSearchParams(window.location.search);
@@ -576,12 +575,24 @@
       await Promise.all([loadUsers(), loadCustomFields(), loadExistingCategories(), loadSpeciesSteps()]);
     }
 
-    // 성장 Step 이미지 업로드 영역 — Step 1(대표 이미지)은 제외, Step 2 이상만 표시
+    // 성장 Step 이미지 업로드 영역 — 대표 이미지로 지정된 Step은 업로드 칸 없이 안내만, 나머지만 업로드 가능.
+    // 성장 Step 이미지는 크롭하지 않고 원본 구도 그대로 저장하므로 썸네일도 생성하지 않는다.
     async function loadSpeciesSteps() {
       if (!speciesId) return;
-      const { data } = await sb.from('species_steps').select('id, step_order, name').eq('species_id', speciesId).order('step_order');
+      const [{ data: sp }, { data }] = await Promise.all([
+        sb.from('species').select('main_image_step_id').eq('id', speciesId).single(),
+        sb.from('species_steps').select('id, step_order, name').eq('species_id', speciesId).order('step_order'),
+      ]);
       speciesSteps = data || [];
-      const extraSteps = speciesSteps.filter(s => s.step_order >= 2);
+      if (speciesSteps.length < 2) return; // 이 종족은 Step 기능 미사용
+
+      // 대표 이미지 Step 판별은 항상 species.main_image_step_id(=species_steps.id) 기준으로 한다.
+      // 배열의 첫 항목이나 step_order로 판단하지 않는다 — 순서를 바꿔도 대표 이미지 Step은 그대로 유지되어야 한다.
+      // 하위 호환: main_image_step_id가 아직 없는 기존 데이터만 step_order가 가장 낮은 Step으로 대체한다.
+      mainImageStepId = sp?.main_image_step_id || speciesSteps[0].id;
+
+      // 대표 이미지 Step은 기존 대표 이미지 입력 영역에서 이미 등록하므로 이 목록에는 표시하지 않는다.
+      const extraSteps = speciesSteps.filter(s => s.id !== mainImageStepId);
       if (!extraSteps.length) return;
 
       document.getElementById('stepImageSection').style.display = '';
@@ -865,23 +876,23 @@
     // 추가 이미지 파일 목록
     let extraFiles = [];
 
-    // 이미지 선택 → 크롭 모달 오픈 (메인 이미지 / 성장 Step 이미지 공용)
+    // 이미지 선택 — 대표 이미지(targetStep===null)만 크롭 모달을 거치고, 성장 Step 이미지는
+    // 크롭 없이 원본 구도 그대로 사용하므로 바로 미리보기만 표시한다.
     function handleImageFileSelected(file, targetStep, errorEl) {
       if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
         errorEl.textContent = 'PNG, GIF, JPG, WebP 형식의 이미지만 업로드할 수 있어요.';
         return;
       }
       errorEl.textContent = '';
-      cropTargetStep = targetStep;
 
       const previewId     = targetStep === null ? 'imagePreview' : `stepImagePreview_${targetStep}`;
       const placeholderId = targetStep === null ? 'uploadPlaceholder' : `stepUploadPlaceholder_${targetStep}`;
 
       if (targetStep === null) { selectedMainFile = file; pendingThumbnailBlob = null; }
-      else { stepFiles[targetStep] = file; stepPendingThumb[targetStep] = null; }
+      else { stepFiles[targetStep] = file; }
 
-      // GIF: 크롭 모달 스킵, 애니메이션 미리보기 표시
-      if (file.type === 'image/gif') {
+      // 성장 Step 이미지 또는 GIF: 크롭 모달 스킵, 바로 미리보기 표시
+      if (targetStep !== null || file.type === 'image/gif') {
         const url = URL.createObjectURL(file);
         document.getElementById(previewId).src           = url;
         document.getElementById(previewId).style.display = 'block';
@@ -893,7 +904,7 @@
       cropImg.onerror = () => {
         URL.revokeObjectURL(cropImg.src);
         errorEl.textContent = '이미지 파일을 읽을 수 없습니다. 파일 용량·색상 프로파일·손상 여부를 확인해주세요.';
-        if (targetStep === null) selectedMainFile = null; else delete stepFiles[targetStep];
+        selectedMainFile = null;
       };
       cropImg.onload = () => {
         document.getElementById('cropModal').style.display = 'flex';
@@ -950,49 +961,39 @@
     }
 
     // ── 크롭 모달 (메인 이미지 / 성장 Step 이미지 공용) ──────────────────────────────
+    // 크롭 모달은 대표 이미지에만 사용된다 (성장 Step 이미지는 크롭하지 않음)
     async function confirmCrop() {
       const errorEl = document.getElementById('registerError');
       try {
-        const blob = await cropToBlob(cropperInstance, 600, 0.85);
-        if (cropTargetStep === null) pendingThumbnailBlob = blob;
-        else stepPendingThumb[cropTargetStep] = blob;
-        showThumbPreview(blob);
+        pendingThumbnailBlob = await cropToBlob(cropperInstance, 600, 0.85);
+        showThumbPreview(pendingThumbnailBlob);
         closeCropModal();
       } catch (err) { errorEl.textContent = err.message; }
     }
 
     async function useCropAsIs() {
-      const file = cropTargetStep === null ? selectedMainFile : stepFiles[cropTargetStep];
-      if (!file) return;
+      if (!selectedMainFile) return;
       const errorEl = document.getElementById('registerError');
       try {
-        const blob = await autoCenterCropToBlob(file, 3/4, 600, 0.85);
-        if (cropTargetStep === null) pendingThumbnailBlob = blob;
-        else stepPendingThumb[cropTargetStep] = blob;
-        showThumbPreview(blob);
+        pendingThumbnailBlob = await autoCenterCropToBlob(selectedMainFile, 3/4, 600, 0.85);
+        showThumbPreview(pendingThumbnailBlob);
         closeCropModal();
       } catch (err) { errorEl.textContent = err.message; }
     }
 
     function cancelCropModal() {
-      const previewId     = cropTargetStep === null ? 'imagePreview' : `stepImagePreview_${cropTargetStep}`;
-      const placeholderId = cropTargetStep === null ? 'uploadPlaceholder' : `stepUploadPlaceholder_${cropTargetStep}`;
-      const fileInputId   = cropTargetStep === null ? 'imageFile' : `stepImageFile_${cropTargetStep}`;
-      if (cropTargetStep === null) { selectedMainFile = null; pendingThumbnailBlob = null; }
-      else { delete stepFiles[cropTargetStep]; delete stepPendingThumb[cropTargetStep]; }
-      document.getElementById(fileInputId).value = '';
-      document.getElementById(previewId).style.display = 'none';
-      document.getElementById(placeholderId).style.display = '';
+      selectedMainFile = null; pendingThumbnailBlob = null;
+      document.getElementById('imageFile').value            = '';
+      document.getElementById('imagePreview').style.display = 'none';
+      document.getElementById('uploadPlaceholder').style.display = '';
       closeCropModal();
     }
 
     function showThumbPreview(blob) {
-      const previewId = cropTargetStep === null ? 'imagePreview' : `stepImagePreview_${cropTargetStep}`;
-      const placeholderId = cropTargetStep === null ? 'uploadPlaceholder' : `stepUploadPlaceholder_${cropTargetStep}`;
       const url = URL.createObjectURL(blob);
-      document.getElementById(previewId).src           = url;
-      document.getElementById(previewId).style.display = 'block';
-      document.getElementById(placeholderId).style.display = 'none';
+      document.getElementById('imagePreview').src           = url;
+      document.getElementById('imagePreview').style.display = 'block';
+      document.getElementById('uploadPlaceholder').style.display = 'none';
     }
 
     function closeCropModal() {
@@ -1110,47 +1111,52 @@
           }
         }
 
-        // 성장 Step 이미지 업로드 (원본 + 워터마크 적용본 + 썸네일) — 등록하지 않은 Step은 건너뜀
-        const stepImageRows = [];
+        // 성장 Step 이미지 업로드 (원본 + 워터마크 적용본만 — 크롭·썸네일 없음) — 등록하지 않은 Step은 건너뜀.
+        // Step 이미지는 선택사항이므로 한 Step의 업로드가 실패해도 전체 개체 등록은 계속 진행하고,
+        // 실패한 Step에서 이미 올라간 파일이 있으면 정리한다.
+        const stepImageRows  = [];
+        const stepUploadErrs = [];
         for (const [stepOrderStr, stepFile] of Object.entries(stepFiles)) {
           if (!stepFile) continue;
           const stepOrder    = parseInt(stepOrderStr, 10);
           const speciesStep  = speciesSteps.find(s => s.step_order === stepOrder);
-          if (!speciesStep) continue;
+          if (!speciesStep || speciesStep.id === mainImageStepId) continue;
 
-          const ts    = Date.now();
-          const isGif = stepFile.type === 'image/gif';
-          const ext   = isGif ? 'gif' : 'jpg';
-          const blob  = await compressImage(stepFile);
+          const uploadedNames = [];
+          try {
+            const ts    = Date.now();
+            const isGif = stepFile.type === 'image/gif';
+            const ext   = isGif ? 'gif' : 'jpg';
+            const blob  = await compressImage(stepFile);
 
-          const origName = `${ts}_step${stepOrder}_orig.${ext}`;
-          const { error: origErr } = await sb.storage.from('images').upload(origName, blob, { contentType: isGif ? 'image/gif' : 'image/jpeg' });
-          if (origErr) throw new Error(`Step 이미지 원본 업로드에 실패했어요. (${origErr.message})`);
-          const stepOriginalUrl = sb.storage.from('images').getPublicUrl(origName).data.publicUrl;
+            const origName = `${ts}_step${stepOrder}_orig.${ext}`;
+            const { error: origErr } = await sb.storage.from('images').upload(origName, blob, { contentType: isGif ? 'image/gif' : 'image/jpeg' });
+            if (origErr) throw new Error(`원본 업로드 실패 (${origErr.message})`);
+            uploadedNames.push(origName);
+            const stepOriginalUrl = sb.storage.from('images').getPublicUrl(origName).data.publicUrl;
 
-          let stepImageUrl;
-          if (isGif) {
-            stepImageUrl = stepOriginalUrl;
-          } else {
-            const wmBlob    = await applyWatermark(blob, wmSrc);
-            const mainName  = `${ts}_step${stepOrder}.jpg`;
-            const { error: mainErr } = await sb.storage.from('images').upload(mainName, wmBlob, { contentType: 'image/jpeg' });
-            if (mainErr) throw new Error(`Step 이미지 업로드에 실패했어요. (${mainErr.message})`);
-            stepImageUrl = sb.storage.from('images').getPublicUrl(mainName).data.publicUrl;
+            let stepImageUrl;
+            if (isGif) {
+              stepImageUrl = stepOriginalUrl;
+            } else {
+              const wmBlob    = await applyWatermark(blob, wmSrc);
+              const mainName  = `${ts}_step${stepOrder}.jpg`;
+              const { error: mainErr } = await sb.storage.from('images').upload(mainName, wmBlob, { contentType: 'image/jpeg' });
+              if (mainErr) throw new Error(`워터마크 이미지 업로드 실패 (${mainErr.message})`);
+              uploadedNames.push(mainName);
+              stepImageUrl = sb.storage.from('images').getPublicUrl(mainName).data.publicUrl;
+            }
+
+            stepImageRows.push({
+              species_step_id:    speciesStep.id,
+              image_url:          stepImageUrl,
+              original_image_url: stepOriginalUrl,
+              thumbnail_url:      null,
+            });
+          } catch (stepErr) {
+            if (uploadedNames.length) await sb.storage.from('images').remove(uploadedNames).catch(() => {});
+            stepUploadErrs.push(`${speciesStep.name || `Step ${stepOrder}`}: ${stepErr.message}`);
           }
-
-          const thumbBlob = stepPendingThumb[stepOrder] || await autoCenterCropToBlob(stepFile, 3/4, 600, 0.85);
-          const thumbName = `${ts}_step${stepOrder}_thumb.jpg`;
-          const { error: thumbErr } = await sb.storage.from('images').upload(thumbName, thumbBlob, { contentType: 'image/jpeg' });
-          if (thumbErr) throw new Error(`Step 썸네일 업로드에 실패했어요. (${thumbErr.message})`);
-          const stepThumbUrl = sb.storage.from('images').getPublicUrl(thumbName).data.publicUrl;
-
-          stepImageRows.push({
-            species_step_id:    speciesStep.id,
-            image_url:          stepImageUrl,
-            original_image_url: stepOriginalUrl,
-            thumbnail_url:      stepThumbUrl,
-          });
         }
 
         // 커스텀 필드 값 수집
@@ -1206,7 +1212,10 @@
           const { error: stepImgErr } = await sb.from('character_step_images').insert(
             stepImageRows.map(row => ({ ...row, character_id: newChar.id }))
           );
-          if (stepImgErr) console.warn('성장 Step 이미지 저장 실패(개체 등록은 완료됨):', stepImgErr.message);
+          if (stepImgErr) stepUploadErrs.push(`Step 이미지 저장 실패: ${stepImgErr.message}`);
+        }
+        if (stepUploadErrs.length) {
+          alert('개체 등록은 완료됐지만 일부 성장 Step 이미지 처리에 실패했어요:\n' + stepUploadErrs.join('\n') + '\n\n개체 수정 페이지에서 다시 시도해주세요.');
         }
 
         if (ownerType === 'site' && selectedNickId && selectedNickId !== currentUser?.id) {

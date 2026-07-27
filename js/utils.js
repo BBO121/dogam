@@ -146,6 +146,14 @@ function applyWatermark(imageBlob, watermarkUrl) {
   });
 }
 
+// Storage 공개 URL → 버킷 내 파일 경로 (images 버킷, .storage.from('images').remove()에 사용)
+function storagePathFromUrl(url) {
+  if (!url) return null;
+  const marker = '/object/public/images/';
+  const idx = url.indexOf(marker);
+  return idx === -1 ? null : url.slice(idx + marker.length);
+}
+
 // 중앙 자동 크롭 (팝업 없이) → JPEG blob
 function autoCenterCropToBlob(file, aspectRatio = 3/4, maxSize = 600, quality = 0.85) {
   return new Promise((resolve, reject) => {
