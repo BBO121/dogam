@@ -624,7 +624,7 @@
 
       for (const item of items) {
         const id       = item.id.replace('item_', '');
-        const name     = document.getElementById(`name_${id}`).value.trim();
+        const name     = document.getElementById(`name_${id}`).value.trim().normalize('NFC');
         const state    = itemStates[id] || {};
         const designer = (state.designerType === 'external'
           ? document.getElementById(`itemDExtName_${id}`)?.value.trim()

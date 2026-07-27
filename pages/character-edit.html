@@ -1432,7 +1432,7 @@
       }
 
       // 종족주 / 관리자 저장 (종족 설정 영역)
-      const name      = document.getElementById('charName').value.trim();
+      const name      = document.getElementById('charName').value.trim().normalize('NFC');
       const desc      = document.getElementById('charDesc').value.trim();
       const ownerDesc = document.getElementById('ownerDesc').value.trim();
       const file      = document.getElementById('imageFile').files[0];

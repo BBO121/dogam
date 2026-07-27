@@ -63,7 +63,7 @@
   <script>
     document.getElementById('signupForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const nickname = document.getElementById('nickname').value.trim();
+      const nickname = document.getElementById('nickname').value.trim().normalize('NFC');
       const password = document.getElementById('password').value;
       const confirm  = document.getElementById('passwordConfirm').value;
       const errorEl  = document.getElementById('signupError');

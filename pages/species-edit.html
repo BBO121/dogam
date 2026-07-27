@@ -974,7 +974,7 @@
     }
 
     async function submitEdit() {
-      const name    = document.getElementById('speciesName').value.trim();
+      const name    = document.getElementById('speciesName').value.trim().normalize('NFC');
       const desc    = descQuill.getLength() > 1 ? descQuill.root.innerHTML : '';
       const errorEl = document.getElementById('formError');
       const btn     = document.getElementById('submitBtn');

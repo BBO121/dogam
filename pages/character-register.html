@@ -1005,7 +1005,7 @@
     document.getElementById('registerForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const name    = document.getElementById('charName').value.trim();
+      const name    = document.getElementById('charName').value.trim().normalize('NFC');
       const desc    = document.getElementById('charDesc').value.trim();
       const file    = selectedMainFile;
       const errorEl = document.getElementById('registerError');

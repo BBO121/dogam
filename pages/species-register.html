@@ -615,7 +615,7 @@
     }
 
     async function submitSpecies() {
-      const name    = document.getElementById('speciesName').value.trim();
+      const name    = document.getElementById('speciesName').value.trim().normalize('NFC');
       const desc    = document.getElementById('speciesDesc').value.trim();
       const errorEl = document.getElementById('formError');
       const btn     = document.getElementById('submitBtn');

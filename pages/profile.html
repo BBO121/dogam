@@ -1348,7 +1348,7 @@
 
     // 프로필 저장
     async function saveProfile() {
-      const newDisplayName = document.getElementById('editDisplayName').value.trim();
+      const newDisplayName = document.getElementById('editDisplayName').value.trim().normalize('NFC');
       const bio = bioQuill.getLength() > 1 ? bioQuill.root.innerHTML : '';
       const tos = tosQuill.getLength() > 1 ? tosQuill.root.innerHTML : '';
       const btn = document.getElementById('editProfileBtn');
