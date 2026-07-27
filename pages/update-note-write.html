@@ -154,8 +154,8 @@
           document.getElementById('writeError').textContent = 'PNG, JPG, WebP, GIF 형식만 업로드 가능해요.';
           return;
         }
-        if (file.size > 5 * 1024 * 1024) {
-          document.getElementById('writeError').textContent = '이미지는 5MB 이하여야 해요.';
+        if (file.size > 10 * 1024 * 1024) {
+          document.getElementById('writeError').textContent = '이미지는 10MB 이하여야 해요.';
           return;
         }
         const status = document.getElementById('imgUploadStatus');
