@@ -22,3 +22,7 @@ desktop.ini
 
 # 백업 폴더 (GitHub에 올리지 않음)
 backup/
+
+# 의존성 / 로컬 툴 상태
+node_modules/
+supabase/.temp/
