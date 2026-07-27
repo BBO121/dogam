@@ -1364,14 +1364,19 @@
               .eq('owner_user_id', currentUser.id),
             // 디자이너명 갱신: UUID 기반(신규) + nickname 기반(레거시) 병행
             (async () => {
-              // UUID 보유 항목: display string 내 old → new 교체
-              const { data: uuidDesigns } = await sb.from('characters')
-                .select('id, designer_nickname')
-                .filter('designer_user_ids', 'cs', `{${currentUser.id}}`);
+              // UUID 보유 항목: designer_nickname을 split하지 않고, uuid별 "현재" 닉네임 +
+              // designer_external 이름으로 표시 캐시를 새로 만든다.
+              const [{ data: uuidDesigns }, { data: allUsersData }] = await Promise.all([
+                sb.from('characters').select('id, designer_user_ids, designer_external')
+                  .filter('designer_user_ids', 'cs', `{${currentUser.id}}`),
+                sb.rpc('get_all_users'),
+              ]);
+              const idToNick = Object.fromEntries((allUsersData || []).map(u => [u.id, u.nickname]));
               await Promise.all((uuidDesigns || []).map(c => {
-                const updated = c.designer_nickname.split(' / ')
-                  .map(n => n.trim() === oldDisplayName ? newDisplayName : n).join(' / ');
-                return sb.from('characters').update({ designer_nickname: updated }).eq('id', c.id);
+                const siteNicks   = (c.designer_user_ids || []).map(id => id === currentUser.id ? newDisplayName : (idToNick[id] || '(알수없음)'));
+                const extNames    = (c.designer_external || []).filter(e => e && e.name).map(e => e.name);
+                const updatedNick = [...siteNicks, ...extNames].join(' / ');
+                return sb.from('characters').update({ designer_nickname: updatedNick }).eq('id', c.id);
               }));
               // 레거시 단일 항목 (designer_user_ids 없는 기존 데이터)
               await sb.from('characters').update({ designer_nickname: newDisplayName })
@@ -1469,13 +1474,17 @@
           sb.from('characters').update({ owner_nickname: '(알수없음)', owner_user_id: null }).eq('owner_user_id', currentUser.id),
           // 디자이너 삭제 처리: UUID 제거 + display string 갱신 (비동기)
           (async () => {
-            const { data: uuidDesigns } = await sb.from('characters')
-              .select('id, designer_nickname, designer_user_ids')
-              .filter('designer_user_ids', 'cs', `{${currentUser.id}}`);
+            const [{ data: uuidDesigns }, { data: allUsersData }] = await Promise.all([
+              sb.from('characters').select('id, designer_user_ids, designer_external')
+                .filter('designer_user_ids', 'cs', `{${currentUser.id}}`),
+              sb.rpc('get_all_users'),
+            ]);
+            const idToNick = Object.fromEntries((allUsersData || []).map(u => [u.id, u.nickname]));
             await Promise.all((uuidDesigns || []).map(c => {
-              const updatedNick = c.designer_nickname.split(' / ')
-                .map(n => n.trim() === nickname ? '(알수없음)' : n).join(' / ');
               const updatedIds  = (c.designer_user_ids || []).filter(id => id !== currentUser.id);
+              const siteNicks   = updatedIds.map(id => idToNick[id] || '(알수없음)');
+              const extNames    = (c.designer_external || []).filter(e => e && e.name).map(e => e.name);
+              const updatedNick = [...siteNicks, ...extNames].join(' / ') || '(알수없음)';
               return sb.from('characters').update({ designer_nickname: updatedNick, designer_user_ids: updatedIds }).eq('id', c.id);
             }));
             await sb.from('characters').update({ designer_nickname: '(알수없음)' }).eq('designer_nickname', nickname);

@@ -1061,13 +1061,19 @@
 
       // ③ 연관 데이터 정리 (디자이너 정보, 거래 내역)
       try {
-        const { data: uuidDesigns } = await sb.from('characters')
-          .select('id, designer_nickname, designer_user_ids')
-          .filter('designer_user_ids', 'cs', `{${userId}}`);
+        const [{ data: uuidDesigns }, { data: allUsersData }] = await Promise.all([
+          sb.from('characters').select('id, designer_user_ids, designer_external')
+            .filter('designer_user_ids', 'cs', `{${userId}}`),
+          sb.rpc('get_all_users'),
+        ]);
+        const idToNick = Object.fromEntries((allUsersData || []).map(u => [u.id, u.nickname]));
+        // designer_nickname 문자열을 다시 split(' / ')하지 않고, uuid 배열에서 제거 후
+        // 남은 uuid의 "현재" 닉네임 + designer_external 이름으로 표시 캐시를 새로 만든다.
         await Promise.all((uuidDesigns || []).map(c => {
-          const updatedNick = c.designer_nickname.split(' / ')
-            .map(n => n.trim() === nickname ? '(알수없음)' : n).join(' / ');
           const updatedIds  = (c.designer_user_ids || []).filter(id => id !== userId);
+          const siteNicks   = updatedIds.map(id => idToNick[id] || '(알수없음)');
+          const extNames    = (c.designer_external || []).filter(e => e && e.name).map(e => e.name);
+          const updatedNick = [...siteNicks, ...extNames].join(' / ') || '(알수없음)';
           return sb.from('characters').update({ designer_nickname: updatedNick, designer_user_ids: updatedIds }).eq('id', c.id);
         }));
         await Promise.all([

@@ -307,6 +307,38 @@ function closeDropdown() {
   searchDropdown.innerHTML = '';
 }
 
+/* ── 디자이너 레거시 데이터 유틸 ───────────────
+   designer_external(jsonb 배열) 도입 이전에 저장된 구(舊) 레코드는
+   designer_user_ids(uuid 배열)만 있고 외부 디자이너 이름은
+   designer_nickname 캐시 문자열 안에 " / "로 합쳐진 채로만 남아있을 수 있다.
+   이 문자열을 다시 split(' / ')하면 닉네임 자체에 "/"가 포함된 경우
+   한 명을 여러 명으로 잘못 나누게 되므로, 이미 알고 있는 연구소 회원
+   닉네임을 앞/뒤에서만 정확히 제거하고 남은 부분은 통째로 외부 디자이너
+   1개 항목으로 보존한다. (임의로 여러 명으로 분리하지 않음) */
+function extractLegacyDesignerLeftover(fullText, knownSiteNicknames) {
+  if (!fullText) return '';
+  const nicks = (knownSiteNicknames || []).filter(Boolean);
+  let remaining = fullText.trim();
+
+  for (const nick of nicks) {
+    const stripped = remaining.replace(/^\s*\/\s*/, '');
+    if (stripped.startsWith(nick)) {
+      remaining = stripped.slice(nick.length).trim();
+    } else {
+      break;
+    }
+  }
+  for (let i = nicks.length - 1; i >= 0; i--) {
+    const stripped = remaining.replace(/\s*\/\s*$/, '');
+    if (stripped.endsWith(nicks[i])) {
+      remaining = stripped.slice(0, stripped.length - nicks[i].length).trim();
+    } else {
+      break;
+    }
+  }
+  return remaining.replace(/^\s*\/\s*/, '').replace(/\s*\/\s*$/, '').trim();
+}
+
 function goToSearch(q) {
   window.location.href = `character-list.html?q=${encodeURIComponent(q)}`;
 }
