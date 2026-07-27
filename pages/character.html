@@ -236,7 +236,7 @@
         // 완전 레거시(uuid 없음) 단일 텍스트: 현재 연구소 닉네임과 일치하면 site로, 아니면 external 1개로
         const uuid = _nickToId[c.designer_nickname];
         if (uuid) {
-          siteItems.push({ uid, name: c.designer_nickname });
+          siteItems.push({ uid: uuid, name: c.designer_nickname });
         } else {
           externalItems = [{ name: c.designer_nickname, contact: c.designer_contact || '' }];
         }
