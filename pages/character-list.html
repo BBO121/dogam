@@ -65,30 +65,26 @@
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/achievements.js"></script>
+  <script src="../js/search.js"></script>
   <script src="../js/main.js"></script>
   <script>
-    let allChars      = [];
     let idToNick      = {};
     let isInitialLoad = true;
-    let ownerParamId = null;
+    let ownerParamId  = null;
+    let searchController = null;
+    let searchToken   = 0;
     const _qs          = new URLSearchParams(window.location.search);
     const ownerParam   = _qs.get('owner');
     const ownerIdParam = _qs.get('owner_id'); // UUID 기준 조회
     const pager = createPager(render);
 
+    // 전체 개체를 미리 캐싱해 브라우저에서 필터링하는 대신, 검색어/필터가
+    // 바뀔 때마다 searchCharacters()로 서버에 직접 요청한다.
     async function loadCharacters() {
-      const [{ data, error }, { data: userList }] = await Promise.all([
-        sb.from('characters')
-          .select('id, name, species_name, owner_nickname, owner_user_id, image_url, thumbnail_url, created_at, is_sensitive, sensitive_note')
-          .order('created_at', { ascending: false })
-          .limit(10000),
+      const [{ data: userList }, { data: speciesRows, error: speciesErr }] = await Promise.all([
         sb.rpc('get_all_users'),
+        sb.from('species').select('name').order('name'),
       ]);
-
-      if (error || !data) {
-        document.getElementById('characterGrid').innerHTML = '<p class="page-loading">불러오기 실패</p>';
-        return;
-      }
 
       if (userList) userList.forEach(u => { if (u.id && u.nickname) idToNick[u.id] = u.nickname; });
 
@@ -103,93 +99,59 @@
         ownerParamId = found?.id || null;
       }
 
-      allChars = data;
-
       if (!ownerIdParam && ownerParam) {
         document.querySelector('.list-page-title').textContent = `${ownerParam}의 개체`;
       }
 
-      if (isInitialLoad) {
-        const p    = new URLSearchParams(location.search);
-        const urlQ = p.get('q'); const sp = p.get('species'); const sort = p.get('sort');
-        if (urlQ) document.getElementById('searchInput').value  = urlQ;
-        if (sp)   document.getElementById('speciesFilter').value = sp;
-        if (sort) document.getElementById('sortSelect').value    = sort;
-      }
+      const p    = new URLSearchParams(location.search);
+      const urlQ = p.get('q'); const sp = p.get('species'); const sort = p.get('sort');
+      if (urlQ) document.getElementById('searchInput').value  = urlQ;
+      if (sp)   document.getElementById('speciesFilter').value = sp;
+      if (sort) document.getElementById('sortSelect').value    = sort;
 
-      // 종족 필터 옵션 생성
-      const species = [...new Set(data.map(c => c.species_name).filter(Boolean))].sort((a,b) => a.localeCompare(b,'ko'));
-      const filterEl = document.getElementById('speciesFilter');
-      species.forEach(s => {
-        const opt = document.createElement('option');
-        opt.value = s;
-        opt.textContent = s;
-        filterEl.appendChild(opt);
-      });
+      // 종족 필터 옵션 생성 (species 테이블 기준 — 개체 데이터 전체를 불러올 필요 없음)
+      if (!speciesErr && speciesRows) {
+        const filterEl = document.getElementById('speciesFilter');
+        speciesRows.forEach(s => {
+          const opt = document.createElement('option');
+          opt.value = s.name;
+          opt.textContent = s.name;
+          filterEl.appendChild(opt);
+        });
+        if (sp) filterEl.value = sp;
+      }
 
       applyFilter();
     }
 
     async function applyFilter() {
-      const q    = document.getElementById('searchInput').value.trim();
+      const q    = normalizeSearchQuery(document.getElementById('searchInput').value);
       const sp   = document.getElementById('speciesFilter').value;
       const sort = document.getElementById('sortSelect').value;
 
-      let list;
+      if (searchController) searchController.abort();
+      searchController = new AbortController();
+      const myToken = ++searchToken;
 
-      if (q) {
-        // 검색어 있을 때: 전체 DB 서버 검색 (1000개 제한 우회)
-        let listQuery = sb.from('characters')
-          .select('id, name, species_name, owner_nickname, owner_user_id, image_url, thumbnail_url, created_at, is_sensitive, sensitive_note')
-          .or(`name.ilike.%${q}%,owner_nickname.ilike.%${q}%,species_name.ilike.%${q}%`);
-        if (sp)   listQuery = listQuery.eq('species_name', sp);
-        if (ownerIdParam && ownerParamId) listQuery = listQuery.eq('owner_user_id', ownerParamId);
-        else if (ownerParam)              listQuery = listQuery.eq('owner_nickname', ownerParam);
-        listQuery = sort === 'name'
-          ? listQuery.order('name', { ascending: true })
-          : listQuery.order('created_at', { ascending: false });
+      const { data, count, error } = await searchCharacters(q, {
+        speciesName: sp || null,
+        ownerUserId: (ownerIdParam && ownerParamId) ? ownerParamId : null,
+        ownerNickname: (!ownerIdParam && ownerParam) ? ownerParam : null,
+        sort,
+        limit: 5000,
+        signal: searchController.signal,
+      });
 
-        let countQuery = sb.from('characters').select('id', { count: 'exact', head: true })
-          .or(`name.ilike.%${q}%,owner_nickname.ilike.%${q}%,species_name.ilike.%${q}%`);
-        if (sp)   countQuery = countQuery.eq('species_name', sp);
-        if (ownerIdParam && ownerParamId) countQuery = countQuery.eq('owner_user_id', ownerParamId);
-        else if (ownerParam)              countQuery = countQuery.eq('owner_nickname', ownerParam);
+      if (myToken !== searchToken) return; // 이전 요청보다 늦게 온 응답은 무시
 
-        const [{ data: searchData }, { count: exactCount }] = await Promise.all([
-          listQuery.limit(2000),
-          countQuery,
-        ]);
-        list = searchData || [];
-        document.getElementById('charCount').textContent = `총 ${exactCount ?? list.length}개의 개체`;
-      } else if (ownerParam || ownerIdParam) {
-        // 소유자 필터 있을 때: 서버 직접 조회 (allChars는 최신 일부만 캐시되므로 누락 방지)
-        let ownerListQ = sb.from('characters')
-          .select('id, name, species_name, owner_nickname, owner_user_id, image_url, thumbnail_url, created_at, is_sensitive, sensitive_note');
-        if (sp)              ownerListQ = ownerListQ.eq('species_name', sp);
-        if (ownerParamId)    ownerListQ = ownerListQ.eq('owner_user_id', ownerParamId);
-        else if (ownerParam) ownerListQ = ownerListQ.eq('owner_nickname', ownerParam);
-        ownerListQ = sort === 'name'
-          ? ownerListQ.order('name', { ascending: true })
-          : ownerListQ.order('created_at', { ascending: false });
-
-        let ownerCountQ = sb.from('characters').select('id', { count: 'exact', head: true });
-        if (sp)              ownerCountQ = ownerCountQ.eq('species_name', sp);
-        if (ownerParamId)    ownerCountQ = ownerCountQ.eq('owner_user_id', ownerParamId);
-        else if (ownerParam) ownerCountQ = ownerCountQ.eq('owner_nickname', ownerParam);
-
-        const [{ data: ownerData }, { count: exactCount }] = await Promise.all([ownerListQ, ownerCountQ]);
-        list = ownerData || [];
-        document.getElementById('charCount').textContent = `총 ${exactCount ?? list.length}개의 개체`;
-      } else {
-        // 소유자 필터 없을 때: 캐시된 allChars 클라이언트 필터
-        list = allChars.filter(c => (!sp || c.species_name === sp));
-        if (sort === 'name') list = [...list].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
-
-        let countQuery = sb.from('characters').select('id', { count: 'exact', head: true });
-        if (sp) countQuery = countQuery.eq('species_name', sp);
-        const { count: exactCount } = await countQuery;
-        document.getElementById('charCount').textContent = `총 ${exactCount ?? list.length}개의 개체`;
+      if (error) {
+        document.getElementById('characterGrid').innerHTML = '<p class="page-loading">불러오기 실패</p>';
+        document.getElementById('paginationWrap').innerHTML = '';
+        return;
       }
+
+      const list = data;
+      document.getElementById('charCount').textContent = `총 ${count ?? list.length}개의 개체`;
       document.getElementById('noResult').style.display = list.length ? 'none' : 'block';
 
       if (!list.length) {
@@ -210,10 +172,7 @@
         isInitialLoad = false;
         pager.init(list);
       } else {
-        const url  = new URL(location.href);
-        const q    = document.getElementById('searchInput').value.trim();
-        const sp   = document.getElementById('speciesFilter').value;
-        const sort = document.getElementById('sortSelect').value;
+        const url = new URL(location.href);
         if (q)    url.searchParams.set('q', q);           else url.searchParams.delete('q');
         if (sp)   url.searchParams.set('species', sp);    else url.searchParams.delete('species');
         if (sort) url.searchParams.set('sort', sort);     else url.searchParams.delete('sort');
@@ -222,6 +181,8 @@
         pager.load(list);
       }
     }
+
+    const debouncedApplyFilter = debounce(applyFilter, 300);
 
     function render(data) {
       const grid = document.getElementById('characterGrid');
@@ -251,7 +212,7 @@
       overlayEl.remove();
     }
 
-    document.getElementById('searchInput').addEventListener('input', applyFilter);
+    document.getElementById('searchInput').addEventListener('input', debouncedApplyFilter);
     document.getElementById('speciesFilter').addEventListener('change', applyFilter);
     document.getElementById('sortSelect').addEventListener('change', applyFilter);
 

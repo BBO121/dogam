@@ -84,67 +84,66 @@
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/achievements.js"></script>
+  <script src="../js/search.js"></script>
   <script src="../js/main.js"></script>
   <script>
-    let allSpecies    = [];
     let isInitialLoad = true;
     let openFilter    = 'all';
     let ageFilter     = 'all';
+    let searchController = null;
+    let searchToken   = 0;
     const pager = createPager(render);
 
-    async function loadSpecies() {
-      const { data, error } = await sb
-        .from('species')
-        .select('id, name, image_url, thumbnail_url, created_at, is_sensitive, sensitive_note, open_type, age_limit')
-        .order('created_at', { ascending: false });
-
-      if (error || !data) {
-        document.getElementById('speciesGrid').innerHTML = '<p class="page-loading">불러오기 실패</p>';
-        return;
+    // 전체 종족을 미리 캐싱해 브라우저에서 필터링하는 대신, 검색어/필터가
+    // 바뀔 때마다 searchSpecies()로 서버에 직접 요청한다.
+    function loadSpecies() {
+      const p = new URLSearchParams(location.search);
+      const q      = p.get('q');
+      const sort   = p.get('sort');
+      const filter = p.get('filter');
+      const ageF   = p.get('ageFilter');
+      if (q)      document.getElementById('searchInput').value = q;
+      if (sort)   document.getElementById('sortSelect').value  = sort;
+      if (filter) {
+        openFilter = filter;
+        document.querySelectorAll('#openFilterChips .species-filter-chip').forEach(b =>
+          b.classList.toggle('active', b.dataset.filter === filter));
       }
-
-      allSpecies = data;
-      if (isInitialLoad) {
-        const p = new URLSearchParams(location.search);
-        const q      = p.get('q');
-        const sort   = p.get('sort');
-        const filter = p.get('filter');
-        const ageF   = p.get('ageFilter');
-        if (q)      document.getElementById('searchInput').value = q;
-        if (sort)   document.getElementById('sortSelect').value  = sort;
-        if (filter) {
-          openFilter = filter;
-          document.querySelectorAll('#openFilterChips .species-filter-chip').forEach(b =>
-            b.classList.toggle('active', b.dataset.filter === filter));
-        }
-        if (ageF) {
-          ageFilter = ageF;
-          document.querySelectorAll('#ageFilterChips .species-filter-chip').forEach(b =>
-            b.classList.toggle('active', b.dataset.ageFilter === ageF));
-        }
+      if (ageF) {
+        ageFilter = ageF;
+        document.querySelectorAll('#ageFilterChips .species-filter-chip').forEach(b =>
+          b.classList.toggle('active', b.dataset.ageFilter === ageF));
       }
       applyFilter();
     }
 
     async function applyFilter() {
-      const q    = document.getElementById('searchInput').value.trim();
+      const q    = normalizeSearchQuery(document.getElementById('searchInput').value);
       const sort = document.getElementById('sortSelect').value;
 
-      const qLow = q.toLowerCase();
-      let list = allSpecies.filter(s => {
-        if (openFilter === 'open'   && s.open_type !== 'open')   return false;
-        if (openFilter === 'closed' && s.open_type !== 'closed') return false;
-        if (ageFilter === 'none'       && s.age_limit > 0)  return false;
-        if (ageFilter === 'restricted' && !(s.age_limit > 0)) return false;
-        return !q || s.name.toLowerCase().includes(qLow);
+      if (searchController) searchController.abort();
+      searchController = new AbortController();
+      const myToken = ++searchToken;
+
+      const { data, count, error } = await searchSpecies(q, {
+        openType: openFilter,
+        ageFilter,
+        sort,
+        limit: 2000,
+        signal: searchController.signal,
       });
 
-      if (sort === 'name') {
-        list = [...list].sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+      if (myToken !== searchToken) return; // 이전 요청보다 늦게 온 응답은 무시
+
+      if (error) {
+        document.getElementById('speciesGrid').innerHTML = '<p class="page-loading">불러오기 실패</p>';
+        document.getElementById('paginationWrap').innerHTML = '';
+        return;
       }
 
+      const list = data;
       const countEl = document.getElementById('speciesCount');
-      countEl.textContent = `총 ${list.length}개의 종족`;
+      countEl.textContent = `총 ${count ?? list.length}개의 종족`;
 
       const grid = document.getElementById('speciesGrid');
       if (!list.length) {
@@ -167,8 +166,6 @@
         pager.init(list);
       } else {
         const url = new URL(location.href);
-        const q    = document.getElementById('searchInput').value.trim();
-        const sort = document.getElementById('sortSelect').value;
         if (q)    url.searchParams.set('q', q);             else url.searchParams.delete('q');
         if (sort) url.searchParams.set('sort', sort);       else url.searchParams.delete('sort');
         if (openFilter !== 'all') url.searchParams.set('filter', openFilter);
@@ -180,6 +177,8 @@
         pager.load(list);
       }
     }
+
+    const debouncedApplyFilter = debounce(applyFilter, 300);
 
     function speciesImgHtml(s) {
       const imgSrc = s.thumbnail_url || s.image_url;
@@ -239,7 +238,7 @@
       applyFilter();
     });
 
-    document.getElementById('searchInput').addEventListener('input', applyFilter);
+    document.getElementById('searchInput').addEventListener('input', debouncedApplyFilter);
     document.getElementById('sortSelect').addEventListener('change', applyFilter);
 
     async function initPage() {

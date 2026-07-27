@@ -214,7 +214,15 @@
 
       allUsers = sortUsers(data);
       document.getElementById('usersCount').textContent = `총 ${allUsers.length}명`;
-      pager.load(allUsers);
+
+      // 헤더 통합검색 "더보기"에서 넘어온 경우 검색어 유지
+      const q = new URLSearchParams(location.search).get('q');
+      if (q) {
+        document.getElementById('searchInput').value = q;
+        filterUsers(q);
+      } else {
+        pager.load(allUsers);
+      }
     }
 
     loadUsers();

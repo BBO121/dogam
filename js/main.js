@@ -124,87 +124,32 @@ if (grid) {
   }
 }
 
-let characters = [];
-let speciesList = [];
-let siteUsers   = [];
-let userIdMap   = {};
-let speciesOwnerNicksSet = new Set();
-
-async function loadSearchData() {
-  const [
-    { data: chars,   error: charErr },
-    { data: userList },
-    { data: spList },
-  ] = await Promise.all([
-    sb.from('characters').select('id, name, species_name'),
-    sb.rpc('get_all_users'),
-    sb.from('species').select('id, name, owner_nickname'),
-  ]);
-  if (charErr) { console.error('[검색] 데이터 로드 실패:', charErr); return; }
-
-  if (spList) {
-    spList.forEach(s => { if (s.owner_nickname) speciesOwnerNicksSet.add(s.owner_nickname); });
-    speciesList = spList.map(s => ({
-      name: s.name,
-      url:  `species.html?id=${s.id}`,
-    }));
-  }
-
-  if (userList) {
-    siteUsers = userList
-      .filter(u => u.login_id !== 'admin')
-      .map(u => ({
-        name:           u.nickname  || '',
-        id:             u.id        || '',
-        loginId:        u.login_id || u.nickname || '',
-        role:           u.role     || '',
-        isSpeciesOwner: u.role === 'species_owner' || speciesOwnerNicksSet.has(u.nickname || ''),
-      }));
-    userList.forEach(u => {
-      const loginId     = (u.login_id  || u.nickname || '').toLowerCase();
-      const displayName = (u.nickname  || '').toLowerCase();
-      if (loginId) userIdMap[loginId] = displayName;
-    });
-  }
-
-  if (chars) {
-    characters = chars.map(c => ({
-      name:    c.name,
-      species: c.species_name || '',
-      url:     `character.html?id=${c.id}`,
-    }));
-  }
-}
-
+// 헤더 통합 검색: js/search.js의 searchAll()을 사용한다.
+// (개체/종족/유저 전체 데이터를 미리 캐싱해두던 방식은 폐기 —
+//  입력 시마다 서버에 직접 검색 요청을 보낸다.)
 const searchInput    = document.getElementById('searchInput');
 const searchDropdown = document.getElementById('searchDropdown');
+let headerSearchController = null;
 
 if (searchInput && searchDropdown) {
-  loadSearchData();
-
-  searchInput.addEventListener('input', () => {
-    const q = searchInput.value.trim();
+  const runHeaderSearch = debounce(async () => {
+    const q = normalizeSearchQuery(searchInput.value);
     if (!q) { closeDropdown(); return; }
 
-    const qLow = q.toLowerCase();
+    if (headerSearchController) headerSearchController.abort();
+    headerSearchController = new AbortController();
+    const { signal } = headerSearchController;
 
-    const matchedUsers = siteUsers.filter(u =>
-      u.name.toLowerCase().includes(qLow) ||
-      u.loginId.toLowerCase().includes(qLow)
-    );
-    const matchedSpecies = speciesList.filter(s =>
-      s.name.toLowerCase().includes(qLow)
-    );
-    const matchedChars = characters.filter(c =>
-      c.name.toLowerCase().includes(qLow)
-    );
+    const result = await searchAll(q, { signal, charLimit: 6, speciesLimit: 4, userLimit: 5 });
+    if (signal.aborted || result.aborted) return; // 이전 요청보다 늦게 온 응답은 무시
+    renderDropdown(q, result);
+  }, 300);
 
-    renderDropdown(q, matchedUsers, matchedSpecies, matchedChars);
-  });
+  searchInput.addEventListener('input', runHeaderSearch);
 
   searchInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
-      const q = searchInput.value.trim();
+      const q = normalizeSearchQuery(searchInput.value);
       if (q) goToSearch(q);
     }
     if (e.key === 'Escape') closeDropdown();
@@ -231,56 +176,86 @@ function getUserBadgesHtml(u) {
   return badges.join('');
 }
 
-function renderDropdown(q, matchedUsers, matchedSpecies, matchedChars) {
-  const total = matchedUsers.length + matchedSpecies.length + matchedChars.length;
+function ddThumb(url) {
+  return url
+    ? `<span class="dd-thumb" style="background-image:url('${url}')"></span>`
+    : `<span class="dd-thumb dd-thumb--empty"></span>`;
+}
+
+// 검색 실패 시 드롭다운 UI 자체가 깨지지 않도록 항상 안전하게 렌더링한다.
+function renderDropdown(q, result) {
+  const characters   = result?.characters || [];
+  const species      = result?.species    || [];
+  const users        = result?.users      || [];
+  const charCount     = result?.charCount    ?? characters.length;
+  const speciesCount  = result?.speciesCount ?? species.length;
+  const userCount     = result?.userCount    ?? users.length;
+  const total = characters.length + species.length + users.length;
+
+  if (result?.error && !total) {
+    searchDropdown.innerHTML = '<li class="dd-error">검색 중 문제가 발생했어요. 잠시 후 다시 시도해주세요.</li>';
+    searchDropdown.classList.add('active');
+    return;
+  }
   if (!total) { closeDropdown(); return; }
 
-  const sortedUsers = [...matchedUsers].sort((a, b) => userPriority(a) - userPriority(b));
+  const sortedUsers = users
+    .map(u => ({
+      id:             u.id,
+      nickname:       u.nickname || '(닉네임 미설정)',
+      loginId:        u.login_id || '',
+      role:           u.role || '',
+      avatar_url:     u.avatar_url || '',
+      isSpeciesOwner: !!u.is_species_owner,
+    }))
+    .sort((a, b) => userPriority(a) - userPriority(b));
 
-  const p = {
-    users:   sortedUsers.slice(0, 4),
-    species: matchedSpecies.slice(0, 2),
-    chars:   matchedChars.slice(0, 3),
-  };
+  const charGroup = characters.length ? `
+    <li class="dd-group-title">개체</li>
+    ${characters.map(c => `
+      <li><a href="character.html?id=${c.id}">
+        ${ddThumb(c.thumbnail_url || c.image_url)}
+        <span class="dd-text">
+          <span class="dd-label">${highlight(c.name, q)}</span>
+          <span class="dd-meta">${[escapeHtml(c.species_name || ''), escapeHtml(c.owner_nickname || '')].filter(Boolean).join(' · ')}</span>
+        </span>
+      </a></li>
+    `).join('')}
+    ${charCount > characters.length ? `<li class="dd-more" data-href="character-list.html?q=${encodeURIComponent(q)}">개체 검색 결과 ${charCount}개 전체 보기 →</li>` : ''}
+  ` : '';
 
-  const userHtml = p.users.map(u => `
-    <li>
-      <a href="profile.html?user=${u.id || encodeURIComponent(u.name)}">
-        ${getUserBadgesHtml(u)}
-        <span class="dd-label">${highlight(u.name, q)}</span>
-      </a>
-    </li>
-  `).join('');
+  const speciesGroup = species.length ? `
+    <li class="dd-group-title">종족</li>
+    ${species.map(s => `
+      <li><a href="species.html?id=${s.id}">
+        ${ddThumb(s.thumbnail_url || s.image_url)}
+        <span class="dd-text">
+          <span class="dd-label">${highlight(s.name, q)}</span>
+          <span class="dd-meta">${escapeHtml(s.owner_nickname || '')}</span>
+        </span>
+      </a></li>
+    `).join('')}
+    ${speciesCount > species.length ? `<li class="dd-more" data-href="species-list.html?q=${encodeURIComponent(q)}">종족 검색 결과 ${speciesCount}개 전체 보기 →</li>` : ''}
+  ` : '';
 
-  const speciesHtml = p.species.map(s => `
-    <li>
-      <a href="${s.url}">
-        <span class="dd-badge dd-badge--species">종족</span>
-        <span class="dd-label">${highlight(s.name, q)}</span>
-      </a>
-    </li>
-  `).join('');
+  const userGroup = sortedUsers.length ? `
+    <li class="dd-group-title">유저</li>
+    ${sortedUsers.map(u => `
+      <li><a href="profile.html?user=${u.id}">
+        ${ddThumb(u.avatar_url)}
+        <span class="dd-text">
+          <span class="dd-label">${getUserBadgesHtml(u)} ${highlight(u.nickname, q)}</span>
+          <span class="dd-meta">${escapeHtml(u.loginId)}</span>
+        </span>
+      </a></li>
+    `).join('')}
+    ${userCount > sortedUsers.length ? `<li class="dd-more" data-href="users.html?q=${encodeURIComponent(q)}">유저 검색 결과 ${userCount}개 전체 보기 →</li>` : ''}
+  ` : '';
 
-  const charHtml = p.chars.map(c => `
-    <li>
-      <a href="${c.url}">
-        <span class="dd-badge dd-badge--char">캐릭터</span>
-        <span class="dd-label">${c.species ? `${escapeHtml(c.species)}: ` : ''}${highlight(c.name, q)}</span>
-      </a>
-    </li>
-  `).join('');
-
-  searchDropdown.innerHTML = userHtml + speciesHtml + charHtml;
-
-  const shown = p.users.length + p.species.length + p.chars.length;
-  if (total > shown) {
-    const li = document.createElement('li');
-    li.className = 'dd-enter';
-    li.textContent = `'${q}' 검색 결과 ${total}개 전체 보기 →`;
-    li.addEventListener('click', () => goToSearch(q));
-    searchDropdown.appendChild(li);
-  }
-
+  searchDropdown.innerHTML = charGroup + speciesGroup + userGroup;
+  searchDropdown.querySelectorAll('.dd-more').forEach(li => {
+    li.addEventListener('click', () => { window.location.href = li.dataset.href; });
+  });
   searchDropdown.classList.add('active');
 }
 
