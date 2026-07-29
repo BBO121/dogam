@@ -95,6 +95,34 @@ function cropToBlob(cropper, maxSize = 600, quality = 0.85) {
   });
 }
 
+// 워터마크 원본 비율을 유지하면서 대상 이미지 크기에 맞춘 최종 출력 크기 계산
+// - 긴 변 기준 maxSize(px) 초과 금지
+// - 대상 이미지 짧은 변 기준 relativeRatio 초과 금지
+// - 워터마크 원본보다 확대(업스케일)하지 않음
+function calculateWatermarkSize({
+  imageWidth,
+  imageHeight,
+  watermarkWidth,
+  watermarkHeight,
+  maxSize = 300,
+  relativeRatio = 0.22
+}) {
+  if (!imageWidth || !imageHeight || !watermarkWidth || !watermarkHeight) {
+    return { width: 0, height: 0 };
+  }
+
+  const relativeLimit = Math.min(imageWidth, imageHeight) * relativeRatio;
+  const originalLongSide = Math.max(watermarkWidth, watermarkHeight);
+  const maxLongSide = Math.min(maxSize, relativeLimit, originalLongSide);
+
+  const scale = Math.min(1, maxLongSide / originalLongSide);
+
+  return {
+    width: Math.round(watermarkWidth * scale),
+    height: Math.round(watermarkHeight * scale)
+  };
+}
+
 // 이미지 blob + 워터마크 URL → 워터마크 합성 JPEG blob
 function applyWatermark(imageBlob, watermarkUrl) {
   return new Promise((resolve, reject) => {
