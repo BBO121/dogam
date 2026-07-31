@@ -835,6 +835,22 @@
     border-radius: 0;
 }
 
+.profile-avatar-wrap.frame-ai-shark::after {
+    border: none;
+    inset: -13.0208%;
+    background-image: url('../images/shop/frame_ai_shark.png');
+    background-size: 100% 100%;
+    border-radius: 0;
+}
+
+.profile-avatar-wrap.frame-sp-marenight::after {
+    border: none;
+    inset: -13.0208%;
+    background-image: url('../images/shop/frame_sp_marenight.png');
+    background-size: 100% 100%;
+    border-radius: 0;
+}
+
 .profile-avatar-wrap.frame-li-bbo::after {
     border: none;
     inset: -13.0208%;
@@ -6243,6 +6259,8 @@ button.btn-more {
 .frame-preview.frame-ai-blackcat     { border: none; background-image: url('../images/shop/frame_ai_blackcat.png'); background-size: cover; background-position: center; }
 .frame-preview.frame-ai-fishcat      { border: none; background-image: url('../images/shop/frame_ai_fishcat.png');  background-size: cover; background-position: center; }
 .frame-preview.frame-ai-siamcat      { border: none; background-image: url('../images/shop/frame_ai_siamcat.png');  background-size: cover; background-position: center; }
+.frame-preview.frame-ai-shark        { border: none; background-image: url('../images/shop/frame_ai_shark.png');    background-size: cover; background-position: center; }
+.frame-preview.frame-sp-marenight    { border: none; background-image: url('../images/shop/frame_sp_marenight.png'); background-size: cover; background-position: center; }
 .frame-preview.frame-li-bbo          { border: none; background-image: url('../images/shop/frame_li_bbo.png');      background-size: cover; background-position: center; }
 
 /* 상품 상세 모달 */
@@ -6672,6 +6690,12 @@ button.btn-more {
 .bag-ep-preview-wrap.frame-ai-siamcat            { overflow: visible; }
 .bag-ep-preview-wrap.frame-ai-siamcat .bag-ep-avatar { border-radius: 20px; overflow: hidden; }
 .bag-ep-preview-wrap.frame-ai-siamcat::after      { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_ai_siamcat.png');  background-size: 100% 100%; border-radius: 0; }
+.bag-ep-preview-wrap.frame-ai-shark              { overflow: visible; }
+.bag-ep-preview-wrap.frame-ai-shark .bag-ep-avatar { border-radius: 20px; overflow: hidden; }
+.bag-ep-preview-wrap.frame-ai-shark::after        { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_ai_shark.png');    background-size: 100% 100%; border-radius: 0; }
+.bag-ep-preview-wrap.frame-sp-marenight          { overflow: visible; }
+.bag-ep-preview-wrap.frame-sp-marenight .bag-ep-avatar { border-radius: 20px; overflow: hidden; }
+.bag-ep-preview-wrap.frame-sp-marenight::after    { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_sp_marenight.png'); background-size: 100% 100%; border-radius: 0; }
 .bag-ep-preview-wrap.frame-li-bbo                { overflow: visible; }
 .bag-ep-preview-wrap.frame-li-bbo .bag-ep-avatar  { border-radius: 20px; overflow: hidden; }
 .bag-ep-preview-wrap.frame-li-bbo::after          { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_li_bbo.png');      background-size: 100% 100%; border-radius: 0; }
@@ -6758,6 +6782,8 @@ button.btn-more {
 .bag-ep-frame-wrap.frame-ai-blackcat::after     { border: none; background-image: url('../images/shop/frame_ai_blackcat.png'); background-size: cover; background-position: center; }
 .bag-ep-frame-wrap.frame-ai-fishcat::after      { border: none; background-image: url('../images/shop/frame_ai_fishcat.png');  background-size: cover; background-position: center; }
 .bag-ep-frame-wrap.frame-ai-siamcat::after      { border: none; background-image: url('../images/shop/frame_ai_siamcat.png');  background-size: cover; background-position: center; }
+.bag-ep-frame-wrap.frame-ai-shark::after        { border: none; background-image: url('../images/shop/frame_ai_shark.png');    background-size: cover; background-position: center; }
+.bag-ep-frame-wrap.frame-sp-marenight::after    { border: none; background-image: url('../images/shop/frame_sp_marenight.png'); background-size: cover; background-position: center; }
 .bag-ep-frame-wrap.frame-li-bbo::after          { border: none; background-image: url('../images/shop/frame_li_bbo.png');      background-size: cover; background-position: center; }
 
 .bag-ep-avatar {
@@ -7146,6 +7172,8 @@ button.btn-more {
 .deco-modal-frame-preview.frame-ai-blackcat     { border: none; background-image: url('../images/shop/frame_ai_blackcat.png'); background-size: cover; background-position: center; }
 .deco-modal-frame-preview.frame-ai-fishcat      { border: none; background-image: url('../images/shop/frame_ai_fishcat.png');  background-size: cover; background-position: center; }
 .deco-modal-frame-preview.frame-ai-siamcat      { border: none; background-image: url('../images/shop/frame_ai_siamcat.png');  background-size: cover; background-position: center; }
+.deco-modal-frame-preview.frame-ai-shark        { border: none; background-image: url('../images/shop/frame_ai_shark.png');    background-size: cover; background-position: center; }
+.deco-modal-frame-preview.frame-sp-marenight    { border: none; background-image: url('../images/shop/frame_sp_marenight.png'); background-size: cover; background-position: center; }
 .deco-modal-frame-preview.frame-li-bbo          { border: none; background-image: url('../images/shop/frame_li_bbo.png');      background-size: cover; background-position: center; }
 
 .deco-modal-sticker-img {
