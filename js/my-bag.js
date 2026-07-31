@@ -88,7 +88,8 @@ async function loadData() {
   const { data: shopItemsData, error: shopErr } = await sb.from('shop_items')
     .select('id, name, description, item_type, style_key, image_url, sub_category, sort_order')
     .in('id', itemIds)
-    .order('sort_order', { ascending: true });
+    .order('sort_order', { ascending: true })
+    .order('created_at',  { ascending: true });
 
   console.log('[my-bag] shop_items 조회 결과:', shopItemsData, '에러:', shopErr);
 
