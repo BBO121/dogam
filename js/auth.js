@@ -250,6 +250,8 @@ async function updateHeader() {
     const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname || '유저';
 
     const TESTERS = ['Moulow', 'moulow', 'Sawol'];
+    const STAFF_GEN1 = ['아요', '사월', '사월巳月'];
+    const isStaffGen1 = STAFF_GEN1.includes(nickname);
     const roleIsSpeciesOwner = user.user_metadata?.role === 'species_owner';
     const isSpeciesOwner = await window._cachedIsSpeciesOwner(user.id, roleIsSpeciesOwner);
     const isTester = TESTERS.includes(nickname);
@@ -283,9 +285,10 @@ async function updateHeader() {
       const headerBadges = [];
       if (admin)                                        headerBadges.push(`<a href="admin.html" class="badge-admin">관리자</a>`);
       if (staff)                                        headerBadges.push(`<a href="admin.html" class="badge-staff">스태프</a>`);
+      if (isStaffGen1)                                  headerBadges.push(`<span class="badge-staff-gen1">스태프(1기)</span>`);
       if (isTester && !staff)                           headerBadges.push(`<span style="font-size:10px; padding:3px 8px; background:#dcfce7; color:#166534; border-radius:4px; font-weight:700; display:inline-block; margin-right:4px;">테스터</span>`);
       if (isSpeciesOwner)                               headerBadges.push(`<span class="badge-role">종족주</span>`);
-      if (!admin && !staff && !isTester && !isSpeciesOwner) headerBadges.push(`<span class="badge-user">일반유저</span>`);
+      if (!admin && !staff && !isTester && !isSpeciesOwner && !isStaffGen1) headerBadges.push(`<span class="badge-user">일반유저</span>`);
       if (headerBadges.length) {
         loginBtn.insertAdjacentHTML('beforebegin', headerBadges.join(''));
       }

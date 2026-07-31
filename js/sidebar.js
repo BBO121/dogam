@@ -304,16 +304,19 @@ async function updateSidebarLogin() {
       const admin = user.user_metadata?.role === 'admin';
       const staff = user.user_metadata?.role === 'staff';
       const TESTERS = ['Moulow', 'moulow', 'Sawol'];
+      const STAFF_GEN1 = ['아요', '사월', '사월巳月'];
       const isTester = TESTERS.includes(nickname);
+      const isStaffGen1 = STAFF_GEN1.includes(nickname);
       const roleIsSpeciesOwner = user.user_metadata?.role === 'species_owner';
       const isSpeciesOwner = await window._cachedIsSpeciesOwner?.(user.id, roleIsSpeciesOwner) ?? roleIsSpeciesOwner;
 
       const badges = [];
       if (admin)                                        badges.push(`<a href="admin.html" class="badge-admin">관리자</a>`);
       if (staff)                                        badges.push(`<a href="admin.html" class="badge-staff">스태프</a>`);
+      if (isStaffGen1)                                  badges.push(`<span class="badge-staff-gen1">스태프(1기)</span>`);
       if (isTester && !staff)                           badges.push(`<span style="font-size:10px;padding:3px 8px;background:#dcfce7;color:#166534;border-radius:4px;font-weight:700;">테스터</span>`);
       if (isSpeciesOwner)                               badges.push(`<span class="badge-role">종족주</span>`);
-      if (!admin && !staff && !isTester && !isSpeciesOwner) badges.push(`<span class="badge-user">일반유저</span>`);
+      if (!admin && !staff && !isTester && !isSpeciesOwner && !isStaffGen1) badges.push(`<span class="badge-user">일반유저</span>`);
 
       const { data: wallet } = await getMyWallet(user.id).catch(() => ({ data: null }));
       const researchAmt = (wallet?.research_records ?? 0).toLocaleString();

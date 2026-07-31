@@ -42,6 +42,7 @@
     }
     .user-row-badges .badge-admin,
     .user-row-badges .badge-staff,
+    .user-row-badges .badge-staff-gen1,
     .user-row-badges .badge-role,
     .user-row-badges .badge-user {
       margin: 0;
@@ -115,6 +116,7 @@
   <script src="../js/main.js"></script>
   <script>
     const TESTERS = ['Moulow', 'moulow', 'Sawol'];
+    const STAFF_GEN1 = ['아요', '사월', '사월巳月'];
     let allUsers = [];
     let speciesOwnerNicks = new Set();
     const pager = createPager(renderList);
@@ -123,10 +125,13 @@
       const badges = [];
       const isSpeciesOwner = u.role === 'species_owner' || speciesOwnerNicks.has(u.nickname);
 
+      const isStaffGen1 = STAFF_GEN1.includes(u.nickname);
+
       if (u.role === 'admin') badges.push('<span class="badge-admin">관리자</span>');
       if (u.role === 'staff') badges.push('<span class="badge-staff">스태프</span>');
+      if (isStaffGen1)        badges.push('<span class="badge-staff-gen1">스태프(1기)</span>');
       if (isSpeciesOwner)     badges.push('<span class="badge-role">종족주</span>');
-      if (!isAdminOrStaff(u.role) && !isSpeciesOwner) badges.push('<span class="badge-user">일반유저</span>');
+      if (!isAdminOrStaff(u.role) && !isSpeciesOwner && !isStaffGen1) badges.push('<span class="badge-user">일반유저</span>');
       if (TESTERS.includes(u.nickname) && u.role !== 'staff') badges.push('<span style="font-size:10px; padding:3px 8px; background:#dcfce7; color:#166534; border-radius:4px; font-weight:700; display:inline-block;">테스터</span>');
       return badges.join('');
     }
@@ -165,9 +170,10 @@
       if (u.login_id === 'admin')       return 0;
       if (u.role === 'admin')           return 1;
       if (u.role === 'staff')           return 2;
-      if (TESTERS.includes(u.nickname)) return 3;
-      if (u.role === 'species_owner' || speciesOwnerNicks.has(u.nickname)) return 4;
-      return 5;
+      if (STAFF_GEN1.includes(u.nickname)) return 3;
+      if (TESTERS.includes(u.nickname)) return 4;
+      if (u.role === 'species_owner' || speciesOwnerNicks.has(u.nickname)) return 5;
+      return 6;
     }
 
     function sortUsers(list) {

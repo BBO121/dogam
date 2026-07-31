@@ -926,15 +926,17 @@
 
     // ── 유저 관리 ────────────────────────────
     const TESTERS = ['Moulow', 'moulow', 'Sawol'];
+    const STAFF_GEN1 = ['아요', '사월', '사월巳月'];
     let allAdminUsers = [];
 
     function adminUserPriority(u) {
       if (u.login_id === 'admin')          return 0;
       if (u.role === 'admin')              return 1;
       if (u.role === 'staff')              return 2;
-      if (TESTERS.includes(u.nickname))    return 3;
-      if (u.role === 'species_owner')      return 4;
-      return 5;
+      if (STAFF_GEN1.includes(u.nickname)) return 3;
+      if (TESTERS.includes(u.nickname))    return 4;
+      if (u.role === 'species_owner')      return 5;
+      return 6;
     }
 
     function sortAdminUsers(list) {
@@ -950,8 +952,14 @@
         const date = new Date(u.created_at).toLocaleDateString('ko-KR', {
           year: 'numeric', month: '2-digit', day: '2-digit'
         }).replace(/\. /g, '.').replace(/\.$/, '');
-        const roleLabel      = u.role === 'admin' ? '관리자' : u.role === 'staff' ? '스태프' : u.role === 'species_owner' ? '종족주' : '일반유저';
-        const roleBadgeClass = u.role === 'admin' ? 'badge-admin' : u.role === 'staff' ? 'badge-staff' : u.role === 'species_owner' ? 'badge-species-owner' : 'badge-user';
+        const isStaffGen1 = STAFF_GEN1.includes(u.nickname);
+        const roleBadges = [];
+        if (u.role === 'admin')         roleBadges.push('<span class="badge-admin">관리자</span>');
+        if (u.role === 'staff')         roleBadges.push('<span class="badge-staff">스태프</span>');
+        if (isStaffGen1)                roleBadges.push('<span class="badge-staff-gen1">스태프(1기)</span>');
+        if (u.role === 'species_owner') roleBadges.push('<span class="badge-species-owner">종족주</span>');
+        if (!roleBadges.length)         roleBadges.push('<span class="badge-user">일반유저</span>');
+        const roleBadgeHtml = roleBadges.join(' ');
         const safeNick = (u.nickname || '').replace(/'/g, "\\'");
         const actions = u.role === 'admin' ? '' : `
           <div class="admin-card-actions">
@@ -964,7 +972,7 @@
         return `
           <div class="admin-card-row" id="user-row-${u.id}">
             <div class="admin-card-left">
-              <span class="${roleBadgeClass}">${roleLabel}</span>
+              ${roleBadgeHtml}
               <span class="admin-card-name">${u.nickname || '—'}</span>
             </div>
             <div class="admin-card-right">
