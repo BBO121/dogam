@@ -1469,6 +1469,7 @@
         let image_url          = currentImageUrl;
         let thumbnail_url      = currentThumbnailUrl;
         let newOriginalUrl = null;
+        let newWatermarkType = null; // 실제 적용한 워터마크 종류 (GIF 등 워터마크 미적용 시 null → 기존 값 유지)
         // 개인 워터마크 있으면 사용, 없으면 연구소 기본
         const wmSrc = userWatermarkUrl || '../images/watermark.png';
         if (file) {
@@ -1493,6 +1494,7 @@
             const { error: mainErr } = await sb.storage.from('images').upload(mainName, wmBlob, { contentType: 'image/jpeg' });
             if (mainErr) throw new Error(`메인 이미지 업로드에 실패했어요. (${mainErr.message})`);
             image_url = sb.storage.from('images').getPublicUrl(mainName).data.publicUrl;
+            newWatermarkType = userWatermarkUrl ? 'personal' : 'lab_black';
           }
 
           // 썸네일 (워터마크 없음 — 첫 프레임 크롭)
@@ -1541,6 +1543,7 @@
             const { error: uploadError } = await sb.storage.from('images').upload(fileName, wmBlob, { contentType: 'image/jpeg' });
             if (uploadError) throw new Error(`추가 이미지 업로드에 실패했어요. (${f.name}: ${uploadError.message})`);
             uploadedNew.push(sb.storage.from('images').getPublicUrl(fileName).data.publicUrl);
+            newWatermarkType = userWatermarkUrl ? 'personal' : 'lab_black';
           }
         }
 
@@ -1584,6 +1587,7 @@
               if (mainErr) throw new Error(`워터마크 이미지 업로드 실패 (${mainErr.message})`);
               uploadedNames.push(mainName);
               stepImageUrl = sb.storage.from('images').getPublicUrl(mainName).data.publicUrl;
+              newWatermarkType = userWatermarkUrl ? 'personal' : 'lab_black';
             }
 
             stepImageUpserts.push({
@@ -1640,6 +1644,7 @@
           image_url,
           thumbnail_url,
           ...(newOriginalUrl && { original_image_url: newOriginalUrl }),
+          ...(newWatermarkType && { watermark_type: newWatermarkType }),
           additional_images:            additional_images.length ? additional_images : null,
           original_additional_images:   original_additional_images,
           custom_field_values: Object.keys(customFieldValues).length ? customFieldValues : null,

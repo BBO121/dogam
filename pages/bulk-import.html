@@ -221,6 +221,7 @@
 
     let currentUser                 = null;
     let customFields                = [];
+    let speciesWatermarkUrl         = null; // 종족주의 개인 워터마크 URL (없으면 null → 연구소 기본)
     let itemCount                   = 0;
     let allUsers                    = [];
     let defaultDesignerType         = 'site';
@@ -246,8 +247,15 @@
         document.getElementById('breadcrumbSpecies').href = backHref;
         document.getElementById('pageSubtitle').textContent = `${speciesName}의 개체를 한번에 등록해요`;
 
-        const { data: sp } = await sb.from('species').select('custom_fields').eq('name', speciesName).single();
+        const { data: sp } = await sb.from('species').select('custom_fields, owner_user_id').eq('name', speciesName).single();
         customFields = sp?.custom_fields || [];
+
+        // 종족주의 개인 워터마크 조회 (없으면 null → 연구소 기본 워터마크 사용)
+        if (sp?.owner_user_id) {
+          const { data: profile } = await sb.from('user_profiles')
+            .select('watermark_url').eq('user_id', sp.owner_user_id).maybeSingle();
+          speciesWatermarkUrl = profile?.watermark_url || null;
+        }
       }
 
       await loadBulkUsers();
@@ -642,20 +650,45 @@
         progressText.textContent = `${done + 1} / ${items.length} 처리 중... (${name})`;
 
         try {
-          // 이미지 업로드
-          let image_url     = null;
-          let thumbnail_url = null;
+          // 이미지 업로드 (단일 등록과 동일하게 원본/워터마크 분리 저장)
+          let image_url          = null;
+          let thumbnail_url      = null;
+          let original_image_url = null;
+          let watermark_type     = null; // 실제 적용한 워터마크 종류 (GIF 등 워터마크 미적용 시 null → DB 기본값)
+          // 종족주 개인 워터마크 있으면 사용, 없으면 연구소 기본
+          const wmSrc = speciesWatermarkUrl || '../images/watermark.png';
           if (file) {
-            const blob     = await compressImage(file);
-            const mainName = `${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
-            const { error: mainErr } = await sb.storage.from('images').upload(mainName, blob, {
-              contentType: 'image/jpeg',
-            });
-            if (mainErr) throw new Error(mainErr.message);
-            image_url = sb.storage.from('images').getPublicUrl(mainName).data.publicUrl;
+            const rnd   = Math.random().toString(36).slice(2);
+            const isGif = file.type === 'image/gif';
+            const ext   = isGif ? 'gif' : 'jpg';
+            const blob  = await compressImage(file);
 
+            // 원본 저장
+            const origName = `${Date.now()}_${rnd}_orig.${ext}`;
+            const { error: origErr } = await sb.storage.from('images').upload(origName, blob, {
+              contentType: isGif ? 'image/gif' : 'image/jpeg',
+            });
+            if (origErr) throw new Error(origErr.message);
+            original_image_url = sb.storage.from('images').getPublicUrl(origName).data.publicUrl;
+
+            if (isGif) {
+              // GIF: 워터마크 미적용, 원본 그대로 사용
+              image_url = original_image_url;
+            } else {
+              // 워터마크 합성 후 저장
+              const wmBlob   = await applyWatermark(blob, wmSrc);
+              const mainName = `${Date.now()}_${rnd}.jpg`;
+              const { error: mainErr } = await sb.storage.from('images').upload(mainName, wmBlob, {
+                contentType: 'image/jpeg',
+              });
+              if (mainErr) throw new Error(mainErr.message);
+              image_url = sb.storage.from('images').getPublicUrl(mainName).data.publicUrl;
+              watermark_type = speciesWatermarkUrl ? 'personal' : 'lab_black';
+            }
+
+            // 썸네일 (워터마크 없음 — 기존 정책 유지)
             const thumbBlob = await autoCenterCropToBlob(file, 3/4, 600, 0.85);
-            const thumbName = `${Date.now()}_${Math.random().toString(36).slice(2)}_thumb.jpg`;
+            const thumbName = `${Date.now()}_${rnd}_thumb.jpg`;
             const { error: thumbErr } = await sb.storage.from('images').upload(thumbName, thumbBlob, {
               contentType: 'image/jpeg',
             });
@@ -685,6 +718,8 @@
             description:         desc || null,
             image_url,
             thumbnail_url,
+            original_image_url,
+            ...(watermark_type ? { watermark_type } : {}),
             custom_field_values: Object.keys(customFieldValues).length ? customFieldValues : null,
             is_sensitive:        isSensitive,
             sensitive_note:      isSensitive ? sensitiveNote : null,

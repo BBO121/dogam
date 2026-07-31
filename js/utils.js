@@ -95,31 +95,23 @@ function cropToBlob(cropper, maxSize = 600, quality = 0.85) {
   });
 }
 
-// 워터마크 원본 비율을 유지하면서 대상 이미지 크기에 맞춘 최종 출력 크기 계산
-// - 긴 변 기준 maxSize(px) 초과 금지
-// - 대상 이미지 짧은 변 기준 relativeRatio 초과 금지
-// - 워터마크 원본보다 확대(업스케일)하지 않음
-function calculateWatermarkSize({
-  imageWidth,
-  imageHeight,
-  watermarkWidth,
-  watermarkHeight,
-  maxSize = 300,
-  relativeRatio = 0.22
-}) {
-  if (!imageWidth || !imageHeight || !watermarkWidth || !watermarkHeight) {
-    return { width: 0, height: 0 };
+// 워터마크 원본 종횡비를 유지한 채, 대상 이미지 중앙에 최대 크기로 들어가는 사각형 계산 (contain 방식)
+// - 가로형 이미지는 좌우 기준, 세로형 이미지는 상하 기준으로 맞춰짐
+// - 정사각형 워터마크를 canvas 크기에 맞춰 강제로 늘리면 종횡비가 찌그러지므로 사용
+function calculateWatermarkRect(canvasWidth, canvasHeight, watermarkWidth, watermarkHeight) {
+  if (!canvasWidth || !canvasHeight || !watermarkWidth || !watermarkHeight) {
+    return { x: 0, y: 0, width: 0, height: 0 };
   }
 
-  const relativeLimit = Math.min(imageWidth, imageHeight) * relativeRatio;
-  const originalLongSide = Math.max(watermarkWidth, watermarkHeight);
-  const maxLongSide = Math.min(maxSize, relativeLimit, originalLongSide);
-
-  const scale = Math.min(1, maxLongSide / originalLongSide);
+  const scale  = Math.min(canvasWidth / watermarkWidth, canvasHeight / watermarkHeight);
+  const width  = watermarkWidth  * scale;
+  const height = watermarkHeight * scale;
 
   return {
-    width: Math.round(watermarkWidth * scale),
-    height: Math.round(watermarkHeight * scale)
+    x: (canvasWidth  - width)  / 2,
+    y: (canvasHeight - height) / 2,
+    width,
+    height
   };
 }
 
@@ -139,7 +131,10 @@ function applyWatermark(imageBlob, watermarkUrl) {
         canvas.height = img.naturalHeight;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0);
-        if (wm.naturalWidth > 0) ctx.drawImage(wm, 0, 0, canvas.width, canvas.height);
+        if (wm.naturalWidth > 0) {
+          const rect = calculateWatermarkRect(canvas.width, canvas.height, wm.naturalWidth, wm.naturalHeight);
+          ctx.drawImage(wm, rect.x, rect.y, rect.width, rect.height);
+        }
         canvas.toBlob(blob => {
           URL.revokeObjectURL(blobUrl);
           if (!blob) { reject(new Error('워터마크 합성에 실패했어요. (canvas tainted 또는 메모리 부족)')); return; }

@@ -1046,6 +1046,7 @@
         let image_url          = null;
         let thumbnail_url      = null;
         let original_image_url = null;
+        let watermark_type     = null; // 실제 적용한 워터마크 종류 (GIF 등 워터마크 미적용 시 null → DB 기본값)
         // 개인 워터마크 있으면 사용, 없으면 연구소 기본
         const wmSrc = userWatermarkUrl || '../images/watermark.png';
         if (file) {
@@ -1070,6 +1071,7 @@
             const { error: mainErr } = await sb.storage.from('images').upload(mainName, wmBlob, { contentType: 'image/jpeg' });
             if (mainErr) throw new Error(`메인 이미지 업로드에 실패했어요. (${mainErr.message})`);
             image_url = sb.storage.from('images').getPublicUrl(mainName).data.publicUrl;
+            watermark_type = userWatermarkUrl ? 'personal' : 'lab_black';
           }
 
           // 썸네일 (워터마크 없음 — 첫 프레임 크롭)
@@ -1108,6 +1110,7 @@
             const { error: uploadError } = await sb.storage.from('images').upload(fileName, wmBlob, { contentType: 'image/jpeg' });
             if (uploadError) throw new Error(`추가 이미지 업로드에 실패했어요. (${f.name}: ${uploadError.message})`);
             additional_images.push(sb.storage.from('images').getPublicUrl(fileName).data.publicUrl);
+            watermark_type = userWatermarkUrl ? 'personal' : 'lab_black';
           }
         }
 
@@ -1145,6 +1148,7 @@
               if (mainErr) throw new Error(`워터마크 이미지 업로드 실패 (${mainErr.message})`);
               uploadedNames.push(mainName);
               stepImageUrl = sb.storage.from('images').getPublicUrl(mainName).data.publicUrl;
+              watermark_type = userWatermarkUrl ? 'personal' : 'lab_black';
             }
 
             stepImageRows.push({
@@ -1193,6 +1197,7 @@
           image_url,
           thumbnail_url,
           original_image_url,
+          ...(watermark_type ? { watermark_type } : {}),
           additional_images:            additional_images.length ? additional_images : null,
           original_additional_images:   original_additional_images.length ? original_additional_images : null,
           custom_field_values: Object.keys(customFieldValues).length ? customFieldValues : null,

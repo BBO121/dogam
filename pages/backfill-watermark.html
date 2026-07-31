@@ -52,67 +52,139 @@
 
     <hr style="margin: 32px 0; border: none; border-top: 1px solid var(--border);">
 
-    <h2 style="font-size:16px; font-weight:600; margin-bottom:6px;">추가 이미지 백필</h2>
+    <h2 style="font-size:16px; font-weight:600; margin-bottom:6px;">워터마크 이미지 일괄 재생성 (종횡비 수정 반영)</h2>
     <p style="font-size:13px; color:var(--text-mute); margin-bottom:16px; line-height:1.6;">
-      original_additional_images가 없는 기존 개체의 추가 이미지를 백필합니다.<br>
-      현재 additional_images를 원본으로 저장하고, 기본 워터마크 적용본으로 교체합니다.<br>
-      personal 워터마크 개체는 이후 프로필에서 재적용하세요.
+      이미 원본이 저장된 기존 개체의 대표·추가·성장 Step 워터마크 이미지를, 종횡비를 유지하는 새 방식(calculateWatermarkRect)으로
+      다시 합성합니다. 각 개체의 watermark_type에 맞춰 연구소 기본 또는 개인 워터마크를 그대로 사용합니다.<br>
+      개체 하나만 재생성하고 싶으면 대상 범위에서 <strong>특정 개체</strong>를 선택하고 ID를 입력하면 됩니다.
     </p>
 
     <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:14px 16px; font-size:13px; color:#92400e; margin-bottom:20px; line-height:1.6;">
       <strong>주의사항</strong><br>
-      • original_additional_images가 이미 있는 개체는 건너뜁니다.<br>
-      • 현재 additional_images가 원본(워터마크 미적용) 상태인 경우에만 실행하세요.<br>
-      • 기본 워터마크(/images/watermark.png)로 합성합니다.<br>
-      • 테스트 모드: 뽀 계정 소유 개체만 처리합니다.
+      • original_image_url / original_additional_images / character_step_images.original_image_url은 절대 변경하지 않습니다.<br>
+      • 개인 워터마크가 없거나 로드에 실패하면 기본 워터마크로 대체하지 않고 해당 개체를 건너뜁니다.<br>
+      • 추가 이미지는 원본/현재 배열 길이가 다르면 해당 개체의 추가 이미지 전체를 건너뜁니다. 일부 인덱스만 성공하면 성공한 인덱스만 교체합니다.<br>
+      • 새 파일은 항상 새 파일명으로 업로드되며, 기존 워터마크 파일은 자동 삭제되지 않습니다.<br>
+      • 테스트 실행(dry-run)은 Storage 업로드·DB 반영을 하지 않습니다. 먼저 특정 사용자/특정 개체로 검증한 뒤 전체 적용하세요.
     </div>
 
-    <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap;">
-      <input id="extraSingleIdInput" type="text" placeholder="개체 ID로 단일 테스트"
-        style="flex:1; min-width:200px; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:monospace;">
-      <button id="btnExtraSingle" class="btn-secondary" onclick="startExtraBackfillSingle()">단일 ID 실행</button>
+    <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:16px;">
+      <div>
+        <strong style="font-size:13px; display:block; margin-bottom:6px;">대상 범위</strong>
+        <label style="font-size:13px; margin-right:14px;"><input type="radio" name="rbScope" value="all" checked onchange="onRbScopeChange()"> 전체 사용자</label>
+        <label style="font-size:13px; margin-right:6px;"><input type="radio" name="rbScope" value="user" onchange="onRbScopeChange()"> 특정 사용자</label>
+        <input id="rbUserNick" type="text" placeholder="닉네임" disabled
+          style="padding:6px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px; width:140px;">
+        <label style="font-size:13px; margin-left:14px; margin-right:6px;"><input type="radio" name="rbScope" value="char" onchange="onRbScopeChange()"> 특정 개체</label>
+        <input id="rbCharId" type="text" placeholder="개체 ID" disabled
+          style="padding:6px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px; width:120px;">
+      </div>
+
+      <div>
+        <strong style="font-size:13px; display:block; margin-bottom:6px;">워터마크 유형 필터</strong>
+        <select id="rbWmType" style="padding:6px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px;">
+          <option value="all">전체</option>
+          <option value="lab_black">연구소 기본만</option>
+          <option value="personal">개인만</option>
+        </select>
+      </div>
+
+      <div>
+        <strong style="font-size:13px; display:block; margin-bottom:6px;">재생성 대상 이미지</strong>
+        <label style="font-size:13px; margin-right:14px;"><input type="checkbox" id="rbIncludeMain" checked> 대표 이미지</label>
+        <label style="font-size:13px; margin-right:14px;"><input type="checkbox" id="rbIncludeAdditional" checked> 추가 이미지</label>
+        <label style="font-size:13px;"><input type="checkbox" id="rbIncludeSteps" checked> 성장 Step 이미지</label>
+      </div>
     </div>
 
     <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
-      <button id="btnExtraTest" class="btn-secondary" onclick="startExtraBackfill(true)">테스트 실행 (뽀 계정만)</button>
-      <button id="btnExtraAll"  class="btn-ghost"     onclick="startExtraBackfill(false)" style="border-color:#fca5a5; color:#ef4444;">전체 적용</button>
-      <button id="btnExtraStop" class="btn-ghost"     onclick="stopExtraBackfill()" style="display:none;">중단</button>
+      <button id="btnRbPreview" class="btn-secondary" onclick="previewRegenBatch()">대상 미리보기</button>
+      <button id="btnRbTest"    class="btn-secondary" onclick="startRegenBatch(true)">테스트 실행 (dry-run)</button>
+      <button id="btnRbAll"     class="btn-ghost" style="border-color:#fca5a5; color:#ef4444;" onclick="startRegenBatch(false)">전체 적용</button>
+      <button id="btnRbStop"    class="btn-ghost" onclick="stopRegenBatch()" style="display:none;">중단</button>
     </div>
 
-    <div id="extraProgressWrap" style="display:none;">
-      <p id="extraProgressText" style="font-size:13px; color:var(--text-mute); margin-bottom:6px;">준비 중...</p>
-      <div class="progress-bar-wrap"><div class="progress-bar" id="extraProgressBar" style="width:0%"></div></div>
+    <div id="rbPreviewBox" style="display:none; background:#f0f9ff; border:1px solid #bae6fd; border-radius:10px; padding:14px 16px; font-size:13px; color:#0c4a6e; margin-bottom:16px; line-height:1.7;"></div>
+
+    <div id="rbProgressWrap" style="display:none;">
+      <p id="rbProgressText" style="font-size:13px; color:var(--text-mute); margin-bottom:6px;">준비 중...</p>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="rbProgressBar" style="width:0%"></div></div>
     </div>
 
-    <div id="extraLogBox" class="backfill-log" style="display:none;"></div>
+    <div id="rbPreviewGrid" style="display:none; gap:8px; flex-wrap:wrap; margin-bottom:12px;"></div>
+
+    <div id="rbLogBox" class="backfill-log" style="display:none;"></div>
 
     <hr style="margin: 32px 0; border: none; border-top: 1px solid var(--border);">
 
-    <h2 style="font-size:16px; font-weight:600; margin-bottom:6px;">단일 개체 image_url 재생성</h2>
+    <h2 style="font-size:16px; font-weight:600; margin-bottom:6px;">watermark_type 보정 (lab_black → personal)</h2>
     <p style="font-size:13px; color:var(--text-mute); margin-bottom:16px; line-height:1.6;">
-      이미 original_image_url이 있는 개체의 image_url을 현재 <code>/images/watermark.png</code>로 재합성합니다.<br>
-      original_image_url은 절대 변경하지 않으며, image_url과 썸네일은 건드리지 않습니다.
+      등록/수정 경로가 watermark_type을 안 쓰던 시기의 잔재로, 실제로는 종족주의 개인 워터마크가 적용됐어야 하는데
+      watermark_type이 lab_black으로 남아있는 개체를 찾아 <strong>종족주의 개인 워터마크로 다시 재생성하고 watermark_type을
+      personal로 보정</strong>합니다.
     </p>
 
     <div style="background:#f0f9ff; border:1px solid #bae6fd; border-radius:10px; padding:14px 16px; font-size:13px; color:#0c4a6e; margin-bottom:16px; line-height:1.6;">
-      <strong>동작 방식</strong><br>
-      1. original_image_url을 소스로 사용 (없으면 image_url 사용)<br>
-      2. /images/watermark.png 합성 후 새 파일로 Storage 업로드<br>
-      3. image_url만 새 파일로 교체 — original_image_url / thumbnail_url 불변
+      <strong>대상 조건 (전부 만족)</strong><br>
+      1. watermark_type = 'lab_black'<br>
+      2. original_image_url 존재<br>
+      3. 소속 종족주의 user_profiles.watermark_url 등록됨
     </div>
 
-    <div style="display:flex; gap:10px; align-items:center; margin-bottom:16px; flex-wrap:wrap;">
-      <input id="regenIdInput" type="text" placeholder="개체 ID (UUID 또는 숫자)"
-        style="flex:1; min-width:200px; padding:8px 12px; border:1px solid var(--border); border-radius:8px; font-size:13px; font-family:monospace;">
-      <button id="btnRegen" class="btn-secondary" onclick="startRegen()">image_url 재생성</button>
+    <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:10px; padding:14px 16px; font-size:13px; color:#92400e; margin-bottom:20px; line-height:1.6;">
+      <strong>주의사항</strong><br>
+      • 위 세 조건을 모두 만족하는 개체가 대상입니다 — watermark_type이 실제로 틀렸다는 확정 증거는 아니라
+        (등록 당시엔 진짜 lab_black이었을 수도 있음) 결과를 미리보기로 먼저 확인하세요.<br>
+      • original_image_url / original_additional_images는 절대 변경하지 않습니다.<br>
+      • <strong>대표 이미지가 실제로 재생성 성공했을 때만</strong> characters.watermark_type을 personal로 갱신합니다.
+        추가·Step 이미지만 성공하고 대표가 실패/건너뜀이면 watermark_type은 그대로 둡니다.<br>
+      • 테스트 실행(dry-run)은 Storage 업로드·DB 반영을 하지 않습니다.<br>
+      • 새 파일은 항상 새 파일명으로 업로드되며, 기존 워터마크 파일은 자동 삭제되지 않습니다.
     </div>
 
-    <div id="regenLogBox" class="backfill-log" style="display:none;"></div>
+    <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:16px;">
+      <div>
+        <strong style="font-size:13px; display:block; margin-bottom:6px;">대상 범위</strong>
+        <label style="font-size:13px; margin-right:14px;"><input type="radio" name="cScope" value="all" checked onchange="onCScopeChange()"> 전체 사용자</label>
+        <label style="font-size:13px; margin-right:6px;"><input type="radio" name="cScope" value="user" onchange="onCScopeChange()"> 특정 사용자</label>
+        <input id="cUserNick" type="text" placeholder="닉네임 (개체 소유자 기준)" disabled
+          style="padding:6px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px; width:170px;">
+        <label style="font-size:13px; margin-left:14px; margin-right:6px;"><input type="radio" name="cScope" value="char" onchange="onCScopeChange()"> 특정 개체</label>
+        <input id="cCharId" type="text" placeholder="개체 ID" disabled
+          style="padding:6px 10px; border:1px solid var(--border); border-radius:8px; font-size:13px; width:120px;">
+      </div>
+
+      <div>
+        <strong style="font-size:13px; display:block; margin-bottom:6px;">보정 대상 이미지</strong>
+        <label style="font-size:13px; margin-right:14px;"><input type="checkbox" id="cIncludeMain" checked> 대표 이미지</label>
+        <label style="font-size:13px; margin-right:14px;"><input type="checkbox" id="cIncludeAdditional" checked> 추가 이미지</label>
+        <label style="font-size:13px;"><input type="checkbox" id="cIncludeSteps" checked> 성장 Step 이미지</label>
+      </div>
+    </div>
+
+    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:16px;">
+      <button id="btnCPreview" class="btn-secondary" onclick="previewCorrectionBatch()">대상 미리보기</button>
+      <button id="btnCTest"    class="btn-secondary" onclick="startCorrectionBatch(true)">테스트 실행 (dry-run)</button>
+      <button id="btnCAll"     class="btn-ghost" style="border-color:#fca5a5; color:#ef4444;" onclick="startCorrectionBatch(false)">전체 적용</button>
+      <button id="btnCStop"    class="btn-ghost" onclick="stopCorrectionBatch()" style="display:none;">중단</button>
+    </div>
+
+    <div id="cPreviewBox" style="display:none; background:#f0f9ff; border:1px solid #bae6fd; border-radius:10px; padding:14px 16px; font-size:13px; color:#0c4a6e; margin-bottom:16px; line-height:1.7;"></div>
+
+    <div id="cProgressWrap" style="display:none;">
+      <p id="cProgressText" style="font-size:13px; color:var(--text-mute); margin-bottom:6px;">준비 중...</p>
+      <div class="progress-bar-wrap"><div class="progress-bar" id="cProgressBar" style="width:0%"></div></div>
+    </div>
+
+    <div id="cPreviewGrid" style="display:none; gap:8px; flex-wrap:wrap; margin-bottom:12px;"></div>
+
+    <div id="cLogBox" class="backfill-log" style="display:none;"></div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/main.js"></script>
+  <script src="../js/utils.js"></script>
   <script>
     const WM_URL  = '../images/watermark.png';
     const BO_NICK = '뽀';
@@ -170,7 +242,8 @@
           canvas.height = srcImg.naturalHeight;
           const ctx = canvas.getContext('2d');
           ctx.drawImage(srcImg, 0, 0);
-          ctx.drawImage(wmImg, 0, 0, canvas.width, canvas.height);
+          const rect = calculateWatermarkRect(canvas.width, canvas.height, wmImg.naturalWidth, wmImg.naturalHeight);
+          ctx.drawImage(wmImg, rect.x, rect.y, rect.width, rect.height);
           canvas.toBlob(blob => {
             if (!blob) { reject(new Error('canvas → Blob 변환 실패')); return; }
             resolve(blob);
@@ -179,6 +252,218 @@
           reject(new Error('canvas 합성 오류: ' + e.message));
         }
       });
+    }
+
+    // ── 워터마크 재생성 공통 로직 (일괄 재생성에서 사용) ─────────────────────
+    // watermark_type에 따라 연구소 기본 / 개인 워터마크를 판별해서 사용한다.
+
+    let _rbLabWm = null; // 연구소 기본 워터마크 캐시 (최초 1회만 로드)
+    const _rbPersonalCache = new Map();     // species owner_user_id -> { img } | { error }
+    const _rbSpeciesOwnerCache = new Map(); // species_name -> owner_user_id | null
+
+    async function getLabWatermark() {
+      if (!_rbLabWm) _rbLabWm = await preloadWatermark(WM_URL);
+      return _rbLabWm;
+    }
+
+    // 개인 워터마크는 개체 소유자(owner_user_id)가 아니라 종족주(species.owner_user_id) 기준이다.
+    // (profile.html의 reapplyAutoWatermarks가 종족 단위로 개인 워터마크를 일괄 적용하기 때문)
+    async function getSpeciesOwnerId(speciesName) {
+      if (_rbSpeciesOwnerCache.has(speciesName)) return _rbSpeciesOwnerCache.get(speciesName);
+      const { data, error } = await sb.from('species')
+        .select('owner_user_id').eq('name', speciesName).maybeSingle();
+      const id = (!error && data) ? data.owner_user_id : null;
+      _rbSpeciesOwnerCache.set(speciesName, id);
+      return id;
+    }
+
+    // 개체의 watermark_type에 맞는 워터마크 Image를 반환. 실패 시 구체적 사유로 reject.
+    // forcePersonal: watermark_type 값과 무관하게 종족주의 개인 워터마크를 사용
+    // (watermark_type='lab_black' 보정 대상 재생성에서 사용)
+    async function resolveWatermarkForCharacter(char, personalCache, forcePersonal = false) {
+      if (!forcePersonal && char.watermark_type !== 'personal') return getLabWatermark();
+
+      const speciesOwnerId = await getSpeciesOwnerId(char.species_name);
+      if (!speciesOwnerId) {
+        throw new Error(`종족 정보를 찾을 수 없음 (species_name: ${char.species_name})`);
+      }
+
+      if (personalCache.has(speciesOwnerId)) {
+        const cached = personalCache.get(speciesOwnerId);
+        if (cached.error) throw new Error(cached.error);
+        return cached.img;
+      }
+
+      const { data: profile, error: profErr } = await sb.from('user_profiles')
+        .select('watermark_url').eq('user_id', speciesOwnerId).maybeSingle();
+
+      if (profErr) {
+        const msg = '개인 워터마크 조회 실패: ' + profErr.message;
+        personalCache.set(speciesOwnerId, { error: msg });
+        throw new Error(msg);
+      }
+      if (!profile) {
+        const msg = '개인 워터마크 프로필 없음 (종족주 기준)';
+        personalCache.set(speciesOwnerId, { error: msg });
+        throw new Error(msg);
+      }
+      if (!profile.watermark_url) {
+        const msg = '개인 워터마크 미등록 (종족주 기준)';
+        personalCache.set(speciesOwnerId, { error: msg });
+        throw new Error(msg);
+      }
+      try {
+        const img = await loadImageElement(profile.watermark_url);
+        personalCache.set(speciesOwnerId, { img });
+        return img;
+      } catch (e) {
+        const msg = '개인 워터마크 로드 실패: ' + e.message;
+        personalCache.set(speciesOwnerId, { error: msg });
+        throw new Error(msg);
+      }
+    }
+
+    // 원본 이미지 1장을 워터마크와 합성. dryRun이면 업로드 없이 합성 성공 여부만 반환.
+    async function regenerateOneImage(origUrl, wmImg, namePrefix, dryRun, previewSink) {
+      if (!origUrl) return { status: 'skip', reason: '원본 이미지 없음' };
+      if (/\.gif(\?|$)/i.test(origUrl)) return { status: 'skip', reason: 'GIF 파일 — 워터마크 미적용 정책' };
+
+      let srcImg;
+      try {
+        srcImg = await loadImageElement(origUrl);
+      } catch (e) {
+        return { status: 'fail', reason: '원본 이미지 로드 실패: ' + e.message };
+      }
+
+      let blob;
+      try {
+        blob = await compositeImages(srcImg, wmImg);
+      } catch (e) {
+        return { status: 'fail', reason: 'Canvas 합성 실패: ' + e.message };
+      }
+
+      if (dryRun) {
+        if (previewSink) previewSink(blob);
+        return { status: 'ok' };
+      }
+
+      const wmName = `${Date.now()}_${namePrefix}.jpg`;
+      const { error: upErr } = await sb.storage.from('images').upload(wmName, blob, { contentType: 'image/jpeg' });
+      if (upErr) return { status: 'fail', reason: 'Storage 업로드 실패: ' + upErr.message };
+      const url = sb.storage.from('images').getPublicUrl(wmName).data.publicUrl;
+      return { status: 'ok', url };
+    }
+
+    // 개체 1개의 대표/추가/Step 이미지를 재생성. dryRun이 아니면 DB까지 갱신.
+    // char는 최소한 id, name, owner_user_id, watermark_type, original_image_url,
+    // image_url, additional_images, original_additional_images를 포함해야 함.
+    async function regenerateCharacterImages(char, opts) {
+      const logFn = opts.logFn;
+      const result = { done: 0, failed: 0, skipped: 0 };
+
+      let wmImg;
+      try {
+        wmImg = await resolveWatermarkForCharacter(char, opts.personalCache, opts.forcePersonal);
+      } catch (e) {
+        logFn(`✗ ${char.name}: ${e.message} — 전체 건너뜀`, 'log-skip');
+        result.skipped++;
+        return result;
+      }
+
+      const dbUpdate = {};
+      const idShort = String(char.id).slice(0, 8);
+
+      if (opts.includeMain) {
+        const r = await regenerateOneImage(char.original_image_url, wmImg, `regen2_${idShort}`, opts.dryRun, opts.previewSink);
+        if (r.status === 'ok') {
+          result.done++;
+          if (!opts.dryRun) {
+            dbUpdate.image_url = r.url;
+            // 대표 이미지가 실제로 개인 워터마크로 재생성된 경우에만 watermark_type을 personal로 보정
+            if (opts.forcePersonal) dbUpdate.watermark_type = 'personal';
+          }
+          logFn(`  [대표] ${opts.dryRun ? '합성 성공 (dry-run)' : '완료'}`, 'log-ok');
+        } else if (r.status === 'skip') {
+          result.skipped++;
+          logFn(`  [대표] 건너뜀: ${r.reason}`, 'log-skip');
+        } else {
+          result.failed++;
+          logFn(`  [대표] 실패: ${r.reason}`, 'log-err');
+        }
+      }
+
+      if (opts.includeAdditional) {
+        const origs    = char.original_additional_images || [];
+        const currents = [...(char.additional_images || [])];
+        if (!origs.length && currents.length) {
+          logFn(`  [추가] original_additional_images 없음 — 추가 이미지 ${currents.length}장 건너뜀`, 'log-skip');
+          result.skipped += currents.length;
+        } else if (origs.length && origs.length !== currents.length) {
+          logFn(`  [추가] 원본(${origs.length})/현재(${currents.length}) 배열 길이 불일치 — 추가 이미지 전체 건너뜀`, 'log-skip');
+          result.skipped += Math.max(origs.length, currents.length);
+        } else {
+          let changed = false;
+          for (let idx = 0; idx < origs.length; idx++) {
+            const r = await regenerateOneImage(origs[idx], wmImg, `regen2_ex${idx}_${idShort}`, opts.dryRun, null);
+            if (r.status === 'ok') {
+              result.done++;
+              if (!opts.dryRun) { currents[idx] = r.url; changed = true; }
+              logFn(`  [추가 ${idx + 1}] ${opts.dryRun ? '합성 성공 (dry-run)' : '완료'}`, 'log-ok');
+            } else if (r.status === 'skip') {
+              result.skipped++;
+              logFn(`  [추가 ${idx + 1}] 건너뜀: ${r.reason}`, 'log-skip');
+            } else {
+              result.failed++;
+              logFn(`  [추가 ${idx + 1}] 실패: ${r.reason}`, 'log-err');
+            }
+            await new Promise(res => setTimeout(res, 150));
+          }
+          // 일부만 성공해도 성공한 인덱스만 교체 — 실패/건너뜀 인덱스는 기존 URL 유지
+          if (!opts.dryRun && changed) dbUpdate.additional_images = currents;
+        }
+      }
+
+      const stepDbUpdates = [];
+      if (opts.includeSteps) {
+        const { data: steps, error: stepErr } = await sb.from('character_step_images')
+          .select('id, original_image_url')
+          .eq('character_id', char.id)
+          .not('original_image_url', 'is', null);
+        if (stepErr) {
+          logFn(`  [Step] 조회 실패: ${stepErr.message}`, 'log-err');
+        } else {
+          for (const step of (steps || [])) {
+            const r = await regenerateOneImage(step.original_image_url, wmImg, `regen2_step_${step.id}`, opts.dryRun, null);
+            if (r.status === 'ok') {
+              result.done++;
+              if (!opts.dryRun) stepDbUpdates.push({ id: step.id, url: r.url });
+              logFn(`  [Step #${step.id}] ${opts.dryRun ? '합성 성공 (dry-run)' : '완료'}`, 'log-ok');
+            } else if (r.status === 'skip') {
+              result.skipped++;
+              logFn(`  [Step #${step.id}] 건너뜀: ${r.reason}`, 'log-skip');
+            } else {
+              result.failed++;
+              logFn(`  [Step #${step.id}] 실패: ${r.reason}`, 'log-err');
+            }
+            await new Promise(res => setTimeout(res, 150));
+          }
+        }
+      }
+
+      if (!opts.dryRun) {
+        if (Object.keys(dbUpdate).length > 0) {
+          const { error: dbErr } = await sb.from('characters').update(dbUpdate).eq('id', char.id);
+          if (dbErr) logFn(`  [DB] characters 갱신 실패: ${dbErr.message}`, 'log-err');
+        }
+        for (const su of stepDbUpdates) {
+          const { error: stepUpdErr } = await sb.from('character_step_images')
+            .update({ image_url: su.url, updated_at: new Date().toISOString() })
+            .eq('id', su.id);
+          if (stepUpdErr) logFn(`  [Step #${su.id}] DB 갱신 실패: ${stepUpdErr.message}`, 'log-err');
+        }
+      }
+
+      return result;
     }
 
     async function startBackfill(testMode) {
@@ -322,392 +607,459 @@
       log(`\n완료: 성공 ${done}개 / 실패 ${failed}개`, 'log-info');
     }
 
-    // ── 추가 이미지 전체 백필 ──────────────────────────────────────────
+    // ── 워터마크 이미지 일괄 재생성 ──────────────────────────────────────
 
-    let _extraStop    = false;
-    let _extraRunning = false;
+    let _rbStop    = false;
+    let _rbRunning = false;
 
-    function extraLog(msg, cls = '') {
-      const box = document.getElementById('extraLogBox');
+    function rbLog(msg, cls = '') {
+      const box = document.getElementById('rbLogBox');
       box.style.display = '';
       const line = document.createElement('span');
       if (cls) line.className = cls;
       line.textContent = msg + '\n';
       box.appendChild(line);
       box.scrollTop = box.scrollHeight;
+      console.log(`[regen-batch${cls ? ':' + cls : ''}]`, msg);
     }
 
-    function setExtraProgress(done, total) {
+    function setRbProgress(done, total) {
       const pct = total ? Math.round(done / total * 100) : 0;
-      document.getElementById('extraProgressBar').style.width = pct + '%';
-      document.getElementById('extraProgressText').textContent = `처리 중: ${done} / ${total} (${pct}%)`;
+      document.getElementById('rbProgressBar').style.width = pct + '%';
+      document.getElementById('rbProgressText').textContent = `처리 중: ${done} / ${total} (${pct}%)`;
     }
 
-    function stopExtraBackfill() { _extraStop = true; extraLog('[중단 요청됨]', 'log-info'); }
+    function stopRegenBatch() { _rbStop = true; rbLog('[중단 요청됨]', 'log-info'); }
 
-    async function startExtraBackfill(testMode) {
-      if (_extraRunning) { alert('이미 실행 중이에요.'); return; }
-      if (!testMode && !confirm(
-        '전체 개체의 추가 이미지를 백필합니다.\n' +
-        '현재 additional_images를 original_additional_images로 이동하고\n' +
-        '기본 워터마크 적용본으로 교체합니다.\n\n' +
-        '반드시 테스트를 먼저 실행했는지 확인하세요.\n계속할까요?'
-      )) return;
+    function onRbScopeChange() {
+      const scope = document.querySelector('input[name="rbScope"]:checked').value;
+      document.getElementById('rbUserNick').disabled = scope !== 'user';
+      document.getElementById('rbCharId').disabled   = scope !== 'char';
+    }
 
-      _extraStop    = false;
-      _extraRunning = true;
-      document.getElementById('btnExtraTest').disabled = true;
-      document.getElementById('btnExtraAll').disabled  = true;
-      document.getElementById('btnExtraStop').style.display = '';
-      document.getElementById('extraProgressWrap').style.display = '';
-      document.getElementById('extraLogBox').innerHTML = '';
-      document.getElementById('extraLogBox').style.display = '';
+    function getRbScope() {
+      const opts = {
+        scope:    document.querySelector('input[name="rbScope"]:checked').value,
+        userNick: document.getElementById('rbUserNick').value.trim(),
+        charId:   document.getElementById('rbCharId').value.trim(),
+        wmType:   document.getElementById('rbWmType').value,
+        includeMain:       document.getElementById('rbIncludeMain').checked,
+        includeAdditional: document.getElementById('rbIncludeAdditional').checked,
+        includeSteps:      document.getElementById('rbIncludeSteps').checked,
+      };
+      if (!opts.includeMain && !opts.includeAdditional && !opts.includeSteps) {
+        throw new Error('재생성 대상 이미지를 하나 이상 선택해주세요.');
+      }
+      return opts;
+    }
+
+    // 대상 개체 목록 조회 (필터 + 1000행 제한 대비 페이지네이션)
+    async function fetchRegenTargets(opts) {
+      let resolvedUserId = null;
+      if (opts.scope === 'user') {
+        if (!opts.userNick) throw new Error('사용자 닉네임을 입력해주세요.');
+        const { data: users } = await sb.rpc('get_all_users');
+        const u = (users || []).find(x => x.nickname === opts.userNick);
+        if (!u) throw new Error(`사용자를 찾을 수 없어요: ${opts.userNick}`);
+        resolvedUserId = u.id;
+      } else if (opts.scope === 'char' && !opts.charId) {
+        throw new Error('개체 ID를 입력해주세요.');
+      }
+
+      const buildQuery = () => {
+        let q = sb.from('characters')
+          .select('id, name, image_url, original_image_url, additional_images, original_additional_images, owner_user_id, owner_nickname, species_name, watermark_type')
+          .not('original_image_url', 'is', null)
+          .not('image_url', 'is', null);
+        if (opts.scope === 'user') q = q.eq('owner_user_id', resolvedUserId);
+        else if (opts.scope === 'char') q = q.eq('id', opts.charId);
+        if (opts.wmType !== 'all') q = q.eq('watermark_type', opts.wmType);
+        return q;
+      };
+
+      const pageSize = 1000;
+      let all = [], from = 0;
+      while (true) {
+        const { data, error } = await buildQuery().range(from, from + pageSize - 1);
+        if (error) throw error;
+        all = all.concat(data || []);
+        if (!data || data.length < pageSize) break;
+        from += pageSize;
+      }
+      return all;
+    }
+
+    // 사이트 전체 기준 원본이 있는 성장 Step 이미지 목록 (건수가 적어 통째로 조회 후 클라이언트에서 필터)
+    async function fetchStepOriginalMap() {
+      const { data, error } = await sb.from('character_step_images')
+        .select('id, character_id, original_image_url')
+        .not('original_image_url', 'is', null);
+      if (error) throw error;
+      return data || [];
+    }
+
+    function computeRegenStats(targets, stepOriginals, opts) {
+      const targetIds = new Set(targets.map(c => c.id));
+      const stepRows  = stepOriginals.filter(s => targetIds.has(s.character_id));
+
+      const labCount      = targets.filter(c => c.watermark_type === 'lab_black').length;
+      const personalCount = targets.filter(c => c.watermark_type === 'personal').length;
+
+      let additionalCount = 0, additionalMismatch = 0, additionalMissingOriginal = 0;
+      if (opts.includeAdditional) {
+        for (const c of targets) {
+          const origs    = c.original_additional_images || [];
+          const currents = c.additional_images || [];
+          if (!origs.length) continue;
+          if (origs.length !== currents.length) { additionalMismatch++; continue; }
+          origs.forEach(u => { if (u) additionalCount++; else additionalMissingOriginal++; });
+        }
+      }
+
+      return {
+        charCount: targets.length,
+        mainCount: opts.includeMain ? targets.length : 0,
+        additionalCount, additionalMismatch, additionalMissingOriginal,
+        stepCount: opts.includeSteps ? stepRows.length : 0,
+        labCount, personalCount,
+      };
+    }
+
+    async function previewRegenBatch() {
+      const box = document.getElementById('rbPreviewBox');
+      box.style.display = '';
+      box.textContent = '조회 중...';
+
+      const user = await getUser();
+      if (!user || (user.user_metadata?.role !== 'admin' && user.user_metadata?.role !== 'staff')) {
+        box.textContent = '관리자/스태프만 사용할 수 있어요.';
+        return;
+      }
 
       try {
-        const user = await getUser();
-        if (!user || (user.user_metadata?.role !== 'admin' && user.user_metadata?.role !== 'staff')) {
-          extraLog('관리자/스태프만 사용할 수 있어요.', 'log-err'); return;
-        }
-
-        // 워터마크 이미지 사전 로드
-        extraLog('워터마크 이미지 로드 확인 중...', 'log-info');
-        let wmImg;
-        try {
-          wmImg = await preloadWatermark(WM_URL);
-          extraLog(`워터마크 로드 성공 (${wmImg.naturalWidth}×${wmImg.naturalHeight})`, 'log-ok');
-        } catch (e) {
-          extraLog('워터마크 로드 실패: ' + e.message, 'log-err'); return;
-        }
-
-        extraLog(`[${testMode ? '테스트 모드' : '전체 모드'}] 대상 조회 중...`, 'log-info');
-
-        let chars = [];
-        if (testMode) {
-          const { data: boUser } = await sb.rpc('get_all_users');
-          const boData = (boUser || []).find(u => u.nickname === BO_NICK);
-          if (!boData) { extraLog(`'${BO_NICK}' 계정을 찾을 수 없어요.`, 'log-err'); return; }
-          extraLog(`'${BO_NICK}' 계정 ID: ${boData.id}`, 'log-info');
-          const { data, error } = await sb.from('characters')
-            .select('id, name, additional_images')
-            .is('original_additional_images', null)
-            .not('additional_images', 'is', null)
-            .eq('owner_user_id', boData.id);
-          if (error) { extraLog('조회 오류: ' + error.message, 'log-err'); return; }
-          chars = data || [];
-        } else {
-          const { data, error } = await sb.from('characters')
-            .select('id, name, additional_images')
-            .is('original_additional_images', null)
-            .not('additional_images', 'is', null);
-          if (error) { extraLog('조회 오류: ' + error.message, 'log-err'); return; }
-          chars = data || [];
-        }
-
-        await processExtraChars(chars, wmImg);
-
+        const opts = getRbScope();
+        const [targets, stepOriginals] = await Promise.all([fetchRegenTargets(opts), fetchStepOriginalMap()]);
+        const stats = computeRegenStats(targets, stepOriginals, opts);
+        box.innerHTML =
+          `<strong>대상 미리보기</strong><br>` +
+          `대상 개체 수: ${stats.charCount}개<br>` +
+          `대표 이미지: ${stats.mainCount}개<br>` +
+          `추가 이미지: ${stats.additionalCount}개 ` +
+          `(인덱스 불일치로 제외 ${stats.additionalMismatch}개체, 원본 누락 ${stats.additionalMissingOriginal}건)<br>` +
+          `성장 Step 이미지: ${stats.stepCount}개<br>` +
+          `연구소 기본 워터마크 대상: ${stats.labCount}개<br>` +
+          `개인 워터마크 대상: ${stats.personalCount}개`;
       } catch (e) {
-        extraLog('예상치 못한 오류: ' + e.message, 'log-err');
-        console.error('[extra-backfill]', e);
-      } finally {
-        _extraRunning = false;
-        document.getElementById('btnExtraTest').disabled = false;
-        document.getElementById('btnExtraAll').disabled  = false;
-        document.getElementById('btnExtraStop').style.display = 'none';
+        box.textContent = '조회 실패: ' + e.message;
       }
     }
 
-    async function processExtraChars(chars, wmImg) {
-      const total = chars.length;
-      extraLog(`대상 ${total}개 확인됨.`, 'log-info');
-      if (total === 0) { extraLog('처리할 개체가 없어요 (original_additional_images 없는 개체).', 'log-skip'); return; }
+    async function startRegenBatch(dryRun) {
+      if (_rbRunning) { alert('이미 실행 중이에요.'); return; }
 
-      let done = 0, failed = 0;
-      setExtraProgress(0, total);
-
-      for (const char of chars) {
-        if (_extraStop) { extraLog('[중단됨]', 'log-info'); break; }
-
-        const origUrls = char.additional_images;
-        extraLog(`→ ${char.name} (추가 이미지 ${origUrls.length}장)`, 'log-step');
-
-        try {
-          const newWmUrls  = [];
-          let   anyFailed  = false;
-
-          for (let idx = 0; idx < origUrls.length; idx++) {
-            extraLog(`  [${idx + 1}/${origUrls.length}] 처리 중...`, 'log-step');
-
-            // GIF 파일은 Canvas 처리 불가 — 원본 그대로 유지
-            if (/\.gif(\?|$)/i.test(origUrls[idx])) {
-              newWmUrls.push(origUrls[idx]);
-              extraLog(`  [${idx + 1}] GIF 파일 — 건너뜁니다.`, 'log-skip');
-              continue;
-            }
-
-            // 이미지 로드
-            let srcImg;
-            try {
-              srcImg = await loadImageElement(origUrls[idx]);
-            } catch (e) {
-              extraLog(`  [${idx + 1}] 로드 실패: ${e.message}`, 'log-err');
-              newWmUrls.push(origUrls[idx]); // 실패 시 원본 유지
-              anyFailed = true;
-              continue;
-            }
-
-            // 워터마크 합성
-            let wmBlob;
-            try {
-              wmBlob = await compositeImages(srcImg, wmImg);
-            } catch (e) {
-              extraLog(`  [${idx + 1}] 합성 실패: ${e.message}`, 'log-err');
-              newWmUrls.push(origUrls[idx]);
-              anyFailed = true;
-              continue;
-            }
-
-            // Storage 업로드
-            const wmName = `${Date.now()}_ex_wm${idx}_${String(char.id).slice(0, 8)}.jpg`;
-            const { error: upErr } = await sb.storage.from('images').upload(wmName, wmBlob, { contentType: 'image/jpeg' });
-            if (upErr) {
-              extraLog(`  [${idx + 1}] 업로드 실패: ${upErr.message}`, 'log-err');
-              newWmUrls.push(origUrls[idx]);
-              anyFailed = true;
-              continue;
-            }
-            newWmUrls.push(sb.storage.from('images').getPublicUrl(wmName).data.publicUrl);
-            extraLog(`  [${idx + 1}] 완료`, 'log-step');
-
-            await new Promise(r => setTimeout(r, 300));
-          }
-
-          // DB 업데이트 — original_additional_images IS NULL 조건으로 중복 방지
-          const { error: dbErr } = await sb.from('characters').update({
-            original_additional_images: origUrls,
-            additional_images:          newWmUrls,
-          }).eq('id', char.id).is('original_additional_images', null);
-          if (dbErr) throw new Error('DB 업데이트 실패: ' + dbErr.message);
-
-          done++;
-          if (anyFailed) {
-            extraLog(`△ ${char.name}: 일부 실패 (원본 URL 유지됨)`, 'log-skip');
-          } else {
-            extraLog(`✓ ${char.name}: ${origUrls.length}장 완료`, 'log-ok');
-          }
-
-        } catch (e) {
-          failed++;
-          extraLog(`✗ ${char.name}: ${e.message}`, 'log-err');
-          console.error('[extra-backfill]', char.name, e);
-        }
-
-        setExtraProgress(done + failed, total);
-        await new Promise(r => setTimeout(r, 500));
-      }
-
-      extraLog(`\n완료: 성공 ${done}개 / 실패 ${failed}개`, 'log-info');
-    }
-
-    async function startExtraBackfillSingle() {
-      const rawId = document.getElementById('extraSingleIdInput').value.trim();
-      if (!rawId) { alert('개체 ID를 입력해주세요.'); return; }
-
-      const btn = document.getElementById('btnExtraSingle');
-      btn.disabled = true;
-      document.getElementById('extraLogBox').innerHTML = '';
-      document.getElementById('extraLogBox').style.display = '';
-      document.getElementById('extraProgressWrap').style.display = 'none';
-
+      let opts;
       try {
-        const user = await getUser();
-        if (!user || (user.user_metadata?.role !== 'admin' && user.user_metadata?.role !== 'staff')) {
-          extraLog('관리자/스태프만 사용할 수 있어요.', 'log-err'); return;
-        }
-
-        extraLog(`대상 조회: ${rawId}`, 'log-info');
-        const { data, error } = await sb.from('characters')
-          .select('id, name, additional_images, original_additional_images')
-          .eq('id', rawId)
-          .single();
-
-        if (error || !data) {
-          extraLog(`개체를 찾을 수 없어요. (${error?.message ?? 'no data'})`, 'log-err'); return;
-        }
-
-        extraLog(`개체 확인: ${data.name}`, 'log-info');
-        extraLog(`  additional_images          : ${(data.additional_images || []).length}장`, 'log-info');
-        extraLog(`  original_additional_images : ${data.original_additional_images ? data.original_additional_images.length + '장 (이미 있음)' : '없음'}`, 'log-info');
-
-        if (!data.additional_images?.length) {
-          extraLog('추가 이미지가 없어요. 처리를 중단합니다.', 'log-skip'); return;
-        }
-        if (data.original_additional_images) {
-          extraLog('original_additional_images가 이미 있어요. 백필이 필요하지 않습니다.', 'log-skip'); return;
-        }
-
-        extraLog('워터마크 이미지 로드 중...', 'log-step');
-        let wmImg;
-        try {
-          wmImg = await preloadWatermark(WM_URL);
-          extraLog(`워터마크 로드 완료 (${wmImg.naturalWidth}×${wmImg.naturalHeight})`, 'log-step');
-        } catch (e) {
-          extraLog('워터마크 로드 실패: ' + e.message, 'log-err'); return;
-        }
-
-        await processExtraChars([data], wmImg);
-
+        opts = getRbScope();
       } catch (e) {
-        extraLog('예상치 못한 오류: ' + e.message, 'log-err');
-        console.error('[extra-backfill-single]', e);
-      } finally {
-        btn.disabled = false;
+        alert(e.message);
+        return;
       }
+
+      document.getElementById('rbLogBox').innerHTML = '';
+      document.getElementById('rbLogBox').style.display = '';
+      document.getElementById('rbPreviewGrid').innerHTML = '';
+      document.getElementById('rbPreviewGrid').style.display = 'none';
+
+      const user = await getUser();
+      if (!user || (user.user_metadata?.role !== 'admin' && user.user_metadata?.role !== 'staff')) {
+        rbLog('관리자/스태프만 사용할 수 있어요.', 'log-err');
+        return;
+      }
+
+      let targets;
+      try {
+        targets = await fetchRegenTargets(opts);
+      } catch (e) {
+        rbLog('대상 조회 실패: ' + e.message, 'log-err');
+        return;
+      }
+
+      rbLog(`대상 ${targets.length}개 확인됨. (${dryRun ? '테스트 모드 — Storage 업로드/DB 반영 없음' : '전체 적용'})`, 'log-info');
+      if (targets.length === 0) { rbLog('처리할 개체가 없어요.', 'log-skip'); return; }
+
+      if (!dryRun) {
+        const msg = `${targets.length}개 개체의 워터마크 이미지를 실제로 재생성합니다.\n` +
+          `대표: ${opts.includeMain ? 'O' : 'X'} / 추가: ${opts.includeAdditional ? 'O' : 'X'} / Step: ${opts.includeSteps ? 'O' : 'X'}\n\n` +
+          `original_image_url / original_additional_images는 변경되지 않습니다.\n계속할까요?`;
+        if (!confirm(msg)) return;
+      }
+
+      _rbStop    = false;
+      _rbRunning = true;
+      document.getElementById('btnRbPreview').disabled = true;
+      document.getElementById('btnRbTest').disabled     = true;
+      document.getElementById('btnRbAll').disabled      = true;
+      document.getElementById('btnRbStop').style.display = '';
+      document.getElementById('rbProgressWrap').style.display = '';
+
+      let previewCount = 0;
+      const previewSink = dryRun ? (blob) => {
+        if (previewCount >= 5) return;
+        previewCount++;
+        const url  = URL.createObjectURL(blob);
+        const grid = document.getElementById('rbPreviewGrid');
+        grid.style.display = 'flex';
+        const img = document.createElement('img');
+        img.src = url;
+        img.style.cssText = 'width:110px; height:110px; object-fit:cover; border-radius:8px; border:1px solid var(--border);';
+        grid.appendChild(img);
+      } : null;
+
+      let done = 0, failed = 0, skipped = 0, processed = 0;
+      setRbProgress(0, targets.length);
+
+      for (const char of targets) {
+        if (_rbStop) { rbLog('[중단됨]', 'log-info'); break; }
+
+        rbLog(`→ ${char.name} (${String(char.id).slice(0, 8)}, ${char.watermark_type || '?'})`, 'log-step');
+
+        const r = await regenerateCharacterImages(char, {
+          includeMain:       opts.includeMain,
+          includeAdditional: opts.includeAdditional,
+          includeSteps:      opts.includeSteps,
+          dryRun,
+          personalCache: _rbPersonalCache,
+          logFn: rbLog,
+          previewSink,
+        });
+
+        done += r.done; failed += r.failed; skipped += r.skipped;
+        processed++;
+        setRbProgress(processed, targets.length);
+        await new Promise(res => setTimeout(res, 200));
+      }
+
+      rbLog(`\n완료: 성공 ${done} / 실패 ${failed} / 건너뜀 ${skipped} (개체 ${processed}/${targets.length})`, 'log-info');
+
+      _rbRunning = false;
+      document.getElementById('btnRbPreview').disabled = false;
+      document.getElementById('btnRbTest').disabled     = false;
+      document.getElementById('btnRbAll').disabled      = false;
+      document.getElementById('btnRbStop').style.display = 'none';
     }
 
-    // ── 단일 개체 재생성 ──────────────────────────────────────────────
+    // ── watermark_type 보정 (lab_black → personal) ───────────────────────
 
-    function regenLog(msg, cls = '') {
-      const box = document.getElementById('regenLogBox');
+    let _cStop    = false;
+    let _cRunning = false;
+
+    function cLog(msg, cls = '') {
+      const box = document.getElementById('cLogBox');
       box.style.display = '';
       const line = document.createElement('span');
       if (cls) line.className = cls;
       line.textContent = msg + '\n';
       box.appendChild(line);
       box.scrollTop = box.scrollHeight;
-      console.log(`[regen${cls ? ':' + cls : ''}]`, msg);
+      console.log(`[correction${cls ? ':' + cls : ''}]`, msg);
     }
 
-    async function startRegen() {
-      const rawId = document.getElementById('regenIdInput').value.trim();
-      if (!rawId) { alert('개체 ID를 입력해주세요.'); return; }
+    function setCProgress(done, total) {
+      const pct = total ? Math.round(done / total * 100) : 0;
+      document.getElementById('cProgressBar').style.width = pct + '%';
+      document.getElementById('cProgressText').textContent = `처리 중: ${done} / ${total} (${pct}%)`;
+    }
 
-      const btn = document.getElementById('btnRegen');
-      btn.disabled = true;
-      document.getElementById('regenLogBox').innerHTML = '';
-      document.getElementById('regenLogBox').style.display = '';
+    function stopCorrectionBatch() { _cStop = true; cLog('[중단 요청됨]', 'log-info'); }
+
+    function onCScopeChange() {
+      const scope = document.querySelector('input[name="cScope"]:checked').value;
+      document.getElementById('cUserNick').disabled = scope !== 'user';
+      document.getElementById('cCharId').disabled   = scope !== 'char';
+    }
+
+    function getCScope() {
+      const opts = {
+        scope:    document.querySelector('input[name="cScope"]:checked').value,
+        userNick: document.getElementById('cUserNick').value.trim(),
+        charId:   document.getElementById('cCharId').value.trim(),
+        includeMain:       document.getElementById('cIncludeMain').checked,
+        includeAdditional: document.getElementById('cIncludeAdditional').checked,
+        includeSteps:      document.getElementById('cIncludeSteps').checked,
+      };
+      if (!opts.includeMain && !opts.includeAdditional && !opts.includeSteps) {
+        throw new Error('보정 대상 이미지를 하나 이상 선택해주세요.');
+      }
+      return opts;
+    }
+
+    // 대상: watermark_type='lab_black' + original_image_url 존재 + 소속 종족주가 개인 워터마크 보유
+    async function fetchCorrectionTargets(opts) {
+      let resolvedUserId = null;
+      if (opts.scope === 'user') {
+        if (!opts.userNick) throw new Error('사용자 닉네임을 입력해주세요.');
+        const { data: users } = await sb.rpc('get_all_users');
+        const u = (users || []).find(x => x.nickname === opts.userNick);
+        if (!u) throw new Error(`사용자를 찾을 수 없어요: ${opts.userNick}`);
+        resolvedUserId = u.id;
+      } else if (opts.scope === 'char' && !opts.charId) {
+        throw new Error('개체 ID를 입력해주세요.');
+      }
+
+      // 종족주 / 개인 워터마크 매핑 (소량 테이블, 전체 조회)
+      const { data: speciesRows, error: spErr } = await sb.from('species').select('name, owner_user_id');
+      if (spErr) throw spErr;
+      const { data: profileRows, error: profErr } = await sb.from('user_profiles').select('user_id, watermark_url');
+      if (profErr) throw profErr;
+      const speciesOwnerByName = new Map((speciesRows || []).map(s => [s.name, s.owner_user_id]));
+      const wmUrlByUser        = new Map((profileRows || []).map(p => [p.user_id, p.watermark_url]));
+
+      const buildQuery = () => {
+        let q = sb.from('characters')
+          .select('id, name, image_url, original_image_url, additional_images, original_additional_images, owner_user_id, owner_nickname, species_name, watermark_type')
+          .eq('watermark_type', 'lab_black')
+          .not('original_image_url', 'is', null);
+        if (opts.scope === 'user') q = q.eq('owner_user_id', resolvedUserId);
+        else if (opts.scope === 'char') q = q.eq('id', opts.charId);
+        return q;
+      };
+
+      const pageSize = 1000;
+      let all = [], from = 0;
+      while (true) {
+        const { data, error } = await buildQuery().range(from, from + pageSize - 1);
+        if (error) throw error;
+        all = all.concat(data || []);
+        if (!data || data.length < pageSize) break;
+        from += pageSize;
+      }
+
+      // 클라이언트에서 "소속 종족주가 개인 워터마크를 갖고 있는지" 필터
+      return all.filter(c => {
+        const speciesOwnerId = speciesOwnerByName.get(c.species_name);
+        return speciesOwnerId && !!wmUrlByUser.get(speciesOwnerId);
+      });
+    }
+
+    async function previewCorrectionBatch() {
+      const box = document.getElementById('cPreviewBox');
+      box.style.display = '';
+      box.textContent = '조회 중...';
+
+      const user = await getUser();
+      if (!user || (user.user_metadata?.role !== 'admin' && user.user_metadata?.role !== 'staff')) {
+        box.textContent = '관리자/스태프만 사용할 수 있어요.';
+        return;
+      }
 
       try {
-        const user = await getUser();
-        if (!user || (user.user_metadata?.role !== 'admin' && user.user_metadata?.role !== 'staff')) {
-          regenLog('관리자/스태프만 사용할 수 있어요.', 'log-err');
-          return;
-        }
-
-        regenLog(`대상 조회: ${rawId}`, 'log-info');
-
-        const { data, error } = await sb.from('characters')
-          .select('id, name, image_url, original_image_url, additional_images, original_additional_images')
-          .eq('id', rawId)
-          .single();
-
-        if (error || !data) {
-          regenLog(`개체를 찾을 수 없어요. (${error?.message ?? 'no data'})`, 'log-err');
-          return;
-        }
-
-        regenLog(`개체 확인: ${data.name} (id: ${String(data.id).slice(0, 8)}...)`, 'log-info');
-        regenLog(`  image_url                  : ${data.image_url ? '있음' : '없음'}`, 'log-info');
-        regenLog(`  original_image_url         : ${data.original_image_url ? '있음' : '없음'}`, 'log-info');
-        regenLog(`  additional_images          : ${(data.additional_images || []).length}장`, 'log-info');
-        regenLog(`  original_additional_images : ${(data.original_additional_images || []).length}장`, 'log-info');
-
-        // 워터마크 로드
-        regenLog('워터마크 이미지 로드 중...', 'log-step');
-        let wmImg;
-        try {
-          wmImg = await preloadWatermark(WM_URL);
-          regenLog(`워터마크 로드 완료 (${wmImg.naturalWidth}×${wmImg.naturalHeight})`, 'log-step');
-        } catch (e) {
-          regenLog('워터마크 로드 실패: ' + e.message, 'log-err');
-          return;
-        }
-
-        const dbUpdate = {};
-
-        // ── 대표 이미지 재생성 ──────────────────────────────────────────
-        const mainSrcUrl = data.original_image_url || data.image_url;
-        if (!mainSrcUrl) {
-          regenLog('대표 이미지 소스 없음 — 건너뜁니다.', 'log-skip');
-        } else if (/\.gif(\?|$)/i.test(mainSrcUrl)) {
-          regenLog('\n[대표 이미지] GIF 파일 — 재생성 대상 아님, 건너뜁니다.', 'log-skip');
-        } else {
-          regenLog(`\n[대표 이미지] 소스: ${data.original_image_url ? 'original_image_url' : 'image_url'}`, 'log-step');
-          try {
-            const srcImg = await loadImageElement(mainSrcUrl);
-            regenLog(`  로드 완료 (${srcImg.naturalWidth}×${srcImg.naturalHeight})`, 'log-step');
-            const wmBlob = await compositeImages(srcImg, wmImg);
-            const wmName = `${Date.now()}_regen_${String(data.id).slice(0, 8)}.jpg`;
-            const { error: upErr } = await sb.storage.from('images').upload(wmName, wmBlob, { contentType: 'image/jpeg' });
-            if (upErr) throw new Error('Storage 업로드 실패: ' + upErr.message);
-            dbUpdate.image_url = sb.storage.from('images').getPublicUrl(wmName).data.publicUrl;
-            regenLog('  업로드 완료 → image_url 교체 예정', 'log-step');
-          } catch (e) {
-            regenLog('  대표 이미지 재생성 실패: ' + e.message, 'log-err');
-          }
-        }
-
-        // ── 추가 이미지 재생성 (original_additional_images 있는 것만) ──
-        const origAdditional = data.original_additional_images || [];
-        const wmAdditional   = [...(data.additional_images || [])];
-        let extraUpdated = false;
-
-        for (let idx = 0; idx < origAdditional.length; idx++) {
-          const origUrl = origAdditional[idx];
-          if (!origUrl) {
-            regenLog(`\n[추가 이미지 ${idx + 1}] original 없음 — 건너뜁니다.`, 'log-skip');
-            continue;
-          }
-          if (/\.gif(\?|$)/i.test(origUrl)) {
-            wmAdditional[idx] = origUrl;
-            regenLog(`\n[추가 이미지 ${idx + 1}] GIF 파일 — 건너뜁니다.`, 'log-skip');
-          } else {
-          regenLog(`\n[추가 이미지 ${idx + 1}] original 기준 재합성`, 'log-step');
-          try {
-            const srcImg = await loadImageElement(origUrl);
-            regenLog(`  로드 완료 (${srcImg.naturalWidth}×${srcImg.naturalHeight})`, 'log-step');
-            const wmBlob = await compositeImages(srcImg, wmImg);
-            const wmName = `${Date.now()}_regen_extra${idx}_${String(data.id).slice(0, 8)}.jpg`;
-            const { error: upErr } = await sb.storage.from('images').upload(wmName, wmBlob, { contentType: 'image/jpeg' });
-            if (upErr) throw new Error('Storage 업로드 실패: ' + upErr.message);
-            wmAdditional[idx] = sb.storage.from('images').getPublicUrl(wmName).data.publicUrl;
-            regenLog(`  업로드 완료 → additional_images[${idx}] 교체 예정`, 'log-step');
-            extraUpdated = true;
-          } catch (e) {
-            regenLog(`  추가 이미지 ${idx + 1} 재생성 실패: ${e.message}`, 'log-err');
-          }
-          }
-          await new Promise(r => setTimeout(r, 300));
-        }
-
-        if (extraUpdated) {
-          dbUpdate.additional_images = wmAdditional;
-        }
-
-        if (Object.keys(dbUpdate).length === 0) {
-          regenLog('\n처리할 항목이 없어요. (원본 URL이 모두 없음)', 'log-skip');
-          return;
-        }
-
-        // DB 업데이트 — original 컬럼은 절대 덮어쓰지 않음
-        regenLog('\nDB 업데이트 중...', 'log-step');
-        const { error: dbErr } = await sb.from('characters')
-          .update(dbUpdate)
-          .eq('id', data.id);
-        if (dbErr) {
-          regenLog('DB 업데이트 실패: ' + dbErr.message, 'log-err');
-          return;
-        }
-
-        regenLog(`\n✓ 재생성 완료! ${data.name}`, 'log-ok');
-        if (dbUpdate.image_url)        regenLog('  대표 이미지 교체됨 (original_image_url 불변)', 'log-ok');
-        if (dbUpdate.additional_images) regenLog(`  추가 이미지 ${origAdditional.filter(Boolean).length}장 교체됨 (original_additional_images 불변)`, 'log-ok');
-
+        const opts = getCScope();
+        const targets = await fetchCorrectionTargets(opts);
+        const speciesSet = new Set(targets.map(c => c.species_name));
+        box.innerHTML =
+          `<strong>보정 대상 미리보기</strong><br>` +
+          `대상 개체 수: ${targets.length}개<br>` +
+          `관련 종족 수: ${speciesSet.size}개<br>` +
+          `대표 이미지가 실제로 재생성 성공한 개체만 watermark_type이 personal로 바뀝니다.`;
       } catch (e) {
-        regenLog('예상치 못한 오류: ' + e.message, 'log-err');
-        console.error('[regen]', e);
-      } finally {
-        btn.disabled = false;
+        box.textContent = '조회 실패: ' + e.message;
       }
+    }
+
+    async function startCorrectionBatch(dryRun) {
+      if (_cRunning) { alert('이미 실행 중이에요.'); return; }
+
+      let opts;
+      try {
+        opts = getCScope();
+      } catch (e) {
+        alert(e.message);
+        return;
+      }
+
+      document.getElementById('cLogBox').innerHTML = '';
+      document.getElementById('cLogBox').style.display = '';
+      document.getElementById('cPreviewGrid').innerHTML = '';
+      document.getElementById('cPreviewGrid').style.display = 'none';
+
+      const user = await getUser();
+      if (!user || (user.user_metadata?.role !== 'admin' && user.user_metadata?.role !== 'staff')) {
+        cLog('관리자/스태프만 사용할 수 있어요.', 'log-err');
+        return;
+      }
+
+      let targets;
+      try {
+        targets = await fetchCorrectionTargets(opts);
+      } catch (e) {
+        cLog('대상 조회 실패: ' + e.message, 'log-err');
+        return;
+      }
+
+      cLog(`대상 ${targets.length}개 확인됨. (${dryRun ? '테스트 모드 — Storage 업로드/DB 반영 없음' : '전체 적용'})`, 'log-info');
+      if (targets.length === 0) { cLog('처리할 개체가 없어요.', 'log-skip'); return; }
+
+      if (!dryRun) {
+        const msg = `${targets.length}개 개체의 watermark_type을 lab_black → personal로 보정하고\n` +
+          `종족주의 개인 워터마크로 이미지를 다시 생성합니다.\n\n` +
+          `대표: ${opts.includeMain ? 'O' : 'X'} / 추가: ${opts.includeAdditional ? 'O' : 'X'} / Step: ${opts.includeSteps ? 'O' : 'X'}\n\n` +
+          `original_image_url / original_additional_images는 변경되지 않습니다.\n계속할까요?`;
+        if (!confirm(msg)) return;
+      }
+
+      _cStop    = false;
+      _cRunning = true;
+      document.getElementById('btnCPreview').disabled = true;
+      document.getElementById('btnCTest').disabled     = true;
+      document.getElementById('btnCAll').disabled      = true;
+      document.getElementById('btnCStop').style.display = '';
+      document.getElementById('cProgressWrap').style.display = '';
+
+      let previewCount = 0;
+      const previewSink = dryRun ? (blob) => {
+        if (previewCount >= 5) return;
+        previewCount++;
+        const url  = URL.createObjectURL(blob);
+        const grid = document.getElementById('cPreviewGrid');
+        grid.style.display = 'flex';
+        const img = document.createElement('img');
+        img.src = url;
+        img.style.cssText = 'width:110px; height:110px; object-fit:cover; border-radius:8px; border:1px solid var(--border);';
+        grid.appendChild(img);
+      } : null;
+
+      let done = 0, failed = 0, skipped = 0, processed = 0;
+      setCProgress(0, targets.length);
+
+      for (const char of targets) {
+        if (_cStop) { cLog('[중단됨]', 'log-info'); break; }
+
+        cLog(`→ ${char.name} (${String(char.id).slice(0, 8)})`, 'log-step');
+
+        const r = await regenerateCharacterImages(char, {
+          includeMain:       opts.includeMain,
+          includeAdditional: opts.includeAdditional,
+          includeSteps:      opts.includeSteps,
+          dryRun,
+          forcePersonal: true,
+          personalCache: _rbPersonalCache,
+          logFn: cLog,
+          previewSink,
+        });
+
+        done += r.done; failed += r.failed; skipped += r.skipped;
+        processed++;
+        setCProgress(processed, targets.length);
+        await new Promise(res => setTimeout(res, 200));
+      }
+
+      cLog(`\n완료: 성공 ${done} / 실패 ${failed} / 건너뜀 ${skipped} (개체 ${processed}/${targets.length})`, 'log-info');
+
+      _cRunning = false;
+      document.getElementById('btnCPreview').disabled = false;
+      document.getElementById('btnCTest').disabled     = false;
+      document.getElementById('btnCAll').disabled      = false;
+      document.getElementById('btnCStop').style.display = 'none';
     }
   </script>
 </body>
