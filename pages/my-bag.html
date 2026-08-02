@@ -58,7 +58,7 @@
 
   <footer class="footer"><p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; <a href="credits.html">운영진</a> &nbsp;·&nbsp; ver.2.1</p></footer>
 
-  <!-- 아이템 상세 모달 (소모품 전용) -->
+  <!-- 아이템 상세 모달 (프레임/스티커/소모품 공통) -->
   <div class="modal-overlay" id="bagDetailModal" style="display:none;" onclick="if(event.target===this)closeItemDetailModal()">
     <div class="shop-detail-card">
       <button class="shop-detail-close" onclick="closeItemDetailModal()">×</button>
@@ -66,12 +66,14 @@
       <div class="shop-detail-info">
         <div class="shop-detail-name-row">
           <p class="shop-detail-name" id="bagDetailName"></p>
+          <span class="shop-detail-credit" id="bagDetailCredit"></span>
         </div>
         <p class="shop-detail-desc" id="bagDetailDesc"></p>
+        <div id="bagDetailSpeciesLink"></div>
         <p class="shop-detail-condition" id="bagDetailCondition" style="display:none;"></p>
         <div class="shop-detail-footer">
           <span class="shop-detail-price" id="bagDetailQty"></span>
-          <a href="my-adoptions.html" class="shop-buy-btn-lg">내 분양에서 사용하기</a>
+          <div id="bagDetailAction"></div>
         </div>
       </div>
     </div>

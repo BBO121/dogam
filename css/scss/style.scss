@@ -6360,6 +6360,24 @@ button.btn-more {
   white-space: pre-line;
 }
 
+/* 종족 아이템 → 종족 페이지 이동 버튼 (작은 pill) */
+.shop-detail-species-link {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--sky-pale);
+  color: var(--text-sub);
+  font-size: 11px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.shop-detail-species-link:hover {
+  background: var(--sky-light);
+}
+
 /* 사용 조건 안내 — 상점/가방 상세 모달, 확인 모달 공통 (범프 티켓 등) */
 .shop-detail-condition {
   font-size: 12px;

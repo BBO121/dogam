@@ -15,6 +15,13 @@ function formatShopName(name) {
   return name.replace(/^(분양 끌올 티켓) /, '$1<br>');
 }
 
+// 카드(썸네일) 전용: "메어나이트(1/2)(Marenight)"는 괄호 앞에서 줄바꿈해
+// 다른 아이템과 박스 높이를 맞춤. 상세 모달에서는 줄바꿈하지 않음.
+function formatShopNameThumb(name) {
+  return formatShopName(name)
+    .replace(/^(메어나이트\d?)\(Marenight\)$/, '$1<br>(Marenight)');
+}
+
 const TICKET_BUMP_CONDITION_HTML =
   '<strong>※ 사용 조건</strong><br>' +
   '내 분양글보다 최신 분양글이 20개 이상 등록되어 있을 때 사용할 수 있습니다.<br>' +
@@ -218,7 +225,7 @@ function renderThumb(item) {
         ${previewHtml}
       </div>
       ${adminOnlyBadge ? `<div class="shop-thumb-badge-row">${adminOnlyBadge}</div>` : ''}
-      <p class="shop-thumb-name">${formatShopName(item.name)}</p>
+      <p class="shop-thumb-name">${formatShopNameThumb(item.name)}</p>
       ${statusHtml}
     </div>`;
 }
@@ -238,6 +245,14 @@ function openDetailModal(item) {
 
   document.getElementById('detailName').innerHTML    = formatShopName(item.name);
   document.getElementById('detailDesc').textContent  = item.description || '';
+
+  const speciesLinkEl = document.getElementById('detailSpeciesLink');
+  if (item.species_link_id) {
+    const speciesName = item.name.replace(/\d+(?=\()/, '');
+    speciesLinkEl.innerHTML = `<a class="shop-detail-species-link" href="species.html?id=${item.species_link_id}">${speciesName} ㅣ 종족주 : ${item.credit || ''}</a>`;
+  } else {
+    speciesLinkEl.innerHTML = '';
+  }
 
   const conditionEl = document.getElementById('detailCondition');
   if (item.item_key === 'ticket-bump') {

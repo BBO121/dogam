@@ -31,6 +31,14 @@ const TYPE_LABEL = {
   consumable:   '아이템',
 };
 
+// 카드(썸네일) 전용: 이름이 길어 박스가 커지는 걸 막기 위해 정해진 위치에서 줄바꿈
+// (상점 shop.js의 formatShopNameThumb와 동일 규칙 — 상세 모달에는 적용하지 않음)
+function formatBagNameThumb(name) {
+  return name
+    .replace(/^(분양 끌올 티켓) /, '$1<br>')
+    .replace(/^(메어나이트\d?)\(Marenight\)$/, '$1<br>(Marenight)');
+}
+
 // ── 초기화 ──────────────────────────────────────────────
 async function initPage() {
   try {
@@ -86,23 +94,22 @@ async function loadData() {
   console.log('[my-bag] item_id 목록:', itemIds);
 
   const { data: shopItemsData, error: shopErr } = await sb.from('shop_items')
-    .select('id, name, description, item_type, style_key, image_url, sub_category, sort_order')
+    .select('id, name, description, item_type, style_key, image_url, sub_category, sort_order, credit, species_link_id')
     .in('id', itemIds)
     .order('sort_order', { ascending: true })
     .order('created_at',  { ascending: true });
 
   console.log('[my-bag] shop_items 조회 결과:', shopItemsData, '에러:', shopErr);
 
-  const shopMap = {};
-  (shopItemsData || []).forEach(item => { shopMap[item.id] = item; });
+  const userItemMap = {};
+  userItems.forEach(row => { userItemMap[row.item_id] = row; });
 
   // _itemsByType = { type: { sub_category: [items] } }
-  userItems.forEach(row => {
-    const item = shopMap[row.item_id];
-    if (!item) {
-      console.warn('[my-bag] item_id에 해당하는 shop_items 없음:', row.item_id);
-      return;
-    }
+  // shopItemsData가 sort_order 순으로 정렬되어 있으므로 이 순서를 그대로 따라가면
+  // 상점 페이지와 동일한 카테고리/아이템 순서가 됨 (구매 순서에 의존하지 않음)
+  (shopItemsData || []).forEach(item => {
+    const row = userItemMap[item.id];
+    if (!row) return;
     const type = item.item_type || 'etc';
     const sub  = item.sub_category || '기본';
     if (!_itemsByType[type])      _itemsByType[type] = {};
@@ -275,20 +282,20 @@ function renderBagItem(item, type) {
   if (type === 'frame') {
     actionHtml = isEquipped
       ? `<span class="shop-thumb-status shop-status--owned">착용중</span>`
-      : `<button class="bag-equip-btn-sm" data-item-id="${item.id}" onclick="equipFrame('${item.id}')">착용하기</button>`;
+      : `<button class="bag-equip-btn-sm" data-item-id="${item.id}" onclick="event.stopPropagation(); equipFrame('${item.id}')">착용하기</button>`;
   } else if (type === 'sticker') {
     actionHtml = isEquipped
       ? `<span class="shop-thumb-status shop-status--owned">착용중</span>`
-      : `<button class="bag-equip-btn-sm" data-item-id="${item.id}" onclick="equipSticker('${item.id}')">착용하기</button>`;
+      : `<button class="bag-equip-btn-sm" data-item-id="${item.id}" onclick="event.stopPropagation(); equipSticker('${item.id}')">착용하기</button>`;
   } else if (type === 'consumable') {
     actionHtml = `<span class="shop-thumb-status shop-status--owned">보유 ${item.quantity ?? 0}장</span>`;
   } else {
     actionHtml = `<span class="shop-thumb-status shop-status--owned">보유중</span>`;
   }
 
-  // 소모품(범프 티켓 등)은 카드 클릭 시 상세 모달 오픈
+  // 카드 클릭 시 상세 모달 오픈 (착용 버튼 클릭은 stopPropagation으로 분리)
   const itemJson = JSON.stringify(item).replace(/'/g, "\\'");
-  const clickAttr = type === 'consumable' ? ` onclick='openItemDetailModal(${itemJson})'` : '';
+  const clickAttr = ` onclick='openItemDetailModal(${itemJson})'`;
 
   return `
     <div class="bag-item-card${isEquipped ? ' bag-item-card--equipped' : ''}"${clickAttr}>
@@ -296,7 +303,7 @@ function renderBagItem(item, type) {
         ${badgeHtml}
         ${previewHtml}
       </div>
-      <p class="bag-item-name">${item.name}</p>
+      <p class="bag-item-name">${formatBagNameThumb(item.name)}</p>
       <div class="bag-item-action">${actionHtml}</div>
     </div>`;
 }
@@ -306,14 +313,32 @@ const TICKET_BUMP_CONDITION_HTML =
   '내 분양글보다 최신 분양글이 20개 이상 등록되어 있을 때 사용할 수 있습니다.<br>' +
   '사용 시 해당 분양글이 분양 목록 최상단으로 이동합니다.';
 
-// ── 아이템 상세 모달 (소모품 전용 — 프레임/스티커는 카드 내 버튼으로 바로 처리) ──
+// ── 아이템 상세 모달 (프레임/스티커/소모품 공통) ──
 function openItemDetailModal(item) {
+  const type = item.item_type;
+  const isEquipped = type === 'frame'
+    ? item.id === _equippedFrameId
+    : type === 'sticker'
+      ? item.id === _equippedStickerId
+      : false;
+
   document.getElementById('bagDetailName').textContent = item.name;
   document.getElementById('bagDetailDesc').textContent = item.description || '';
-  document.getElementById('bagDetailQty').textContent  = `보유 ${item.quantity ?? 0}장`;
   document.getElementById('bagDetailPreview').innerHTML = item.image_url
-    ? `<img src="${item.image_url}" alt="${item.name}" style="width:100%;height:100%;object-fit:cover;">`
+    ? `<img src="${item.image_url}" alt="${item.name}" style="width:100%;height:100%;object-fit:${type === 'sticker' ? 'contain' : 'cover'};">`
     : '';
+
+  const creditEl = document.getElementById('bagDetailCredit');
+  creditEl.textContent   = item.credit ? `Design by ${item.credit}` : '';
+  creditEl.style.display = item.credit ? '' : 'none';
+
+  const speciesLinkEl = document.getElementById('bagDetailSpeciesLink');
+  if (item.species_link_id) {
+    const speciesName = item.name.replace(/\d+(?=\()/, '');
+    speciesLinkEl.innerHTML = `<a class="shop-detail-species-link" href="species.html?id=${item.species_link_id}">${speciesName} ㅣ 종족주 : ${item.credit || ''}</a>`;
+  } else {
+    speciesLinkEl.innerHTML = '';
+  }
 
   const conditionEl = document.getElementById('bagDetailCondition');
   if (item.item_key === 'ticket-bump') {
@@ -321,6 +346,25 @@ function openItemDetailModal(item) {
     conditionEl.style.display = '';
   } else {
     conditionEl.style.display = 'none';
+  }
+
+  const qtyEl    = document.getElementById('bagDetailQty');
+  const actionEl = document.getElementById('bagDetailAction');
+
+  if (type === 'consumable') {
+    qtyEl.style.display = '';
+    qtyEl.textContent    = `보유 ${item.quantity ?? 0}장`;
+    actionEl.innerHTML   = `<a href="my-adoptions.html" class="shop-buy-btn-lg">내 분양에서 사용하기</a>`;
+  } else if (type === 'frame' || type === 'sticker') {
+    qtyEl.style.display = 'none';
+    qtyEl.textContent    = '';
+    actionEl.innerHTML  = isEquipped
+      ? `<span class="shop-detail-status shop-status--owned">착용중</span>`
+      : `<button class="shop-buy-btn-lg" onclick="${type === 'frame' ? 'equipFrameFromModal' : 'equipStickerFromModal'}('${item.id}')">착용하기</button>`;
+  } else {
+    qtyEl.style.display = 'none';
+    qtyEl.textContent    = '';
+    actionEl.innerHTML   = `<span class="shop-detail-status shop-status--owned">보유중</span>`;
   }
 
   document.getElementById('bagDetailModal').style.display = 'flex';
@@ -366,6 +410,18 @@ async function equipFrame(itemId) {
   renderBag();
 }
 
+// ── 프레임 장착 (상세 모달 전용) ──────────────────────────
+async function equipFrameFromModal(itemId) {
+  const { data, error } = await sb.rpc('equip_frame', { p_item_id: itemId });
+  if (error || !data?.success) {
+    alert('장착 중 오류가 발생했습니다.');
+    return;
+  }
+  _equippedFrameId = data.equipped_frame_id;
+  closeItemDetailModal();
+  renderBag();
+}
+
 // ── 스티커 해제 ──────────────────────────────────────────
 async function unequipSticker() {
   document.querySelectorAll('.bag-unequip-btn').forEach(btn => {
@@ -401,6 +457,18 @@ async function equipSticker(itemId) {
   }
 
   _equippedStickerId = data.equipped_sticker_id;
+  renderBag();
+}
+
+// ── 스티커 장착 (상세 모달 전용) ─────────────────────────
+async function equipStickerFromModal(itemId) {
+  const { data, error } = await sb.rpc('equip_sticker', { p_item_id: itemId });
+  if (error || !data?.success) {
+    alert('장착 중 오류가 발생했습니다.');
+    return;
+  }
+  _equippedStickerId = data.equipped_sticker_id;
+  closeItemDetailModal();
   renderBag();
 }
 
