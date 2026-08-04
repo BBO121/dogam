@@ -5,6 +5,7 @@ let _qtyByKey    = {};   // item_key → 보유 수량 (stackable 아이템 잔�
 let _pendingItem = null;
 let _allItems    = [];
 let _activeTab   = 'item'; // 'item' | 'decorate'
+let _showSensitive = localStorage.getItem('shopShowSensitive') === 'true';
 
 const TAB_ITEM_TYPES = {
   item:     ['consumable'],
@@ -66,6 +67,14 @@ async function initPage() {
       document.querySelectorAll('#shopTabRow .shop-tab-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       _activeTab = btn.dataset.tab;
+      renderCategories();
+    });
+
+    const sensitiveToggle = document.getElementById('shopSensitiveToggle');
+    sensitiveToggle.checked = _showSensitive;
+    sensitiveToggle.addEventListener('change', () => {
+      _showSensitive = sensitiveToggle.checked;
+      localStorage.setItem('shopShowSensitive', String(_showSensitive));
       renderCategories();
     });
 
@@ -150,6 +159,35 @@ function renderCategories() {
   }).join('');
 }
 
+// ── 민감한 요소 가림 썸네일 ──────────────────────────────
+const SENSITIVE_PLACEHOLDER_HTML =
+  '<div class="shop-sensitive-placeholder">' +
+  '<span class="shop-sensitive-placeholder-icon">⚠</span>' +
+  '<span class="shop-sensitive-placeholder-label">민감한 요소</span>' +
+  '</div>';
+
+// 상세 모달용 — 안내 문구 포함 (카드 썸네일은 공간이 좁아 문구 없이 유지)
+const SENSITIVE_PLACEHOLDER_LARGE_HTML =
+  '<div class="shop-sensitive-placeholder">' +
+  '<span class="shop-sensitive-placeholder-icon">⚠</span>' +
+  '<span class="shop-sensitive-placeholder-label">민감한 요소</span>' +
+  '<span class="shop-sensitive-placeholder-hint">상단의 ‘민감한 요소 보이기’ 설정에서 표시할 수 있습니다.</span>' +
+  '</div>';
+
+// 토글 OFF && is_sensitive 상품만 이미지 자리에 가림 화면을 대신 렌더링
+function buildPreviewHtml(item, { large = false } = {}) {
+  if (item.is_sensitive && !_showSensitive) {
+    return large ? SENSITIVE_PLACEHOLDER_LARGE_HTML : SENSITIVE_PLACEHOLDER_HTML;
+  }
+  if (item.style_key && item.item_type !== 'sticker') {
+    return `<div class="frame-preview ${large ? 'frame-preview--lg ' : ''}${item.style_key}"></div>`;
+  }
+  if (!item.image_url) return '';
+  return large
+    ? `<img src="${item.image_url}" alt="${item.name}" style="width:100%;height:100%;object-fit:${item.item_type === 'sticker' ? 'contain' : 'cover'};">`
+    : `<img src="${item.image_url}" alt="${item.name}"${item.item_type === 'sticker' ? ' class="shop-sticker-img"' : ''}>`;
+}
+
 // ── 가격 HTML 생성 (이중 통화 지원) ────────────────────────
 function buildPriceHtml(item, discountHtml = '') {
   const curIcon = CURRENCY_ICON[item.currency] ?? CURRENCY_LABEL[item.currency] ?? item.currency;
@@ -196,11 +234,7 @@ function renderThumb(item) {
     ? `<span class="shop-thumb-badge shop-badge--coming shop-thumb-badge--static">관리자 전용(비공개)</span>`
     : '';
 
-  const previewHtml = item.style_key && item.item_type !== 'sticker'
-    ? `<div class="frame-preview ${item.style_key}"></div>`
-    : item.image_url
-      ? `<img src="${item.image_url}" alt="${item.name}"${item.item_type === 'sticker' ? ' class="shop-sticker-img"' : ''}>`
-      : '';
+  const previewHtml = buildPreviewHtml(item);
 
   const hasDiscount = item.original_price && item.original_price > item.price;
   const discountHtml = hasDiscount
@@ -237,11 +271,7 @@ function openDetailModal(item) {
   const curIcon  = CURRENCY_ICON[item.currency] ?? CURRENCY_LABEL[item.currency] ?? item.currency;
 
   const previewEl = document.getElementById('detailPreview');
-  previewEl.innerHTML = item.style_key && item.item_type !== 'sticker'
-    ? `<div class="frame-preview frame-preview--lg ${item.style_key}"></div>`
-    : item.image_url
-      ? `<img src="${item.image_url}" alt="${item.name}" style="width:100%;height:100%;object-fit:${item.item_type === 'sticker' ? 'contain' : 'cover'};">`
-      : '';
+  previewEl.innerHTML = buildPreviewHtml(item, { large: true });
 
   document.getElementById('detailName').innerHTML    = formatShopName(item.name);
   document.getElementById('detailDesc').textContent  = item.description || '';

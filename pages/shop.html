@@ -38,10 +38,19 @@
           </div>
         </div>
 
-        <!-- 상점 탭 -->
-        <div class="shop-tab-row" id="shopTabRow">
-          <button class="shop-tab-btn active" data-tab="item">아이템</button>
-          <button class="shop-tab-btn" data-tab="decorate">꾸미기</button>
+        <!-- 상점 탭 + 민감한 요소 토글 -->
+        <div class="shop-tab-bar">
+          <div class="shop-tab-row" id="shopTabRow">
+            <button class="shop-tab-btn active" data-tab="item">아이템</button>
+            <button class="shop-tab-btn" data-tab="decorate">꾸미기</button>
+          </div>
+          <label class="shop-sensitive-toggle" for="shopSensitiveToggle">
+            <span class="shop-sensitive-toggle-label">민감한 요소 보이기</span>
+            <span class="switch">
+              <input type="checkbox" id="shopSensitiveToggle">
+              <span class="switch-slider"></span>
+            </span>
+          </label>
         </div>
 
         <!-- 카테고리 목록 (JS 렌더) -->
