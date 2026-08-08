@@ -352,12 +352,24 @@
         document.getElementById('guideSection').style.display = '';
       }
 
-      // 소속 개체
-      const { data: chars } = await sb
-        .from('characters')
-        .select('id, name, species_name, owner_nickname, owner_user_id, image_url, thumbnail_url, created_at, is_sensitive, sensitive_note, char_categories, char_number')
-        .eq('species_name', s.name)
-        .order('created_at', { ascending: false });
+      // 소속 개체 (1000행 제한을 넘는 종족도 전부 가져오도록 페이지네이션)
+      const chars = [];
+      {
+        const pageSize = 1000;
+        let from = 0;
+        while (true) {
+          const { data: page } = await sb
+            .from('characters')
+            .select('id, name, species_name, owner_nickname, owner_user_id, image_url, thumbnail_url, created_at, is_sensitive, sensitive_note, char_categories, char_number')
+            .eq('species_name', s.name)
+            .order('created_at', { ascending: false })
+            .range(from, from + pageSize - 1);
+          if (!page || !page.length) break;
+          chars.push(...page);
+          if (page.length < pageSize) break;
+          from += pageSize;
+        }
+      }
 
       allChars = chars || [];
       renderCategoryFilter();
