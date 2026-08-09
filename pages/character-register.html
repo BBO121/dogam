@@ -505,9 +505,23 @@
       const speciesName = speciesSelect.options[speciesSelect.selectedIndex]?.dataset?.name;
       if (!speciesName) { charSelect.innerHTML = '<option value="">개체 선택</option>'; return; }
       charSelect.innerHTML = '<option value="">불러오는 중...</option>';
-      const { data } = await sb.from('characters').select('id, name').eq('species_name', speciesName).order('name');
+
+      const pageSize = 1000;
+      let from = 0;
+      let allChars = [];
+      while (true) {
+        const { data, error } = await sb.from('characters').select('id, name')
+          .eq('species_name', speciesName).order('name')
+          .range(from, from + pageSize - 1);
+        if (error) { console.error('관계 설정 개체 목록 로드 실패:', error); break; }
+        if (!data || data.length === 0) break;
+        allChars.push(...data);
+        if (data.length < pageSize) break;
+        from += pageSize;
+      }
+
       charSelect.innerHTML = '<option value="">개체 선택</option>' +
-        (data || []).map(c => `<option value="${c.id}" data-name="${c.name}">${c.name}</option>`).join('');
+        allChars.map(c => `<option value="${c.id}" data-name="${c.name}">${c.name}</option>`).join('');
     }
 
     function collectSections() {
