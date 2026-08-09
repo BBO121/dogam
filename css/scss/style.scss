@@ -6143,6 +6143,19 @@ button.btn-more {
    상점
 ═══════════════════════════════════════ */
 
+/* 상점 탭 바 (탭 + 민감한 요소 토글을 양 끝으로 배치) */
+.shop-tab-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 14px;
+}
+.shop-tab-bar .shop-tab-row {
+  margin-top: 0;
+}
+
 /* 상점 탭 (폴더 인덱스 느낌) */
 .shop-tab-row {
   display: flex;
