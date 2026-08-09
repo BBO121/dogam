@@ -26,3 +26,6 @@ backup/
 # 의존성 / 로컬 툴 상태
 node_modules/
 supabase/.temp/
+
+# 대량 이전 스크립트 결과 (닉네임 등 개인정보 포함 — 커밋 금지)
+scripts/tails-transfer/output/

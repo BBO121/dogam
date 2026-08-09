@@ -17,5 +17,9 @@
   "bugs": {
     "url": "https://github.com/BBO121/dogam/issues"
   },
-  "homepage": "https://github.com/BBO121/dogam#readme"
+  "homepage": "https://github.com/BBO121/dogam#readme",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.2",
+    "dotenv": "^17.4.2"
+  }
 }
