@@ -278,7 +278,7 @@ function openDetailModal(item) {
 
   const speciesLinkEl = document.getElementById('detailSpeciesLink');
   if (item.species_link_id) {
-    const speciesName = item.name.replace(/\d+(?=\()/, '');
+    const speciesName = item.name.replace(/\d+(?=\()|\d+$/, '');
     speciesLinkEl.innerHTML = `<a class="shop-detail-species-link" href="species.html?id=${item.species_link_id}">${speciesName} ㅣ 종족주 : ${item.credit || ''}</a>`;
   } else {
     speciesLinkEl.innerHTML = '';

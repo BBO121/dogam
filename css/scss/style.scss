@@ -867,6 +867,14 @@
     border-radius: 0;
 }
 
+.profile-avatar-wrap.frame-sp-tails::after {
+    border: none;
+    inset: -13.0208%;
+    background-image: url('../images/shop/frame_sp_tails.png');
+    background-size: 100% 100%;
+    border-radius: 0;
+}
+
 .profile-avatar-wrap.frame-li-bbo::after {
     border: none;
     inset: -13.0208%;
@@ -6279,6 +6287,7 @@ button.btn-more {
 .frame-preview.frame-ai-shark2       { border: none; background-image: url('../images/shop/frame_ai_shark2.png');   background-size: cover; background-position: center; }
 .frame-preview.frame-ai-gerong       { border: none; background-image: url('../images/shop/frame_ai_gerong.png');   background-size: cover; background-position: center; }
 .frame-preview.frame-sp-marenight    { border: none; background-image: url('../images/shop/frame_sp_marenight.png'); background-size: cover; background-position: center; }
+.frame-preview.frame-sp-tails        { border: none; background-image: url('../images/shop/frame_sp_tails.png');     background-size: cover; background-position: center; }
 .frame-preview.frame-li-bbo          { border: none; background-image: url('../images/shop/frame_li_bbo.png');      background-size: cover; background-position: center; }
 
 /* 상품 상세 모달 */
@@ -6739,6 +6748,9 @@ button.btn-more {
 .bag-ep-preview-wrap.frame-sp-marenight          { overflow: visible; }
 .bag-ep-preview-wrap.frame-sp-marenight .bag-ep-avatar { border-radius: 20px; overflow: hidden; }
 .bag-ep-preview-wrap.frame-sp-marenight::after    { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_sp_marenight.png'); background-size: 100% 100%; border-radius: 0; }
+.bag-ep-preview-wrap.frame-sp-tails              { overflow: visible; }
+.bag-ep-preview-wrap.frame-sp-tails .bag-ep-avatar { border-radius: 20px; overflow: hidden; }
+.bag-ep-preview-wrap.frame-sp-tails::after        { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_sp_tails.png');     background-size: 100% 100%; border-radius: 0; }
 .bag-ep-preview-wrap.frame-li-bbo                { overflow: visible; }
 .bag-ep-preview-wrap.frame-li-bbo .bag-ep-avatar  { border-radius: 20px; overflow: hidden; }
 .bag-ep-preview-wrap.frame-li-bbo::after          { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_li_bbo.png');      background-size: 100% 100%; border-radius: 0; }
@@ -6829,6 +6841,7 @@ button.btn-more {
 .bag-ep-frame-wrap.frame-ai-shark2::after       { border: none; background-image: url('../images/shop/frame_ai_shark2.png');   background-size: cover; background-position: center; }
 .bag-ep-frame-wrap.frame-ai-gerong::after       { border: none; background-image: url('../images/shop/frame_ai_gerong.png');   background-size: cover; background-position: center; }
 .bag-ep-frame-wrap.frame-sp-marenight::after    { border: none; background-image: url('../images/shop/frame_sp_marenight.png'); background-size: cover; background-position: center; }
+.bag-ep-frame-wrap.frame-sp-tails::after        { border: none; background-image: url('../images/shop/frame_sp_tails.png');     background-size: cover; background-position: center; }
 .bag-ep-frame-wrap.frame-li-bbo::after          { border: none; background-image: url('../images/shop/frame_li_bbo.png');      background-size: cover; background-position: center; }
 
 .bag-ep-avatar {
@@ -7221,6 +7234,7 @@ button.btn-more {
 .deco-modal-frame-preview.frame-ai-shark2       { border: none; background-image: url('../images/shop/frame_ai_shark2.png');   background-size: cover; background-position: center; }
 .deco-modal-frame-preview.frame-ai-gerong       { border: none; background-image: url('../images/shop/frame_ai_gerong.png');   background-size: cover; background-position: center; }
 .deco-modal-frame-preview.frame-sp-marenight    { border: none; background-image: url('../images/shop/frame_sp_marenight.png'); background-size: cover; background-position: center; }
+.deco-modal-frame-preview.frame-sp-tails        { border: none; background-image: url('../images/shop/frame_sp_tails.png');     background-size: cover; background-position: center; }
 .deco-modal-frame-preview.frame-li-bbo          { border: none; background-image: url('../images/shop/frame_li_bbo.png');      background-size: cover; background-position: center; }
 
 .deco-modal-sticker-img {
