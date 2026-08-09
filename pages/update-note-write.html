@@ -139,44 +139,87 @@
         ],
       },
     });
+    const QuillDelta = Quill.import('delta');
 
-    /* ── 이미지 업로드 핸들러 (Supabase Storage) ── */
+    /* ── 이미지 업로드 (Supabase Storage) — 파일선택/Ctrl+V/drag&drop 모두 이 함수로 수렴 ── */
+    async function uploadBoardImage(file) {
+      const allowed = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+      if (!allowed.includes(file.type)) throw new Error('PNG, JPG, WebP, GIF 형식만 업로드 가능해요.');
+      if (file.size > 10 * 1024 * 1024) throw new Error('이미지는 10MB 이하여야 해요.');
+      const status = document.getElementById('imgUploadStatus');
+      status.textContent = '이미지 업로드 중...';
+      document.getElementById('writeError').textContent = '';
+      const dotIdx = file.name.lastIndexOf('.');
+      const ext = dotIdx > -1 ? file.name.slice(dotIdx + 1).toLowerCase() : 'jpg';
+      const path = `board-images/updates/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await sb.storage.from('images').upload(path, file, { contentType: file.type });
+      status.textContent = '';
+      if (error) throw new Error('이미지 업로드 실패: ' + error.message);
+      const { data: urlData } = sb.storage.from('images').getPublicUrl(path);
+      return urlData.publicUrl;
+    }
+
+    async function insertBoardImageFile(file) {
+      if (!file || !file.type || !file.type.startsWith('image/')) return;
+      try {
+        const url   = await uploadBoardImage(file);
+        const range = quill.getSelection(true) || { index: quill.getLength() };
+        quill.insertEmbed(range.index, 'image', url, 'user');
+        quill.setSelection(range.index + 1, 0, 'silent');
+      } catch (err) {
+        document.getElementById('writeError').textContent = err.message || '이미지 업로드에 실패했어요.';
+      }
+    }
+
     quill.getModule('toolbar').addHandler('image', () => {
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = 'image/png,image/jpeg,image/webp,image/gif';
+      input.addEventListener('change', () => insertBoardImageFile(input.files[0]));
       input.click();
-      input.addEventListener('change', async () => {
-        const file = input.files[0];
-        if (!file) return;
-        const allowed = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
-        if (!allowed.includes(file.type)) {
-          document.getElementById('writeError').textContent = 'PNG, JPG, WebP, GIF 형식만 업로드 가능해요.';
-          return;
-        }
-        if (file.size > 10 * 1024 * 1024) {
-          document.getElementById('writeError').textContent = '이미지는 10MB 이하여야 해요.';
-          return;
-        }
-        const status = document.getElementById('imgUploadStatus');
-        status.textContent = '이미지 업로드 중...';
-        document.getElementById('writeError').textContent = '';
-        const dotIdx = file.name.lastIndexOf('.');
-        const ext = dotIdx > -1 ? file.name.slice(dotIdx + 1).toLowerCase() : 'jpg';
-        const path = `board-images/updates/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
-        const { error } = await sb.storage.from('images').upload(path, file, { contentType: file.type });
-        if (error) {
-          status.textContent = '';
-          document.getElementById('writeError').textContent = '이미지 업로드 실패: ' + error.message;
-          return;
-        }
-        const { data: urlData } = sb.storage.from('images').getPublicUrl(path);
-        const range = quill.getSelection(true);
-        quill.insertEmbed(range.index, 'image', urlData.publicUrl, 'user');
-        quill.setSelection(range.index + 1, 0, 'silent');
-        status.textContent = '';
-      });
     });
+
+    // 이미지 자체를 붙여넣는 경우: Quill 기본 base64 변환 전에 가로채서 업로드로 대체
+    quill.root.addEventListener('paste', (e) => {
+      const items = e.clipboardData?.items || [];
+      for (const item of items) {
+        if (item.type && item.type.startsWith('image/')) {
+          e.preventDefault();
+          e.stopPropagation();
+          insertBoardImageFile(item.getAsFile());
+          return;
+        }
+      }
+    }, true);
+
+    // 이미지 파일 드래그앤드롭
+    quill.root.addEventListener('drop', (e) => {
+      const file = e.dataTransfer?.files?.[0];
+      if (file && file.type && file.type.startsWith('image/')) {
+        e.preventDefault();
+        e.stopPropagation();
+        insertBoardImageFile(file);
+      }
+    });
+
+    // 다른 사이트/문서에서 복사한 HTML 안에 data:/blob: 이미지가 섞여 들어오는 경우 삽입 자체를 차단
+    quill.clipboard.addMatcher('IMG', (node, delta) => {
+      const src = node.getAttribute('src') || '';
+      if (src.startsWith('data:') || src.startsWith('blob:')) return new QuillDelta();
+      return delta;
+    });
+
+    // 저장 직전 방어 필터: data:/blob: 이미지만 확실히 제거 (외부 https 이미지는 허용)
+    function stripUnsafeImages(html) {
+      if (!html) return html;
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      div.querySelectorAll('img').forEach(img => {
+        const src = img.getAttribute('src') || '';
+        if (src.startsWith('data:') || src.startsWith('blob:')) img.remove();
+      });
+      return div.innerHTML;
+    }
 
     const editId = new URLSearchParams(window.location.search).get('edit');
 
@@ -207,7 +250,7 @@
       e.preventDefault();
 
       const title    = document.getElementById('noteTitle').value.trim();
-      const content  = quill.root.innerHTML.trim();
+      const content  = stripUnsafeImages(quill.root.innerHTML.trim());
       const isEmpty  = quill.getText().trim().length === 0;
       const isPinned = document.getElementById('isPinned').checked;
       const errorEl  = document.getElementById('writeError');

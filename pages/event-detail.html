@@ -80,6 +80,19 @@
   <script src="../js/achievements.js"></script>
   <script src="../js/main.js"></script>
   <script>
+    // 리치텍스트 렌더링 직전 방어: data:/blob: 이미지만 제거 (Storage URL 등 외부 https 이미지는 그대로 표시)
+    // DOMPurify 기본 설정은 img의 data: URI를 막지 않으므로, sanitize와 별개로 이 필터를 함께 적용한다.
+    function stripUnsafeRenderedImages(html) {
+      if (!html) return html;
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      div.querySelectorAll('img').forEach(img => {
+        const src = img.getAttribute('src') || '';
+        if (src.startsWith('data:') || src.startsWith('blob:')) img.remove();
+      });
+      return div.innerHTML;
+    }
+
     async function initPage() {
       const params = new URLSearchParams(window.location.search);
       const id = params.get('id');
@@ -118,7 +131,7 @@
       }).replace(/\. /g, '.').replace(/\.$/, '');
       document.getElementById('detailDate').textContent = date;
 
-      document.getElementById('detailContent').innerHTML = DOMPurify.sanitize(data.content, {
+      document.getElementById('detailContent').innerHTML = DOMPurify.sanitize(stripUnsafeRenderedImages(data.content), {
         ADD_TAGS: ['img'],
         ADD_ATTR: ['src', 'alt', 'style', 'class', 'width', 'height'],
       });

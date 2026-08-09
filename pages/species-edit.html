@@ -414,14 +414,52 @@
       [{ list: 'ordered' },{ list: 'bullet' }],
       ['link','clean'],
     ];
+    // 이 페이지의 Quill 에디터들은 이미지 첨부 기능을 제공하지 않음(대표 이미지는 별도 uploadGuideImg로 처리) —
+    // Ctrl+V/drag&drop 이미지 삽입 및 HTML paste로 들어오는 data:/blob: img를 전부 차단한다.
+    const QuillDelta = Quill.import('delta');
+    function blockQuillImages(quill) {
+      quill.root.addEventListener('paste', (e) => {
+        const items = e.clipboardData?.items || [];
+        for (const item of items) {
+          if (item.type && item.type.startsWith('image/')) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+        }
+      }, true);
+      quill.root.addEventListener('drop', (e) => {
+        const file = e.dataTransfer?.files?.[0];
+        if (file && file.type && file.type.startsWith('image/')) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      });
+      quill.clipboard.addMatcher('IMG', () => new QuillDelta());
+    }
+
+    // 저장 직전 방어 필터: data:/blob: 이미지만 확실히 제거
+    function stripUnsafeImages(html) {
+      if (!html) return html;
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      div.querySelectorAll('img').forEach(img => {
+        const src = img.getAttribute('src') || '';
+        if (src.startsWith('data:') || src.startsWith('blob:')) img.remove();
+      });
+      return div.innerHTML;
+    }
+
     function makeQuill(el, placeholder = '내용을 입력하세요') {
-      return new Quill(el, { theme:'snow', placeholder, modules:{ toolbar: QUILL_TOOLBAR } });
+      const quill = new Quill(el, { theme:'snow', placeholder, modules:{ toolbar: QUILL_TOOLBAR } });
+      blockQuillImages(quill);
+      return quill;
     }
     function getQuillContent(block) {
       const c = block.querySelector('.ql-container');
       if (!c) return '';
       const q = Quill.find(c);
-      return q && q.getLength() > 1 ? q.root.innerHTML : '';
+      return q && q.getLength() > 1 ? stripUnsafeImages(q.root.innerHTML) : '';
     }
     function setQuillContent(block, html) {
       const c = block.querySelector('.ql-container');
@@ -975,7 +1013,7 @@
 
     async function submitEdit() {
       const name    = document.getElementById('speciesName').value.trim().normalize('NFC');
-      const desc    = descQuill.getLength() > 1 ? descQuill.root.innerHTML : '';
+      const desc    = descQuill.getLength() > 1 ? stripUnsafeImages(descQuill.root.innerHTML) : '';
       const errorEl = document.getElementById('formError');
       const btn     = document.getElementById('submitBtn');
 

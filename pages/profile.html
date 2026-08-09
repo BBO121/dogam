@@ -455,6 +455,44 @@
     const tosQuill = new Quill(document.getElementById('quill_editTos'), {
       theme:'snow', placeholder:'개인공지 또는 거래 조건을 입력해주세요', modules:{ toolbar: QUILL_TOOLBAR },
     });
+
+    // 이 에디터들은 이미지 첨부 기능을 제공하지 않음 — Ctrl+V/drag&drop 이미지 삽입 및
+    // HTML paste로 들어오는 data:/blob: img를 전부 차단한다 (신규 이미지 버튼은 추가하지 않음).
+    const QuillDelta = Quill.import('delta');
+    function blockQuillImages(quill) {
+      quill.root.addEventListener('paste', (e) => {
+        const items = e.clipboardData?.items || [];
+        for (const item of items) {
+          if (item.type && item.type.startsWith('image/')) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
+        }
+      }, true);
+      quill.root.addEventListener('drop', (e) => {
+        const file = e.dataTransfer?.files?.[0];
+        if (file && file.type && file.type.startsWith('image/')) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      });
+      quill.clipboard.addMatcher('IMG', () => new QuillDelta());
+    }
+    blockQuillImages(bioQuill);
+    blockQuillImages(tosQuill);
+
+    // 저장 직전 방어 필터: data:/blob: 이미지만 확실히 제거
+    function stripUnsafeImages(html) {
+      if (!html) return html;
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      div.querySelectorAll('img').forEach(img => {
+        const src = img.getAttribute('src') || '';
+        if (src.startsWith('data:') || src.startsWith('blob:')) img.remove();
+      });
+      return div.innerHTML;
+    }
     // ─────────────────────────────────────────
     const BIO_MAX = 300;
     const TOS_MAX = 2000;
@@ -1353,8 +1391,8 @@
     // 프로필 저장
     async function saveProfile() {
       const newDisplayName = document.getElementById('editDisplayName').value.trim().normalize('NFC');
-      const bio = bioQuill.getLength() > 1 ? bioQuill.root.innerHTML : '';
-      const tos = tosQuill.getLength() > 1 ? tosQuill.root.innerHTML : '';
+      const bio = bioQuill.getLength() > 1 ? stripUnsafeImages(bioQuill.root.innerHTML) : '';
+      const tos = tosQuill.getLength() > 1 ? stripUnsafeImages(tosQuill.root.innerHTML) : '';
       const btn = document.getElementById('editProfileBtn');
       const errorEl   = document.getElementById('editProfileError');
       const successEl = document.getElementById('editProfileSuccess');
