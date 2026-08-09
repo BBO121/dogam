@@ -1152,6 +1152,9 @@ button.btn-more {
   min-height: 480px;
   background: #F8FAFC;
   overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* 오른쪽 정보 패널 */

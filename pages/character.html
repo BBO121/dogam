@@ -466,10 +466,12 @@
       _stepImageMap  = {};
       _mainStepOrder = 1;
       _mainStepLabel = 'Step 1';
+      let hasStepSystem = false; // 이 종족이 성장 Step 기능을 쓰는지 — Step이 1개(대표만)여도 칩은 항상 보여준다.
       if (sp?.id) {
         const { data: steps } = await sb.from('species_steps').select('id, step_order, name').eq('species_id', sp.id).order('step_order');
         const allSteps = steps || [];
         if (allSteps.length >= 2) {
+          hasStepSystem = true;
           // 개체별 대표 Step(c.representative_step_id) 우선 — 우선순위가 설정된 종족(현재 융용)만 채워짐.
           // 하위 호환: 둘 다 없으면 step_order가 가장 낮은 Step을 대표 이미지 Step으로 처리
           const mainStepId = c.representative_step_id || sp.main_image_step_id || allSteps[0].id;
@@ -499,7 +501,7 @@
         }
       }
       _currentStep = _mainStepOrder;
-      const hasStepButtons = Object.keys(_stepImageMap).length > 0;
+      const hasStepButtons = hasStepSystem;
 
       const registeredDate = new Date(c.created_at).toLocaleDateString('ko-KR', {
         year: 'numeric', month: '2-digit', day: '2-digit'
@@ -553,8 +555,8 @@
             <div class="char-img-area">
               ${c.image_url
                 ? (c.is_sensitive
-                    ? `<div style="position:relative; overflow:hidden; border-radius:var(--radius);"><img id="charMainImg" src="${c.image_url}" alt="${c.name}" class="blurred" style="width:100%; height:auto; display:block;"><div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span>${c.sensitive_note ? '<span class="sensitive-overlay-note">' + c.sensitive_note + '</span>' : ''}<span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div></div>`
-                    : `<img id="charMainImg" src="${c.image_url}" alt="${c.name}" style="width:100%; height:auto; display:block;">`)
+                    ? `<div style="position:relative; overflow:hidden; border-radius:var(--radius); max-width:100%;"><img id="charMainImg" src="${c.image_url}" alt="${c.name}" class="blurred" style="max-width:100%; max-height:100%; width:auto; height:auto; display:block;"><div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span>${c.sensitive_note ? '<span class="sensitive-overlay-note">' + c.sensitive_note + '</span>' : ''}<span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div></div>`
+                    : `<img id="charMainImg" src="${c.image_url}" alt="${c.name}" style="max-width:100%; max-height:100%; width:auto; height:auto; display:block;">`)
                 : ''}
             </div>
             ${canViewOriginal ? `
