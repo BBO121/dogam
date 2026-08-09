@@ -1,0 +1,27 @@
+[
+  {
+    "char_number": "0338",
+    "url": "https://sq1222.wixsite.com/tails/post/338-수녀의-테일스",
+    "reason": "ability bracket/quote formatting looked reformatted by WebFetch (odd [능력:] then quoted text) - needs manual reverify against source"
+  },
+  {
+    "char_number": "0339",
+    "url": "https://sq1222.wixsite.com/tails/post/339-사신의-테일스",
+    "reason": "ability bracket formatting looked reformatted by WebFetch ([능력]: instead of [능력:...]) - needs manual reverify against source"
+  },
+  {
+    "char_number": "0363",
+    "url": "https://sq1222.wixsite.com/tails/post/363-딸기하트도넛의-테일스",
+    "reason": "WebFetch output twice used inconsistent 합니다체 register / quoted paraphrase-style formatting instead of matching established 다체 verbatim style seen in all other entries - suspected paraphrase even after 1 retry, needs manual verification against source"
+  },
+  {
+    "char_number": "0372",
+    "url": "https://sq1222.wixsite.com/tails/post/372-햄버거의-테일스",
+    "reason": "WebFetch failed twice (1 initial + 1 retry) - returned only title, no body content retrieved from source page"
+  },
+  {
+    "char_number": "0392",
+    "url": "https://sq1222.wixsite.com/tails/post/392-카라멜-푸딩의-테일스",
+    "reason": "WebFetch twice failed to produce verbatim Korean: attempt 1 mixed 합니다체 endings inconsistent with established 다체 style, attempt 2 returned full English translation - needs manual verification against source"
+  }
+]

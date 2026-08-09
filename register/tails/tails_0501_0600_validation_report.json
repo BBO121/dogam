@@ -1,0 +1,86 @@
+{
+  "total": 100,
+  "errors": [],
+  "issues": [
+    {
+      "ctx": "char_number=0533",
+      "field": "주식/분류",
+      "note": "주식:X/Y 패턴을 찾지 못함"
+    },
+    {
+      "ctx": "char_number=0533",
+      "field": "description",
+      "note": "'최근 게시물' 마커를 찾지 못함 (그대로 유지)"
+    },
+    {
+      "ctx": "char_number=0535",
+      "field": "주식/분류",
+      "note": "주식:X/Y 패턴을 찾지 못함"
+    },
+    {
+      "ctx": "char_number=0535",
+      "field": "description",
+      "note": "'최근 게시물' 마커를 찾지 못함 (그대로 유지)"
+    },
+    {
+      "ctx": "char_number=0540",
+      "field": "주식/분류",
+      "note": "주식:X/Y 패턴을 찾지 못함"
+    },
+    {
+      "ctx": "char_number=0540",
+      "field": "description",
+      "note": "'최근 게시물' 마커를 찾지 못함 (그대로 유지)"
+    },
+    {
+      "ctx": "char_number=0541",
+      "field": "능력",
+      "note": "원문에 닫는 대괄호 ']'가 없어 첫 문단을 능력으로 간주함 (원문 자체 누락, 확인 권장)"
+    },
+    {
+      "ctx": "char_number=0543",
+      "field": "주식/분류",
+      "note": "주식:X/Y 패턴을 찾지 못함"
+    },
+    {
+      "ctx": "char_number=0533",
+      "field": "주식",
+      "note": "주식 값이 비어있음"
+    },
+    {
+      "ctx": "char_number=0533",
+      "field": "분류",
+      "note": "분류 값이 \"데비스\"/\"에니스\"가 아님(신규 분류일 수 있음, 확인 필요): \"null\""
+    },
+    {
+      "ctx": "char_number=0535",
+      "field": "주식",
+      "note": "주식 값이 비어있음"
+    },
+    {
+      "ctx": "char_number=0535",
+      "field": "분류",
+      "note": "분류 값이 \"데비스\"/\"에니스\"가 아님(신규 분류일 수 있음, 확인 필요): \"null\""
+    },
+    {
+      "ctx": "char_number=0540",
+      "field": "주식",
+      "note": "주식 값이 비어있음"
+    },
+    {
+      "ctx": "char_number=0540",
+      "field": "분류",
+      "note": "분류 값이 \"데비스\"/\"에니스\"가 아님(신규 분류일 수 있음, 확인 필요): \"null\""
+    },
+    {
+      "ctx": "char_number=0543",
+      "field": "주식",
+      "note": "주식 값이 비어있음"
+    },
+    {
+      "ctx": "char_number=0543",
+      "field": "분류",
+      "note": "분류 값이 \"데비스\"/\"에니스\"가 아님(신규 분류일 수 있음, 확인 필요): \"null\""
+    }
+  ]
+}

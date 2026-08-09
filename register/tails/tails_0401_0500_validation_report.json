@@ -1,0 +1,23 @@
+{
+  "total": 100,
+  "errors": [
+    "char_number=0444: owner_nickname이 비어있음"
+  ],
+  "issues": [
+    {
+      "ctx": "char_number=0415",
+      "field": "description",
+      "note": "'최근 게시물' 마커를 찾지 못함 (그대로 유지)"
+    },
+    {
+      "ctx": "char_number=0444",
+      "field": "owner",
+      "note": "'파트너: ...' 패턴을 찾지 못함"
+    },
+    {
+      "ctx": "char_number=0475",
+      "field": "description",
+      "note": "'최근 게시물' 마커를 찾지 못함 (그대로 유지)"
+    }
+  ]
+}

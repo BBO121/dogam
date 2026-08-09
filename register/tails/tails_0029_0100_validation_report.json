@@ -1,0 +1,85 @@
+{
+  "total": 72,
+  "errors": [],
+  "issues": [
+    {
+      "ctx": "char_number=0100",
+      "field": "name vs url-slug",
+      "note": "제목/본문 개체명과 URL slug가 서로 다름 (검토 필요, 임의 수정하지 않음)",
+      "name": "블랙커피의 테일스",
+      "url": "https://sq1222.wixsite.com/tails/post/100-%EC%95%BC%EC%B1%84%ED%98%B8%EB%B9%B5%EC%9D%98-%ED%85%8C%EC%9D%BC%EC%8A%A4",
+      "slugName": "야채호빵의 테일스"
+    },
+    {
+      "ctx": "char_number=0100",
+      "field": "owner_nickname",
+      "note": "owner_nickname이 designer_nickname(슷큐)과 동일함 - 실제 파트너 추출이 안됐을 가능성, 검토 필요",
+      "owner": "슷큐"
+    },
+    {
+      "ctx": "char_number=0071",
+      "field": "name vs url-slug",
+      "note": "제목/본문 개체명과 URL slug가 서로 다름 (검토 필요, 임의 수정하지 않음)",
+      "name": "스코티시폴드의 테일스",
+      "url": "https://sq1222.wixsite.com/tails/post/71-%EC%8B%9C%EA%B0%84%EC%9D%98-%ED%85%8C%EC%9D%BC%EC%8A%A4",
+      "slugName": "시간의 테일스"
+    },
+    {
+      "ctx": "char_number=0071",
+      "field": "name vs 주식",
+      "note": "이름과 주식 표기가 정확히 일치하지 않음 (원문 그대로 보존, 확인 필요)",
+      "name": "스코티시폴드의 테일스",
+      "주식": "스코티시폴드의 털"
+    },
+    {
+      "ctx": "char_number=0070",
+      "field": "name vs 주식",
+      "note": "이름과 주식 표기가 정확히 일치하지 않음 (원문 그대로 보존, 확인 필요)",
+      "name": "야생의 테일스",
+      "주식": "야생에 있는 것"
+    },
+    {
+      "ctx": "char_number=0064",
+      "field": "name vs 주식",
+      "note": "이름과 주식 표기가 정확히 일치하지 않음 (원문 그대로 보존, 확인 필요)",
+      "name": "노르웨이 숲의 테일스",
+      "주식": "노르웨이 숲의 털"
+    },
+    {
+      "ctx": "char_number=0063",
+      "field": "name vs 주식",
+      "note": "이름과 주식 표기가 정확히 일치하지 않음 (원문 그대로 보존, 확인 필요)",
+      "name": "쥐의 테일스",
+      "주식": "쥐의 털"
+    },
+    {
+      "ctx": "char_number=0062",
+      "field": "name vs 주식",
+      "note": "이름과 주식 표기가 정확히 일치하지 않음 (원문 그대로 보존, 확인 필요)",
+      "name": "늑대의 테일스",
+      "주식": "늑대의 털"
+    },
+    {
+      "ctx": "char_number=0061",
+      "field": "name vs 주식",
+      "note": "이름과 주식 표기가 정확히 일치하지 않음 (원문 그대로 보존, 확인 필요)",
+      "name": "흰 양의 테일스",
+      "주식": "흰 양의 털"
+    },
+    {
+      "ctx": "raw idx 43",
+      "field": "crawl-error",
+      "note": "크롤링 실패 항목 - 수동 보충 데이터로 대체 예정",
+      "raw": {
+        "sourceTitle": "57.환상의 테일스",
+        "url": "https://sq1222.wixsite.com/tails/post/57-%ED%99%98%EC%83%81%EC%9D%98-%ED%85%8C%EC%9D%BC%EC%8A%A4",
+        "error": "본문 영역 없음"
+      }
+    },
+    {
+      "ctx": "char_number=0057",
+      "field": "주식/분류",
+      "note": "원문에 주식/분류 정보가 없어 null로 둠 (임의로 추측하지 않음) - 검증 필요 항목"
+    }
+  ]
+}

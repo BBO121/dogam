@@ -1,0 +1,1788 @@
+[
+  {
+    "name": "잭오랜턴의 테일스",
+    "species_name": "테일스",
+    "char_number": "0301",
+    "owner_nickname": "시즈키 히노",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "잭오랜턴",
+      "분류": "데비스",
+      "능력": "각기 다른 표정의 잭오랜턴을 만들어 낸다. 표정은 랜덤이며 잭오랜턴 안에는 형형색색의 사탕들이 담겨있다.가끔 잭오랜턴의 표정이 바뀌는 듯한 오싹한 기분이 들기도 한다."
+    },
+    "description": "잭오랜턴을 먹고 자란 테일스,평범한 호박도 이 테일스의 손을 거쳐가면 사악하게 웃고있는 잭오랜턴으로 재탄생 된다.말을 굉장히 짧게 하는 편으로 과묵하고 얌전하게 보일 수 있지만,장난끼가 가득한 악동으로 함께 지내면 골치아파진다.뒤집어 쓰고있는 호박때문에 눈매가 날카로워 보이지만 호박을 벗으면 의외로 순한 인상이다.호박 벗는걸 좋아하지 않는다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/301-잭오랜턴의-테일스"
+  },
+  {
+    "name": "미라의 테일스",
+    "species_name": "테일스",
+    "char_number": "0302",
+    "owner_nickname": "치베",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "미라의 천",
+      "분류": "데비스",
+      "능력": "날개의 끝자락에 삐져나와있는 붕대를 자유롭게 늘렸다 줄이며 자신의 손처럼 조종할 수 있다.이 붕대로 상대의 전신을 감싸면 급격하게 건조된다."
+    },
+    "description": "미라의 천을 먹고 자란 테일스,전신 대부분이 붕대에 가려져 보이지 않는다.본체의 입도 보이지 않지만 주식 섭취는 정상적으로 하는듯 하다.공허한 눈은 항상 빛이 나고 있으며 늘 움직이지 않고 가만히 있어 인형이나 소품으로 착각하는 사람도 있다.그래도 감정이 있는 생명체이기 때문에 자신이 믿는 사람에겐 먼저 다가가 곁에 앉는 모습도 보여준다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/302-미라의-테일스"
+  },
+  {
+    "name": "프랑켄슈타인의 테일스",
+    "species_name": "테일스",
+    "char_number": "0303",
+    "owner_nickname": "하보미",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "프랑켄슈타인 장난감",
+      "분류": "데비스",
+      "능력": "생명이 없는 것들을 이리저리 조합해 하나의 생명체로 만들어 내는 능력 만들어진 생명체는 자아를 가지고 있으며 그 누구의 명령도 듣지 않기 때문에 날뛰거나 밖으로 뛰쳐 나갈 수 있다.시간이 지나면 다시 각자의 형태로 분리되어 되돌아 간다."
+    },
+    "description": "프랑켄슈타인 장난감을 먹고 자란 테일스,어느 장난감 회사의 프랑켄슈타인 장난감을 몰래 훔쳐먹으며 자랐다.여기저기 다른 물질들로 덧대어 꿰맨 흔적들이 있으며 이는 다 다른 성질로 이뤄져 있다.머리쪽에 박힌 못에선 탁하고 알수없는 끈적한 액체가 흘러 나온다.눈에는 생기가 없으며 항상 다크서클이 진하게 자리잡고 있다.괴상한 외관과는 다르게 친절해서 처음보는 사람이여도 무언가 부탁하면 들어주려 노력한다.하지만 행동과 생각이 느리고 둔해서 오히려 사고를 치는 편",
+    "source_url": "https://sq1222.wixsite.com/tails/post/303-프랑켄슈타인의-테일스"
+  },
+  {
+    "name": "쁘띠좀비의 테일스",
+    "species_name": "테일스",
+    "char_number": "0304",
+    "owner_nickname": "슈나",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "망가진 고양이 인형",
+      "분류": "데비스",
+      "능력": "죽은 생명에게 짧은 시간동안 생명력을 불어넣어준다.최대 3명까지 가능하며 동식물사람 가리지 않고 생명체라면 모두 적용된다.하지만 미숙한 능력때문에 다시 부활한 대상은 제대로된 사고를 하지 못하고 마치 좀비처럼 흐느적 거리면서 걸어다닌다.\\"
+    },
+    "description": "망가진 고양이 인형을 먹고 자란 테일스,끈적한 잼같은 분홍액체를 온몸에 뭍히고 있다.곁에서는 인공적인 달달한 향기가 나며 전체적으로 인형처럼 폭신폭신 하다.애교가 많지만 집착이 심해 좋아하는 사람곁에 항상 붙어있으려 한다.본체 쪽엔 차가 밟고 지나간듯한 타이어 자국이 있다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/304-쁘띠좀비의-테일스"
+  },
+  {
+    "name": "묘지의 테일스",
+    "species_name": "테일스",
+    "char_number": "0305",
+    "owner_nickname": "멍",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "묘지",
+      "분류": "데비스",
+      "능력": "묘지 주인의 영혼을 불러낼 수 있는 능력 영혼과 대화와 교감이 가능하다.반드시 밤에만 사용이 가능하다.아침이 되면 능력의 효과는 사라진다."
+    },
+    "description": "묘지를 먹고 자란 테일스,늘 묘지 근처를 어슬렁 거리며 돌아다닌다.겁이 많고 멘탈이 약한 편이며 항상 서럽게 울고 있다.항상 원한이 있는 유령들에게 둘러싸여 있는데,그 영혼들의 서글픈 이야기들을 들어주는것이 일상인듯 하다.하얀 국화 몇송이가 머리쪽에 놓아져 있다.묘지를 파헤치는 행동을 가장 싫어한다.날개와 귀쪽은 돌처럼 딱딱하다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/305-묘지의-테일스"
+  },
+  {
+    "name": "뱀파이어의 테일스",
+    "species_name": "테일스",
+    "char_number": "0306",
+    "owner_nickname": "나덕",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "뱀파이어의 피",
+      "분류": "데비스",
+      "능력": "혈액으로 만들어진 박쥐들을 소환한다. 만들어진 박쥐들은 매우 뾰족한 이빨이 나있으며 이 박쥐들은 사람이나 동물의 피를 빨아 모은다.모은 피는 이 테일스가 전부 가져가는 듯 하다.피를 빨리면 어지러울 수 있으니 조심하자."
+    },
+    "description": "어떤 뱀파이어의 피를 먹고 자란 테일스,어떤 피든 마실 수 있지만 같은 뱀파이어의 피를 가장 좋아한다.능글맞은 성격으로 마음에도 없는 느끼한 말들을 내뱉을 때가 많다.좋아하는 행동은 와인잔에 피를 담아 마시면서 상대방을 놀리는 것이다.몸체 망토 끝은 박쥐날개 처럼 되어있으며 비행할때 날개처럼 사용 할 수 있다.본체의 이빨은 매우 날카롭고 뾰족하기 때문에 물리지 않게 조심해야 한다.가끔씩 자신의 혀를 씹어 피가 날때도 있지만 피를 마셔주면 빠르게 낫기때문에 크게 신경쓰지 않아도 된다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/306-뱀파이어의-테일스"
+  },
+  {
+    "name": "저승사자의 테일스",
+    "species_name": "테일스",
+    "char_number": "0307",
+    "owner_nickname": "새",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "저승사자의 명부",
+      "분류": "데비스",
+      "능력": "혼과 육체를 분리 시킬 수 있는 능력 명부에 적혀있는 생명체에게만 적용 가능하며 분리된 혼은 자신이 마음대로 조종 할 수 있다.\\"
+    },
+    "description": "저승사자의 명부를 먹고 자란 테일스,늘 들고다니는 책과 두루마리에는 그날 저승으로 데려가야할 생명체들의 이름이 적혀있다.보통 사람보다 동물들의 인도를 돕는다.성실하고 책임감 있는 성격으로 맡은 임무는 확실하게 끝내려 하지만 마음이 여려서 자주 실패하기도 한다.카리스마 있고 늘 예민하기 때문에 초반엔 무섭게 느껴질 수 있지만 속은 굉장히 약한 성격이다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/307-저승사자의-테일스"
+  },
+  {
+    "name": "마녀의 집의 테일스",
+    "species_name": "테일스",
+    "char_number": "0308",
+    "owner_nickname": "수라감자",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "마녀의 집의 빛",
+      "분류": "데비스",
+      "능력": "마녀의 마법으로 상대를 아주 작게 만들수 있다.일정 시간이 지나면 다시 원래대로 돌아온다.작아진 상대를 자신의 몸안에 초대하는것이 취미다."
+    },
+    "description": "마녀의 집에서 나오는 빛을 먹고 자란 테일스,온 몸 곳곳에 있는 창문에선 진한 노랑빛이 새어나오고 있다.검은 박쥐들은 이 테일스 내부에 살고있는 마녀가 만든것이다.마녀는 가끔씩 그림자 실루엣을 보일뿐 절대 밖으로 나오지 않고 모습을 드러내지 않는다.유쾌하고 시원시원한 성격으로 시덥잖은 농담을 할때가 많다.잠을 잘때면 모든 창문에서 불이 꺼진다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/308-마녀의-집의-테일스"
+  },
+  {
+    "name": "비행사의 테일스",
+    "species_name": "테일스",
+    "char_number": "0309",
+    "owner_nickname": "깜빈",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "비행사의 깃털",
+      "분류": "에니스",
+      "능력": "몸을 순간적으로 매우 빠르게 회전시켜 불꽃을 만들어내는 능력을 가지고 있다. 방금 만들어진 불꽃 주변에 다가가면 불이 옮겨 붙을 수도 있어서 항상 조심해야한다."
+    },
+    "description": "비행사의 깃털을 먹고 자란 테일스,특유의 빠른 활공 속도를 가지고 있다.외부에서 어떤 공격이 날아들어도 모두 피할 수 있을 정도의 스피드로 날아다닌다.대신 한 번 날면 에너지 소모가 크기때문에 항상 에너지 보충을 위한 것을 들고다녀야 한다.이 테일스는 천진난만하고 다정한 성격을 가지고 있으며. 다른 테일스들과 함께 나는 것을 좋아한다.머플러와 고글은 비행 도중 우연히 만난 주인이 선물해 준 것이고, 비행 속도를 크게 올려준다.*디자인권을 사용하여 창작한 테일스 입니다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/309-비행사의-테일스"
+  },
+  {
+    "name": "미생물의 테일스",
+    "species_name": "테일스",
+    "char_number": "0310",
+    "owner_nickname": "저승",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "미생물 플라스크",
+      "분류": "데비스",
+      "능력": "하고있는 일의 성공률을 70% 올려준다."
+    },
+    "description": "미생물 플라스크를 먹고 자란 테일스,미생물 플라스크를 먹은 테일스, 몸에서는 화학약품 냄새가 약하게 난다.호기심이 매우 많으며 모든것을 알아가고싶어한다.흥미를 가진 무언가에 꽂히면 하루종일 연구를 하느라 밤을 새는 경우가 과반수라고 한다.가지고 있는 신념은 단 하나'뭐든지 해낼 수 있어'다.인상이 조금 차갑게 생겨 무덤덤한 성격을 가졌을거라고 생각할 수 있겠지만 이 테일스가 상냥하다는걸 알기에는 시간이 오래걸리지않는다.*디자인권을 사용하여 창작한 테일스 입니다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/310-미생물의-테일스"
+  },
+  {
+    "name": "별모래의 테일스",
+    "species_name": "테일스",
+    "char_number": "0311",
+    "owner_nickname": "마가렛",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "별모래",
+      "분류": "에니스",
+      "능력": "별모래의 특별한 힘을 담은 부적을 만들어준다.그걸 유리병에 담아 선물해주며, 그 부적을 지니고 있는 사람은 하는 일이 잘되거나, 금전운 또는 연애운이 오른다고 한다."
+    },
+    "description": "반짝반짝거리는 별모래를 먹고 자란 테일스,바다를 좋아한다고 한다. 성격은 늘 느긋느긋하고 긍정적이다. 몸 자체에 머금은 별모래가 반짝거려, 깜깜한 밤에도 잘 보인다고 한다.*디자인권을 사용하여 창작한 테일스 입니다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/311-별모래의-테일스"
+  },
+  {
+    "name": "캡슐뽑기의 테일스",
+    "species_name": "테일스",
+    "char_number": "0312",
+    "owner_nickname": "슷큐",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "캡슐",
+      "분류": "에니스",
+      "능력": "목에 있는 레버를 돌려 캡슐 하나를 뽑는다.캡슐안에는 오늘의 운세부터 귀여운 장난감,심지어는 신기한 능력을 가진 아이템이 랜덤으로 나온다."
+    },
+    "description": "캡슐을 먹고 자란 테일스,머리와 본체 끝부분은 유리처럼 단단하고 매끈해서 속이 보이는 성질을 가졌다.머리위 안테나 같은 두개의 더듬이는 상대의 감정을 느끼게 해준다.움직일때마다 캡슐이 부딪혀 달그락 거리는 소리가 나며 몸통은 부드러운 털로 덮혀있다.본체쪽과 몸체쪽 하트문양이 그려진 부위는 뚜껑처럼 열리며 이곳을 통해서 캡슐을 가져갈 수 있다.순수하고 동심이 많으며 자주 깜빡깜빡한다.눈치가 없으며 이해가 느리기 때문에 누군가 자신에게 화를 내도 못알아 차릴 때가 있다.긍정적이고 활발한 성격을 가졌다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/312-캡슐뽑기의-테일스"
+  },
+  {
+    "name": "어항의 테일스",
+    "species_name": "테일스",
+    "char_number": "0313",
+    "owner_nickname": "새",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "어항",
+      "분류": "에니스",
+      "능력": "특정 대상을 하나를 지정한 후 물방울 속에 넣는다.물방울은 순식간에 그 대상의 크기에 맞춰진 어항으로 변하여 대상을 어항속에 가둔다."
+    },
+    "description": "어항을 먹고 자란 테일스,온몸이 어항처럼 맑고 투명하여 속이 다 비춰진다.입을 통해서 물고기들을 넣었다 뺄 수 있다.자신의 본체를 멍때리고 바라보며 물고기들을 관찰하는것이 취미.가끔 너무 집중하면 옆에서 불러도 듣지 못한다.아주 강한 몸이지만 커다란 충격을 주면 깨질 수도 있기 때문에 조심해야 한다.입과 눈은 몸속 물과 이어져 있다.그사이에 투명한 막이나 벽이 없지만 신기하게도 물이 흘러나오지 않는다.감성적이고 조용한 성격으로 자주 생각에 빠진다.철학적인 주제로 이야기하는걸 좋아하며 물이 흘러가는 소리 물고기가 헤엄치는 소리를 고요한 환경속에서 듣는걸 즐겨한다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/313-어항의-테일스"
+  },
+  {
+    "name": "산타의 테일스",
+    "species_name": "테일스",
+    "char_number": "0314",
+    "owner_nickname": "단",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "산타모자",
+      "분류": "에니스",
+      "능력": "매우 빠르게 비행할 수 있다.이 테일스가 지나간 하늘을 보면 마치 비행기가 지나간듯한 흔적이 남아있다."
+    },
+    "description": "산타모자를 먹고 자란 테일스,빨간색의 커다란 보따리에선 선물을 꺼낼 수 있다.선물속엔 랜덤으로 상대가 필요한 물건이나 원하는 것이 들어있다.크리스마스 당일날 세상에 있는 테일스들 집을 돌아다니며 몰래 선물 하나를 두고 간다.선물을 받고 좋아하는 모습의 테일스를 보면 내심 기뻐한다.화이팅 넘치고 열정적인 성격으로 쉽게 포기하지 않는다.크리스마스 이브가 끝나고 크리스마스가 시작되는 밤에 한손에 들고있는 종을 울려 크리스마스를 알린다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/314-산타의-테일스"
+  },
+  {
+    "name": "루돌프의 테일스",
+    "species_name": "테일스",
+    "char_number": "0315",
+    "owner_nickname": "새",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "루돌프의 털",
+      "분류": "에니스",
+      "능력": "강한 빛을 내는 노란 반짝이를 뿌려 밤길을 밝혀준다. 이 능력을 쓰면서 날면 그날 하늘엔 수많은 별들이 떠있는것처럼 보인다."
+    },
+    "description": "루돌프의 털을 먹고 자란 테일스,본체에 있는 빨간구체는 붉게 빛나며 세상에 있는 테일스들의 위치를 알려준다.깨발랄한 성격으로 붙임성이 좋다.호기심이 많아 많은 사고를 치지만 악의는 전혀 없다.순수하지만 집중력이 낮아 비행을 하다 한눈을 팔아 길을 잃기도 한다.눈내리는 겨울밤을 좋아하며 추위에 강하다.전체적으로 반짝반짝 빛나는 분위기.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/315-루돌프의-테일스"
+  },
+  {
+    "name": "트리의 테일스",
+    "species_name": "테일스",
+    "char_number": "0316",
+    "owner_nickname": "문사맨",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "트리",
+      "분류": "에니스",
+      "능력": "평범한 나무를 빛으로 감싸면 형형색색의 다양한 장신구들로 치장하고 있는 트리가 된다. 장신구들은 랜덤으로, 이 능력을 사용하면 다양한 종류의 트리를 볼 수 있다."
+    },
+    "description": "트리를 먹고 자란 테일스, 꾸미는것을 매우 좋아하며 밋밋한것을 그냥 두지 못한다. 길거리에 나무들이 전부 트리가 되었다면 범인은 이 테일스일 확률이 높다. 모닥불을 피워놓고 트리 옆에서 따뜻한 커피와 쿠키를 즐기는것이 취미다. 자신의 몸에 치장되어 있는 장식품들은 자주 위치나 종류가 바뀐다. 크리스마스가 되면 길거리에 나가 가로등이며 길거리, 나무들을 꾸며놓는다. 날갯짓을 할때 가끔 나뭇잎이 떨어진다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/316-트리의-테일스"
+  },
+  {
+    "name": "눈사람의 테일스",
+    "species_name": "테일스",
+    "char_number": "0318",
+    "owner_nickname": "MJ",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "눈사람",
+      "분류": "에니스",
+      "능력": "눈사람을 만들어 일시적인 시간동안 살아 움직이게 만들 수 있다. 어떤 모양의 눈사람이든 그것이 \"눈사람\"이기만 한다면 모두 적용 가능하다!시간이 지나면 녹아서 사라진다."
+    },
+    "description": "눈사람을 먹고 자란 테일스,온몸이 차갑지만 마음은 굉장히 따뜻한 테일스로 더운곳에서는 행동이 느려지고 축 쳐지게 된다.가을에서 벗어나지 못한 나뭇잎으로 자신의 본체를 꾸몄으며 입과 단추들은 자갈돌로 이루어져 있다.예의바르고 신사적인 성격을 가지고 있어 누구에게나 친절하고 센스넘치게 행동한다.멘탈이 강해 쉽게 무너지지 않으며 여유로운 모습을 보여준다.겨울날 벤치에 앉아 눈내리는 풍경을 바라보는걸 가장 좋아한다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/318-눈사람의-테일스"
+  },
+  {
+    "name": "스노우볼의 테일스",
+    "species_name": "테일스",
+    "char_number": "0319",
+    "owner_nickname": "빵울",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "스노우볼",
+      "분류": "에니스",
+      "능력": "아무것도 들어있지 않는 스노우볼을 만들어 낸 다음,현재 있는 배경을 스노우볼 속에 담는다. 그럼 아무것도 없던 스노우볼 속에는 그곳의 풍경이 담기게 되며 스노우볼속에서 눈이내리면 그곳에도 똑같이 눈이 내리게 된다."
+    },
+    "description": "스노우볼을 먹고 자란 테일스,본체 끝부분과 양쪽 귀가 스노우볼처럼 유리로 되어있으며 그속에선 천천히 눈이 내리고 있다.진한 남색의 링에서는 차가운 냉기가 돌아 주변의 온도를 낮춰버린다.수줍은 많고 조심스러운 성격으로 걱정이 많지만 그만큼 세심한 면도 있다.나긋나긋 착한 성격으로 새하얗다 라는 말이 가장 잘어울린다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/319-스노우볼의-테일스"
+  },
+  {
+    "name": "코딩의 테일스",
+    "species_name": "테일스",
+    "char_number": "0320",
+    "owner_nickname": "담요",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "컴퓨터과학책",
+      "분류": "데비스",
+      "능력": "코딩중 오류가 난곳을 바로 캐치할 수 있으며 디버깅에 특출나다."
+    },
+    "description": "컴퓨터과학책을 먹고 자란 테일스,늘 피곤한 탓인지 다크서클이 진하게 나있으며 인상이 좋지 않다.코딩에 천부적인 재능이 있지만 그렇게 좋아하진 않는다.평소에도 까칠한 성격을 가지고 있지만 코딩을 할때면 더욱더 예민해져서 건들면 안된다.계획적이고 빨리빨리 하는걸 좋아하며 그날 자신이 세운 계획을 전부 완료하면 조금은 성격이 온순해진다.본체 볼쪽에 있는 숫자는 이 테일스의 상태를 나타내며 100에 가까워 질 수록 기분이 좋지 않거나 과부하가 되어가고 있다는 뜻이다.숫자가 높아지면 높아질수록 몸의 전체적인 온도가 올라간다.항상 코딩과 관련된 전공서적을 들고다닌다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/320-코딩의-테일스"
+  },
+  {
+    "name": "솔잎의 테일스",
+    "species_name": "테일스",
+    "char_number": "0321",
+    "owner_nickname": "쵸",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "솔잎",
+      "분류": "데비스",
+      "능력": "뾰족한 솔잎을 소환하여 조종하는 능력 보통의 솔잎들 보단 약간 크지만 성분은 똑같다.은근 솔잎에 찔리면 따끔따끔 아프다."
+    },
+    "description": "솔잎을 먹고 자란 테일스,주변에서 소나무의 향이 나며 날개와 더듬이는 솔잎으로 이루어져 있다.목에 달려있는 솔방울은 자신이 마음에 드는것으로 치장한것이다.까칠한듯 하지만 쿨하고 예리한 성격을 가지고 있다.답답한건 참지 못하며 적극적이게 행동하는 편이다.여름날의 시원한 바람을 좋아하며 솔잎차를 즐겨 마신다.마음에 드는 사람에게 자신이 고른 솔방울을 주고 갈 때도 있다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/321-솔잎의-테일스"
+  },
+  {
+    "name": "엔지니어의 테일스",
+    "species_name": "테일스",
+    "char_number": "0322",
+    "owner_nickname": "스패너",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "반도체",
+      "분류": "데비스",
+      "능력": "가지고 있는 스패너로 때리면 기발한 아이디어를 한번 할 수 있게 해주는 능력"
+    },
+    "description": "반도체를 먹고 자란 테일스,친절하고 다정다감한 성격으로 곤란한 문제를 해결해 주는걸 즐긴다.날개와 뿔,본체 끝쪽은 더욱 강하고 편리해 지도록 자신이 개조한 것이다.날개의 스크린을 통해 메모를 하거나 대상을 분석하는등 여러 기능을 쓸 수 있다.등 뒤쪽에서 나오는 4개의 도구는 자유자재로 움직일 수 있으며 정교한 작업도 쉽게 할 수 있게하는 장비들이다.여러가지 발명품을 개발하는것이 취미지만 대부분 맘에 들지 않아 버린다고 한다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/322-엔지니어의-테일스"
+  },
+  {
+    "name": "나루토마키의 테일스",
+    "species_name": "테일스",
+    "char_number": "0323",
+    "owner_nickname": "슷큐",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "나루토마키",
+      "분류": "에니스",
+      "능력": "대상을 정해 최면을 거는 능력 한번에 한 사람에게만 최면을 걸 수 있다.능력을 사용할때면 온몸의 무늬와 링이 은은하게 빛난다."
+    },
+    "description": "나루토마키를 먹고 자란 테일스,우동 위에 올려져 있는 어묵처럼 반달 모양으로 눈웃음 짓는것이 특징.친절하고 느긋해보이지만 어딘가 쎄한 느낌이 들때도 있다.항상 웃고다니며 표정이 잘 바뀌지 않는다.따뜻한 물 위에서 둥둥 떠다니며 명상 하는걸 가장 좋아한다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/323-나루토마키의-테일스"
+  },
+  {
+    "name": "암살자의 테일스",
+    "species_name": "테일스",
+    "char_number": "0324",
+    "owner_nickname": "먕",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "단검",
+      "분류": "데비스",
+      "능력": "소리, 냄새, 살기 등 모든 기척을 지울 수 있으며 표적의 급소를 정확하게 베면 그 표적은 한시간 이내로 서서히 죽어가 끝내 잿가루가 되어 사라진다."
+    },
+    "description": "단검을 먹고 자란 테일스,멍해보여도 눈이 마주치면 소름이 돋는 이 테일스는 단언컨데 최고 중에 최고라고 불릴만한 암살 실력의 소유자다.이 테일스는 오직 의뢰받은 표적만을 목표로하고 그 목표를 절대 놓치지 않으려하는 엄청난 집념이 있다.또 흔적을 남기는걸 매우 싫어하는걸 넘어 아예 있어서는 안된다고 생각하는 경향이 있어서인지 이 테일스가 지나간 자리는 어떤 흔적도 발견할 수 없다.이 테일스가 최고의 암살자가 될 수 있었던 이유는 한번 찔리면 피를 멈플 수 없고,그저 그 자리에서 서서히 죽어 흔적도 없이 사라지는 공포를 맞이하기 때문이다.*디자인권을 사용하여 창작한 테일스 입니다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/324-암살자의-테일스"
+  },
+  {
+    "name": "유리장미의 테일스",
+    "species_name": "테일스",
+    "char_number": "0325",
+    "owner_nickname": "먕",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "유리장미",
+      "분류": "에니스",
+      "능력": "어떤모양,크기의 유리라도 세련되게 고급진 유리장미로 만들어 버리는 능력 만들때마다 다양한 모양의 유리장미들이 나온다."
+    },
+    "description": "유리장미를 먹고 자란 테일스,날개와 장미 가시,장미들은 전부 유리로 만들어져 있어 움직일때마다 영롱한 유리소리가 난다.특히 날개는 유리장미잎으로 이루어져 있기 때문에 몇몇개 가끔 빠질때도 있다.빠진 날개잎은 반짝거리고 예쁘기 때문에 선물로도 줄때가 있다.시간이 지나면 다시 자라기 때문에 걱정할 필요 없다.감정적이고 마음이 유리처럼 약하지만 매우 상냥하다.작은 소리에도 깜짝 놀라며 다정한 사람을 좋아한다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/325-유리장미의-테일스"
+  },
+  {
+    "name": "노란 오리의 테일스",
+    "species_name": "테일스",
+    "char_number": "0326",
+    "owner_nickname": "먕",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "노란오리의 털",
+      "분류": "에니스",
+      "능력": "자신의 털로 만든 털복숭이 아기 오리군단을 만들어 내는 능력 매우 복실하고 귀여운 작은 오리들은 아장아장 걸으며 이 테일스를 따라다닌다.일정 시간이 지나면 다시 털로 돌아가 사라진다."
+    },
+    "description": "노란오리의 털을 먹고 자란 테일스,반짝반짝한 눈망울에 애교넘치는 테일스로 아이같은 순수함을 가졌다.자신의 오리군단 친구들과 함께 연못이나 욕조같은 물위에서 둥둥 떠다니는걸 좋아한다.시간이 조금만 지나도 털이 많이 자라나기 때문에 지속적인 관리가 필요하다.관심받는걸 좋아하고 활기찬 성격이다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/326-노란-오리의-테일스"
+  },
+  {
+    "name": "기관사의 테일스",
+    "species_name": "테일스",
+    "char_number": "0327",
+    "owner_nickname": "DARWIN",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "기차 장난감",
+      "분류": "데비스",
+      "능력": "자신의 본체에 손님들을 태울 수 있는 능력 본체 입을 통해서 들어간 대상은 작아지게 되어 이 테일스의 본체를 기차처럼 탈 수 있다. 작아진 대상이 기차 창문을 통해서 본 바깥풍경은 모두 거대할 것이다."
+    },
+    "description": "기차 장난감을 먹고 자란 테일스,열정적이고 계획적인 성격으로 시간에 맞춰 할일을 해내는 것을 좋아한다.자신의 본체기차에 탈 수 있는 인원은 3명까지 가능하며 아무나 태워주는것이 아닌 이 테일스에게 기차표를 받은 대상만이 탈 수 있다.또한 이 테일스 보다 큰 존재는 탈 수 없다.기차가 출발할땐 호루라기를 크게 한번 불고 출발해야 평소보다 빠르게 날아 목적지에 도착할 수 있다.어두운 곳에 들어가거나 밤이 되면 본체 양쪽 볼과 기관사 모자 가운데 무늬에서 빛이 켜진다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/327-기관사의-테일스"
+  },
+  {
+    "name": "식빵의 테일스",
+    "species_name": "테일스",
+    "char_number": "0328",
+    "owner_nickname": "DARWIN",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "식빵",
+      "분류": "에니스",
+      "능력": "식어버린 빵을 방금 막 구운것처럼 따끈따끈하게 되돌리는 능력. 그저 따끈해질 뿐만 아니라 시간을 뒤로 되돌린 것처럼 모든 상태가 복구된다."
+    },
+    "description": "식빵을 먹고 자란 테일스, 몸을 둥글게 말고 누워있는것이 취미로 이 테일스가 있던 자리는 매우 따끈따끈 하다. 진한 갈색 부분은 바삭바삭하고 거친 느낌이 나지만 연한 부분은 부드럽고 말랑하다. 그냥 식빵도 좋아하지만 식빵을 살짝 구워 먹는걸 더 선호한다. 둔하고 느긋한 성격으로 눈치가 없지만 친절하고 함께 있으면 마음이 편해진다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/328-식빵의-테일스"
+  },
+  {
+    "name": "어둠의 테일스",
+    "species_name": "테일스",
+    "char_number": "0329",
+    "owner_nickname": "나덕",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "어둠",
+      "분류": "데비스",
+      "능력": "능력을 사용하는 순간 주변에서 어두운 기운이 느껴진다.그 상태로 베이스를 연주하면 매우 무겁고 짙은 어둠속에 빠진것같은 기분에 압도당한다."
+    },
+    "description": "어둠을 먹고 자란 테일스,매우 우울하고 어두운 성격을 가지고 있다.베이스를 연주하는것을 제외하면 그 어떤일에도 의욕을 가지고 있지 않다.소심하다기 보단 과묵하며 절대 먼저 나서지 않는다.검은색을 좋아하며 치렁치렁 달고 다니는게 취향인듯 하다.방안에 틀어박혀있는걸 가장 좋아한다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/329-어둠의-테일스"
+  },
+  {
+    "name": "백산호의 테일스",
+    "species_name": "테일스",
+    "char_number": "0330",
+    "owner_nickname": "나덕",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "백산호",
+      "분류": "데비스",
+      "능력": "건강하게 살아있는 산호도 이 테일스의 손길 한번이면 죽어버리게 된다.한번 죽은 산호는 살릴 수 없으며 본인도 능력을 제어할 수 없는듯 하다."
+    },
+    "description": "백산호를 먹고 자란 테일스,겉으론 단단하고 날카롭게 도도해 보이지만 남의 눈치를 잘 보며 마음이 약하다.부서지지 않기위해 매우 강하게보이고 싶어한다.온몸엔 하얀색의 반짝거리는 산호들로 덮혀있지만 전부 죽은 산호들이다.바다 깊은곳에서 헤엄치는걸 좋아했지만 들어가길 꺼려한다.한번 부서진 산호는 다시 자라나지 않지만 그만큼 단단하게 굳어있다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/330-죽은산호의-테일스"
+  },
+  {
+    "name": "체리소다의 테일스",
+    "species_name": "테일스",
+    "char_number": "0331",
+    "owner_nickname": "나덕",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "체리소다",
+      "분류": "데비스",
+      "능력": "달짝지근하고 톡쏘는 체리소다를 만들어 내는 능력 담을 컵만 있다면 크림과 체리가 화려하게 올라간 체리소다를 순식간에 만들어 낼 수 있다.마시면 한동안 매우 열정이 넘치게 된다."
+    },
+    "description": "체리소다를 먹고 자란 테일스,곁에선 달콤한 크림향과 독특한 체리향이 난다.다짐한 일은 끝을 봐야하며 어느것을 하든 열정넘치는 면을 보여준다.힘차고 활기찬 성격덕에 친해지기 쉬운 반면 오히려 부담스럽다고 느낄 수도 있다.목주변과 귀 안쪽,크림모양 뿔 등은 말랑한 마시멜로 같은 촉감을 가지고 있다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/331-체리소다의-테일스"
+  },
+  {
+    "name": "하얀날개의 테일스",
+    "species_name": "테일스",
+    "char_number": "0332",
+    "owner_nickname": "나덕",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "하얀날개",
+      "분류": "데비스",
+      "능력": "길을 찾는 사람에게 나타나 하얀 깃털을 떨어트려 잘못된 길로 가게한다."
+    },
+    "description": "하얀날개를 먹고 자란 테일스,대담한 성격 덕분에 여러모로 짓궂은 장난을 많이 친다. 길을 찾고 있는 자에게만 나타나 깃털을 떨어트리고 옆에서 자꾸 말을 건다. 그와 수다를 떨다 보면 원래 갈려고 했던 길과는 정반대의 길을 걸어가고 있을 것이다. 하지만 생각보다 그의 이야기가 재미있어서 그냥 지나치는 사람은 없다고 한다.*디자인권을 사용하여 창작한 테일스 입니다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/332-하얀날개의-테일스"
+  },
+  {
+    "name": "여우신령의 테일스",
+    "species_name": "테일스",
+    "char_number": "0333",
+    "owner_nickname": "Chamyo",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "여우구슬",
+      "분류": "에니스",
+      "능력": "여우구슬의 힘으로 대상에게 행운을 가져다 준다.여우 신을 신성시 모시는 사람에게 주로 능력을 부여해 준다."
+    },
+    "description": "여우구슬을 먹고 자란 테일스,목에 달고있는 방울은 평소에 소리가 나지 않지만 마음에 드는 사람이나 여우 신을 모시고 있는 사람을 발견하면 딸랑,소리가 나게 된다.옆에는 늘 사역마가 졸졸 따라다니는데 여우신령이 되기 위해 수련하는 사역마 라고 한다.이 테일스에게만 모습을 보이고 싶어한다.선한 사람들을 좋아하며 본인의 성격도 친절하고 예의 바르다.가끔 산속 깊은 신사에 들린다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/333-여우신령의-테일스"
+  },
+  {
+    "name": "겁화의 테일스",
+    "species_name": "테일스",
+    "char_number": "0334",
+    "owner_nickname": "Blanche",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "겁화",
+      "분류": "데비스",
+      "능력": "자신을 중심으로 원형을 그리며 주변에 끔찍한 불들을 일으킨다. 뜨겁다는 느낌보다 공포스럽다는 느낌에 압도당한다."
+    },
+    "description": "겁화를 먹고 자란 테일스,아주 사납고 거친 성격으로 공감능력이 낮다.자신에게 조금이라도 위협적인 존재는 바로 불태워 버린다.자신의 의지와 상관없이 불길이 번질때도 있기 때문에 숲속은 절대 들어가지 않는다.몇번 산을 불태워 버린 적도 있는듯 하다…날개 끝은 불꽃이 일렁이는 듯이 흩어지고 있으며 목털과 뿔에 달려있는 불꽃은 매우 어두운 붉은색으로 일렁이고 있다.다른 불과 다르게 밝다는 느낌이 별로 들지 않는 불이다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/334-겁화의-테일스"
+  },
+  {
+    "name": "신록의 테일스",
+    "species_name": "테일스",
+    "char_number": "0335",
+    "owner_nickname": "Blanche",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "신록",
+      "분류": "에니스",
+      "능력": "늦봄이나 초여름에 미처 피어나지 못한 잎들을 세상에 나오게 해주는 능력, 잔가지만 있던 나무에 푸른 잎사귀들이 피어나는걸 볼 수 있다."
+    },
+    "description": "신록을 먹고 자란 테일스, 곁에선 초여름 낮의 냄새가 나며 다른곳 보다 공기가 더 맑은것을 느낄 수 있다. 가을과 겨울에는 잠이 매우 많아지며 둔해진다. 공감능력이 뛰어나며 문학적이다. 약해보이지만 내면은 매우 단단하며 쉽게 휘둘리지 않는다. 착한이에겐 친절하며 모든 식물을 사랑한다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/335-신록의-테일스"
+  },
+  {
+    "name": "달무리의 테일스",
+    "species_name": "테일스",
+    "char_number": "0336",
+    "owner_nickname": "Blanche",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "달무리",
+      "분류": "에니스",
+      "능력": "평소 밤에 달빛을 충분히 흡수한 다음 보름달이 뜨는 날, 달무리를 크게 발산시켜 비를 오게 한다.100%확률로 비가 내리는 것은 아니지만 거의 대부분 그 밤에는 보슬비가 내리게 된다."
+    },
+    "description": "달무리를 먹고 자란 테일스,빛의 방향과 주변환경에 따라서 테일스 주변의 고리가 무지개 빛이 나기도,흰 빛이 나기도 한다.고리들은 손으로 만질 수 없으며 묘하게 일렁이고 있다.보름달이 뜨는날에 가장 환하게 빛난다.조용하지만 무뚝뚝한것은 아니다.은근 호기심 많고 엉뚱하며 표정 변화가 거의 없다.말똥말똥한 눈으로 무언가 빤히 바라본다면 그것에 강한 관심을 보인다는 뜻이다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/336-달무리의-테일스"
+  },
+  {
+    "name": "셉터의 테일스",
+    "species_name": "테일스",
+    "char_number": "0337",
+    "owner_nickname": "Blanche",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "셉터",
+      "분류": "에니스",
+      "능력": "이 테일스가 가지고 있는 셉터를 잡게 될 경우 모두를 통솔하고 지휘할 수 있는 통솔력을 가지게 된다.하지만 셉터의 주인은 이 테일스이기 때문에 효과가 지속적이지 않다."
+    },
+    "description": "셉터를 먹고 자란 테일스,장난치는걸 좋아하는 장난꾸러기로 자존심이 굉장히 강하며 하고싶은건 꼭 하고싶어하는 고집스러움도 있다.고급스러운것을 좋아하며 붉은 보석들로 치장하는걸 즐긴다.반짝반짝 빛나는 셉터는 이 테일스의 보물1호며 저 셉터를 휘두르면 나도모르게 이 테일스의 지시에 맞춰주고 있게 된다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/337-셉터의-테일스"
+  },
+  {
+    "name": "꿀단지 개미의 테일스",
+    "species_name": "테일스",
+    "char_number": "0340",
+    "owner_nickname": "한걸음",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "꿀단지 개미",
+      "분류": "에니스",
+      "능력": "꿀이 가득찬 주머니를 뱉어내는데 이는 젤리처럼 식용이 가능하다."
+    },
+    "description": "꿀단지 개미를 먹고 자란 테일스,본체와 귀,목털은 말랑하며 속엔 꿀이 가득 차있다.꿀을 먹으면 먹을 수록 본체가 크고 뚠뚠해지지만 끊임없이 먹을 수 있다.긍정적이고 호기심 많은 성격으로 평범한 길을 산책하는것 보다 가보지 않은 새로운 길을 관찰하며 돌아다니는걸 즐긴다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/340-꿀단지-개미의-테일스"
+  },
+  {
+    "name": "예언의 테일스",
+    "species_name": "테일스",
+    "char_number": "0341",
+    "owner_nickname": "산솔",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "아직 오지 않은 예언이 적힌 편지",
+      "분류": "에니스",
+      "능력": "능력을 사용하면 테일스에게 편지가 도착하며 능력을 사용한 대상의 미래 한 줄을 엿볼 수 있다. 운명을 바꿀 큰 예지는 엄청하게 낮은 확률로 나타나며, 대부분은 정말 사소한 미래 예견만 해 줄 뿐이다."
+    },
+    "description": "아직 오지 않은 예언이 적힌 편지를 먹고 자란 테일스,어디로 튈 지 모르는 운명의 장난같은 성격을 가지고 있다. 변덕이 죽 끓듯 하며 매우 우유부단한 성격이다.쌍둥이인 기록의 테일스와 다르게 활발하면서 장난이 많고 기력이 넘친다.동에번쩍 서에번쩍하며 이 테일스가 한 자리에 오래 머무는 일은 정말 드물다.*디자인권을 사용하여 창작한 테일스 입니다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/341-예언의-테일스"
+  },
+  {
+    "name": "설표의 테일스",
+    "species_name": "테일스",
+    "char_number": "0342",
+    "owner_nickname": "시즈키히노",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "설표의 털",
+      "분류": "에니스",
+      "능력": "차가운 냉기를 이용해 눈설표를 만들어 내어 공격한다.눈설표에게 물린곳은 꽁꽁 얼어 붙는다. 주변이 차가운 곳에서만 능력을 사용할 수 있다."
+    },
+    "description": "설표의 털을 먹고 자란 테일스,새하얀 눈같은 털이 온몸을 덮고 있지만 추위를 많이 타서 목도리까지 착용했다.춥거나 잘때는 본체로 몸체를 둥글게 말아 체온을 보존하면서 잔다.전체적으로 따뜻한 온도를 가지고 있어 만지면 따끈따끈하다.발은 다른 테일스보다 약간 크며 눈 위에서도 빠르게 달릴 수 있다.상냥하고 친절하지만 거절을 잘 못하는 성격이다.은근 감성적인 편---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/342-설표의-테일스"
+  },
+  {
+    "name": "얼룩매가오리의 테일스",
+    "species_name": "테일스",
+    "char_number": "0343",
+    "owner_nickname": "시즈키히노",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "얼룩매가오리",
+      "분류": "데비스",
+      "능력": "높은 점프력. 하늘,땅,바다 어디서든 높게 점프 할 수 있다. 하지만 조절을 잘 못한다."
+    },
+    "description": "얼룩매가오리을 먹고 자란 테일스,점프하면서 자주 벽에 붙이친다.성격은 나긋하고 말이 많은 편이다. 겁이많다.좋아하는것은 물속에 있는것과 낮잠을 자는것을 좋아한다,싫어하는것은 소음과 무서운것이다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/343-얼룩매가오리의-테일스"
+  },
+  {
+    "name": "딸기초코케이크의 테일스",
+    "species_name": "테일스",
+    "char_number": "0344",
+    "owner_nickname": "설화",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "딸기초코케이크",
+      "분류": "에니스",
+      "능력": "겉은 초코 속은 딸기로 가득찬 달콤한 딸기초코케이크를 만들어 내는 능력 단걸 싫어하는 사람이 먹어도 맛있다고 생각할 정도로 맛있는 케이크다."
+    },
+    "description": "딸기초코케이크를 먹고 자란 테일스,쾌활하고 활발한 성격으로 처음 만나는 상대에게도 붙임성 있게 다가간다.귀는 커다란 딸기이며 몸은 푹신한 카스테라로 이루어져 있다.곁에선 초코향이 나지만 몸 곳곳에 딸기가 장식되어있다.목에 있는 하얀것은 생크림이다.친구들과 다같이 베이킹 하는걸 좋아한다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/344-딸기초코케이크의-테일스"
+  },
+  {
+    "name": "민트초코케이크의 테일스",
+    "species_name": "테일스",
+    "char_number": "0345",
+    "owner_nickname": "설화",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "민트초코케이크",
+      "분류": "데비스",
+      "능력": "겉은 초코 속은 민트로 가득찬 시원한 민트초코케이크를 만들어 내는 능력 민트를 싫어하는 사람이 먹어도 맛있다고 생각할 정도로 맛있는 케이크다."
+    },
+    "description": "민트초코케이크를 먹고 자란 테일스,조용하지만 눈을 한번 떼면 사고를 치는 장난꾸러기다.조용한 것이지 소심한것은 아니다.은근 자기주장이 강하고 튼튼한 멘탈을 가지고 있다.날개들은 초콜릿으로 이루어져 있어 더운곳에 가면 흐물흐물 해진다.곁에선 초콜릿과 민트의 향이 섞여 나며 이 향은 마음을 편안하게 만들어 준다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/345-민트초코케이크의-테일스"
+  },
+  {
+    "name": "다크초코케이크의 테일스",
+    "species_name": "테일스",
+    "char_number": "0346",
+    "owner_nickname": "설화",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "다크초코케이크",
+      "분류": "데비스",
+      "능력": "겉은 다크초코 속은 부드러운 초코로 가득찬 진한 다크초코케이크를 만들어 내는 능력 쓴것을 싫어하는 사람이 먹어도 맛있다고 생각할 정도로 맛있는 케이크다."
+    },
+    "description": "다크초코케이크를 먹고 자란 테일스,소심하고 무뚝뚝한 성격을 가지고 있다.겉으로 봐선 다가가기 어려운 무뚝뚝한 테일스지만 막상 친해지면 굉장히 여리고 순수한 성격을 가졌다.귀 겉부분과 날개,목털,뿔은 다크초코로 이루어져 있으며 씁쓸한 향이 난다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/346-다크초코케이크의-테일스"
+  },
+  {
+    "name": "사쿠라모찌의 테일스",
+    "species_name": "테일스",
+    "char_number": "0347",
+    "owner_nickname": "설화",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "사쿠라모찌",
+      "분류": "에니스",
+      "능력": "항상 들고다니는 방울을 흔들어 신내림을 받아 미래를 예지하는 능력 능력을 사용할땐 항상 눈을 감고 있는다."
+    },
+    "description": "사쿠라모찌를 먹고 자란 테일스,정의롭고 활발하며 긍정적인 성격이다.자연스럽게 무리를 이끄는 포지션을 맡는 편이다.몸속에는 피 대신 팥 앙금이 들어있다.곁에선 묘하게 달콤한 벚꽃향이 난다.사쿠라 모찌의 테일스인 만큼 온몸이 말랑말랑 떡같은 질감이다.벚꽃나무를 좋아해 그 아래에서 차와함께 사쿠라 모찌를 먹는것이 취미이다.어째서 인지 몸에 있는 나뭇잎은 절대 떨어지거나 썩지 않는다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/347-사쿠라모찌의-테일스"
+  },
+  {
+    "name": "상현달의 테일스",
+    "species_name": "테일스",
+    "char_number": "0348",
+    "owner_nickname": "해실",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "상현달",
+      "분류": "데비스",
+      "능력": "달과 같은 성질로 만들어진 활을 소환해 공격하는 능력 만들어진 활은 밝게 달빛을 내뽐고 있으며 화살은 상현달이 떠 있을때 위력이 더욱 강해진다."
+    },
+    "description": "상현달의 빛을 먹고자란 테일스.완벽한 상현달이 뜰때만 주식을 섭취할 수 있다.곁에선 항상 따스한 달빛을 뽐내는데 상현달이 뜬 날엔 유난히 더 밝게 빛난다.몸 곳곳에 있는 상현달 모양은 달빛을 받으면 더 밝게 빛나며 따뜻한 온기가 미세하게 남아있다.까칠한 성격으로 친한사이 외에는 굉장히 선을 긋는 타입.그래서 인지 친해지기 어렵지만 한번 친해지면 절대 배신하지 않고 그 관계를 중요시 여긴다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/348-상현달의-테일스"
+  },
+  {
+    "name": "하현달의 테일스",
+    "species_name": "테일스",
+    "char_number": "0349",
+    "owner_nickname": "해실",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "하현달",
+      "분류": "데비스",
+      "능력": "달과 같은 성질로 만들어진 칼을 소환해 공격하는 능력 만들어진 칼은 밝게 달빛을 내뿜고 있으며 하현달이 떠 있을때사용하면 더욱 더 커진 칼을 소환할 수 있다."
+    },
+    "description": "하현달의 빛을 먹고자란 테일스.완벽한 하현달이 뜰때만 주식을 섭취할 수 있다.곁에선 항상 선선한 달빛을 뽐내는데 하현달이 뜬 날엔 유난히 더 밝게 빛난다.몸 곳곳에 있는 하현달 모양은 달빛을 받으면 더 밝게 빛나며 시원한 온기가 미세하게 남아있다.장난끼가 많고 쿨한 성격으로 싸우고 난 뒤에도 뒤끝없이 넘어간다.겉으로 봤을땐 시끄럽고 생각이 없어 보일수도 있지만 누구보다 남을 배려하고 상냥하기 때문에 함께 있어보면 정말 좋은 성격이라는 것을 알 수 있다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/349-하현달의-테일스"
+  },
+  {
+    "name": "그믐달의 테일스",
+    "species_name": "테일스",
+    "char_number": "0350",
+    "owner_nickname": "해실",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "그믐달",
+      "분류": "에니스",
+      "능력": "그믐달의 빛을 받아 불안한 마음을 진정시켜 차분하게 만들어 주는 능력 이 능력을 받은 대상은 신체 어딘가에 그믐달 문양이 생기는데 이 문양이 사라지면 효과도 사라진다."
+    },
+    "description": "그믐달의 빛을 먹고자란 테일스.완벽한 그믐달이 뜰때만 주식을 섭취할 수 있다.곁에선 항상 온화한 달빛을 뽐내는데 그믐달이 뜬 날엔 유난히 더 밝게 빛난다.몸 곳곳에 있는 그믐달 모양은 달빛을 많이 받으면 하얗게 발광한다.하얀색의 털은 아주 복슬거리지만 물을 튕겨내는 방수 기능을 가지고 있다.한쪽 날개가 역으로 뒤집어져 있는 형태다.땅을 걸어간 자리에는 하얀 그믐달 모양이 일시적으로 남는다.지혜롭고 말솜씨가 뛰어나 터무니 없는 말도 이 테일스가 말하면 납득하게 된다.가벼워 보이지만 진지할땐 진지한 성격으로 남의 고민 들어주는걸 좋아한다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/350-그믐달의-테일스"
+  },
+  {
+    "name": "초승달의 테일스",
+    "species_name": "테일스",
+    "char_number": "0351",
+    "owner_nickname": "해실",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "초승달",
+      "분류": "에니스",
+      "능력": "초승달의 빛을 받아 우울한 마음을 없애주고 행복하게 만들어 주는 능력 이 능력을 받은 대상은 신체 어딘가에 초승달 문양이 생기는데 이 문양이 사라지면 효과도 사라진다."
+    },
+    "description": "초승달의 빛을 먹고자란 테일스.완벽한 초승달이 뜰때만 주식을 섭취할 수 있다.곁에선 항상 부드러운 달빛을 뽐내는데 초승달이 뜬 날엔 유난히 더 밝게 빛난다.몸 곳곳에 있는 초승달 모양은 달빛을 많이 받으면 하얗게 발광한다.하얀색의 털은 너무나도 새하얀기 때문에 조금만 더러워 져도 잘 보인다.그래서 지속적인 관리가 필요한 편.한쪽 날개가 역으로 뒤집어져 있는 형태다.땅을 걸어간 자리에는 하얀 초승달 모양이 일시적으로 남는다.늘 행복하고 긍정적이다.세상을 너무 긍정적으로 보는 탓에 여러 불이익을 당하기도 하지만 불만 가지지 않는것 같다.낭만적이고 감동적인 것들을 좋아한다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/351-초승달의-테일스"
+  },
+  {
+    "name": "기록의 테일스",
+    "species_name": "테일스",
+    "char_number": "0352",
+    "owner_nickname": "핫뚜",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "이미 잃어버린 깃펜",
+      "분류": "에니스",
+      "능력": "깃펜으로 잊었던 과거의 기억들을 허공에 적어 떠올리게 해준다. 능력은 대부분 본인(능력사용의 대상자)의 아주 사소한 과거의 기억을 불러일으키지만 매우 낮은 확률로 미래에 영향을 끼치는 중요한 기록이 나타난다."
+    },
+    "description": "더이상 존재하지않는 기억의 한편을 먹고자란 테일스, 잔잔하고 아련한 추억과 닮았다. 쌍둥이인 예언의 테일스와 다르게 변화가 없는 정적인 성격으로, 쉽게 바뀌지않으며 한번 마음에 들인것이나 한번 다짐한것은 끝까지 지킨다.하지만 제 쌍둥이 못지않은 조용한 물밑의 장난꾸러기, 요즘에 가진 소소한 취미는 예언이의 리본을 꼬아놓고 시치미떼기이다.*디자인권을 사용하여 창작한 테일스 입니다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/352-기록의-테일스"
+  },
+  {
+    "name": "갈대의 테일스",
+    "species_name": "테일스",
+    "char_number": "0353",
+    "owner_nickname": "나덕",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "갈대",
+      "분류": "에니스",
+      "능력": "대상의 마음을 쉽게 바꿀 수 있는 능력 고집이 강한 성격이여도 이 테일스의 능력이면 쉽게 마음이 바뀐다."
+    },
+    "description": "갈대를 먹고자란 테일스,바람이 불면 날개와 털이 힘없이 흔들린다.굉장히 부드럽고 고운 털을 가졌다.늘 어딘가 슬프고 외로워 보이지만 자신의 속마음을 잘 털어놓지 않는다.차분하고 감성적인 성격.곧 쓰러질것처럼 약해보이지만 수없이 흔들려도 뽑히지 않는 갈대처럼 내면의 신념은 강하게 자리잡고 있다.곁에선 가을의 저녁노을 향이 난다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/353-갈대의-테일스"
+  },
+  {
+    "name": "들불의 테일스",
+    "species_name": "테일스",
+    "char_number": "0354",
+    "owner_nickname": "랸",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "들불",
+      "분류": "데비스",
+      "능력": "마음을 계속해서 불안하게 만드는 능력 아무리 평온하고 강한 성격이여도 이 테일스의 능력이면 쉽게 멘탈이 깨진다."
+    },
+    "description": "들불을 먹고자란 테일스,끝없이 온몸이 불타오르고 있으며 그 주변에는 항상 아지랑이가 피어오른다.온몸의 불은 꺼질 새가 없으며 불안해 할수록 거칠어 지는듯 하다.만약 온몸의 불이 꺼진다면 새까맣게 타버린 풀의 색일 것이다.굉장히 부정적인 사고를 가졌으며 늘 걱정하고 불안해 한다.불안이 불안의 꼬리를 물고 들판에 불씨가 번지듯 계속해서 패닉상태에 빠진다.주기적으로 주변에 불씨들을 내뿜는데 자칫 잘못하면 큰 불이 날 수 있기때문에 대부분 혼자 있으려 한다.곁에선 늘 풀이 타는 냄새가 난다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/354-들불의-테일스"
+  },
+  {
+    "name": "매화의 테일스",
+    "species_name": "테일스",
+    "char_number": "0355",
+    "owner_nickname": "묘운",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "매화",
+      "분류": "에니스",
+      "능력": "어떠한 어려움도 좋은쪽으로 흘러가게 해주는 매화꽃 한송이를 소환하는 능력. 주로 자신이 인정한 대상,고통을 버티고 이겨낸 대상에게만 꽃을 선물한다.능력의 효과가 끝나면 꽃이 눈이 되어 흩날려 사라진다."
+    },
+    "description": "매화를 먹고자란 테일스, 기품있고 인내심이 많은 성격으로 쉽게 무너지지 않고 버티는 강인한 정신을 가졌다. 늘 뭐든간에 진심을 다하며 배신은 절대 하지않는 고결한 마음을 가지고 있다. 본체의 날개는 눈의 성질로 이뤄져 있으며 가끔 눈송이가 내리기도 한다. 예의와 인내를 가장 중요하게 생각한다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/355-매화의-테일스"
+  },
+  {
+    "name": "삼색고양이의 테일스",
+    "species_name": "테일스",
+    "char_number": "0356",
+    "owner_nickname": "묘운",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "삼색고양이의 털",
+      "분류": "데비스",
+      "능력": "행운을 가져다 주는 능력 그중에서도 재물운을 가져다 주는데, 그날 테일스의 기분에 따라 재물의 질이 바뀐다. 기분이 아주 좋은날 발동한 능력이라면, 운좋게 상당한 금액이 공짜로 굴러 들어올 수도 있다. 능력을 사용할땐 방울이 꼭 울린다."
+    },
+    "description": "삼색고양이의 털을 먹고자란 테일스, 활동적이고 장난끼 많은 성격으로 낯선이에게도 서슴없이 다가가는 친화력을 가졌다. 흔히 말하는 개냥이 같은 성격으로 애교가 많고 말도 많지만 끝없이 장난을 치는 장난꾸러기 이기 때문에 혼나는 일도 많다. 하지만 순수하고 사랑스러운 탓에 쉽사리 봐줄 수 밖에 없어진다. 털실 공을 굴리며 놀거나 꽃밭에서 뒹구는걸 좋아한다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/356-삼색고양이의-테일스"
+  },
+  {
+    "name": "팝콘의 테일스",
+    "species_name": "테일스",
+    "char_number": "0357",
+    "owner_nickname": "이코",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "팝콘",
+      "분류": "데비스",
+      "능력": "모든 음식을 팝콘으로 만드는 능력 먹을 수 있다면 어느것이든 펑펑 터트려 팝콘으로 만든다.식감과 크기는 팝콘과 동일 하지만 맛은 그 본연의 맛이 따른다."
+    },
+    "description": "팝콘을 먹고자란 테일스,본체 머리끝에선 봉투가 터져 주기적으로 팝콘이 쏟아져 나온다.날개에서도 팝콘이 나오는데 평소엔 잘 붙어있다가 하늘을 날거나 격하게 움직이면 후두둑 떨어진다.시간이 지나면 다시 튀어 나오니 걱정은 필요없다.장난끼가 많고 활기찬 성격으로 늘 장난을 치려 하지만 되려 당할때가 많다.무슨 사건이 터지거나 재밌는 일이 생기면 3D안경을 꼭 쓰는 버릇이 있다.깜짝놀라면 옥수수로 이루어진 눈과 양쪽 귀가 펑!터지며 팝콘이 되지만 시간이 지나면 다시 원래 모습으로 돌아온다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/357-팝콘의-테일스"
+  },
+  {
+    "name": "주러나 팔바의 테일스",
+    "species_name": "테일스",
+    "char_number": "0358",
+    "owner_nickname": "이코",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "주러나 팔바",
+      "분류": "데비스",
+      "능력": "위험한 독을 내뿜는 능력 독은 투명한 색을 띄기 때문에 능력을 사용 했는지 확인하기 어려울 수 있다."
+    },
+    "description": "주러나 팔바를 먹고자란 테일스,양쪽 볼과 더듬이로 주변에 무엇이 있는지 빠르게 눈치챌 수 있다.겁이 많아서 먼저 다가가지 않는다.친해지면 마음을 열지만 그전에 무모하게 다가가거나 위협하면 독을 뿼을 수도 있다.전체적으로 몸이 말랑하며 지상보단 물속에 들어가 있는걸 좋아한다.그래서 인지 집안에서도 물속에 들어가 떠다니는것을 목격할 수 있다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/358-주러나-팔바의-테일스"
+  },
+  {
+    "name": "후우링의 테일스",
+    "species_name": "테일스",
+    "char_number": "0359",
+    "owner_nickname": "이코",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "후우링",
+      "분류": "에니스",
+      "능력": "아무리 더운날이여도 시원하게 만들어 준다. 능력을 사용할때는 후우링의 치링거리는 맑은 소리가 난다."
+    },
+    "description": "후우링을 먹고자란 테일스.더운 여름날의 오후같은 향기가 나며 보기만 해도 절로 시원해지는 기분이 든다.주로 창가에 앉아 책을보거나 경치를 구경하는걸 즐긴다.움직일때마다 나는 소리를 들으면 마음이 차분해지고 더운 공기가 가라앉는 느낌이 든다.명랑하고 상냥한 성격으로 남을 도와주는걸 좋아한다.때론 현명하고 똑부러지기 때문에 자신이 손해보는 일은 거의 없다.대부분 도와주는것은 자신이 하고 싶어서다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/359-후우링의-테일스"
+  },
+  {
+    "name": "역무원의 테일스",
+    "species_name": "테일스",
+    "char_number": "0360",
+    "owner_nickname": "치베",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "역무원",
+      "분류": "에니스",
+      "능력": "열차나 역 내부의 부정탑승자 및 매너를 위반한 자를 강제로 퇴장시킬 수 있는 능력. 조건에 맞는 대상에게 퇴장을 요구할 시 대상이 외부로 순간이동된다"
+    },
+    "description": "한 역무원의 고충을 먹고자란 테일스, 근면성실하기 위해 노력하며 기본적으로 모두에게 상냥한 성격을 갖고있다. 하지만 다소 완벽주의적인 성향을 지닌 탓에 심력 소모가 심한 편이라 주의와 관심이 필요하다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/360-역무원의-테일스"
+  },
+  {
+    "name": "이무기의 테일스",
+    "species_name": "테일스",
+    "char_number": "0361",
+    "owner_nickname": "치베",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "이무기",
+      "분류": "에니스",
+      "능력": "잊었던 과거를 보여주는 꿈을 꾸게 만드는 비를 내릴 수 있는 능력. 비를 맞은 자가 잠에 들면 꿈 속에서 잊고 있었던 과거의 기억을 보여준다. 비를 맞은 시간이 길거나 맞은 비의 세기가 거셀수록 더욱 깊은 곳에 숨어있던 기억을 꺼내온다."
+    },
+    "description": "한 때 용이었던 이무기의 비늘을 먹고자란 테일스, 주식을 얻은 이무기의 인간친화적인 성향을 약간 닮아있다. 물흐르듯 살아가는 삶을 선호하며 여유를 좋아해 대부분의 일을 시원하게 넘기지만, 오만하고 고집도 강해 다소 독선적인 면모를 보일 때가 종종 있다.*디자인권을 사용하여 창작한 테일스 입니다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/361-이무기의-테일스"
+  },
+  {
+    "name": "곰인형의 테일스",
+    "species_name": "테일스",
+    "char_number": "0362",
+    "owner_nickname": "곰곰콩",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "곰인형",
+      "분류": "에니스",
+      "능력": "곰인형들을 조종하는 능력. 특이하게 곰인형들만 조종할 수 있으며 크기나 종류에 상관없이 조종가능하다.하지만 동시에 3개까지만 조종 가능한듯 하다."
+    },
+    "description": "곰인형을 먹고자란 테일스,포옹을 좋아하고 순둥순둥한 성격으로 매우 무해하다.함께 소꿉놀이나 인형놀이 하는걸 즐긴다.몸 전체가 솜인형처럼 푹신푹신하며 부드럽다.곁에 있으면 어릴적 친구를 만난것 같은 안정감을 준다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/362-곰인형의-테일스"
+  },
+  {
+    "name": "흑호의 테일스",
+    "species_name": "테일스",
+    "char_number": "0364",
+    "owner_nickname": "largo",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "흑호",
+      "분류": "데비스",
+      "능력": "드라이아이스 같은 이빨로 공격하는 능력 능력이 발동하면 이빨과 발톱들이 파랗게 변하며 차가운 연기가 난다.물린 대상은 화상을 입게 된다.\\"
+    },
+    "description": "흑호의 송곳니를 먹고자란 테일스,냉철하고 이성적이며 감정에 휘둘리지 않는 성격으로 매우 영리하다.아무 이유없이 무력을 사용하지 않지만 타당한 이유가 생기면 가차없이 공격한다.주변환경에 예민하기 때문에 마음에 들지않는 공간엔 두번다시 가지 않는다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/364-흑호의-테일스"
+  },
+  {
+    "name": "백호의 테일스",
+    "species_name": "테일스",
+    "char_number": "0365",
+    "owner_nickname": "largo",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "백호",
+      "분류": "데비스",
+      "능력": "강철 같은 이빨로 공격하는 능력 능력이 발동하면 이빨과 발톱들이 붉은색으로 변하며 뜨겁게 달궈진다.물린 대상은 화상을 입게 된다."
+    },
+    "description": "백호의 송곳니를 먹고자란 테일스,도발에 잘 넘어가며 그만큼 본인도 시도때도 없이 시비를 털거나 도발한다.싸움을 좋아하며 자신이 강하다는 것을 끝없이 어필하고 싶어한다.답답한걸 세상에서 제일 싫어하며 자유로움을 추구하지만 너무 자유롭게 놔두면 어떤 사고를 칠지 모르기 때문에 주의가 필요하다.반짝반짝 빛나는 자신의 뿔을 자랑스럽게 여긴다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/365-백호의-테일스"
+  },
+  {
+    "name": "우유빙수의 테일스",
+    "species_name": "테일스",
+    "char_number": "0366",
+    "owner_nickname": "새",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "우유빙수",
+      "분류": "데비스",
+      "능력": "우유구름을 만들어내는 능력 우유구름에서 내리는 눈은 우유얼음으로 먹을수도 있다."
+    },
+    "description": "우유빙수를 먹고자란 테일스,곁에선 차가운 우유향이 난다.보들거리는 목도리를 휘날리며 겨울하늘을 나는것이 취미.추운날에 먹는 빙수가 더욱더 맛있게 느껴진다고 한다.주로 자신의 능력을 사용해 빙수를 만들어 먹는데 우유얼음눈이 너무 많이 내리면 가지고 있는 양산을 쓰기도 한다.차분하고 조용해서 차가워 보이지만 실은 다정하고 따뜻한 마음씨를 가지고 있다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/366-우유빙수의-테일스"
+  },
+  {
+    "name": "원예사의 테일스",
+    "species_name": "테일스",
+    "char_number": "0367",
+    "owner_nickname": "새",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "원예사",
+      "분류": "에니스",
+      "능력": "자신의 화분과 물뿌리개로 식물을 키우는 능력 키워진 식물은 원래의 식물보다 특별하게 자란다(ex:토마토가 포도송이 처럼 아주 많이 열린다)"
+    },
+    "description": "원예사의 화분을 먹고자란 테일스,모든 꽃과 식물을 사랑하며 그것들을 돌보는것을 좋아한다.곁에선 싱그러운 풀들의 향기가 나며 온화하고 햇살같은 성격을 가지고 있다.그 누구에게도 친절하지만 눈치가 없다는 소리를 듣기도 한다.가끔 풀들과 대화를 하지만 남이 봤을땐 혼잣말 하는것 처럼 보일 뿐이다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/367-원예사의-테일스"
+  },
+  {
+    "name": "세잎클로버의 테일스",
+    "species_name": "테일스",
+    "char_number": "0368",
+    "owner_nickname": "새",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "세잎클로버",
+      "분류": "에니스",
+      "능력": "행복의 토끼풀 반지를 선물해준다 이 반지는 토끼풀로 엮어 만들어 부실해보이지만 이것을 끼고 있으면 토끼풀 꽃이 시들기 전까지 행복이 지속적으로 찾아오게 된다.\\"
+    },
+    "description": "세잎클로버를 먹고자란 테일스,부끄러움을 많이타고 상냥한 성격으로 머릿속은 낭만적인 상상으로 가득하다.늘 행복한 표정으로 싱글벙글 웃으며 다닌다.자신의 행복함을 모두에게 나누고 싶어한다. 본체 쪽에 있는 링은 처음엔 없었지만 후천적으로 생겨난 케이스다.어떤 테일스들과 추억을 간직하려 만들어 낸 토끼풀 링이다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/368-세잎클로버의-테일스"
+  },
+  {
+    "name": "네잎클로버의 테일스",
+    "species_name": "테일스",
+    "char_number": "0369",
+    "owner_nickname": "덤욤욤",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "네잎클로버",
+      "분류": "에니스",
+      "능력": "행운의 토끼풀 팔찌를 선물해준다. 이 팔찌는 토끼풀로 엮어 만들어 부실해보이지만 이것을 끼고 있으면 그 꽃이 시들기 전까지 행운이 지속적으로 찾아오게 된다."
+    },
+    "description": "네잎클로버를 먹고자란 테일스, 친절하고 베푸는걸 좋아하지만 결코 쉬운 성격은 아니다. 똑똑하고 현명하기 때문에 자신의 행운을 아무에게나 나눠주지 않는다. 의도하지 않아도 늘 행운이 뒤따르며 자신의 이런 행운을 어려운 생명체들에게 나눠주고 싶어한다. 본체 쪽에 있는 링은 처음엔 없었지만 후천적으로 생겨난 케이스다. 어떤 테일스들과 추억을 간직하려 만들어 낸 토끼풀 링이다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/369-네잎클로버의-테일스"
+  },
+  {
+    "name": "다섯잎클로버의 테일스",
+    "species_name": "테일스",
+    "char_number": "0370",
+    "owner_nickname": "마키나",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "다섯잎클로버",
+      "분류": "데비스",
+      "능력": "불행의 토끼풀 목걸이를 선물해준다. 이 목걸이는 토끼풀로 엮어 만들어 부실해보이지만 이것을 끼고 있으면 그 꽃이 시들기 전까지 불행이 지속적으로 찾아오게 된다."
+    },
+    "description": "다섯잎클로버를 먹고자란 테일스로, 어딘가 음침하고 불안해 보이는 성격을 가졌다. 가끔 혼잣말로 중얼중얼 거리거나 소름돋게 웃는 등 이상한 행동을 하지만 직접적으로 나쁜 행동은 하지 않는다. 남에게 자신의 불행을 모두 떠넘겨주고 싶어한다. 본체 쪽에 있는 링은 처음엔 없었지만 후천적으로 생겨난 케이스다. 어떤 테일스들과 추억을 간직하려 만들어 낸 토끼풀 링이다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/370-다섯잎클로버의-테일스"
+  },
+  {
+    "name": "전구의 테일스",
+    "species_name": "테일스",
+    "char_number": "0371",
+    "owner_nickname": "해실",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "전구",
+      "분류": "데비스",
+      "능력": "아주 밝게 빛을 내는 능력 그날 먹은 전구의 빛에 따라 전구빛의 색이 바뀐다."
+    },
+    "description": "전구를 먹고자란 테일스,잠이 들면 몸에 있는 모든 전구에 불이 꺼진다.이때 데비스 표식도 같이 꺼져 어두컴컴하게 변한다.몸의 하얀 부분은 실리콘처럼 말랑하지만 노란 부분은 유리처럼 딱딱하다.기운넘치고 남 생각을 많이하지만 모든게 서툴러서 사고를 치는 타입.의욕은 앞서가지만 잘 실행이 안되는 모양이다.뿔 양쪽끝에선 전기가 흘러나오고 있다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/371-전구의-테일스"
+  },
+  {
+    "name": "감자튀김의 테일스",
+    "species_name": "테일스",
+    "char_number": "0373",
+    "owner_nickname": "이호",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "감자튀김",
+      "분류": "데비스",
+      "능력": "날개에 달린 감자튀김을 날려 공격하는 능력 일반 감자튀김보다 더 단단해서 맞으면 은근 아프지만 먹을 순 있다."
+    },
+    "description": "감자튀김을 먹고자란 테일스,항상 조용하고 뚱해보인다.퉁명스럽게 대답하지만 사실은 속마음을 솔직하게 말하지 못하는 성격이다.고소하고 짭짤한 감자튀김의 향이 늘 곁에서 나며 케찹에 감자튀김을 찍어먹는걸 가장 좋아한다.뿔은 말랑말랑하지만 터지거나 흐르진 않는다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/373-감자튀김의-테일스"
+  },
+  {
+    "name": "콜라의 테일스",
+    "species_name": "테일스",
+    "char_number": "0374",
+    "owner_nickname": "수라감자",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "콜라",
+      "분류": "에니스",
+      "능력": "콜라의 탄산을 이용해 아주 빠른 속도로 날아가는 능력이 능력을 마시기 위해선 콜라를 아주 많이 마셔야 하지만 능력을 사용하면 콜라가 터지는 것처럼 강력한 추진력을 가질 수 있게 된다."
+    },
+    "description": "콜라를 먹고자란 테일스,약속과 우정,의리를 가장 중요하게 생각하며 절대 배신 하지 않는 든든한 나무같은 성격.처음에는 무뚝뚝하고 다가가기 어렵게 느껴져도 함께 있으면 든든한 버팀목이 되어 줄것이다.곁에선 콜라향이 진하게 나며 기포가 톡톡 터지는 소리가 끊임 없이 난다.너구리 과 동물의 모습이지만 곰이라고 자주 오해받는다.날개와 링,목털은 콜라 거품으로 이루어져 있다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/374-콜라의-테일스"
+  },
+  {
+    "name": "마피아의 테일스",
+    "species_name": "테일스",
+    "char_number": "0375",
+    "owner_nickname": "러티챤",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "마피아의 총",
+      "분류": "데비스",
+      "능력": "주사위를 굴려 그 상대에게 행운 또는 불운을 하루간 가져다준다. 수가 높을수록 더욱 강한 행운이, 낮을수록 그만큼의 불운이 찾아오며 너무 자주 쓰게되면 지쳐 잠들어버린다."
+    },
+    "description": "마피아의 총을 먹고자란 테일스,무뚝뚝하나 말수가 적진 않고 여러 질나쁜 일에 연류되는 경우가 많다. 의외로 자기애는 별로 없지만 보기와 다르게 친해지기는 쉽다. 속내를 알 수 없으며 위험한 무기들도 갖고 다루기에 주의하는 것이 좋다.*디자인권을 사용하여 창작한 테일스 입니다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/375-마피아의-테일스"
+  },
+  {
+    "name": "혼돈의 테일스",
+    "species_name": "테일스",
+    "char_number": "0376",
+    "owner_nickname": "만두냥",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "혼돈의 조각",
+      "분류": "데비스",
+      "능력": "닿은 존재에게 끔찍한 혼돈의 내면을 보여줄 수 있다.내면을 본 존재는 광기에 걸릴 수도 있다."
+    },
+    "description": "혼돈의 조각을 먹고자란 테일스,주변에 가까이 있으면 꺼림직하거나 기분 나쁘고 질척한 무언가가 몸에 닿는 것 같은 느낌을 받는다.가면이 하나의 방어막 같은 느낌이다.신화적인 무언가가 떨어뜨린 혼돈의 조각을 먹고 자랐지만 그 힘은 너무나도 거대해서 몸이 버티지 못하고 금이 가고있다.*디자인권을 사용하여 창작한 테일스 입니다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/376-혼돈의-테일스"
+  },
+  {
+    "name": "바스러진 빛의 테일스",
+    "species_name": "테일스",
+    "char_number": "0377",
+    "owner_nickname": "들새",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "바스러진 빛",
+      "분류": "에니스",
+      "능력": "한 때 좌절하여 놓아버린 희망을 다시 상기시켜 주는 능력. 희망을 심어주는 능력이며 자신과 접촉한 상대의 경우에 한해서 가능하다."
+    },
+    "description": "바스러진 빛을 먹고자란 테일스,침착하며 말수가적다. 모든이에게 희망을 주기위해 만들어져야만 했지만 결국 한정된 상대에게만 희망을 주는 실패작이 되고 말았다. 그 사실은 자신도 인지하고 있다.*디자인권을 사용하여 창작한 테일스 입니다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/377-바스러진-빛의-테일스"
+  },
+  {
+    "name": "비스크돌의 테일스",
+    "species_name": "테일스",
+    "char_number": "0378",
+    "owner_nickname": "큐벵",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "비스크돌",
+      "분류": "데비스",
+      "능력": "눈이 마주친 자를 비스크돌로 만드는 능력"
+    },
+    "description": "비스크돌을 먹고자란 테일스,도자기처럼 차갑고 딱딱하지만 상냥한 마음씨를 가진 테일스이다.본인의 능력 때문인지 항상 눈이 보이지 않도록 모자를 쓰고 다니며,이 모자는 자신이 직접 만든 모자다.옷을 만드는 취미를 가지고 있어 가끔 주변인에게 아기자기한 옷들을 선물한다.*디자인권을 사용하여 창작한 테일스 입니다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/378-비스크돌의-테일스"
+  },
+  {
+    "name": "시리얼의 테일스",
+    "species_name": "테일스",
+    "char_number": "0379",
+    "owner_nickname": "윤달",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "시리얼",
+      "분류": "에니스",
+      "능력": "단단한 후르츠 링 시리얼을 던져 상대를 결박하는 능력"
+    },
+    "description": "시리얼을 먹고자란 테일스,과일 향이 나는 후르츠 링 시리얼 고글을 쓰고 있다.고글을 쓰면 시력과 명중률이 올라간다.곁에선 달콤한 과일 향과 고소한 우유향이 난다.굳건하고 과묵한 성격을 가지고 있으며 남에게 휘둘리지 않는다.가끔 팩트폭력을 날려 무안하게 만들때도 있다.가끔 시리얼 링을 던지며 놀때도 있다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/379-시리얼의-테일스"
+  },
+  {
+    "name": "아스포델의 테일스",
+    "species_name": "테일스",
+    "char_number": "0380",
+    "owner_nickname": "슷큐",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "아스포델",
+      "분류": "에니스",
+      "능력": "\"함께해\"라고 말하며 능력을 발동하면 능력에 당한 그 대상의 몸에선 아스포델이 피어오른다.몸에 자란 아스포델은 하루면 시드는데,시들기 전까지는 이 테일스 곁을 떠날 수 없게 된다.능력을 너무 많이 쓰면 본인의 몸에서도 아스포델이 하나 둘씩 피어나는데 몸속 살을 파고나와 피어나기 때문에 주의해야 한다."
+    },
+    "description": "아스포델을 먹고자란 테일스,매우 불안정한 성격으로 항상 불안에 떨고 있다.하지만 마냥 가냘프고 불쌍한것이 아닌, 어딘가 꼬여있는 쎄함이 느껴진다.뭐든 과하게 해석하며 극단적이다.늘 흑장미가 떠나갈까 불안해 하며 흑장미가 말하는것은 뭐든 하려 한다.가끔 소름돋는 행동을 할 때도 있다.난 영원히 흑장미의 것.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/380-아스포델의-테일스"
+  },
+  {
+    "name": "흑장미의 테일스",
+    "species_name": "테일스",
+    "char_number": "0381",
+    "owner_nickname": "나덕",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "흑장미",
+      "분류": "에니스",
+      "능력": "\"영원히\"와 함께 원하는걸 말하면 하루동안 이루어진다. 능력에 당한 상대의 몸에는 흑장미가 피어오른다.능력이 끝난 이후 몇일간은 흑장미의 몸에피어있는 장미가 꽃봉오리로변해있는다 다시 장미가 필때까지는 능력을 사용할수없다. ex) 영원히 나를 따르거라.\\"
+    },
+    "description": "흑장미를 먹고자란 테일스,매우 깐깐한 성격이며 말이 거의 없다. 커다란 저택에 피어있는 흑장미를 먹고 자라서 그런지 자신을 귀족이라고 생각한다. 원래 살던 곳을 나온 이후자신만의 저택을 지어 아스포델과 단둘이 살고 있다.저택 관리는 어디에서 온 것인지 움직이는 흑장미 덩굴들에 의해 관리되고 있다. 아스포델은 영원히 나의 것.\\*디자인권을 사용하여 창작한 테일스 입니다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/381-흑장미의-테일스"
+  },
+  {
+    "name": "북극토끼의 테일스",
+    "species_name": "테일스",
+    "char_number": "0382",
+    "owner_nickname": "슷큐",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "북극토끼의 털",
+      "분류": "에니스",
+      "능력": "푹신푹신한 눈사람을 만들어 낸다. 분명 차가운 눈사람이지만 솜인형 처럼 푹신푹신하고 부서지거나 녹지 않는다.일정 시간이 지나면 퐁!하고 사라진다."
+    },
+    "description": "북극토끼의 털을 먹고자란 테일스,전체적으로 폭신폭신한 털로 뒤덮혀 있으며 아주 포근하고 따뜻하다.아무리 추운 온도에서도 시원하게 느끼거나 아무렇지 않아 하지만 더위는 많이 타는 편.순진하고 상냥하며 가끔 엉뚱한 소리를 해서 당황스럽게 만들긴 하지만 아주 착한 마음씨를 가지고 있다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/382-북극토끼의-테일스"
+  },
+  {
+    "name": "북극여우의 테일스",
+    "species_name": "테일스",
+    "char_number": "0383",
+    "owner_nickname": "이코",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "북극여우의 털",
+      "분류": "데비스",
+      "능력": "주위에 있는 눈을 재빠르게 뿌려서 공격하는 능력. 눈을 재빠르게 뿌리고 눈밭에 숨는다."
+    },
+    "description": "북극여우의 털을 먹고자란 테일스,전체적으로 폭신폭신하고 약간 긴 장모의 털을 가지고 있으며 쓰다듬고 있으면 기분이 좋아진다.특히 목에 있는 털이 아주 폭신한 눈밭 같다.아무리 추운 온도에서도 시원하게 느끼거나 아무렇지 않아 하지만 더위는 많이 타는 편.능청스럽고 능글맞지만 한사람만 바라보며 은근 챙겨주려는 세심하고 다정한 성격을 가지고 있다.*디자인권을 사용하여 창작한 테일스 입니다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/383-북극여우의-테일스"
+  },
+  {
+    "name": "네코마타의 테일스",
+    "species_name": "테일스",
+    "char_number": "0384",
+    "owner_nickname": "슷큐",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "네코마타의 영혼",
+      "분류": "데비스",
+      "능력": "인간으로 둔갑하는 능력.성별과 나이 키 등등 모두 랜덤이다.원하는 모습으로 변하는 능력을 키우기 위해 아직도 노력하는 중이다."
+    },
+    "description": "네코마타의 영혼을 먹고자란 테일스,오랜 세월을 산 네코마타의 영혼을 먹었기 때문에 이 테일스도 수백년은 거뜬히 살수 있다.본체 옆엔 고양이 꼬리가 하나 더 나있으며 이는 진짜 꼬리처럼 자유자재로 움직일 수 있다.곁에는 영혼의 불꽃들이 떠다니며 영혼을 먹을수록 방울 소리가 커진다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/384-네코마타의-테일스"
+  },
+  {
+    "name": "삼목구의 테일스",
+    "species_name": "테일스",
+    "char_number": "0385",
+    "owner_nickname": "Ruda",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "삼목구의 털",
+      "분류": "데비스",
+      "능력": "귀신을 보고 쫓아낼 수 있다"
+    },
+    "description": "지옥문을 지키는 삼목대왕인 삼목구의 털을 먹은 테일스을 먹고자란 테일스,충성심이 강하고, 정의로운 성격이며 악귀를 물리치는 힘이 있다.*디자인권을 사용하여 창작한 테일스 입니다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/385-삼목구의-테일스"
+  },
+  {
+    "name": "천호의 테일스",
+    "species_name": "테일스",
+    "char_number": "0386",
+    "owner_nickname": "Chamyo",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "천호",
+      "분류": "에니스",
+      "능력": "먼 곳을 보여주는 능력. 천리안이라고 부르기도 하는 이 능력을 사용할 시 흰색의 눈이 금빛으로 빛나게 된다. 자신에게도, 지정한 대상에게도 먼 곳을 보여줄 수 있다."
+    },
+    "description": "천호의 꼬리털을 먹고 자란 테일스,오래 살아온 만큼 지혜롭고 인자하며 싸움을 싫어한다. 금색 빛 털을 가졌으며 9갈래로 이루어진 꼬리털이 본체를 감싸고 있다. 많은 사람들의 사연과 이야기를 들어왔지만 들어만 줄뿐 너무 많은 이야기를 들어와 너무 긴 대화는 귀찮아 하는 눈치이다.*디자인권을 사용하여 창작한 테일스 입니다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/386-천호의-테일스"
+  },
+  {
+    "name": "구미호의 테일스",
+    "species_name": "테일스",
+    "char_number": "0387",
+    "owner_nickname": "슷큐",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "구미호",
+      "분류": "에니스",
+      "능력": "상대를 매혹시키는 능력으로 아무리 불합리한 요구라도 들어주게 된다.능력을 사용할땐 거대한 구미호의 그림자가 뒤에서 보인다."
+    },
+    "description": "구미호의 꼬리털을 먹고 자란 테일스,은색 빛 털을 가졌으며 9갈래로 이루어진 꼬리털이 무섭게 살랑이고 있다.능글 맞고 거짓말을 잘하며 포커페이스에 능하다.마음에 없는 소리도 술술하기 때문에 이 테일스가 하는 말을 전부 믿지는 말자.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/387-구미호의-테일스"
+  },
+  {
+    "name": "전화기의 테일스",
+    "species_name": "테일스",
+    "char_number": "0388",
+    "owner_nickname": "문사맨",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "전화기",
+      "분류": "에니스",
+      "능력": "어떤곳의 연락처든 존재만 한다면 바로 알 수 있는 능력."
+    },
+    "description": "전화기를 먹고 자란 테일스,한쪽 눈은 전화기의 다이얼로 직접 돌려 전화번호를 입력할 수 있다.몸 이곳저곳 이어져 있는 전화기 선이 끊어지면 모든 소리를 들을 수도,말할 수도 없게 된다.수화기 너머에서 들리는것 같은 목소리를 가지고 있다.덤덤하고 감정이 거의 없으며 경어체를 사용한다.친절하진 않지만 모든 대답해주는 상담사 같은 역할.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/388-전화기의-테일스"
+  },
+  {
+    "name": "벚꽃라떼의 테일스",
+    "species_name": "테일스",
+    "char_number": "0389",
+    "owner_nickname": "새",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "벚꽃라떼",
+      "분류": "에니스",
+      "능력": "벚꽃향이 진하게 나는 벚꽃라떼를 만들어 낸다.만들어낸 라떼를 마시면 봄이 찾아와 모든것이 시작되는것처럼 뭐든지 새출발을 할 마음이 생기게 된다."
+    },
+    "description": "벚꽃라떼를 먹고 자란 테일스,봄의 화창한날 피크닉 가는것을 좋아한다.벚나무 아래에 돗자리를 깔고 따뜻한 벚꽃라떼를 마시는것이 일상.발랄하고 애교쟁이인 성격으로 함께 할수록 행복해진다.늘 곁에선 데운 우유와 벚꽃향이 은은하게 난다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/389-벚꽃라떼의-테일스"
+  },
+  {
+    "name": "우유푸딩의 테일스",
+    "species_name": "테일스",
+    "char_number": "0390",
+    "owner_nickname": "슷큐",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "우유푸딩",
+      "분류": "데비스",
+      "능력": "몽글몽글 우유맛이 나는 우유푸딩을 만들어 내는 능력 우유가 있다면 언제든지 만들 수 있다.그것이 딸기우유,초코우유 일지라도!"
+    },
+    "description": "우유푸딩을 먹고 자란 테일스,당돌하고 자신감 넘치는 성격으로 늘 존댓말을 쓴다.가끔 우유의 테일스 에게서 우유를 받아 푸딩을 만든다.곁에선 달콤한 우유향이 나며 머리위에 있는 푸딩들은 말랑말랑 탱글탱글하다.좋은 생각이 나면 목에있는 종이 울린다.*새 님이 창작한 테일스 입니다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/390-우유푸딩의-테일스"
+  },
+  {
+    "name": "병푸딩의 테일스",
+    "species_name": "테일스",
+    "char_number": "0391",
+    "owner_nickname": "본본",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "병푸딩",
+      "분류": "데비스",
+      "능력": "어떤 푸딩이든 사라지게 만드는 능력 푸딩만 사라지게 할 수 있으며 이 테일스가 먹는것이 아닌 정말 흔적도 없이 사라지게 만든다."
+    },
+    "description": "병푸딩을 먹고 자란 테일스,전체적으로 투명하고 속이 비춰져 보인다.속에는 무언가 들어있었던 듯이 흔적만 남아있다.항상 멍때리고 있으며 둔한 성격으로 늘 붕떠있다.곁에선 플라스틱의 향이 나지만 묘하게 우유향이 나는것 같기도 하다.*새 님이 창작한 테일스 입니다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/391-병푸딩의-테일스"
+  },
+  {
+    "name": "초코 푸딩의 테일스",
+    "species_name": "테일스",
+    "char_number": "0393",
+    "owner_nickname": "eku",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "초코 푸딩",
+      "분류": "데비스",
+      "능력": "화이트 초코시럽이 뿌려진 초코푸딩을 만들어 내는 능력 동그란 형태의 초코푸딩을 만들어 내는데 가끔씩 아주 쓴 푸딩이 나오기도 한다."
+    },
+    "description": "초코푸딩을 먹고 자란 테일스,귀와 날개,손발은 화이트 초코로 코팅되어 있다.곁에선 늘 달콤한 초코향이 나며 달려있는 뿔은 진짜 먹을 수 있는 초콜릿 이다.예민하고 자주 깜짝깜짝 놀라며 경계를 쉽게 풀지 않는 성격.머리위에 있는 푸딩은 탱탱하며 매끈거린다.*새 님이 창작한 테일스 입니다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/392-초코-푸딩의-테일스"
+  },
+  {
+    "name": "벚꽃 푸딩의 테일스",
+    "species_name": "테일스",
+    "char_number": "0394",
+    "owner_nickname": "덤욤욤",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "벚꽃 푸딩",
+      "분류": "에니스",
+      "능력": "벚꽃향이 나는 투명한 푸딩을 만들어 내는 능력 푸딩속에는 벚꽃잎이 한두개 들어있다.색이 오묘해서 아주 아름다운 푸딩."
+    },
+    "description": "벚꽃푸딩을 먹고 자란 테일스,몸의 대부분이 벚꽃 푸딩처럼 투명하고 탱글하며 그 속엔 벚꽃잎들이 가득차 있다.분홍색이 진한곳 일 수록 달콤한 벚꽃향이 난다.상처를 잘 받고 정이 많은 성격이라 자주 눈물을 흘리는데,눈물은 벚꽃모양으로 흐르고 입에선 벚꽃잎을 토해낸다.*새 님이 창작한 테일스 입니다.---",
+    "source_url": "https://sq1222.wixsite.com/tails/post/393-벚꽃-푸딩의-테일스"
+  },
+  {
+    "name": "별사탕의 테일스",
+    "species_name": "테일스",
+    "char_number": "0395",
+    "owner_nickname": "둥지",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "별사탕",
+      "분류": "데비스",
+      "능력": "설탕을 별사탕으로 만들 수 있다"
+    },
+    "description": "별사탕을 먹고 자란 테일스,장난스럽고 호기심이 많다 어린아이들과 잘 어울리며 좋아한다*디자인권을 사용하여 창작한 테일스 입니다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/395-별사탕의-테일스"
+  },
+  {
+    "name": "베네수엘라 푸들나방의 테일스",
+    "species_name": "테일스",
+    "char_number": "0396",
+    "owner_nickname": "슷큐",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "베네수엘라 푸들나방",
+      "분류": "에니스",
+      "능력": "자신의 털로 푸들나방을 만들어 내는 능력 최대 4마리 까지 만들 수 있다.이 나방은 심란한 마음을 진정시켜주는 능력이 있다.\\"
+    },
+    "description": "베네수엘라 푸들나방을 먹고 자란 테일스,피부가 매우 약해서 이를 보호하기 위해 털로 보송보송 뒤덮혀 있다.겁이 많고 눈물이 많아 자주 울음을 터트리지만 달래주면 금방 그친다.이 테일스의 털은 따뜻하진 않지만 매우 부드럽다.더듬이로 주변환경의 변화를 빠르게 알아차릴 수 있다.팔이 4개로 여러 물건을 집을 수 있다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/396-베네수엘라-푸들나방의-테일스"
+  },
+  {
+    "name": "옥색긴꼬리산누에나방의 테일스",
+    "species_name": "테일스",
+    "char_number": "0397",
+    "owner_nickname": "새",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "옥색긴꼬리산누에나방",
+      "분류": "에니스",
+      "능력": "은은하게 야광으로 빛이나는 옥색긴꼬리산누에나방을 소환하는 능력 한번에 4마리 까지 가능하며 아름다운 모습에 요정이라고 착각하는 사람도 있다.이 나방은 생명을 치유하는 능력이 있다."
+    },
+    "description": "옥색긴꼬리산누에나방을 먹고 자란 테일스,깃털같은 더듬이는 주변온도에 민감하며 목에 난 털은 아주 부드럽다.노란색을 띄는 3개의 손톱을 가지고 있다.시력이 좋지않아 안경을 들고 다닌다.역사에 관심이 많으며 여러 상식들을 많이 알고 있다.가끔 남에게 차갑게 대할때도 있다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/397-옥색긴꼬리산누에나방의-테일스"
+  },
+  {
+    "name": "흰애기물결자나방의 테일스",
+    "species_name": "테일스",
+    "char_number": "0398",
+    "owner_nickname": "옹시미",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "흰애기물결자나방",
+      "분류": "에니스",
+      "능력": "자그마한 흰애기물결자나방을 소환하는 능력 은빛,금빛,보라빛 여러색으로 빛나는 날개를 가진 나방을 최대 6마리 까지 소환할 수 있다.이 나방은 대상에게 환각을 보여주는 능력이 있다."
+    },
+    "description": "흰애기물결자나방을 먹고 자란 테일스,늘 느리고 느긋하며 모든일에 서툴다.한눈을 팔면 사고를 치는 아이처럼 자주 관심을 가져줘야 한다.팔이 4개이기 때문에그런지 사고도 4배!조용하기 때문에 얌전하고 의젓해 보이지만 소리소문 없이 사고를 치는 장난꾸러기다.말을 늘려 말하는 버릇이 있다(ex.네에-)",
+    "source_url": "https://sq1222.wixsite.com/tails/post/398-흰애기물결자나방의-테일스"
+  },
+  {
+    "name": "부엉이산누에나방의 테일스",
+    "species_name": "테일스",
+    "char_number": "0399",
+    "owner_nickname": "치베",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "부엉이산누에나방",
+      "분류": "에니스",
+      "능력": "커다란 부엉이산누에나방을 소환하는 능력. 소환한 나방들은 사나운 성격으로 지목한 대상에 달라붙어 마구 공격한다.최대 2마리 까지 소환할 수 있다.이 나방은 대상에게 공포심을 심어주는 능력이 있다."
+    },
+    "description": "부엉이산누에나방을 먹고 자란 테일스,위험한 상대를 만나면 날개를 크게 펼쳐 눈알 모양을 보여준다.눈알 모양은 그저 단순한 무늬가 아닌 진짜 눈처럼 움직인다.날개 눈과 마주친 대상은 큰 공포심에 휩싸인다.박애주의자 이며 어딘가 수상해 보이지만 베일에 휩싸여 있다.커다란 날개로 비행을 자유롭게 하는것이 특징.이곳저곳 돌아다니는 방랑자이다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/398-부엉이산누에나방의-테일스"
+  },
+  {
+    "name": "피냐타의 테일스",
+    "species_name": "테일스",
+    "char_number": "0400",
+    "owner_nickname": "이보노키",
+    "owner_user_id": null,
+    "owner_is_offsite": true,
+    "designer_nickname": "슷큐",
+    "designer_user_ids": [
+      "3b060ba1-64cb-4eb3-8289-1ff9a88add8e"
+    ],
+    "custom_field_values": {
+      "주식": "피냐타",
+      "분류": "에니스",
+      "능력": "화려한 피냐타를 만들어 내는 능력 다양한 색으로 만들어진 피냐타를 만들어 나무나 천장에 매단후 자신이 들고다니는 방망이를 빌려준다.피냐타를 터트리면 다양한 맛의 사탕과 과자가 잔뜩 나온다.이 피냐타를 터트린 대상의 상태에 따라 사탕과 과자의 효과가 바뀐다{ex:대상이 우울함→우울함을 치료해 주는 사탕이 나옴\\"
+    },
+    "description": "\\]피냐타를 먹고 자란 테일스,적극적이고 화끈한 성격으로 답답한건 절대 참지 못한다.신나는 음악과 고조되어가는 분위기를 즐긴다.몸속 안에는 달콤한 것들로 가득 차있다.등에 달린 4개의 비닐은 끝없이 늘어나며 손처럼 사용할 수 있다.이것으로 피냐타를 터트리려는 대상의 눈을 가려주는듯 하다.항상 막대 사탕을 물고다닌다.이 테일스는 아주아주 단단해 터지지 않는다.",
+    "source_url": "https://sq1222.wixsite.com/tails/post/400-피냐타의-테일스"
+  }
+]

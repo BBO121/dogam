@@ -1,0 +1,18 @@
+{
+  "total": 94,
+  "errors": [
+    "char_number 0317 누락",
+    "char_number 0338 누락",
+    "char_number 0339 누락",
+    "char_number 0363 누락",
+    "char_number 0372 누락",
+    "char_number 0392 누락"
+  ],
+  "issues": [
+    {
+      "ctx": "char_number=0356",
+      "field": "owner",
+      "note": "괄호 없는 변형 포맷에서 파트너명을 추출함 (확인 권장)"
+    }
+  ]
+}

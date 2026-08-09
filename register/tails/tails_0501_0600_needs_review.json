@@ -1,0 +1,17 @@
+[
+  {
+    "char_number": "0533",
+    "url": "https://sq1222.wixsite.com/tails/post/533-태양의-테일스",
+    "reason": "주식/[능력:...] block and character description paragraph never rendered in WebFetch output across 8 attempts (multiple cache-busting query params, raw markdown dump, image/alt-text listing, strict verbatim prompt). Page appears to genuinely lack this content in the crawled source."
+  },
+  {
+    "char_number": "0535",
+    "url": "https://sq1222.wixsite.com/tails/post/535-금성의-테일스",
+    "reason": "주식/[능력:...] block and character description paragraph never rendered in WebFetch output across 6 attempts (cache-busting query params, raw markdown dump, strict verbatim prompt). Page appears to genuinely lack this content in the crawled source."
+  },
+  {
+    "char_number": "0540",
+    "url": "https://sq1222.wixsite.com/tails/post/540-천왕성의-테일스",
+    "reason": "주식/[능력:...] block and character description paragraph never rendered in WebFetch output across 4 attempts (cache-busting query params, raw markdown dump, strict verbatim prompt). Page appears to genuinely lack this content in the crawled source."
+  }
+]

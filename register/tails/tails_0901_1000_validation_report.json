@@ -1,0 +1,13 @@
+{
+  "total": 100,
+  "errors": [
+    "char_number=1000: owner_nickname이 비어있음"
+  ],
+  "issues": [
+    {
+      "ctx": "char_number=1000",
+      "field": "owner",
+      "note": "'파트너: ...' 패턴을 찾지 못함"
+    }
+  ]
+}
