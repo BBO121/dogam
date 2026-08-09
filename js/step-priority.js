@@ -3,7 +3,7 @@
 // 여기 없는 종족은 기존 방식(species.main_image_step_id 고정) 그대로 동작한다.
 // 우선순위는 배열 앞쪽일수록 높다(먼저 대표로 선택됨), Step 이름으로 매칭한다(step_order와 무관).
 const REPRESENTATIVE_STEP_PRIORITY = {
-  172: ['승천용', '재앙용', '수련용', '발탁용', '아기융'], // 융용 — 아기융만 '융', 나머지는 '용' 표기가 정식 명칭
+  172: ['성체용', '승천용', '재앙용', '수련용', '발탁용', '아기융'], // 융용 — 성체용이 최우선 대표, 아기융만 '융', 나머지는 '용' 표기가 정식 명칭
 };
 
 function hasRepresentativePriority(speciesId) {
