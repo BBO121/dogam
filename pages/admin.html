@@ -1199,22 +1199,38 @@
     }
 
     async function loadAdminChars() {
-      const { data, error } = await sb
-        .from('characters')
-        .select('id, name, species_name, owner_nickname, owner_user_id, created_at')
-        .order('created_at', { ascending: false });
+      // PostgREST 기본 최대 반환 행수(1000) 제한 우회를 위해 1000개 단위로 반복 조회
+      const PAGE_SIZE = 1000;
+      let allData    = [];
+      let from       = 0;
+      let fetchError = null;
+
+      while (true) {
+        const { data, error } = await sb
+          .from('characters')
+          .select('id, name, species_name, owner_nickname, owner_user_id, created_at')
+          .order('created_at', { ascending: false })
+          .range(from, from + PAGE_SIZE - 1);
+
+        if (error) { fetchError = error; break; }
+
+        allData.push(...(data || []));
+
+        if (!data || data.length < PAGE_SIZE) break;
+        from += PAGE_SIZE;
+      }
 
       const empty = document.getElementById('charAdminEmpty');
 
-      if (error || !data || data.length === 0) {
+      if (fetchError || allData.length === 0) {
         document.getElementById('charTableBody').innerHTML = '';
         empty.style.display = 'block';
         return;
       }
 
       empty.style.display = 'none';
-      allAdminChars = data;
-      charPager.load(data);
+      allAdminChars = allData;
+      charPager.load(allAdminChars);
     }
 
     function filterAdminChars(q) {

@@ -389,8 +389,112 @@
       [{ color: [] }],
       [{ align: [] }],
       [{ list: 'ordered' }, { list: 'bullet' }],
+      ['link', 'image', 'clean'],
+    ];
+    // 관계 설명(relDescQ)용: 이미지 첨부 기능 제외 — 설정/커스텀 섹션에만 이미지 첨부를 제공
+    const QUILL_TOOLBAR_NO_IMAGE = [
+      [{ size: ['12px', '14px', false, '18px', '20px', '24px', '28px'] }],
+      ['bold', 'italic', 'underline'],
+      [{ color: [] }],
+      [{ align: [] }],
+      [{ list: 'ordered' }, { list: 'bullet' }],
       ['link', 'clean'],
     ];
+    const QuillDelta = Quill.import('delta');
+
+    // ── char_sections 이미지 첨부 (Storage 업로드, base64/blob 저장 금지) ──
+    async function uploadSectionImage(file) {
+      if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+        throw new Error('PNG, GIF, JPG, WebP 형식의 이미지만 첨부할 수 있어요.');
+      }
+      const blob   = await compressImage(file);
+      const ext    = blob.type === 'image/gif' ? 'gif' : 'jpg';
+      const idPart = charId || 'tmp';
+      const path   = `section_${idPart}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}.${ext}`;
+      const { error } = await sb.storage.from('images').upload(path, blob, { contentType: blob.type });
+      if (error) throw new Error('이미지 업로드 실패: ' + error.message);
+      return sb.storage.from('images').getPublicUrl(path).data.publicUrl;
+    }
+
+    function setSectionQuillBusy(quill, busy) {
+      quill.enable(!busy);
+      quill.container.style.opacity = busy ? '0.6' : '';
+    }
+
+    async function insertSectionImageFile(quill, file) {
+      if (!file || !file.type || !file.type.startsWith('image/')) return;
+      if (quill.__sectionImgBusy) return;
+      quill.__sectionImgBusy = true;
+      setSectionQuillBusy(quill, true);
+      try {
+        const url   = await uploadSectionImage(file);
+        const range = quill.getSelection(true) || { index: quill.getLength() };
+        quill.insertEmbed(range.index, 'image', url, 'user');
+        quill.setSelection(range.index + 1, 0, 'silent');
+      } catch (err) {
+        alert(err.message || '이미지 업로드에 실패했어요.');
+      } finally {
+        quill.__sectionImgBusy = false;
+        setSectionQuillBusy(quill, false);
+      }
+    }
+
+    // 파일선택 / Ctrl+V / drag&drop 세 경로 모두 uploadSectionImage() 하나로 수렴
+    // allowUpload=false: 이미지 첨부 기능 없이 data:/blob: 방어(clipboard matcher)만 적용 (관계 설명용)
+    function attachSectionImageSupport(quill, { allowUpload = true } = {}) {
+      if (allowUpload) {
+        quill.getModule('toolbar').addHandler('image', () => {
+          const input = document.createElement('input');
+          input.type   = 'file';
+          input.accept = 'image/png,image/jpeg,image/webp,image/gif';
+          input.addEventListener('change', () => insertSectionImageFile(quill, input.files[0]));
+          input.click();
+        });
+
+        // 이미지 자체를 붙여넣는 경우: Quill 기본 base64 변환 전에 가로채서 업로드로 대체
+        quill.root.addEventListener('paste', (e) => {
+          const items = e.clipboardData?.items || [];
+          for (const item of items) {
+            if (item.type && item.type.startsWith('image/')) {
+              e.preventDefault();
+              e.stopPropagation();
+              insertSectionImageFile(quill, item.getAsFile());
+              return;
+            }
+          }
+          // 텍스트/HTML 붙여넣기는 Quill 기본 처리 + 아래 clipboard matcher에 맡김
+        }, true);
+
+        // 이미지 파일 드래그앤드롭
+        quill.root.addEventListener('drop', (e) => {
+          const file = e.dataTransfer?.files?.[0];
+          if (file && file.type && file.type.startsWith('image/')) {
+            e.preventDefault();
+            e.stopPropagation();
+            insertSectionImageFile(quill, file);
+          }
+        });
+      }
+
+      // 다른 사이트/문서에서 복사한 HTML 안에 data:/blob: 이미지가 섞여 들어오는 경우 삽입 자체를 차단 (항상 적용)
+      quill.clipboard.addMatcher('IMG', (node, delta) => {
+        const src = node.getAttribute('src') || '';
+        if (src.startsWith('data:') || src.startsWith('blob:')) return new QuillDelta();
+        return delta;
+      });
+    }
+
+    // char_sections 저장 직전 방어 필터: data:/blob: 이미지만 확실히 제거 (외부 https 이미지는 허용)
+    function stripUnsafeImages(html) {
+      if (!html) return html;
+      const div = document.createElement('div');
+      div.innerHTML = html;
+      div.querySelectorAll('img').forEach(img => {
+        const src = img.getAttribute('src') || '';
+        if (src.startsWith('data:') || src.startsWith('blob:')) img.remove();
+      });
+      return div.innerHTML;
+    }
 
     // ── 섹션 관리 ──────────────────────────────
     function updateSectionAddButtons() {
@@ -519,6 +623,7 @@
         placeholder: '내용을 작성하세요...',
         modules: { toolbar: QUILL_TOOLBAR },
       });
+      attachSectionImageSupport(quill);
       if (content) quill.root.innerHTML = content;
       quillInstances.set(id, quill);
     }
@@ -579,8 +684,9 @@
       const relDescQ = new Quill(div.querySelector('.rel-desc-quill-target'), {
         theme: 'snow',
         placeholder: '설명 (선택사항)',
-        modules: { toolbar: QUILL_TOOLBAR },
+        modules: { toolbar: QUILL_TOOLBAR_NO_IMAGE },
       });
+      attachSectionImageSupport(relDescQ, { allowUpload: false });
       if (data?.description) relDescQ.root.innerHTML = data.description;
     }
 
@@ -625,7 +731,7 @@
         const authorRole = card.dataset.authorRole || 'species_owner';
         if (type === 'settings') {
           const quill = quillInstances.get(id);
-          const content = quill ? quill.root.innerHTML : '';
+          const content = quill ? stripUnsafeImages(quill.root.innerHTML) : '';
           const hasContent = quill && quill.getLength() > 1;
           if (hasContent) sections.push({ id, type, content, author_role: authorRole });
         } else if (type === 'relation') {
@@ -642,14 +748,14 @@
               char_name:      charName,
               species_name:   speciesOpt?.dataset?.name || item.dataset.speciesName || '',
               relation_label: item.querySelector('.rel-label').value.trim(),
-              description: (() => { const c = item.querySelector('.ql-container'); const q = c && Quill.find(c); return q && q.getLength() > 1 ? q.root.innerHTML : ''; })(),
+              description: (() => { const c = item.querySelector('.ql-container'); const q = c && Quill.find(c); return q && q.getLength() > 1 ? stripUnsafeImages(q.root.innerHTML) : ''; })(),
             });
           });
           if (relations.length) sections.push({ id, type, relations, author_role: authorRole });
         } else if (type === 'custom') {
           const title = card.querySelector('.section-title-input').value.trim();
           const quill = quillInstances.get(id);
-          const content = quill ? quill.root.innerHTML : '';
+          const content = quill ? stripUnsafeImages(quill.root.innerHTML) : '';
           const hasContent = quill && quill.getLength() > 1;
           if (title || hasContent) sections.push({ id, type, title, content, author_role: authorRole });
         }
