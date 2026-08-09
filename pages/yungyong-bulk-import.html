@@ -180,7 +180,7 @@
     const SPECIES_ID   = 172;
     const SPECIES_NAME = '융용';
     const REFERENCE_CATALOG_CHAR_ID = 3263; // 분류(라벨→색상) 카탈로그로 쓰는 기존 테스트 개체
-    const OFFICIAL_STEPS = ['아기융', '발탁용', '수련용', '승천용', '재앙용'];
+    const OFFICIAL_STEPS = ['아기융', '발탁용', '수련용', '승천용', '재앙용', '성체용'];
     const SUFFIX_STEP_MAP = {
       _baby: '아기융', _chosen: '발탁용', _trainee: '수련용', _ascended: '승천용', _calamit: '재앙용',
     };
@@ -311,13 +311,24 @@
       '노션원본페이지ID': '2e9aa57b-dfe2-8089-b964-efde347ae524',
     };
 
+    // 행의 char_number/이미지 접두번호는 파일 안에서의 순서가 아니라, 그 행 자체의 "이미지파일명"에
+    // 박힌 접두번호(예: yungyong_217_01...)에서 직접 뽑는다. 이렇게 해야 엑셀이 재정렬되거나
+    // 일부 행만 추린 파일(예: 미등록분만 모은 파일)을 넣어도 밀림 없이 항상 올바른 번호로 매칭된다.
+    function extractSeqFromRow(r) {
+      const m = String(r['이미지파일명'] || '').match(/yungyong_(\d+)_/);
+      return m ? m[1].padStart(3, '0') : null;
+    }
+
     // ── 행 빌드 ──────────────────────────────
     function buildRows() {
       const CAT_COL = '분류 (개체 항목 - 복수선택 가능)';
       const validRaw = excelRowsRaw.filter(r => String(r['개체명'] || '').trim());
-      const valid = [...validRaw.slice(0, 520), MISSING_ROW_521, ...validRaw.slice(520)];
-      return valid.map((r, i) => {
-        const seq  = String(i + 1).padStart(3, '0');
+      // 누락 행(521번, 나인투파이브-03)이 이 파일에 없으면 추가한다 — 순서는 이제 상관없다(접두번호로 매칭하므로).
+      const alreadyHasMissing = validRaw.some(r => r['노션원본페이지ID'] === MISSING_ROW_521['노션원본페이지ID']);
+      const valid = alreadyHasMissing ? validRaw : [...validRaw, MISSING_ROW_521];
+
+      return valid.map((r) => {
+        const seq  = extractSeqFromRow(r);
         const name = String(r['개체명']).trim().normalize('NFC');
         const rawSteps  = String(r['사용step'] || '').split(',').map(s => s.trim()).filter(Boolean);
         const usedSteps = [...new Set(rawSteps)];
@@ -327,14 +338,16 @@
         const catResult = matchCategories(r[CAT_COL]);
 
         let imgResult;
-        if (badSteps.length) {
+        if (!seq) {
+          imgResult = { status: 'nofile', reason: '이미지파일명에서 접두번호를 추출할 수 없음', stepFiles: {}, additionalFiles: [] };
+        } else if (badSteps.length) {
           imgResult = { status: 'stepinvalid', reason: `정식 Step명이 아님: ${badSteps.join(', ')}`, stepFiles: {}, additionalFiles: [] };
         } else {
           imgResult = analyzeImages(seq, usedSteps);
         }
 
         return {
-          seq, name, usedSteps, badSteps,
+          seq: seq || '???', name, usedSteps, badSteps,
           ownerText, designerText,
           note: String(r['비고'] || '').trim(),
           notionUrl: String(r['노션URL'] || '').trim(),
