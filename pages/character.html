@@ -392,7 +392,7 @@
       const isAdminUser  = isAdminOrStaff(user?.user_metadata?.role);
 
       // original_image_url 제외 — 권한자가 토글 시 on-demand 조회
-      const CHAR_SELECT = 'id,name,species_name,image_url,thumbnail_url,additional_images,owner_nickname,owner_user_id,owner_is_offsite,owner_contact,designer_nickname,designer_user_ids,designer_external,designer_contact,char_number,description,owner_description,is_sensitive,sensitive_note,char_sections,custom_field_values,char_categories,allow_free_adoption,allow_resale,allow_paid_adoption,allow_other_adoption,pending_transfer,created_at';
+      const CHAR_SELECT = 'id,name,species_name,image_url,thumbnail_url,additional_images,owner_nickname,owner_user_id,owner_is_offsite,owner_contact,designer_nickname,designer_user_ids,designer_external,designer_contact,char_number,description,owner_description,is_sensitive,sensitive_note,char_sections,custom_field_values,char_categories,allow_free_adoption,allow_resale,allow_paid_adoption,allow_other_adoption,pending_transfer,created_at,representative_step_id';
       const [{ data: c, error }, { data: siteUserData }] = await Promise.all([
         sb.from('characters').select(CHAR_SELECT).eq('id', charId).single(),
         sb.rpc('get_all_users'),
@@ -470,8 +470,9 @@
         const { data: steps } = await sb.from('species_steps').select('id, step_order, name').eq('species_id', sp.id).order('step_order');
         const allSteps = steps || [];
         if (allSteps.length >= 2) {
-          // 하위 호환: main_image_step_id가 없으면 step_order가 가장 낮은 Step을 대표 이미지 Step으로 처리
-          const mainStepId = sp.main_image_step_id || allSteps[0].id;
+          // 개체별 대표 Step(c.representative_step_id) 우선 — 우선순위가 설정된 종족(현재 융용)만 채워짐.
+          // 하위 호환: 둘 다 없으면 step_order가 가장 낮은 Step을 대표 이미지 Step으로 처리
+          const mainStepId = c.representative_step_id || sp.main_image_step_id || allSteps[0].id;
           const mainStep   = allSteps.find(s => s.id === mainStepId) || allSteps[0];
           _mainStepOrder = mainStep.step_order;
           _mainStepLabel = mainStep.name || `Step ${mainStep.step_order}`;

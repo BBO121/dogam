@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <link rel="icon" href="../images/favicon.png" type="image/png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>융용 대량 등록 — 종족연구소</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .yy-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 16px 60px; }
+    .yy-section {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+    }
+    .yy-section h2 { font-size: 16px; margin: 0 0 12px; }
+    .yy-hint { font-size: 12px; color: var(--text-mute); margin: 4px 0 0; }
+    .yy-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .yy-stat {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: var(--bg-sub);
+    }
+    .yy-stat .n { font-size: 20px; font-weight: 700; }
+    .yy-stat .l { font-size: 11px; color: var(--text-mute); margin-top: 2px; }
+    .yy-badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600; white-space:nowrap; }
+    .yy-badge.ok       { background:#dcfce7; color:#15803d; }
+    .yy-badge.check    { background:#fef9c3; color:#a16207; }
+    .yy-badge.nofile   { background:#fee2e2; color:#b91c1c; }
+    .yy-badge.stepbad  { background:#fee2e2; color:#b91c1c; }
+    .yy-badge.exists   { background:#e5e7eb; color:#4b5563; }
+    .yy-badge.new      { background:#dbeafe; color:#1d4ed8; }
+    .yy-badge.done     { background:#dcfce7; color:#15803d; }
+    .yy-badge.fail     { background:#fee2e2; color:#b91c1c; }
+    .yy-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+    table.yy-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    table.yy-table th, table.yy-table td { padding: 7px 9px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; white-space: nowrap; }
+    table.yy-table th { background: var(--bg-sub); position: sticky; top: 0; }
+    table.yy-table td.wrap { white-space: normal; max-width: 220px; }
+    table.yy-table tr.row-fail { background: #fff7f7; }
+    .yy-inline-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .yy-inline-row input[type="number"] { width: 90px; }
+    .yy-log { font-size:12px; white-space:pre-wrap; background:var(--bg-sub); border:1px solid var(--border); border-radius:8px; padding:10px; max-height:220px; overflow-y:auto; margin-top:10px; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">종족연구소</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main">
+      <div class="yy-wrap">
+
+        <div class="breadcrumb" style="margin-bottom:20px;">
+          <a href="index.html">홈</a>
+          <span>/</span>
+          <a href="species-list.html">전체 종족</a>
+          <span>/</span>
+          <span>융용 대량 등록</span>
+        </div>
+
+        <h1 class="register-title">융용 대량 등록</h1>
+        <p class="register-subtitle" style="margin-bottom:20px;">엑셀 + 이미지 폴더 → 자동 매칭 → 검증 → 소량 배치 등록</p>
+
+        <!-- 1. 파일 선택 -->
+        <div class="yy-section">
+          <h2>1. 파일 선택</h2>
+          <div class="form-group">
+            <label class="form-label" style="font-size:13px;">엑셀 파일 (yungyong_raw_data_real.xlsx)</label>
+            <input type="file" id="excelInput" accept=".xlsx,.xls">
+            <p class="yy-hint" id="excelStatus"></p>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" style="font-size:13px;">이미지 폴더 (register/yungyong/images)</label>
+            <input type="file" id="imagesInput" webkitdirectory multiple>
+            <p class="yy-hint" id="imagesStatus"></p>
+          </div>
+          <button type="button" class="btn-field-add" style="margin-top:14px;" onclick="buildPreview()">미리보기 / 검증 실행</button>
+          <p class="auth-error" id="prepError" style="white-space:pre-line;"></p>
+        </div>
+
+        <!-- 2. 검증 결과 -->
+        <div class="yy-section" id="statsSection" style="display:none;">
+          <h2>2. 검증 결과 (실제 등록 아님 — 통계만 계산)</h2>
+          <div class="yy-stats-grid" id="statsGrid"></div>
+        </div>
+
+        <!-- 3. 미리보기 테이블 -->
+        <div class="yy-section" id="previewSection" style="display:none;">
+          <h2>3. 개체별 미리보기</h2>
+          <div class="yy-table-wrap">
+            <table class="yy-table">
+              <thead>
+                <tr>
+                  <th>순번</th>
+                  <th>개체명</th>
+                  <th>사용 Step</th>
+                  <th>Step별 이미지</th>
+                  <th>추가이미지</th>
+                  <th>소유주 원본명</th>
+                  <th>디자이너 원본명</th>
+                  <th>분류</th>
+                  <th>이미지 매칭 상태</th>
+                  <th>DB 상태</th>
+                  <th>등록 상태</th>
+                </tr>
+              </thead>
+              <tbody id="previewBody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- 4. 배치 등록 -->
+        <div class="yy-section" id="batchSection" style="display:none;">
+          <h2>4. 배치 등록</h2>
+          <p class="yy-hint" style="margin-bottom:10px;">검증 상태가 "정상"이고, 아직 DB에 없는(char_number 미존재) 행만 실제로 등록됩니다. 나머지는 자동으로 건너뜁니다.</p>
+          <div class="yy-inline-row" style="margin-bottom:12px;">
+            <label style="font-size:13px;">시작 순번</label>
+            <input type="number" id="rangeStart" class="form-input" min="1" value="1">
+            <label style="font-size:13px;">끝 순번</label>
+            <input type="number" id="rangeEnd" class="form-input" min="1" value="5">
+            <button type="button" class="btn-secondary" onclick="checkDupInRange()">범위 내 중복 확인</button>
+            <button type="button" class="btn-secondary" id="registerBtn" onclick="runBatchRegister()">이 범위 등록 실행</button>
+          </div>
+          <div id="batchProgressWrap" style="display:none; margin-bottom:10px;">
+            <div style="background:var(--border); border-radius:99px; height:8px; margin-bottom:8px; overflow:hidden;">
+              <div id="batchProgressBar" style="height:100%; background:var(--sky); width:0%; transition:width 0.3s; border-radius:99px;"></div>
+            </div>
+            <p id="batchProgressText" style="font-size:13px; color:var(--text-sub);"></p>
+          </div>
+          <div class="yy-log" id="batchLog" style="display:none;"></div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; <a href="credits.html">운영진</a> &nbsp;·&nbsp; ver.2.1</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/main.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/step-priority.js"></script>
+  <script>
+    // ── 융용 대량 등록 전용 설정 ──────────────────────────────
+    const SPECIES_ID   = 172;
+    const SPECIES_NAME = '융용';
+    const REFERENCE_CATALOG_CHAR_ID = 3263; // 분류(라벨→색상) 카탈로그로 쓰는 기존 테스트 개체
+    const OFFICIAL_STEPS = ['아기융', '발탁용', '수련용', '승천용', '재앙용'];
+    const SUFFIX_STEP_MAP = {
+      _baby: '아기융', _chosen: '발탁용', _trainee: '수련용', _ascended: '승천용', _calamit: '재앙용',
+    };
+    const EXTRA_SUFFIXES = ['_additional', '_ad'];
+
+    let speciesSteps  = []; // [{id, step_order, name}]
+    let categoryCatalog = new Map(); // label -> color
+    let allImageFiles = []; // File[] (webkitdirectory로 선택된 전체)
+    let rows = []; // 분석된 행 배열
+
+    async function initPage() {
+      const user = await getUser();
+      if (!user) { window.location.href = 'login.html'; return; }
+      const role = user.user_metadata?.role;
+      if (!isAdminOrStaff(role)) { window.location.href = 'index.html'; return; }
+
+      const [{ data: sp }, { data: steps }, { data: refChar }] = await Promise.all([
+        sb.from('species').select('main_image_step_id').eq('id', SPECIES_ID).single(),
+        sb.from('species_steps').select('id, step_order, name').eq('species_id', SPECIES_ID).order('step_order'),
+        sb.from('characters').select('char_categories').eq('id', REFERENCE_CATALOG_CHAR_ID).single(),
+      ]);
+      speciesSteps = steps || [];
+      (refChar?.char_categories || []).forEach(c => categoryCatalog.set(c.label, c.color));
+    }
+
+    // ── 파일 로드 ──────────────────────────────
+    let excelRowsRaw = null;
+
+    document.getElementById('excelInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      const statusEl = document.getElementById('excelStatus');
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const wb = XLSX.read(ev.target.result, { type: 'array' });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          excelRowsRaw = XLSX.utils.sheet_to_json(ws, { defval: '' });
+          const validCount = excelRowsRaw.filter(r => String(r['개체명'] || '').trim()).length;
+          statusEl.textContent = `로드됨 — 전체 행 ${excelRowsRaw.length} / 개체명 있는 유효 행 ${validCount}`;
+          statusEl.style.color = 'var(--sky-deep)';
+        } catch (err) {
+          excelRowsRaw = null;
+          statusEl.textContent = '엑셀 파싱 실패: ' + err.message;
+          statusEl.style.color = '#ef4444';
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    });
+
+    document.getElementById('imagesInput').addEventListener('change', (e) => {
+      allImageFiles = [...e.target.files].filter(f => /^yungyong_\d+_/.test(f.name));
+      document.getElementById('imagesStatus').textContent =
+        `${e.target.files.length}개 파일 선택됨 (yungyong_ 접두사 매칭 ${allImageFiles.length}개)`;
+    });
+
+    // ── 분류 매칭 ──────────────────────────────
+    // 전체 문자열이 카탈로그에 그대로 있으면 단일 분류로 처리(라벨 자체에 쉼표가 포함된 경우 대응).
+    // 없으면 쉼표로 분리해서 각각 매칭한다.
+    function matchCategories(raw) {
+      const text = String(raw || '').trim();
+      if (!text) return { ok: true, categories: [], missing: [] };
+      if (categoryCatalog.has(text)) {
+        return { ok: true, categories: [{ label: text, color: categoryCatalog.get(text) }], missing: [] };
+      }
+      const parts = text.split(',').map(s => s.trim()).filter(Boolean);
+      const missing = parts.filter(p => !categoryCatalog.has(p));
+      if (parts.length > 1 && !missing.length) {
+        return { ok: true, categories: parts.map(p => ({ label: p, color: categoryCatalog.get(p) })), missing: [] };
+      }
+      return { ok: false, categories: [], missing: missing.length ? missing : [text] };
+    }
+
+    // ── 이미지 매칭 (스펙 3~4번 알고리즘) ──────────────────────────────
+    function analyzeImages(seq, usedSteps) {
+      const prefix = `yungyong_${seq}_`;
+      const rowFiles = allImageFiles.filter(f => f.name.startsWith(prefix));
+      if (!rowFiles.length) return { status: 'nofile', reason: '폴더에 매칭되는 파일이 없음', stepFiles: {}, additionalFiles: [] };
+
+      const stepFiles = {};
+      const additionalFiles = [];
+      const unsuffixed = [];
+      let dup = false, unknownStep = false, unrecognized = false;
+
+      rowFiles.forEach(f => {
+        const base = f.name.replace(/\.[^.]+$/, '');
+        const m = base.match(/(_[a-zA-Z]+)$/);
+        const suf = m ? m[1] : null;
+        if (!suf) { unsuffixed.push(f); return; }
+        if (EXTRA_SUFFIXES.includes(suf)) { additionalFiles.push(f); return; }
+        const stepName = SUFFIX_STEP_MAP[suf];
+        if (!stepName) { unrecognized = true; return; }
+        if (!usedSteps.includes(stepName)) { unknownStep = true; return; }
+        if (stepFiles[stepName]) { dup = true; return; }
+        stepFiles[stepName] = f;
+      });
+
+      const remain = usedSteps.filter(s => !stepFiles[s]);
+
+      if (dup)          return { status: 'check', reason: '같은 Step suffix 이미지가 중복됨', stepFiles, additionalFiles };
+      if (unknownStep)  return { status: 'check', reason: '사용step에 없는 Step suffix가 파일에 존재함', stepFiles, additionalFiles };
+      if (unrecognized) return { status: 'check', reason: '알 수 없는 suffix', stepFiles, additionalFiles };
+      if (remain.length !== unsuffixed.length)
+        return { status: 'check', reason: `남은 Step(${remain.length}) ≠ suffix 없는 이미지(${unsuffixed.length})`, stepFiles, additionalFiles };
+      if (remain.length === 0)
+        return { status: 'normal', reason: '', stepFiles, additionalFiles };
+      if (remain.length === 1) {
+        stepFiles[remain[0]] = unsuffixed[0];
+        return { status: 'normal', reason: '', stepFiles, additionalFiles };
+      }
+      // remain.length >= 2: 개수는 같아도 순서를 확정할 근거가 없으므로 추측하지 않는다.
+      return { status: 'check', reason: `Step ${remain.length}개가 suffix 없이 남아 순서를 확정할 수 없음`, stepFiles, additionalFiles };
+    }
+
+    // ── 행 빌드 ──────────────────────────────
+    function buildRows() {
+      const CAT_COL = '분류 (개체 항목 - 복수선택 가능)';
+      const valid = excelRowsRaw.filter(r => String(r['개체명'] || '').trim());
+      return valid.map((r, i) => {
+        const seq  = String(i + 1).padStart(3, '0');
+        const name = String(r['개체명']).trim().normalize('NFC');
+        const rawSteps  = String(r['사용step'] || '').split(',').map(s => s.trim()).filter(Boolean);
+        const usedSteps = [...new Set(rawSteps)];
+        const badSteps  = usedSteps.filter(s => !OFFICIAL_STEPS.includes(s));
+        const ownerText    = String(r['소유주'] || '').trim();
+        const designerText = String(r['디자이너'] || '').trim();
+        const catResult = matchCategories(r[CAT_COL]);
+
+        let imgResult;
+        if (badSteps.length) {
+          imgResult = { status: 'stepinvalid', reason: `정식 Step명이 아님: ${badSteps.join(', ')}`, stepFiles: {}, additionalFiles: [] };
+        } else {
+          imgResult = analyzeImages(seq, usedSteps);
+        }
+
+        return {
+          seq, name, usedSteps, badSteps,
+          ownerText, designerText,
+          note: String(r['비고'] || '').trim(),
+          notionUrl: String(r['노션URL'] || '').trim(),
+          notionPageId: String(r['노션원본페이지ID'] || '').trim(),
+          categories: imgResult ? catResult.categories : [],
+          categoryOk: catResult.ok,
+          categoryMissing: catResult.missing,
+          imageStatus: imgResult.status,
+          imageReason: imgResult.reason,
+          stepFiles: imgResult.stepFiles,
+          additionalFiles: imgResult.additionalFiles,
+          get overallOk() { return this.imageStatus === 'normal' && this.categoryOk; },
+          dbStatus: 'unknown',
+          regStatus: 'pending', // pending | skipped | done | failed
+          regError: '',
+        };
+      });
+    }
+
+    // ── 통계 ──────────────────────────────
+    function computeStats() {
+      const validCount = rows.length;
+      const normal     = rows.filter(r => r.overallOk).length;
+      const needCheck  = rows.filter(r => r.imageStatus === 'check').length;
+      const noFile     = rows.filter(r => r.imageStatus === 'nofile').length;
+      const stepBad    = rows.filter(r => r.imageStatus === 'stepinvalid').length;
+      const catFail    = rows.filter(r => !r.categoryOk).length;
+
+      const nameCounts = {};
+      rows.forEach(r => { nameCounts[r.name] = (nameCounts[r.name] || 0) + 1; });
+      const dupNames = Object.values(nameCounts).filter(c => c > 1).length;
+
+      const stepImageCounts = {};
+      OFFICIAL_STEPS.forEach(s => stepImageCounts[s] = 0);
+      let additionalCount = 0;
+      rows.forEach(r => {
+        Object.keys(r.stepFiles).forEach(s => { stepImageCounts[s] = (stepImageCounts[s] || 0) + 1; });
+        additionalCount += r.additionalFiles.length;
+      });
+
+      const seqSet = new Set(rows.map(r => r.seq));
+      const orphanFiles = allImageFiles.filter(f => {
+        const m = f.name.match(/^yungyong_(\d+)_/);
+        return !m || !seqSet.has(m[1]);
+      });
+
+      return { validCount, normal, needCheck, noFile, stepBad, catFail, dupNames, stepImageCounts, additionalCount, orphanFiles };
+    }
+
+    function renderStats(stats) {
+      const grid = document.getElementById('statsGrid');
+      const items = [
+        ['엑셀 유효 개체 수', stats.validCount],
+        ['정상 매칭', stats.normal],
+        ['확인 필요', stats.needCheck],
+        ['이미지 파일 없음', stats.noFile],
+        ['Step명 불일치', stats.stepBad],
+        ['분류 매칭 실패', stats.catFail],
+        ['중복 개체명', stats.dupNames],
+        ['추가 이미지 수', stats.additionalCount],
+        ['고아 이미지(엑셀에 없음)', stats.orphanFiles.length],
+        ...OFFICIAL_STEPS.map(s => [`${s} 이미지 수`, stats.stepImageCounts[s]]),
+      ];
+      grid.innerHTML = items.map(([l, n]) => `
+        <div class="yy-stat"><div class="n">${n}</div><div class="l">${l}</div></div>
+      `).join('');
+      document.getElementById('statsSection').style.display = '';
+      if (stats.orphanFiles.length) {
+        console.warn('[고아 이미지]', stats.orphanFiles.map(f => f.name));
+      }
+    }
+
+    const STATUS_LABEL = {
+      normal: '<span class="yy-badge ok">정상</span>',
+      check: '<span class="yy-badge check">확인 필요</span>',
+      nofile: '<span class="yy-badge nofile">파일 없음</span>',
+      stepinvalid: '<span class="yy-badge stepbad">Step 불일치</span>',
+    };
+    const DB_LABEL = {
+      unknown: '<span class="yy-badge check">미확인</span>',
+      new: '<span class="yy-badge new">신규</span>',
+      exists: '<span class="yy-badge exists">이미 등록됨</span>',
+    };
+    const REG_LABEL = {
+      pending: '-',
+      skipped: '<span class="yy-badge exists">건너뜀</span>',
+      done: '<span class="yy-badge done">등록완료</span>',
+      failed: '<span class="yy-badge fail">실패</span>',
+    };
+
+    function renderPreview() {
+      const body = document.getElementById('previewBody');
+      body.innerHTML = rows.map(r => {
+        const stepImgText = r.usedSteps.map(s => `${s}: ${r.stepFiles[s] ? r.stepFiles[s].name : '❌'}`).join('<br>');
+        const catText = r.categories.length
+          ? r.categories.map(c => c.label).join(', ')
+          : (r.categoryOk ? '(없음)' : `❌ ${r.categoryMissing.join(', ')}`);
+        const statusHtml = r.imageStatus === 'normal'
+          ? STATUS_LABEL.normal
+          : `${STATUS_LABEL[r.imageStatus]}<div class="yy-hint">${r.imageReason}</div>`;
+        return `
+        <tr class="${r.overallOk ? '' : 'row-fail'}" data-seq="${r.seq}">
+          <td>${r.seq}</td>
+          <td class="wrap">${r.name}</td>
+          <td>${r.usedSteps.join(', ') || '-'}</td>
+          <td class="wrap">${stepImgText || '-'}</td>
+          <td>${r.additionalFiles.length}</td>
+          <td class="wrap">${r.ownerText || '-'}</td>
+          <td class="wrap">${r.designerText || '-'}</td>
+          <td class="wrap">${catText}</td>
+          <td>${statusHtml}</td>
+          <td class="db-cell">${DB_LABEL[r.dbStatus]}</td>
+          <td class="reg-cell">${REG_LABEL[r.regStatus]}</td>
+        </tr>`;
+      }).join('');
+      document.getElementById('previewSection').style.display = '';
+      document.getElementById('batchSection').style.display = '';
+    }
+
+    async function buildPreview() {
+      const errorEl = document.getElementById('prepError');
+      errorEl.textContent = '';
+      if (!excelRowsRaw) { errorEl.textContent = '엑셀 파일을 먼저 선택해주세요.'; return; }
+      if (!allImageFiles.length) { errorEl.textContent = '이미지 폴더를 먼저 선택해주세요.'; return; }
+      if (!categoryCatalog.size) { errorEl.textContent = `분류 카탈로그를 불러오지 못했어요 (참조 개체 id=${REFERENCE_CATALOG_CHAR_ID} 확인 필요).`; return; }
+
+      rows = buildRows();
+      const stats = computeStats();
+      renderStats(stats);
+      renderPreview();
+
+      const maxSeq = rows.length;
+      document.getElementById('rangeEnd').max = maxSeq;
+      document.getElementById('rangeStart').max = maxSeq;
+    }
+
+    // ── 중복 확인 ──────────────────────────────
+    async function checkDupInRange() {
+      const start = parseInt(document.getElementById('rangeStart').value, 10);
+      const end   = parseInt(document.getElementById('rangeEnd').value, 10);
+      const target = rows.filter(r => {
+        const n = parseInt(r.seq, 10);
+        return n >= start && n <= end;
+      });
+      if (!target.length) return;
+
+      const { data, error } = await sb.from('characters')
+        .select('char_number')
+        .eq('species_name', SPECIES_NAME)
+        .in('char_number', target.map(r => r.seq));
+      if (error) { document.getElementById('prepError').textContent = `중복 확인 실패: ${error.message}`; return; }
+
+      const existing = new Set((data || []).map(r => r.char_number));
+      target.forEach(r => { r.dbStatus = existing.has(r.seq) ? 'exists' : 'new'; });
+      renderPreview();
+    }
+
+    // ── 개체 1건 등록 (register/edit 페이지와 동일한 crop/thumbnail/watermark 파이프라인 재사용) ──
+    async function registerRow(row) {
+      const wmSrc = '../images/watermark.png'; // 융용은 전원 사이트 밖 유저 → 항상 연구소 기본 워터마크
+      const candidates = [];
+
+      for (const stepName of row.usedSteps) {
+        const stepDef = speciesSteps.find(s => s.name === stepName);
+        if (!stepDef) throw new Error(`species_steps에 "${stepName}" 정의가 없어요.`);
+        const file = row.stepFiles[stepName];
+        if (!file) throw new Error(`${stepName} 이미지 파일이 없어요.`);
+
+        const ts = Date.now(), rnd = Math.random().toString(36).slice(2);
+        const isGif = file.type === 'image/gif';
+        const ext = isGif ? 'gif' : 'jpg';
+        const blob = await compressImage(file);
+
+        const origName = `yy${row.seq}_${ts}_${rnd}_s${stepDef.step_order}_orig.${ext}`;
+        const { error: origErr } = await sb.storage.from('images').upload(origName, blob, { contentType: isGif ? 'image/gif' : 'image/jpeg' });
+        if (origErr) throw new Error(`[${stepName}] 원본 업로드 실패: ${origErr.message}`);
+        const original_image_url = sb.storage.from('images').getPublicUrl(origName).data.publicUrl;
+
+        let image_url, watermark_type = null;
+        if (isGif) {
+          image_url = original_image_url;
+        } else {
+          const wmBlob = await applyWatermark(blob, wmSrc);
+          const mainName = `yy${row.seq}_${ts}_${rnd}_s${stepDef.step_order}.jpg`;
+          const { error: mainErr } = await sb.storage.from('images').upload(mainName, wmBlob, { contentType: 'image/jpeg' });
+          if (mainErr) throw new Error(`[${stepName}] 워터마크 이미지 업로드 실패: ${mainErr.message}`);
+          image_url = sb.storage.from('images').getPublicUrl(mainName).data.publicUrl;
+          watermark_type = 'lab_black';
+        }
+
+        const thumbBlob = await autoCenterCropToBlob(file, 3 / 4, 600, 0.85);
+        const thumbName = `yy${row.seq}_${ts}_${rnd}_s${stepDef.step_order}_thumb.jpg`;
+        const { error: thumbErr } = await sb.storage.from('images').upload(thumbName, thumbBlob, { contentType: 'image/jpeg' });
+        if (thumbErr) throw new Error(`[${stepName}] 썸네일 업로드 실패: ${thumbErr.message}`);
+        const thumbnail_url = sb.storage.from('images').getPublicUrl(thumbName).data.publicUrl;
+
+        candidates.push({ id: stepDef.id, step_order: stepDef.step_order, name: stepDef.name, image_url, thumbnail_url, original_image_url, watermark_type, isGif });
+      }
+
+      // 대표 이미지 = 우선순위 최상위 Step (기존 js/step-priority.js 그대로 재사용)
+      const winner = pickHighestPriorityStep(SPECIES_ID, candidates) || candidates[0];
+
+      // 추가 이미지 (_additional/_ad)
+      const additional_images = [], original_additional_images = [];
+      for (const file of row.additionalFiles) {
+        const ts = Date.now(), rnd = Math.random().toString(36).slice(2);
+        const isGif = file.type === 'image/gif';
+        const ext = isGif ? 'gif' : 'jpg';
+        const blob = await compressImage(file);
+        const origName = `yy${row.seq}_${ts}_${rnd}_extra_orig.${ext}`;
+        const { error: origErr } = await sb.storage.from('images').upload(origName, blob, { contentType: isGif ? 'image/gif' : 'image/jpeg' });
+        if (origErr) throw new Error(`추가 이미지 원본 업로드 실패: ${origErr.message}`);
+        const origUrl = sb.storage.from('images').getPublicUrl(origName).data.publicUrl;
+        original_additional_images.push(origUrl);
+        if (isGif) {
+          additional_images.push(origUrl);
+        } else {
+          const wmBlob = await applyWatermark(blob, wmSrc);
+          const fileName = `yy${row.seq}_${ts}_${rnd}_extra.jpg`;
+          const { error: exErr } = await sb.storage.from('images').upload(fileName, wmBlob, { contentType: 'image/jpeg' });
+          if (exErr) throw new Error(`추가 이미지 업로드 실패: ${exErr.message}`);
+          additional_images.push(sb.storage.from('images').getPublicUrl(fileName).data.publicUrl);
+        }
+      }
+
+      const { data: inserted, error: insErr } = await sb.from('characters').insert({
+        name: row.name,
+        species_name: SPECIES_NAME,
+        char_number: row.seq,
+        owner_nickname: row.ownerText || '(미상)',
+        owner_is_offsite: true,
+        owner_user_id: null,
+        designer_nickname: row.designerText || '(미상)',
+        designer_external: row.designerText ? [{ name: row.designerText, contact: '' }] : [],
+        designer_user_ids: [],
+        image_url: winner.image_url,
+        thumbnail_url: winner.thumbnail_url,
+        original_image_url: winner.original_image_url,
+        representative_step_id: winner.id,
+        ...(winner.watermark_type ? { watermark_type: winner.watermark_type } : {}),
+        char_categories: row.categories.length ? row.categories : null,
+        additional_images: additional_images.length ? additional_images : null,
+        original_additional_images: original_additional_images.length ? original_additional_images : null,
+      }).select('id').single();
+      if (insErr) throw new Error(`DB 저장 실패: ${insErr.message}`);
+
+      const stepRows = candidates
+        .filter(c => c.id !== winner.id)
+        .map(c => ({
+          character_id: inserted.id,
+          species_step_id: c.id,
+          image_url: c.image_url,
+          original_image_url: c.original_image_url,
+          thumbnail_url: c.thumbnail_url,
+        }));
+      if (stepRows.length) {
+        const { error: stepErr } = await sb.from('character_step_images').insert(stepRows);
+        if (stepErr) throw new Error(`개체는 등록됐지만(id=${inserted.id}) Step 이미지 저장 실패: ${stepErr.message}`);
+      }
+
+      return inserted.id;
+    }
+
+    function logBatch(msg) {
+      const log = document.getElementById('batchLog');
+      log.style.display = '';
+      log.textContent += msg + '\n';
+      log.scrollTop = log.scrollHeight;
+    }
+
+    async function runBatchRegister() {
+      const errorEl = document.getElementById('prepError');
+      errorEl.textContent = '';
+      const start = parseInt(document.getElementById('rangeStart').value, 10);
+      const end   = parseInt(document.getElementById('rangeEnd').value, 10);
+      if (!start || !end || end < start) { errorEl.textContent = '시작/끝 순번을 올바르게 입력해주세요.'; return; }
+
+      await checkDupInRange();
+
+      const target = rows.filter(r => {
+        const n = parseInt(r.seq, 10);
+        return n >= start && n <= end;
+      });
+
+      const toRegister = target.filter(r => r.overallOk && r.dbStatus === 'new');
+      const skipped = target.filter(r => !(r.overallOk && r.dbStatus === 'new'));
+      skipped.forEach(r => { r.regStatus = 'skipped'; });
+      renderPreview();
+
+      if (!toRegister.length) {
+        errorEl.textContent = '이 범위에 실제로 등록할 항목이 없어요 (검증 실패 또는 이미 등록됨).';
+        return;
+      }
+
+      const ok = confirm(`${toRegister.length}건을 실제로 등록합니다 (범위 내 ${target.length}건 중 ${skipped.length}건은 자동 건너뜀). 계속할까요?`);
+      if (!ok) return;
+
+      const btn = document.getElementById('registerBtn');
+      btn.disabled = true;
+      const progressWrap = document.getElementById('batchProgressWrap');
+      const progressBar  = document.getElementById('batchProgressBar');
+      const progressText = document.getElementById('batchProgressText');
+      progressWrap.style.display = '';
+      document.getElementById('batchLog').textContent = '';
+
+      let done = 0;
+      for (const row of toRegister) {
+        progressText.textContent = `${done + 1} / ${toRegister.length} 처리 중... (${row.seq} ${row.name})`;
+        try {
+          const newId = await registerRow(row);
+          row.regStatus = 'done';
+          logBatch(`✅ ${row.seq} ${row.name} → id=${newId}`);
+        } catch (err) {
+          row.regStatus = 'failed';
+          row.regError = err.message;
+          logBatch(`❌ ${row.seq} ${row.name} 실패: ${err.message}`);
+        }
+        done++;
+        progressBar.style.width = `${(done / toRegister.length) * 100}%`;
+        renderPreview();
+      }
+
+      progressText.textContent = `완료 — ${toRegister.length}건 시도 (성공 ${toRegister.filter(r=>r.regStatus==='done').length} / 실패 ${toRegister.filter(r=>r.regStatus==='failed').length})`;
+      btn.disabled = false;
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

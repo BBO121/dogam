@@ -302,6 +302,7 @@
   <script src="../js/notifications.js"></script>
   <script src="../js/main.js"></script>
   <script src="../js/utils.js"></script>
+  <script src="../js/step-priority.js"></script>
   <script>
     let currentUser   = null;
     let ownerType     = 'site';
@@ -314,6 +315,8 @@
     let selectedMainFile     = null;
     let pendingThumbnailBlob = null;
     let cropperInstance      = null;
+    let cropTargetStep       = null; // null = 대표 이미지, 아니면 크롭 중인 Step의 step_order (융용 등 우선순위 종족 전용)
+    const stepThumbnailBlobs = {};   // step_order -> 크롭된 3:4 썸네일 blob (융용 등 우선순위 종족 전용)
     let sectionDragSrc       = null;
     let userWatermarkUrl     = null;
     let speciesSteps         = [];   // [{id, step_order, name}] — 대표 이미지 Step 포함 전체
@@ -997,6 +1000,9 @@
     let extraFiles = [];
 
     // 이미지 선택 — 대표 이미지(targetStep===null)만 크롭 모달을 거치고, 성장 Step 이미지는
+    // 대표 이미지: 크롭 모달로 3:4 썸네일 영역을 직접 지정할 수 있다.
+    // 성장 Step 이미지: 우선순위(REPRESENTATIVE_STEP_PRIORITY)가 설정된 종족(현재 융용)만
+    // 대표 후보가 될 수 있으므로 동일하게 크롭 모달을 사용하고, 그 외 종족은 기존처럼
     // 크롭 없이 원본 구도 그대로 사용하므로 바로 미리보기만 표시한다.
     function handleImageFileSelected(file, targetStep, errorEl) {
       if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
@@ -1009,10 +1015,12 @@
       const placeholderId = targetStep === null ? 'uploadPlaceholder' : `stepUploadPlaceholder_${targetStep}`;
 
       if (targetStep === null) { selectedMainFile = file; pendingThumbnailBlob = null; }
-      else { stepFiles[targetStep] = file; }
+      else { stepFiles[targetStep] = file; delete stepThumbnailBlobs[targetStep]; }
 
-      // 성장 Step 이미지 또는 GIF: 크롭 모달 스킵, 바로 미리보기 표시
-      if (targetStep !== null || file.type === 'image/gif') {
+      const wantsStepCrop = targetStep !== null && hasRepresentativePriority(speciesId);
+
+      // 크롭 모달 스킵 대상: 우선순위 미설정 종족의 Step 이미지, 또는 GIF(모든 슬롯)
+      if ((targetStep !== null && !wantsStepCrop) || file.type === 'image/gif') {
         const url = URL.createObjectURL(file);
         document.getElementById(previewId).src           = url;
         document.getElementById(previewId).style.display = 'block';
@@ -1020,11 +1028,12 @@
         return;
       }
 
+      cropTargetStep = targetStep;
       const cropImg = document.getElementById('cropImage');
       cropImg.onerror = () => {
         URL.revokeObjectURL(cropImg.src);
         errorEl.textContent = '이미지 파일을 읽을 수 없습니다. 파일 용량·색상 프로파일·손상 여부를 확인해주세요.';
-        selectedMainFile = null;
+        if (targetStep === null) selectedMainFile = null; else delete stepFiles[targetStep];
       };
       cropImg.onload = () => {
         document.getElementById('cropModal').style.display = 'flex';
@@ -1080,44 +1089,59 @@
       btn.closest('div').remove();
     }
 
-    // ── 크롭 모달 (메인 이미지 / 성장 Step 이미지 공용) ──────────────────────────────
-    // 크롭 모달은 대표 이미지에만 사용된다 (성장 Step 이미지는 크롭하지 않음)
+    // ── 크롭 모달 (대표 이미지 / 우선순위 종족의 성장 Step 이미지 공용) ──────────────────────
     async function confirmCrop() {
       const errorEl = document.getElementById('registerError');
       try {
-        pendingThumbnailBlob = await cropToBlob(cropperInstance, 600, 0.85);
-        showThumbPreview(pendingThumbnailBlob);
+        const blob = await cropToBlob(cropperInstance, 600, 0.85);
+        if (cropTargetStep === null) pendingThumbnailBlob = blob;
+        else stepThumbnailBlobs[cropTargetStep] = blob;
+        showThumbPreview(blob);
         closeCropModal();
       } catch (err) { errorEl.textContent = err.message; }
     }
 
     async function useCropAsIs() {
-      if (!selectedMainFile) return;
+      const targetFile = cropTargetStep === null ? selectedMainFile : stepFiles[cropTargetStep];
+      if (!targetFile) return;
       const errorEl = document.getElementById('registerError');
       try {
-        pendingThumbnailBlob = await autoCenterCropToBlob(selectedMainFile, 3/4, 600, 0.85);
-        showThumbPreview(pendingThumbnailBlob);
+        const blob = await autoCenterCropToBlob(targetFile, 3/4, 600, 0.85);
+        if (cropTargetStep === null) pendingThumbnailBlob = blob;
+        else stepThumbnailBlobs[cropTargetStep] = blob;
+        showThumbPreview(blob);
         closeCropModal();
       } catch (err) { errorEl.textContent = err.message; }
     }
 
     function cancelCropModal() {
-      selectedMainFile = null; pendingThumbnailBlob = null;
-      document.getElementById('imageFile').value            = '';
-      document.getElementById('imagePreview').style.display = 'none';
-      document.getElementById('uploadPlaceholder').style.display = '';
+      if (cropTargetStep === null) {
+        selectedMainFile = null; pendingThumbnailBlob = null;
+        document.getElementById('imageFile').value            = '';
+        document.getElementById('imagePreview').style.display = 'none';
+        document.getElementById('uploadPlaceholder').style.display = '';
+      } else {
+        delete stepFiles[cropTargetStep];
+        delete stepThumbnailBlobs[cropTargetStep];
+        document.getElementById(`stepImageFile_${cropTargetStep}`).value            = '';
+        document.getElementById(`stepImagePreview_${cropTargetStep}`).style.display = 'none';
+        document.getElementById(`stepUploadPlaceholder_${cropTargetStep}`).style.display = '';
+      }
       closeCropModal();
     }
 
     function showThumbPreview(blob) {
+      const previewId     = cropTargetStep === null ? 'imagePreview' : `stepImagePreview_${cropTargetStep}`;
+      const placeholderId = cropTargetStep === null ? 'uploadPlaceholder' : `stepUploadPlaceholder_${cropTargetStep}`;
       const url = URL.createObjectURL(blob);
-      document.getElementById('imagePreview').src           = url;
-      document.getElementById('imagePreview').style.display = 'block';
-      document.getElementById('uploadPlaceholder').style.display = 'none';
+      document.getElementById(previewId).src           = url;
+      document.getElementById(previewId).style.display = 'block';
+      document.getElementById(placeholderId).style.display = 'none';
     }
 
     function closeCropModal() {
       document.getElementById('cropModal').style.display = 'none';
+      cropTargetStep = null;
       if (cropperInstance) { cropperInstance.destroy(); cropperInstance = null; }
     }
 
@@ -1234,11 +1258,14 @@
           }
         }
 
-        // 성장 Step 이미지 업로드 (원본 + 워터마크 적용본만 — 크롭·썸네일 없음) — 등록하지 않은 Step은 건너뜀.
+        // 성장 Step 이미지 업로드 (원본 + 워터마크 적용본) — 등록하지 않은 Step은 건너뜀.
+        // 우선순위가 설정된 종족(현재 융용)만 대표 후보가 될 수 있으므로 대표 이미지와 동일하게
+        // 3:4 썸네일도 함께 생성한다. 그 외 종족은 기존처럼 크롭·썸네일 없이 원본 구도 그대로 저장한다.
         // Step 이미지는 선택사항이므로 한 Step의 업로드가 실패해도 전체 개체 등록은 계속 진행하고,
         // 실패한 Step에서 이미 올라간 파일이 있으면 정리한다.
         const stepImageRows  = [];
         const stepUploadErrs = [];
+        const usesStepPriority = hasRepresentativePriority(speciesId);
         for (const [stepOrderStr, stepFile] of Object.entries(stepFiles)) {
           if (!stepFile) continue;
           const stepOrder    = parseInt(stepOrderStr, 10);
@@ -1271,11 +1298,21 @@
               watermark_type = userWatermarkUrl ? 'personal' : 'lab_black';
             }
 
+            let stepThumbUrl = null;
+            if (usesStepPriority) {
+              const thumbBlob = stepThumbnailBlobs[stepOrder] || await autoCenterCropToBlob(stepFile, 3/4, 600, 0.85);
+              const thumbName = `${ts}_step${stepOrder}_thumb.jpg`;
+              const { error: thumbErr } = await sb.storage.from('images').upload(thumbName, thumbBlob, { contentType: 'image/jpeg' });
+              if (thumbErr) throw new Error(`썸네일 업로드 실패 (${thumbErr.message})`);
+              uploadedNames.push(thumbName);
+              stepThumbUrl = sb.storage.from('images').getPublicUrl(thumbName).data.publicUrl;
+            }
+
             stepImageRows.push({
               species_step_id:    speciesStep.id,
               image_url:          stepImageUrl,
               original_image_url: stepOriginalUrl,
-              thumbnail_url:      null,
+              thumbnail_url:      stepThumbUrl,
             });
           } catch (stepErr) {
             if (uploadedNames.length) await sb.storage.from('images').remove(uploadedNames).catch(() => {});
@@ -1300,6 +1337,38 @@
 
         const charSections = collectSections();
 
+        // 우선순위가 설정된 종족(현재 융용)은 대표 이미지 슬롯 + 업로드된 Step들 중
+        // 우선순위가 가장 높은 것을 대표로 승격한다. 대표가 바뀌면 원래 대표 이미지 슬롯은
+        // character_step_images로 강등되어 여전히 Step 전환 버튼으로 볼 수 있다.
+        let representative_step_id = null;
+        if (usesStepPriority && mainImageStepId) {
+          const mainStepDef = speciesSteps.find(s => s.id === mainImageStepId);
+          const candidates  = [];
+          if (mainStepDef && image_url) candidates.push({ ...mainStepDef, _kind: 'main' });
+          stepImageRows.forEach(row => {
+            const stepDef = speciesSteps.find(s => s.id === row.species_step_id);
+            if (stepDef) candidates.push({ ...stepDef, _kind: 'step', _row: row });
+          });
+          const winner = pickHighestPriorityStep(speciesId, candidates);
+          if (winner) {
+            representative_step_id = winner.id;
+            if (winner._kind === 'step') {
+              stepImageRows.splice(stepImageRows.indexOf(winner._row), 1);
+              if (image_url) {
+                stepImageRows.push({
+                  species_step_id:    mainImageStepId,
+                  image_url,
+                  original_image_url,
+                  thumbnail_url,
+                });
+              }
+              image_url          = winner._row.image_url;
+              original_image_url = winner._row.original_image_url;
+              thumbnail_url       = winner._row.thumbnail_url;
+            }
+          }
+        }
+
         // DB 저장
         const { data: newChar, error } = await sb.from('characters').insert({
           name,
@@ -1313,6 +1382,7 @@
           owner_user_id:       ownerType === 'site' ? (selectedNickId || null) : null,
           owner_is_offsite:    ownerType !== 'site',
           owner_contact:       externalContact || null,
+          ...(representative_step_id && { representative_step_id }),
           description:         desc || null,
           image_url,
           thumbnail_url,

@@ -20,13 +20,12 @@ function compressImage(file, maxSize = 1200, quality = 0.82) {
     img.onload = () => {
       URL.revokeObjectURL(objectUrl);
 
-      if (img.width > MAX_IMAGE_DIMENSION || img.height > MAX_IMAGE_DIMENSION) {
-        reject(new Error(`이미지 해상도가 너무 커요. 최대 ${MAX_IMAGE_DIMENSION}×${MAX_IMAGE_DIMENSION}px까지 업로드할 수 있어요. (현재: ${img.width}×${img.height}px)`));
-        return;
-      }
-
-      // GIF: 애니메이션 보존을 위해 Canvas 변환 없이 원본 반환
+      // GIF: 애니메이션 보존을 위해 Canvas 변환 없이 원본 반환 (해상도가 커도 리사이징 불가하므로 여기서만 상한 적용)
       if (file.type === 'image/gif') {
+        if (img.width > MAX_IMAGE_DIMENSION || img.height > MAX_IMAGE_DIMENSION) {
+          reject(new Error(`이미지 해상도가 너무 커요. 최대 ${MAX_IMAGE_DIMENSION}×${MAX_IMAGE_DIMENSION}px까지 업로드할 수 있어요. (현재: ${img.width}×${img.height}px)`));
+          return;
+        }
         if (file.size > MAX_BLOB_BYTES) {
           reject(new Error('GIF 파일은 2MB 이하만 업로드할 수 있어요.'));
           return;
@@ -35,10 +34,12 @@ function compressImage(file, maxSize = 1200, quality = 0.82) {
         return;
       }
 
+      // 해상도가 너무 크면 거부하지 않고 상한(MAX_IMAGE_DIMENSION) 안으로 먼저 축소한다.
       let { width, height } = img;
-      if (width > maxSize || height > maxSize) {
-        if (width > height) { height = Math.round(height * maxSize / width); width  = maxSize; }
-        else                { width  = Math.round(width  * maxSize / height); height = maxSize; }
+      const cap = Math.min(maxSize, MAX_IMAGE_DIMENSION);
+      if (width > cap || height > cap) {
+        if (width > height) { height = Math.round(height * cap / width); width  = cap; }
+        else                { width  = Math.round(width  * cap / height); height = cap; }
       }
 
       const canvas = document.createElement('canvas');
