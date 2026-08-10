@@ -1129,6 +1129,9 @@
     }
 
     const _badgeDataMap = {};
+    // 뱃지 진열대는 기본적으로 미획득 뱃지도 회색으로 전원에게 보여주지만,
+    // 여기 포함된 코드는 획득한 유저에게만 렌더링하고 그 외에는 아예 숨긴다.
+    const HIDDEN_IF_UNEARNED = ['staff', 'staff_gen1'];
 
     async function loadBadges(userId) {
       if (!userId) return;
@@ -1155,8 +1158,10 @@
           };
         });
 
-        document.getElementById('sectionBadges').style.display = '';
-        document.getElementById('profileBadgeList').innerHTML = allBadges.map(b => {
+        const visibleBadges = allBadges.filter(b => (b.code in earnedMap) || !HIDDEN_IF_UNEARNED.includes(b.code));
+
+        document.getElementById('sectionBadges').style.display = visibleBadges.length ? '' : 'none';
+        document.getElementById('profileBadgeList').innerHTML = visibleBadges.map(b => {
           const earned = b.code in earnedMap;
           const cls    = earned ? '' : ' badge-unearned';
           return `<img src="../images/badges/${b.image_url}" alt="${b.name}" title="${b.name}" class="badge-showcase-item${cls}" onclick="openBadgeModal('${b.code}')">`;
