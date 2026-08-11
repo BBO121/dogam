@@ -188,8 +188,20 @@
 
     let speciesSteps  = []; // [{id, step_order, name}]
     let categoryCatalog = new Map(); // label -> color
+    let categoryCatalogNormalized = new Map(); // normalizeCategoryKey(label) -> {label, color}
     let allImageFiles = []; // File[] (webkitdirectory로 선택된 전체)
     let rows = []; // 분석된 행 배열
+
+    // 분류 라벨은 보통 "[아이콘] / 이름" 형태인데, 엑셀에는 앞의 "[아이콘] / " 없이
+    // 개체 번호(-03 등)까지 붙여서 적히는 경우가 있어 느슨하게 비교하기 위한 정규화.
+    // 예: "[●] / 네모난 원-03" → "네모난원" / "네모난원-03" → "네모난원"
+    function normalizeCategoryKey(s) {
+      return String(s || '')
+        .replace(/-\d+$/, '')
+        .replace(/^\[[^\]]*\]\s*\/\s*/, '')
+        .replace(/\s+/g, '')
+        .trim();
+    }
 
     async function initPage() {
       const user = await getUser();
@@ -203,7 +215,10 @@
         sb.from('characters').select('char_categories').eq('id', REFERENCE_CATALOG_CHAR_ID).single(),
       ]);
       speciesSteps = steps || [];
-      (refChar?.char_categories || []).forEach(c => categoryCatalog.set(c.label, c.color));
+      (refChar?.char_categories || []).forEach(c => {
+        categoryCatalog.set(c.label, c.color);
+        categoryCatalogNormalized.set(normalizeCategoryKey(c.label), { label: c.label, color: c.color });
+      });
     }
 
     // ── 파일 로드 ──────────────────────────────
@@ -240,16 +255,25 @@
     // ── 분류 매칭 ──────────────────────────────
     // 전체 문자열이 카탈로그에 그대로 있으면 단일 분류로 처리(라벨 자체에 쉼표가 포함된 경우 대응).
     // 없으면 쉼표로 분리해서 각각 매칭한다.
+    // 정확히 일치하는 라벨이 없으면, 대괄호/슬래시/공백/개체번호(-03 등)를 무시한
+    // 정규화 비교로 한 번 더 시도한다.
+    function resolveCategory(part) {
+      if (categoryCatalog.has(part)) return { label: part, color: categoryCatalog.get(part) };
+      const hit = categoryCatalogNormalized.get(normalizeCategoryKey(part));
+      return hit ? { label: hit.label, color: hit.color } : null;
+    }
+
     function matchCategories(raw) {
       const text = String(raw || '').trim();
       if (!text) return { ok: true, categories: [], missing: [] };
-      if (categoryCatalog.has(text)) {
-        return { ok: true, categories: [{ label: text, color: categoryCatalog.get(text) }], missing: [] };
-      }
+      const direct = resolveCategory(text);
+      if (direct) return { ok: true, categories: [direct], missing: [] };
+
       const parts = text.split(',').map(s => s.trim()).filter(Boolean);
-      const missing = parts.filter(p => !categoryCatalog.has(p));
+      const resolved = parts.map(resolveCategory);
+      const missing = parts.filter((p, i) => !resolved[i]);
       if (parts.length > 1 && !missing.length) {
-        return { ok: true, categories: parts.map(p => ({ label: p, color: categoryCatalog.get(p) })), missing: [] };
+        return { ok: true, categories: resolved, missing: [] };
       }
       return { ok: false, categories: [], missing: missing.length ? missing : [text] };
     }
