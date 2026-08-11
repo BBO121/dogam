@@ -76,7 +76,7 @@
     const _qs          = new URLSearchParams(window.location.search);
     const ownerParam   = _qs.get('owner');
     const ownerIdParam = _qs.get('owner_id'); // UUID 기준 조회
-    const pager = createPager(render);
+    const pager = createPager(render, 'paginationWrap', 'page', 28);
 
     // 전체 개체를 미리 캐싱해 브라우저에서 필터링하는 대신, 검색어/필터가
     // 바뀔 때마다 searchCharacters()로 서버에 직접 요청한다.

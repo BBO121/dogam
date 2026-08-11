@@ -32,7 +32,7 @@ async function initServerClock() {
 /* ── 페이지네이션 유틸 ─────────────────────── */
 const PER_PAGE = 30;
 
-function createPager(renderFn, wrapId = 'paginationWrap', pageParam = 'page') {
+function createPager(renderFn, wrapId = 'paginationWrap', pageParam = 'page', perPage = PER_PAGE) {
   let page = 1;
   let data = [];
 
@@ -48,12 +48,12 @@ function createPager(renderFn, wrapId = 'paginationWrap', pageParam = 'page') {
     init(arr) {
       data = arr;
       const p     = parseInt(new URLSearchParams(location.search).get(pageParam));
-      const total = Math.ceil(arr.length / PER_PAGE);
+      const total = Math.ceil(arr.length / perPage);
       page = (p >= 1 && p <= (total || 1)) ? p : 1;
       pager._draw();
     },
     go(p) {
-      const total = Math.ceil(data.length / PER_PAGE);
+      const total = Math.ceil(data.length / perPage);
       page = Math.max(1, Math.min(p, total || 1));
       const url = new URL(location.href);
       if (page === 1) url.searchParams.delete(pageParam);
@@ -63,13 +63,13 @@ function createPager(renderFn, wrapId = 'paginationWrap', pageParam = 'page') {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
     _draw() {
-      const slice = data.slice((page - 1) * PER_PAGE, page * PER_PAGE);
+      const slice = data.slice((page - 1) * perPage, page * perPage);
       renderFn(slice);
 
       const wrap = document.getElementById(wrapId);
       if (!wrap) return;
 
-      const total = Math.ceil(data.length / PER_PAGE);
+      const total = Math.ceil(data.length / perPage);
       if (total <= 1) { wrap.innerHTML = ''; return; }
 
       // 표시할 페이지 번호 목록 (현재 ±2, 항상 1·끝 포함)

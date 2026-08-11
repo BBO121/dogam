@@ -1,0 +1,2101 @@
+[
+  {
+    "num": "1",
+    "name": "쿠키앤크림 파르페 워터파컷",
+    "owner": "언쿠",
+    "ownerLineRaw": "[파트너: 언쿠]",
+    "classification": "cold",
+    "description": "쿠키앤크림 프라페를 맛 보여 주기 위해 탄생한 워터파컷입니다. 신사적이고 고고한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "2",
+    "name": "나무수액 워터파컷",
+    "owner": "히히히 님 @hihihi_calculus",
+    "ownerLineRaw": "[파트너: 히히히 님 @hihihi_calculus]",
+    "classification": "hot",
+    "description": "나무수액을 맛 보여 주기 위해 탄생한 워터파컷입니다. 싱그럽고 활기찬 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "3",
+    "name": "샹그리아 워터파컷",
+    "owner": "개미 님 @kimant_01",
+    "ownerLineRaw": "[파트너: 개미 님 @kimant_01]",
+    "classification": "cold",
+    "description": "<볼의 물 주머니가 없는 특별 개체> 샹그리아를 맛 보여 주기위해 탄생한 워터파컷입니다. 차분하고 예의바른 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "4",
+    "name": "마그마 워터파컷",
+    "owner": "붹 님 @1o0one",
+    "ownerLineRaw": "[파트너: 붹 님 @1o0one]",
+    "classification": "hot",
+    "description": "마그마를 맛 보여 주기위해 탄생한 워터파컷입니다. 용맹한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "5",
+    "name": "청포도 파르페 워터파컷",
+    "owner": "온점 님 @dkssud_0001",
+    "ownerLineRaw": "[파트너: 온점 님 @dkssud_0001]",
+    "classification": "cold",
+    "description": "청포도 파르페를 맛 보여 주기위해 탄생한 워터파컷입니다. 조용하고 시원시원한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "6",
+    "name": "크림소다 워터파컷",
+    "owner": "히히히 님 @hihihi_calculus",
+    "ownerLineRaw": "[파트너: 히히히 님 @hihihi_calculus]",
+    "classification": "cold",
+    "description": "크림소다를 맛 보여 주기위해 탄생한 워터파컷입니다. 소심하고 겁이 많은 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "7",
+    "name": "카푸치노 키아로 워터파컷",
+    "owner": "hisa 님 @hisa_1_art",
+    "ownerLineRaw": "[파트너: hisa 님 @hisa_1_art]",
+    "classification": "hot",
+    "description": "카푸치노 키아로를 맛 보여 주기위해 탄생한 워터파컷입니다. 포근하고 호기심 많은 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "8",
+    "name": "새벽 옹달샘 워터파컷",
+    "owner": "고기파르페 님 @meat_parfat",
+    "ownerLineRaw": "[파트너: 고기파르페 님 @meat_parfat]",
+    "classification": "hot",
+    "description": "새벽 옹달샘을 맛 보여 주기위해 탄생한 워터파컷입니다. 너그럽고 활발한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "9",
+    "name": "별을 보며 마신 목련꽃차 워터파컷",
+    "owner": "아리 님 @Byongari_1123",
+    "ownerLineRaw": "[파트너: 아리 님 @Byongari_1123]",
+    "classification": "hot",
+    "description": "목련꽃차를 맛 보여 주기위해 탄생한 워터파컷입니다. 나른함하고 포근하며 긍정적인 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "10",
+    "name": "복숭아 아이스티 워터파컷",
+    "owner": "냥콩 님 @디코",
+    "ownerLineRaw": "[파트너: 냥콩 님 @디코]",
+    "classification": "cold",
+    "description": "<꼬리의 물 주머니가 큰 특별 개체> 복숭아 아이스티를 맛 보여 주기위해 탄생한 워터파컷입니다. 소심하고 조심스러운 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "11",
+    "name": "딸기 우유 워터파컷",
+    "owner": "폐사 님 @Non_Humanand",
+    "ownerLineRaw": "[파트너: 폐사 님 @Non_Humanand]",
+    "classification": "hot",
+    "description": "딸기 우유를 맛 보여 주기위해 탄생한 워터파컷입니다. 상냥하고 포근한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "12",
+    "name": "푸른불로 끓인 뜨거운 물 워터파컷",
+    "owner": "그림쟁이J 님 @Grimmler_J_8900",
+    "ownerLineRaw": "[파트너: 그림쟁이J 님 @Grimmler_J_8900]",
+    "classification": "hot",
+    "description": "푸른불로 끓인 뜨거운 물을 맛 보여 주기위해 탄생한 워터파컷입니다. 밝고 장난끼많은 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "13",
+    "name": "스파클링 와인 워터파컷",
+    "owner": "플로라 님 @Flor_aa23",
+    "ownerLineRaw": "[파트너: 플로라 님 @Flor_aa23]",
+    "classification": "cold",
+    "description": "스파클링 와인을 맛 보여 주기위해 탄생한 워터파컷입니다. 타인에 무심하며 자존감이 높은 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "14",
+    "name": "몬스터 에너지 망고로코 워터파컷",
+    "owner": "폐사 님 @Non_Humanand",
+    "ownerLineRaw": "[파트너: 폐사 님 @Non_Humanand]",
+    "classification": "cold",
+    "description": "<꼬리의 물 주머니가 큰 특별 개체> 몬스터 에너지 망고로코을 맛 보여 주기위해 탄생한 워터파컷입니다. 빠른것을 좋아하고 시원한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "15",
+    "name": "차가운 정수 워터파컷",
+    "owner": "이얼 님 @yeee_ar",
+    "ownerLineRaw": "[파트너: 이얼 님 @yeee_ar]",
+    "classification": "cold",
+    "description": "<볼 물주머니가 이마에 있는 특별 개체> 차가운 정수를 맛 보여 주기위해 탄생한 워터파컷입니다. 냉정하고 차가운 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "16",
+    "name": "블루레몬에이드 워터파컷",
+    "owner": "넴 님 @nem__0227",
+    "ownerLineRaw": "[파트너: 넴 님 @nem__0227]",
+    "classification": "cold",
+    "description": "<cold에 반대되는 성격을 가진 특수 개체> 블루레몬에이드를 맛 보여 주기위해 탄생한 워터파컷입니다. 활기차고 엉뚱한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "17",
+    "name": "벚꽃라떼 워터파컷",
+    "owner": "슈월 님 @shoewol",
+    "ownerLineRaw": "[파트너: 슈월 님 @shoewol]",
+    "classification": "cold",
+    "description": "<볼의 물주머니가 없는 특별 개체> 벚꽃라떼를 맛 보여 주기위해 탄생한 워터파컷입니다. 차분하고 소심한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "18",
+    "name": "바닷물 워터파컷",
+    "owner": "백장 님 @cheddar_UU",
+    "ownerLineRaw": "[파트너: 백장 님 @cheddar_UU]",
+    "classification": "cold",
+    "description": "바닷물을 맛 보여 주기위해 탄생한 워터파컷입니다. 소심한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "19",
+    "name": "나쵸치즈 소스 워터파컷",
+    "owner": "가슴야호 님 @YAHOna101",
+    "ownerLineRaw": "[파트너: 가슴야호 님 @YAHOna101]",
+    "classification": "hot",
+    "description": "나쵸치즈 소스를 맛 보여 주기 위해 탄생한 워터파컷입니다. 활동적이고 밝은 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "20",
+    "name": "헤이즐넛 라떼 워터파컷",
+    "owner": "메멜 님 @mamell_ron",
+    "ownerLineRaw": "[파트너: 메멜 님 @mamell_ron]",
+    "classification": "hot",
+    "description": "헤이즐넛 라떼를 맛 보여 주기 위해 탄생한 워터파컷입니다. 상냥하고 너그러운 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "21",
+    "name": "블루 라군 워터파컷",
+    "owner": "리리몬 님 @LiLimon_art",
+    "ownerLineRaw": "[파트너: 리리몬 님 @LiLimon_art]",
+    "classification": "Cold",
+    "description": "블루 라군을 맛 보여 주기 위해 탄생한 워터파컷입니다. 차갑고 냉철하며 얼어붙을 것 같은 냉막한 성격에 냉정하고 융통성이 없으며 철저하고 꼼꼼한, 완벽주의적인 성격을 가졌습니다.",
+    "notes": [
+      "CLASSIFICATION_INVALID: Cold",
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "22",
+    "name": "믹스커피 워터파컷",
+    "owner": "늄뉴비 님 @Newbie_SiA",
+    "ownerLineRaw": "[파트너: 늄뉴비 님 @Newbie_SiA]",
+    "classification": "hot",
+    "description": "믹스커피를 맛 보여 주기 위해 탄생한 워터파컷입니다. 나른하고 느긋한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "23",
+    "name": "레드와인 워터파컷",
+    "owner": "그림쟁이J 님 @Grimmler_J_8900",
+    "ownerLineRaw": "[파트너: 그림쟁이J 님 @Grimmler_J_8900]",
+    "classification": "Cold",
+    "description": "레드와인을 맛 보여 주기 위해 탄생한 워터파컷입니다. 차갑고 무뚝뚝한 성격을 가졌습니다.",
+    "notes": [
+      "CLASSIFICATION_INVALID: Cold",
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "24",
+    "name": "진지한 사랑의 화이트 초코우유 워터파컷",
+    "owner": "투서리 님 @two_seol",
+    "ownerLineRaw": "[파트너: 투서리 님 @two_seol]",
+    "classification": "cold",
+    "description": "<꼬리의 물 주머니가 큰 특별 개체> 진지한 사랑의 화이트 초코우유를 맛 보여 주기 위해 탄생한 워터파컷입니다. 진지하고 신중한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "25",
+    "name": "장난스런 사랑의 블랙 초코우유 워터파컷",
+    "owner": "강무 님 @_rkdan_",
+    "ownerLineRaw": "[파트너: 강무 님 @_rkdan_]",
+    "classification": "hot",
+    "description": "<꼬리의 물 주머니가 큰 특별 개체> 장난스런 사랑의 블랙 초코우유를 맛 보여 주기 위해 탄생한 워터파컷입니다. 장난기 많고 열정적인 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "26",
+    "name": "뇌수 워터파컷",
+    "owner": "CHO 님 @yumyum11541",
+    "ownerLineRaw": "[파트너: CHO 님 @yumyum11541]",
+    "classification": "cold",
+    "description": "뇌수를 맛 보여 주기 위해 탄생한 워터파컷입니다. 아무에게나 마음을 열지않는 혼자 있는걸 좋아하는 고독한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "27",
+    "name": "소중한 마음의 바나나우유 워터파컷",
+    "owner": "익에 님 @SIAFE_EL",
+    "ownerLineRaw": "[파트너: 익에 님 @SIAFE_EL]",
+    "classification": "hot",
+    "description": "<날개가 달린 특수 개체> 소중한 마음의 바나나우유를 맛 보여 주기 위해 탄생한 워터파컷입니다. 순수하고 진심을 다하는 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "28",
+    "name": "네온잉크 워터파컷",
+    "owner": "냥이모찌 님 @Nyangimochi",
+    "ownerLineRaw": "[파트너: 냥이모찌 님 @Nyangimochi]",
+    "classification": "cold",
+    "description": "<cold에 반대되는 성격을 가진 특수 개체> 네온잉크를 맛 보여 주기위해 탄생한 워터파컷입니다. 사람을 좋아하고 따뜻한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "29",
+    "name": "악마에게 저주받은 성수 워터파컷",
+    "owner": "라틴 님 @kiMrate2n",
+    "ownerLineRaw": "[파트너: 라틴 님 @kiMrate2n]",
+    "classification": "cold",
+    "description": "악마에게 저주받은 성수를 맛 보여 주기 위해 탄생한 워터파컷입니다. 이기적인 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "30",
+    "name": "천사에게 축복받은 성수 워터파컷",
+    "owner": "아로니아 님 @MIMIMI_Aronia",
+    "ownerLineRaw": "[파트너: 아로니아 님 @MIMIMI_Aronia]",
+    "classification": "hot",
+    "description": "천사에게 축복받은 성수를 맛 보여 주기 위해 탄생한 워터파컷입니다. 남을 위할줄 아는 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "31",
+    "name": "흑임자 라떼 워터파컷",
+    "owner": "귤공방 님 @gyul_jelly_CR",
+    "ownerLineRaw": "[파트너: 귤공방 님 @gyul_jelly_CR]",
+    "classification": "cold",
+    "description": "흑임자 라떼를 맛 보여 주기 위해 탄생한 워터파컷입니다. 조용하고 차분한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "32",
+    "name": "오래 방치해두어 솜털먼지가 섞인 물 워터파컷",
+    "owner": "플랜/ HADI 님 @peullaen8",
+    "ownerLineRaw": "[파트너: 플랜/ HADI 님 @peullaen8]",
+    "classification": "hot",
+    "description": "<보통 개체 보다 몸집이 작은 특별 개체> 오래 방치해두어 솜털먼지가 섞인 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 맹하고 온순한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "33",
+    "name": "황천수 워터파컷",
+    "owner": "냥콩 님 @디코",
+    "ownerLineRaw": "[파트너: 냥콩 님 @디코]",
+    "classification": "cold",
+    "description": "<3개의 머리를 가진 특수 개체> 황천수를 맛 보여 주기 위해 탄생한 워터파컷입니다. 날카로운 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "34",
+    "name": "나비가 한모금 마시고간 적장미꽃차 워터파컷",
+    "owner": "홍삼 님 @hongsam_js",
+    "ownerLineRaw": "[파트너: 홍삼 님 @hongsam_js]",
+    "classification": "hot",
+    "description": "나비가 한모금 마시고간 적장미꽃차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 좋아하는 것을 열정적으로 사랑하는 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "35",
+    "name": "나비가 한모금 마시고간 벽장미꽃차 워터파컷",
+    "owner": "티스 님 @xltm634",
+    "ownerLineRaw": "[파트너: 티스 님 @xltm634]",
+    "classification": "hot",
+    "description": "나비가 한모금 마시고간 벽장미꽃차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 희망을 믿고 포기하지 않는 강인한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "36",
+    "name": "나비가 한모금 마시고간 황장미꽃차 워터파컷",
+    "owner": "조이작가 님 @joylee_12310",
+    "ownerLineRaw": "[파트너: 조이작가 님 @joylee_12310]",
+    "classification": "hot",
+    "description": "나비가 한모금 마시고간 황장미꽃차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 다른이와의 우정을 소중히하는 친절한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "37",
+    "name": "나비가 한모금 마시고간 자장미꽃차 워터파컷",
+    "owner": "종구 님 @lal53148913",
+    "ownerLineRaw": "[파트너: 종구 님 @lal53148913]",
+    "classification": "hot",
+    "description": "나비가 한모금 마시고간 자장미꽃차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 한번 좋아하는 것은 바뀌지 않는 일편단심에 다정한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "38",
+    "name": "나비가 한모금 마시고간 백장미꽃차 워터파컷",
+    "owner": "늄뉴비 님 @Newbie_SiA",
+    "ownerLineRaw": "[파트너: 늄뉴비 님 @Newbie_SiA]",
+    "classification": "hot",
+    "description": "나비가 한모금 마시고간 백장미꽃차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 다른이를 존경하며, 존경하는 만큼 배려하는 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "39",
+    "name": "나비가 한모금 마시고간 흑장미꽃차 워터파컷",
+    "owner": "한 샙 님 @Han_dawn0627",
+    "ownerLineRaw": "[파트너: 한 샙 님 @Han_dawn0627]",
+    "classification": "hot",
+    "description": "나비가 한모금 마시고간 흑장미꽃차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 자신이 사랑하는 것을 아끼며 소중히하는 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "40",
+    "name": "밤바다 물 워터파컷",
+    "owner": "안초 님 @kimancho930",
+    "ownerLineRaw": "[파트너: 안초 님 @kimancho930]",
+    "classification": "cold",
+    "description": "밤바다 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 조용하며 외로움을 많이 타는 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "41",
+    "name": "강아지가 한입 마시고간 깨끗한 물 워터파컷",
+    "owner": "늄뉴비 님 @Newbie_SiA",
+    "ownerLineRaw": "[파트너: 늄뉴비 님 @Newbie_SiA]",
+    "classification": "hot",
+    "description": "강아지가 한입 마시고간 깨끗한 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 밝고 에너지 넘치는 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "42",
+    "name": "아이돌이 한입 마신 복숭아 물 워터파컷",
+    "owner": "푸른 꿈 님 @BlueDream_Ate_",
+    "ownerLineRaw": "[파트너: 푸른 꿈 님 @BlueDream_Ate_]",
+    "classification": "hot",
+    "description": "아이돌이 한입 마신 복숭아 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 열정적이고 언제나 최선을 다하는 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "43",
+    "name": "벚꽃차 워터파컷",
+    "owner": "셰리 님 @mel_lang__",
+    "ownerLineRaw": "[파트너: 셰리 님 @mel_lang__]",
+    "classification": "hot",
+    "description": "벚꽃차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 다정하고 온순한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "44",
+    "name": "녹은 상어 아이스크림 워터파컷",
+    "owner": "뭉멍라떼 님 @mung_latte",
+    "ownerLineRaw": "[파트너: 뭉멍라떼 님 @mung_latte]",
+    "classification": "hot",
+    "description": "<볼의 물주머니가 없는 특별 개체> 녹은 상어 아이스크림을 맛 보여 주기 위해 탄생한 워터파컷입니다. 밝고 유쾌한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "45",
+    "name": "혈액 워터파컷",
+    "owner": "꽁1 님 @9ong12",
+    "ownerLineRaw": "[파트너: 꽁1 님 @9ong12]",
+    "classification": "cold",
+    "description": "혈액을 맛 보여 주기 위해 탄생한 워터파컷입니다. 차분하고 신중하고 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "46",
+    "name": "성수 워터파컷",
+    "owner": "! 님 @susanghao",
+    "ownerLineRaw": "[파트너: ! 님 @susanghao]",
+    "classification": "cold",
+    "description": "성수를 맛 보여 주기 위해 탄생한 워터파컷입니다. 차분하고 이성적이며, 자신이 믿음을 의심하지 않는 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "47",
+    "name": "붉은 구미호의 수제 주 워터파컷",
+    "owner": "리버 님 @clover09123",
+    "ownerLineRaw": "[파트너: 리버 님 @clover09123]",
+    "classification": "hot",
+    "description": "<꼬리 물주머니가 9개 있는 특수 개체> 자매인 구미호들이 만든 술중, 붉은 구미호가 만든 수제 주를 맛 보여 주기 위해 탄생한 워터파컷입니다. 열정적이며 화끈한 성격을 가졌습니다. 꼬리마다 술의 숙성도가 다릅니다.",
+    "notes": []
+  },
+  {
+    "num": "48",
+    "name": "푸른 구미호의 수제 주 워터파컷",
+    "owner": "햇쌀밥 님 @hunted_sunrice",
+    "ownerLineRaw": "[파트너: 햇쌀밥 님 @hunted_sunrice]",
+    "classification": "cold",
+    "description": "<꼬리 물주머니가 9개 있는 특수 개체> 자매인 구미호들이 만든 술중, 푸른 구미호가 만든 수제 주를 맛 보여 주기 위해 탄생한 워터파컷입니다. 신중하며 차분한 성격을 가졌습니다. 꼬리마다 술의 숙성도가 다릅니다.",
+    "notes": []
+  },
+  {
+    "num": "49",
+    "name": "아무것도 없는 검은 토끼 워터파컷",
+    "owner": "Dreamnight 님 @Dreamnight0808",
+    "ownerLineRaw": "[파트너: Dreamnight 님 @Dreamnight0808]",
+    "classification": "hot & cold",
+    "description": "<'물'을 가지고 있지 않은 ??? 개체> 그 어떤 '물'도 가지고 있지 않는 거짓말 같은 워터파컷입니다. 성격 또한 hot과 cold가 공존하는 듯 합니다. 만우절에 탄생한 이 워터파컷은 정말 거짓말 같습니다.",
+    "notes": [
+      "CLASSIFICATION_INVALID: hot & cold"
+    ]
+  },
+  {
+    "num": "50",
+    "name": "어린왕자가 본 별을 담은 장미꽃 차 워터파컷",
+    "owner": "디떱 님 @Di_ddub",
+    "ownerLineRaw": "[파트너: 디떱 님 @Di_ddub]",
+    "classification": "cold",
+    "description": "<cold와 반대되는 성격을 가진 특수 개체> 어린왕자가 본 별을 담은 장미꽃차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 호기심 많고 따뜻한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "51",
+    "name": "어린왕자의 단 하나뿐인 장미꽃 향기를 담은 차 워터파컷",
+    "owner": "디떱 님 @Di_ddub",
+    "ownerLineRaw": "[파트너: 디떱 님 @Di_ddub]",
+    "classification": "hot",
+    "description": "<꼬리의 물 주머니가 큰 특별 개체> 어린왕자의 단 하나뿐인 장미꽃차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 조용하지만 남을 생각하는 따뜻한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "52",
+    "name": "탄산 포도주스 워터파컷",
+    "owner": "쮜즐 님 @Chwi_zLE",
+    "ownerLineRaw": "[파트너: 쮜즐 님 @Chwi_zLE]",
+    "classification": "cold",
+    "description": "탄산 포도주스를 맛 보여 주기 위해 탄생한 워터파컷입니다. 침착하고 새침한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "53",
+    "name": "고래 낙서를 하며 마신 우유 워터파컷",
+    "owner": "플랜/ HADI 님 @peullaen8",
+    "ownerLineRaw": "[파트너: 플랜/ HADI 님 @peullaen8]",
+    "classification": "cold",
+    "description": "고래 낙서를 하며 마신 우유를 맛 보여 주기 위해 탄생한 워터파컷입니다. 조용하고 낯가리는 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "54",
+    "name": "목소리에 홀린자들의 피 워터파컷",
+    "owner": "유설화 님 @Yoo_smow_flower",
+    "ownerLineRaw": "[파트너: 유설화 님 @Yoo_smow_flower]",
+    "classification": "cold",
+    "description": "목소리에 홀린자들의 피를 맛 보여 주기 위해 탄생한 워터파컷입니다. 신중한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "55",
+    "name": "건너면 안될 강의 물 워터파컷",
+    "owner": "조이작가 님 @joylee_12310",
+    "ownerLineRaw": "[파트너: 조이작가 님 @joylee_12310]",
+    "classification": "hot",
+    "description": "<hot와 반대되는 성격을 가진 특수 개체> 건너면 안될 강의 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 조용하며 냉정한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "56",
+    "name": "도령이 벚나무 아래서 몰래 마신 식혜 워터파컷",
+    "owner": "꽁1 님 @9ong12",
+    "ownerLineRaw": "[파트너: 꽁1 님 @9ong12]",
+    "classification": "hot",
+    "description": "<꼬리 물주머니가 작은 특별 개체> 도령이 벚나무 아래서 몰래 마신 식혜를 맛 보여 주기 위해 탄생한 워터파컷입니다. 부끄럼 많고 친절한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "57",
+    "name": "아씨가 벚나무 아래서 몰래 마신 식혜 워터파컷",
+    "owner": "디떱 님 @Di_ddub",
+    "ownerLineRaw": "[파트너: 디떱 님 @Di_ddub]",
+    "classification": "hot",
+    "description": "<꼬리 물주머니가 작은 특별 개체> 아씨가 벚나무 아래서 몰래 마신 식혜를 맛 보여 주기 위해 탄생한 워터파컷입니다. 부끄럼 많고 다정한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "58",
+    "name": "부활을 축복하며 마신 물 워터파컷",
+    "owner": "달슈 님 @i_hate_the_test",
+    "ownerLineRaw": "[파트너: 달슈 님 @i_hate_the_test]",
+    "classification": "hot",
+    "description": "부활을 축복하며 마신 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 다정하며 모성애가 강한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "59",
+    "name": "따뜻한 매화잎차 워터파컷",
+    "owner": "한 샙 님 @Han_dawn0627",
+    "ownerLineRaw": "[파트너: 한 샙 님 @Han_dawn0627]",
+    "classification": "Hot",
+    "description": "<hot와 반대되는 성격을 가진 특수 개체> 따뜻한 매화잎차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 차분한 성격을 가졌습니다.",
+    "notes": [
+      "CLASSIFICATION_INVALID: Hot",
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "60",
+    "name": "일본도깨비가 홀짝마신 벚꽃잎이 들어간 홍차 워터파컷",
+    "owner": "조이작가 님 @joylee_12310",
+    "ownerLineRaw": "[파트너: 조이작가 님 @joylee_12310]",
+    "classification": "hot",
+    "description": "<보통 개체 보다 몸집이 큰 특별 개체> 일본도깨비가 홀짝마신 벚꽃잎이 들어간 홍차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 활발하며 따듯하게 감싸는걸 좋아하는 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "61",
+    "name": "해파리와 나비가 만안 찰나의 순간의 바닷물 워터파컷",
+    "owner": "안초 님 @kimancho930",
+    "ownerLineRaw": "[파트너: 안초 님 @kimancho930]",
+    "classification": "hot",
+    "description": "해파리와 나비가 만안 찰나의 순간의 바닷물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 느긋하고 너그러운 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "62",
+    "name": "복을 부르는 삼색뚱냥이가 마신 차 워터파컷",
+    "owner": "SIGE 님 @sige1364",
+    "ownerLineRaw": "[파트너: SIGE 님 @sige1364]",
+    "classification": "hot",
+    "description": "<살찐 외형을 가진 특수 개체> 복을 부르는 삼색뚱냥이가 마신 차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 친절하고 포근한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "63",
+    "name": "검은 요괴 고양이가 마신 차 워터파컷",
+    "owner": "CHO 님 @yumyum11541",
+    "ownerLineRaw": "[파트너: CHO 님 @yumyum11541]",
+    "classification": "cold",
+    "description": "<꼬리 물주머니가 2개 있는 특수 개체> 검은 요괴 고양이가 마신 차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 소심하고 조심스러운 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "64",
+    "name": "노란 요괴 고양이가 마신 차 워터파컷",
+    "owner": "백장 님 @cheddar_UU",
+    "ownerLineRaw": "[파트너: 백장 님 @cheddar_UU]",
+    "classification": "hot",
+    "description": "<꼬리 물주머니가 2개 있는 특수 개체> 노란 요괴 고양이가 마신 차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 밝고 활기찬 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "65",
+    "name": "그림자를 머금은 자두 물 워터파컷",
+    "owner": "푸른 꿈 님 @BlueDream_Ate_",
+    "ownerLineRaw": "[파트너: 푸른 꿈 님 @BlueDream_Ate_]",
+    "classification": "Cold",
+    "description": "그림자를 머금은 자두 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 주변에 무심하며 고요한 성격입니다.",
+    "notes": [
+      "CLASSIFICATION_INVALID: Cold",
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "66",
+    "name": "부서진 시계 앞에서 마신 차 워터파컷",
+    "owner": "안초 님 @kimancho930",
+    "ownerLineRaw": "[파트너: 안초 님 @kimancho930]",
+    "classification": "cold",
+    "description": "부서진 시계 앞에서 마신 차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 의욕없고 조용한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "67",
+    "name": "그믐달과 보름달이 뜰때만 마신 차 워터파컷",
+    "owner": "포포 님 @popo_cre",
+    "ownerLineRaw": "[파트너: 포포 님 @popo_cre]",
+    "classification": "hot",
+    "description": "그믐달과 보름달이 뜰때만 마신 차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 느긋하며 친절한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "68",
+    "name": "거미와 함께 만든 머핀의 핑크 크림 워터파컷",
+    "owner": "폐사 님 @Non_Humanand",
+    "ownerLineRaw": "[파트너: 폐사 님 @Non_Humanand]",
+    "classification": "hot",
+    "description": "거미와 함께 만든 머핀의 핑크 크림을 맛 보여 주기 위해 탄생한 워터파컷입니다. 밝고 겁없는 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "69",
+    "name": "꽃향기 양초 물 워터파컷",
+    "owner": "김달서 님 @kimmaeong",
+    "ownerLineRaw": "[파트너: 김달서 님 @kimmaeong]",
+    "classification": "hot",
+    "description": "꽃향기 양초 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 다정하고 친절한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "70",
+    "name": "녹은 바닐라초코 아이스크림 워터파컷",
+    "owner": "광우바 님 @Gwang_Uba",
+    "ownerLineRaw": "[파트너: 광우바 님 @Gwang_Uba]",
+    "classification": "hot",
+    "description": "녹은 바닐라초코 아이스크림을 맛 보여 주기 위해 탄생한 워터파컷입니다. 친절하고 느긋한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "71",
+    "name": "에스프레소 워터파컷",
+    "owner": "김달서 님 @kimmaeong",
+    "ownerLineRaw": "[파트너: 김달서 님 @kimmaeong]",
+    "classification": "hot",
+    "description": "에스프레소를 맛 보여 주기 위해 탄생한 워터파컷입니다. 다정하고 따뜻한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "72",
+    "name": "녹차 워터파컷",
+    "owner": "스즈키 히노 님 @HINO1230_b",
+    "ownerLineRaw": "[파트너: 스즈키 히노 님 @HINO1230_b]",
+    "classification": "cold",
+    "description": "녹차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 차분하며 피곤해하는 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "73",
+    "name": "별이 들어간 에너지 음료 워터파컷",
+    "owner": "조이작가 님 @joylee_12310",
+    "ownerLineRaw": "[파트너: 조이작가 님 @joylee_12310]",
+    "classification": "cold",
+    "description": "별이 들어간 에너지 음료를 맛 보여 주기 위해 탄생한 워터파컷입니다. 진지하고 조금은 딱딱한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "74",
+    "name": "노랑깃털을 담은 물 워터파컷",
+    "owner": "슈가 님 @_suga_0503",
+    "ownerLineRaw": "[파트너: 슈가 님 @_suga_0503]",
+    "classification": "Hot",
+    "description": "노랑깃털을 담은 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 밝고 다정한 성격을 가졌습니다.",
+    "notes": [
+      "CLASSIFICATION_INVALID: Hot",
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "75",
+    "name": "바텐더가 마신 위스키 워터파컷",
+    "owner": "위스키 님 @keonhyu3",
+    "ownerLineRaw": "[파트너: 위스키 님 @keonhyu3]",
+    "classification": "cold",
+    "description": "바텐더가 마신 위스키를 맛 보여 주기 위해 탄생한 워터파컷입니다. 조용하고 무뚝뚝한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "76",
+    "name": "청의 뱀과 여우가 마신 맑은 물 워터파컷",
+    "owner": "짭짭이 님 @Jjapjjap_owo",
+    "ownerLineRaw": "[파트너: 짭짭이 님 @Jjapjjap_owo]",
+    "classification": "cold",
+    "description": "청의 뱀과 여우가 마신 맑은 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 차분하고 침착한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "77",
+    "name": "녹의 뱀과 여우가 마신 맑은 물 워터파컷",
+    "owner": "짭짭이 님 @Jjapjjap_owo",
+    "ownerLineRaw": "[파트너: 짭짭이 님 @Jjapjjap_owo]",
+    "classification": "cold",
+    "description": "녹의 뱀과 여우가 마신 맑은 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 차분하고 얌전한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "78",
+    "name": "피안화차 워터파컷",
+    "owner": "금소 님 @geumso_03",
+    "ownerLineRaw": "[파트너: 금소 님 @geumso_03]",
+    "classification": "Cold",
+    "description": "피안화차를 맛 보여주기 위해 탄생한 워터파컷입니다. 차갑고 어두운, 우울한 성격을 가졌습니다.",
+    "notes": [
+      "CLASSIFICATION_INVALID: Cold",
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "79",
+    "name": "흘러가는 시간의 찰나에 마신 물 워터파컷",
+    "owner": "안초 님 @kimancho930",
+    "ownerLineRaw": "[파트너: 안초 님 @kimancho930]",
+    "classification": "hot",
+    "description": "흘러가는 시간의 찰나에 마신 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 활발하고 용감한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "80",
+    "name": "마카롱과 같이 마신 우유 워터파컷",
+    "owner": "슈가 님 @_suga_0503",
+    "ownerLineRaw": "[파트너: 슈가 님 @_suga_0503]",
+    "classification": "cold",
+    "description": "마카롱과 같이 마신 우유를 맛 보여 주기 위해 탄생한 워터파컷입니다. 소심하고 겁많은 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "81",
+    "name": "갤럭시 레몬 에이드 워터파컷",
+    "owner": "강무 님 @_rkdan_",
+    "ownerLineRaw": "[파트너: 강무 님 @_rkdan_]",
+    "classification": "Cold",
+    "description": "갤럭시 레몬 에이드를 맛 보여주기 위해 탄생한 워터파컷입니다. 냉정한 성격을 가졌습니다.",
+    "notes": [
+      "CLASSIFICATION_INVALID: Cold",
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "82",
+    "name": "활력수 워터파컷",
+    "owner": "안초 님 @kimancho930",
+    "ownerLineRaw": "[파트너: 안초 님 @kimancho930]",
+    "classification": "hot",
+    "description": "<날개가 달린 특수 개체> 활력수를 맛 보여 주기 위해 탄생한 워터파컷입니다. 너그럽고 친절한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "83",
+    "name": "튤립반 아이의 음료 워터파컷",
+    "owner": "셰리 님 @su_hwa__",
+    "ownerLineRaw": "[파트너: 셰리 님 @su_hwa__]",
+    "classification": "hot",
+    "description": "<보통 개체 보다 몸집이 작은 특별 개체> 튤립반 아이의 음료를 맛 보여 주기 위해 탄생한 워터파컷입니다. 다정한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "84",
+    "name": "병아리반 아이의 음료 워터파컷",
+    "owner": "광우바 님 @Gwang_Uba",
+    "ownerLineRaw": "[파트너: 광우바 님 @Gwang_Uba]",
+    "classification": "cold",
+    "description": "병아리반 아이의 음료를 맛 보여 주기 위해 탄생한 워터파컷입니다. 차분한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "85",
+    "name": "아침에 마신 물 워터파컷",
+    "owner": "안초 님 @kimancho930",
+    "ownerLineRaw": "[파트너: 안초 님 @kimancho930]",
+    "classification": "hot",
+    "description": "아침에 마신 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 쾌활하고 용감한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "86",
+    "name": "밤에 마신 물 워터파컷",
+    "owner": "안초 님 @kimancho930",
+    "ownerLineRaw": "[파트너: 안초 님 @kimancho930]",
+    "classification": "cold",
+    "description": "밤에 마신 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 차분하고 겁이 많은 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "87",
+    "name": "유자차 워터파컷",
+    "owner": "뭎돨 님 @daytime0924",
+    "ownerLineRaw": "[파트너: 뭎돨 님 @daytime0924]",
+    "classification": "hot",
+    "description": "<꼬리의 물 주머니가 큰 특별 개체> 유자차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 다정하고 느긋한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "88",
+    "name": "노을 질 무렵 망고 스무디 워터파컷",
+    "owner": "쿠도쿠로 님 @KudoKuro1468",
+    "ownerLineRaw": "[파트너: 쿠도쿠로 님 @KudoKuro1468]",
+    "classification": "cold",
+    "description": "<날개가 달린 특수 개체> 노을 질 무렵 망고 스무디를 맛 보여 주기 위해 탄생한 워터파컷입니다. 차분한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "89",
+    "name": "해 뜰 무렵 블루베리 스무디 워터파컷",
+    "owner": "플레이트 님 @plate0424",
+    "ownerLineRaw": "[파트너: 플레이트 님 @plate0424]",
+    "classification": "cold",
+    "description": "<날개가 달린 특수 개체> 해 뜰 무렵 블루베리 스무디를 맛 보여 주기 위해 탄생한 워터파컷입니다. 침착한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "90",
+    "name": "북극여우를 보며 마신 차 워터파컷",
+    "owner": "강무 님 @_rkdan_",
+    "ownerLineRaw": "[파트너: 강무 님 @_rkdan_]",
+    "classification": "hot",
+    "description": "<보통 개체 보다 몸집이 작은 특별 개체> 북극여우를 보며 마신 차를 맛 보여주기 위해 탄생한 워터파컷입니다. 너그럽고 나른한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "91",
+    "name": "구름 같은 솜사탕과 함께 마신 라무네 워터파컷",
+    "owner": "SORA 님 @SORA10187",
+    "ownerLineRaw": "[파트너: SORA 님 @SORA10187]",
+    "classification": "cold",
+    "description": "구름 같은 솜사탕과 함께 마신 라무네를 맛 보여 주기 위해 탄생한 워터파컷입니다. 걱정많고 겁많은 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "92",
+    "name": "노래하며 마신 커피 워터파컷",
+    "owner": "XODD 님 @XODDM",
+    "ownerLineRaw": "[파트너: XODD 님 @XODDM]",
+    "classification": "cold",
+    "description": "노래하며 마신 커피를 맛 보여 주기 위해 탄생한 워터파컷입니다. 차분한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "93",
+    "name": "생일주 워터파컷",
+    "owner": "Fe브Ri즈 님 @FebR1z",
+    "ownerLineRaw": "[파트너: Fe브Ri즈 님 @FebR1z]",
+    "classification": "hot & cold",
+    "description": "<'물'의 도수를 조절이 가능한 ??? 개체> 생일주를 맛 보여 주기 위해 탄생한 워터파컷입니다. 성격 또한 hot과 cold가 공존하는 듯 합니다. 생일인 사람에게 알맞는 도수의 주를 주는 워터파컷 입니다.",
+    "notes": [
+      "CLASSIFICATION_INVALID: hot & cold"
+    ]
+  },
+  {
+    "num": "94",
+    "name": "황금 꽃 생일주 워터파컷",
+    "owner": "언쿠",
+    "ownerLineRaw": "[파트너: 언쿠]",
+    "classification": "hot & cold",
+    "description": "<'물'의 도수를 조절이 가능한 ??? 개체> 황금 꽃 생일주를 맛 보여 주기 위해 탄생한 워터파컷입니다. 성격 또한 hot과 cold가 공존하는 듯 합니다. 생일인 사람에게 알맞는 도수의 주를 주는 워터파컷 입니다.",
+    "notes": [
+      "CLASSIFICATION_INVALID: hot & cold"
+    ]
+  },
+  {
+    "num": "95",
+    "name": "초코맛 단백질 쉐이크 워터파컷",
+    "owner": "이상어님 @ms1sharklee",
+    "ownerLineRaw": "[파트너 : 이상어님 @ms1sharklee]",
+    "classification": "hot",
+    "description": "<근육질 외형을 가진 특수 개체> 초코맛 단백질 쉐이크를 맛보여주기 위해 탄생한 워터파컷입니다. 운동을 열정적으로 하는 열혈파커 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "96",
+    "name": "모자장수의 홍차 워터파컷",
+    "owner": "이름은 비워둘 수 없습니다 님 @orcinus_iruka_",
+    "ownerLineRaw": "[파트너: 이름은 비워둘 수 없습니다 님 @orcinus_iruka_]",
+    "classification": "hot",
+    "description": "모자장수의 홍차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 밝고 엉뚱한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "97",
+    "name": "청사과 과즙 워터파컷",
+    "owner": "미어 님 @moil_32",
+    "ownerLineRaw": "[파트너: 미어 님 @moil_32]",
+    "classification": "hot",
+    "description": "청사과 과즙을 맛 보여 주기 위해 탄생한 워터파컷입니다. 활발한 성격을 가졌습니다. 아름다운 사과나무 아래 다른'종족'과 함께 태어난 워터파컷 입니다. 그 '종족'과 마치 가족과도 같은 모습을 보입니다.",
+    "notes": [
+      "PRE_TAGS: <강무 님 DA>"
+    ]
+  },
+  {
+    "num": "98",
+    "name": "죽순과 함께 마시는 석죽차 워터파컷",
+    "owner": "말랑한판다 님 @i_o3o_l",
+    "ownerLineRaw": "[파트너: 말랑한판다 님 @i_o3o_l]",
+    "classification": "hot",
+    "description": "죽순과 함께 마시는 석죽차를 맛보여주기 위해 탄생한 워터파컷 입니다. 따뜻한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "99",
+    "name": "검은 대나무 수액 워터파컷",
+    "owner": "강무 님 @_rkdan_",
+    "ownerLineRaw": "[파트너: 강무 님 @_rkdan_]",
+    "classification": "hot",
+    "description": "검은 대나무 수액을 맛 보여 주기 위해 탄생한 워터파컷입니다. 다정하고 느긋한 성격을 가졌습니다. 울창하고 푸르른 대나무숲에서 홀로 검게 빛나는 검은 대나무에서 태어났습니다. 다른'종족'과 함께 태어난 워터파컷 입니다. 가족과 같은 그 '종족'을 의지해 보이는 편 입니다.",
+    "notes": []
+  },
+  {
+    "num": "100",
+    "name": "100번째 파티 주스 워터파컷",
+    "owner": "하루 님 @yuharu11615",
+    "ownerLineRaw": "[파트너: 하루 님 @yuharu11615]",
+    "classification": "hot & cold",
+    "description": "<'물'의 맛을 바꾸는 게 가능한 ??? 개체> 100번째 파티 주스를 맛 보여 주기 위해 탄생한 워터파컷입니다. 성격 또한 hot과 cold가 공존하는 듯 합니다. 여러가지 과일주스 맛을 맛 보여 줄수 있는 워터파컷 입니다.",
+    "notes": [
+      "CLASSIFICATION_INVALID: hot & cold"
+    ]
+  },
+  {
+    "num": "101",
+    "name": "호접몽을 꾸며 마신 제비꽃차 워터파컷",
+    "owner": "안초 님 @kimancho930",
+    "ownerLineRaw": "[파트너: 안초 님 @kimancho930]",
+    "classification": "hot",
+    "description": "호접몽을 꾸며 마신 제비꽃차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 온화하고 친절한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "102",
+    "name": "겨울의 서리 물 워터파컷",
+    "owner": "469 님 @469fsn",
+    "ownerLineRaw": "[파트너: 469 님 @469fsn]",
+    "classification": "cold",
+    "description": "겨울의 서리 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 외로움을 많이타며 잘 놀라는 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "103",
+    "name": "장난스런 상어가 마신 바닷물 워터파컷",
+    "owner": "예니 님 @yell_oiye",
+    "ownerLineRaw": "[파트너: 예니 님 @yell_oiye]",
+    "classification": "cold",
+    "description": "<cold와 반대되는 성격을 가진 특수 개체> 장난스런 상어가 마신 바닷물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 장난을 좋아하며 활발하고 매일 신나하는 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "104",
+    "name": "깊은 숲속의 밤 호수를 보며 마신 페퍼민트 차 워터파컷",
+    "owner": "숲 님 @_forest_64_",
+    "ownerLineRaw": "[파트너: 숲 님 @_forest_64_]",
+    "classification": "cold",
+    "description": "<꼬리의 물 주머니가 큰 특별 개체> 깊은 숲속의 밤 호수를 보며 마신 페퍼민트 차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 조용하며 잔잔하고 차분한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "105",
+    "name": "캐모마일차 워터파컷",
+    "owner": "가슴야호 님 @D_YAHOna101",
+    "ownerLineRaw": "[파트너: 가슴야호 님 @D_YAHOna101]",
+    "classification": "cold",
+    "description": "<보통 개체 보다 몸집이 작은 특별 개체> 캐모마일차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 새침하고 조용한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "106",
+    "name": "허브차 워터파컷",
+    "owner": "햇쌀밥 님 @hunted_sunrice",
+    "ownerLineRaw": "[파트너: 햇쌀밥 님 @hunted_sunrice]",
+    "classification": "hot",
+    "description": "<보통 개체 보다 몸집이 작은 특별 개체> 허브차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 다정하고 나긋한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "107",
+    "name": "고래가 마신 콜라 워터파컷",
+    "owner": "CHO 님 @yumyum11541",
+    "ownerLineRaw": "[파트너: CHO 님 @yumyum11541]",
+    "classification": "hot",
+    "description": "고래가 마신 콜라를 맛 보여 주기 위해 탄생한 워터파컷입니다. 느릇하고 친절한 성격을 가졌습니다. 다른'종족'과 함께 태어난 워터파컷 입니다. 그 '종족'과 언제나 함께하는 모습을 보입니다.",
+    "notes": []
+  },
+  {
+    "num": "108",
+    "name": "고래가 마신 사이다 워터파컷",
+    "owner": "SIGE 님 @sige1364",
+    "ownerLineRaw": "[파트너: SIGE 님 @sige1364]",
+    "classification": "hot",
+    "description": "고래가 마신 사이다를 맛 보여 주기 위해 탄생한 워터파컷입니다. 밝고 활발한 성격을 가졌습니다. 다른'종족'과 함께 태어난 워터파컷 입니다. 그 '종족'과 언제나 함께하는 모습을 보입니다.",
+    "notes": [
+      "PRE_TAGS: <당개 님 DA>"
+    ]
+  },
+  {
+    "num": "109",
+    "name": "어린 해파리가 사는 바닷물 워터파컷",
+    "owner": "안초 님 @kimancho930",
+    "ownerLineRaw": "[파트너: 안초 님 @kimancho930]",
+    "classification": "hot",
+    "description": "어린 해파리가 사는 바닷물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 호기심 많고 다정한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "110",
+    "name": "지구의 물 워터파컷",
+    "owner": "꾸꾸 님 @owu_1215",
+    "ownerLineRaw": "[파트너: 꾸꾸 님 @owu_1215]",
+    "classification": "cold",
+    "description": "지구의 물을 맛 보여주기 위해 탄생한 워터파컷입니다. 무뚝뚝하며, 헛된 기대와 희망은 가지지 않는 성격입니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "111",
+    "name": "버터플라이피차 워터파컷",
+    "owner": "조이작가 님 @joylee_12310",
+    "ownerLineRaw": "[파트너: 조이작가 님 @joylee_12310]",
+    "classification": "cold",
+    "description": "<보통 개체 보다 몸집이 큰 특별 개체> 버터플라이피차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 차분하고 단호한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "112",
+    "name": "홍차 워터파컷",
+    "owner": "안초 님 @kimancho930",
+    "ownerLineRaw": "[파트너: 안초 님 @kimancho930]",
+    "classification": "hot",
+    "description": "<보통 개체 보다 몸집이 큰 특별 개체> 홍차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 의욕이 많고 명랑한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "113",
+    "name": "마녀의 물약 워터파컷",
+    "owner": "한용 님 @HanYong_56",
+    "ownerLineRaw": "[파트너: 한용 님 @HanYong_56]",
+    "classification": "cold",
+    "description": "마녀의 물약을 맛 보여 주기 위해 탄생한 워터파컷입니다. 조용하고 음침한 성격을 가졌습니다. 다른'종족'과 함께 태어난 워터파컷 입니다. 그 '종족'과 친하게 지내는 모습을 보입니다.",
+    "notes": []
+  },
+  {
+    "num": "114",
+    "name": "고양이만을 위한 물 워터파컷",
+    "owner": "마로 님 @Marorong_",
+    "ownerLineRaw": "[파트너: 마로 님 @Marorong_]",
+    "classification": "hot",
+    "description": "고양이만을 위한 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 나른하고 포근한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "115",
+    "name": "별사탕을 담은 우유 워터파컷",
+    "owner": "cherry 님 @cherry10g",
+    "ownerLineRaw": "[파트너: cherry 님 @cherry10g]",
+    "classification": "hot",
+    "description": "별사탕을 담은 우유를 맛 보여 주기 위해 탄생한 워터파컷입니다. 무뚝뚝한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "116",
+    "name": "미래에서 온 에너지드링크 워터파컷",
+    "owner": "티스 님 @xltm345",
+    "ownerLineRaw": "[파트너: 티스 님 @xltm345]",
+    "classification": "cold",
+    "description": "미래에서 온 에너지드링크를 맛 보여 주기 위해 탄생한 워터파컷입니다. 침착하고 고요한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "117",
+    "name": "용이 달여준 말차 워터파컷",
+    "owner": "피안 님 @1309_higanbana",
+    "ownerLineRaw": "[파트너: 피안 님 @1309_higanbana]",
+    "classification": "hot",
+    "description": "<용의 손을 가진 특수 개체> 용이 달여준 말차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 너그럽고 자비로운 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "118",
+    "name": "사랑에 빠진 큐피트의 피 워터파컷",
+    "owner": "안초 님 @kimancho930",
+    "ownerLineRaw": "[파트너: 안초 님 @kimancho930]",
+    "classification": "hot",
+    "description": "<날개가 달린 특수 개체> 사랑에 빠진 큐피트의 피를 맛 보여 주기 위해 탄생한 워터파컷입니다. 사랑에 열정적인 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "119",
+    "name": "설표가 숨은 안개 워터파컷",
+    "owner": "뇨 님 @nyo0822_",
+    "ownerLineRaw": "[파트너: 뇨 님 @nyo0822_]",
+    "classification": "hot & cold",
+    "description": "<액체로 된 '물'이 아닌 수증기로 된 '물'을 가진 ??? 개체> 설표가 숨은 안개를 맛 보여 주기 위해 탄생한 워터파컷입니다. 성격 또한 hot과 cold가 공존하는 듯 합니다. 약간 응결된 수증기인 안개로, 설표가 숨을수 있게 도와주는 워터파컷 입니다.",
+    "notes": [
+      "CLASSIFICATION_INVALID: hot & cold"
+    ]
+  },
+  {
+    "num": "120",
+    "name": "어느 귀한집 시바 이누가 마신 민트차 워터파컷",
+    "owner": "! 님 @susanghao",
+    "ownerLineRaw": "[파트너: ! 님 @susanghao]",
+    "classification": "cold",
+    "description": "어느 귀한집 시바 이누가 마신 민트차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 차분하고 신중한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "121",
+    "name": "가오리가 맛본 달콤한 과일주스 워터파컷",
+    "owner": "이바다 님 @emerald_BADA",
+    "ownerLineRaw": "[파트너: 이바다 님 @emerald_BADA]",
+    "classification": "cold",
+    "description": "가오리가 맛본 달콤한 과일주스를 맛 보여 주기 위해 탄생한 워터파컷입니다. 차분하고 쉬원쉬원 한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "122",
+    "name": "큐피트의 사랑을 위한 차 워터파컷",
+    "owner": "25 님 @jinzumong",
+    "ownerLineRaw": "[파트너: 25 님 @jinzumong]",
+    "classification": "hot",
+    "description": "큐피트의 사랑을 위한 차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 다정하고 적극적인 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "123",
+    "name": "여우와 나비가 함께 마신 수정과 워터파컷",
+    "owner": "슈가 님 @s_uga_0503",
+    "ownerLineRaw": "[파트너: 슈가 님 @s_uga_0503]",
+    "classification": "cold",
+    "description": "여우와 나비가 함께 마신 수정과를 맛 보여 주기 위해 탄생한 워터파컷입니다. 차분하고 조용한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "124",
+    "name": "마시멜로와 딸기 위 뿌린 캐러멜 시럽 워터파컷",
+    "owner": "햇쌀밥 님 @hunted_sunrice",
+    "ownerLineRaw": "[파트너: 햇쌀밥 님 @hunted_sunrice]",
+    "classification": "hot",
+    "description": "마시멜로와 딸기 위 뿌린 캐러멜 시럽을 맛 보여 주기 위해 탄생한 워터파컷입니다. 밝고 명랑한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "125",
+    "name": "한기가 서린 물 워터파컷",
+    "owner": "티스 님 @xltm345",
+    "ownerLineRaw": "[파트너: 티스 님 @xltm345]",
+    "classification": "cold",
+    "description": "한기가 서린 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 차가운 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "126",
+    "name": "신비한 노란 양말 고양이의 특별한 주스 워터파컷",
+    "owner": "언쿠",
+    "ownerLineRaw": "[파트너: 언쿠]",
+    "classification": "hot & cold",
+    "description": "<'물'에 특별한 마법이 담긴 ??? 개체> 신비한 노란 양말 고양이의 특별한 주스를 맛 보여 주기 위해 탄생한 워터파컷입니다. 성격 또한 hot과 cold가 공존하는 듯 합니다. 따르는 '물'마다 특별한 '효과'를 주는 워터파컷 입니다.",
+    "notes": [
+      "CLASSIFICATION_INVALID: hot & cold"
+    ]
+  },
+  {
+    "num": "127",
+    "name": "달토끼표 달떡의 꿀소 워터파컷",
+    "owner": "마로 님 @Marorong_",
+    "ownerLineRaw": "[파트너: 마로 님 @Marorong_]",
+    "classification": "hot",
+    "description": "<보통 개체 보다 몸집이 큰 특별 개체> 달토끼표 달떡의 꿀소를 맛 보여 주기 위해 탄생한 워터파컷입니다. 밝고 기운 넘치는 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "128",
+    "name": "판다가 좋아하는 오렌지 주스 워터파컷",
+    "owner": "안초 님 @kimancho930",
+    "ownerLineRaw": "[파트너: 안초 님 @kimancho930]",
+    "classification": "hot",
+    "description": "판다가 좋아하는 오렌지 주스를 맛 보여 주기 위해 탄생한 워터파컷입니다. 활발하고 상큼한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "129",
+    "name": "꿀 딸기라떼 워터파컷",
+    "owner": "안초 님 @kimancho930",
+    "ownerLineRaw": "[파트너: 안초 님 @kimancho930]",
+    "classification": "Cold",
+    "description": "<물 배출 구멍이 꼬리물주머니에 더 있는 특별 개체> 꿀 딸기라떼를 맛 보여 주기 위해 탄생한 워터파컷입니다. 소심하고 어리버리한 성격을 가졌습니다.",
+    "notes": [
+      "CLASSIFICATION_INVALID: Cold",
+      "PRE_TAGS: <슈가 님 D>"
+    ]
+  },
+  {
+    "num": "130",
+    "name": "블루베리 요거트 스무디 워터파컷",
+    "owner": "쵸카 님 @chokaloveit",
+    "ownerLineRaw": "[파트너: 쵸카 님 @chokaloveit]",
+    "classification": "cold",
+    "description": "블루베리 요거트 스무디를 맛 보여 주기 위해 탄생한 워터파컷입니다. 소심하고 조용하며 눈물이 많은 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "131",
+    "name": "할로윈 사탕의 시럽 워터파컷",
+    "owner": "언쿠",
+    "ownerLineRaw": "[파트너: 언쿠]",
+    "classification": "hot",
+    "description": "할로윈 사탕의 시럽을 맛 보여 주기 위해 탄생한 워터파컷입니다. 자존감 높고 강인한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "132",
+    "name": "성스러운 눈물 워터파컷",
+    "owner": "영극 님 @GeugYeong",
+    "ownerLineRaw": "[파트너: 영극 님 @GeugYeong]",
+    "classification": "cold",
+    "description": "성스러운 눈물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 겁이 많고 잘 우는 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "133",
+    "name": "공룡이 맛본 사이다 워터파컷",
+    "owner": "이내 님 @ina_moment10",
+    "ownerLineRaw": "[파트너: 이내 님 @ina_moment10]",
+    "classification": "cold",
+    "description": "공룡이 맛본 사이다를 맛 보여 주기 위해 탄생한 워터파컷입니다. 차분하고 빈틈 없는 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "134",
+    "name": "눈 내린 겨울날 눈여우의 얼음 물 워터파컷",
+    "owner": "눈묘 님 @Snow-my0",
+    "ownerLineRaw": "[파트너: 눈묘 님 @Snow-my0]",
+    "classification": "cold",
+    "description": "눈 내린 겨울날 눈여우의 얼음 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 반응하지 않는 무심한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "135",
+    "name": "황금 빛 벌꿀 워터파컷",
+    "owner": "위티 님 @WITTYccat",
+    "ownerLineRaw": "[파트너: 위티 님 @WITTYccat]",
+    "classification": "hot",
+    "description": "황금 빛 벌꿀을 맛 보여 주기 위해 탄생한 워터파컷입니다. 친절하고 나긋한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "136",
+    "name": "게임할 때 마신 에이드 워터파컷",
+    "owner": "림파 님 @Lim__pa",
+    "ownerLineRaw": "[파트너: 림파 님 @Lim__pa]",
+    "classification": "cold",
+    "description": "<꼬리의 물 주머니가 큰 특별 개체> 게임할 때 마신 에이드를 맛 보여 주기위해 탄생한 워터파컷입니다. 당돌하고 침착한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <! 님 D>"
+    ]
+  },
+  {
+    "num": "137",
+    "name": "고래가 해엄친 은하수 워터파컷",
+    "owner": "슝치 님 @syungchi_",
+    "ownerLineRaw": "[파트너: 슝치 님 @syungchi_]",
+    "classification": "cold",
+    "description": "고래가 해엄친 은하수를 맛 보여 주기위해 탄생한 워터파컷입니다. 차분하고 꼼꼼한 성격을 가졌습니다. 다른'종족'과 함께 태어난 워터파컷 입니다. 가족과 같은 그 '종족'을 의지해 보이는 편 입니다.",
+    "notes": []
+  },
+  {
+    "num": "138",
+    "name": "은방울꽃에 둘러싸인 유령신부의 눈물 워터파컷",
+    "owner": "견 님 @DOGdog_bow",
+    "ownerLineRaw": "[파트너: 견 님 @DOGdog_bow]",
+    "classification": "cold",
+    "description": "은방울꽃에 둘러싸인 유령신부의 눈물을 맛 보여주기 위해 탄생한 워터파컷입니다. 상처를 잘 받고 우울한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "139",
+    "name": "유령을 보고 놀란 사람의 눈물 워터파컷",
+    "owner": "달콤한슈크림 님 @i_hate_the_test",
+    "ownerLineRaw": "[파트너: 달콤한슈크림 님 @i_hate_the_test]",
+    "classification": "cold",
+    "description": "유령을 보고 놀란 사람의 눈물을 맛 보여주기 위해 탄생한 워터파컷입니다. 장난끼 많고 심술궂은 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "140",
+    "name": "등불에 소원을 빈 고래의 눈물 워터파컷",
+    "owner": "쿠도쿠로 님 @KudoKuro1468",
+    "ownerLineRaw": "[파트너: 쿠도쿠로 님 @KudoKuro1468]",
+    "classification": "hot",
+    "description": "등불에 소원을 빈 고래의 눈물을 맛 보여주기 위해 탄생한 워터파컷입니다. 정이 많고 다정한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "141",
+    "name": "유니콘의 솜사탕맛 주스 워터파컷",
+    "owner": "달콤한슈크림 님 @i_hate_the_test",
+    "ownerLineRaw": "[파트너: 달콤한슈크림 님 @i_hate_the_test]",
+    "classification": "hot",
+    "description": "유니콘의 솜사탕맛 주스를 맛 보여주기 위해 탄생한 워터파컷입니다. 밝고 희망찬 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "142",
+    "name": "별이 뜬 새벽하늘 아래 마신 홍차 워터파컷",
+    "owner": "달콤한슈크림 님 @i_hate_the_test",
+    "ownerLineRaw": "[파트너: 달콤한슈크림 님 @i_hate_the_test]",
+    "classification": "hot",
+    "description": "별이 뜬 새벽하늘 아래 마신 홍차를 맛 보여주기 위해 탄생한 워터파컷입니다. 다정하고 나긋한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "143",
+    "name": "한 화가의 3색 과일주스 워터파컷",
+    "owner": "안초 님 @kimancho930",
+    "ownerLineRaw": "[파트너: 안초 님 @kimancho930]",
+    "classification": "hot",
+    "description": "한 화가의 3색 과일주스를 맛 보여 주기 위해 탄생한 워터파컷입니다. 푸근하고 활동적인 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "144",
+    "name": "고양이 아가씨가 마신 보라빛 흑장미 차 워터파컷",
+    "owner": "이보노키 님 @0Bn7yGrfTDTgPeo",
+    "ownerLineRaw": "[파트너: 이보노키 님 @0Bn7yGrfTDTgPeo]",
+    "classification": "cold",
+    "description": "고양이 아가씨가 마신 보라빛 흑장미 차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 도도하고 새침한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "145",
+    "name": "과일 시리얼을 담군 우유 워터파컷",
+    "owner": "슈가 님 @_suga_0503",
+    "ownerLineRaw": "[파트너: 슈가 님 @_suga_0503]",
+    "classification": "hot",
+    "description": "과일 시리얼을 담군 우유를 맛 보여 주기 위해 탄생한 워터파컷입니다. 다정하고 너그러운 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "146",
+    "name": "물감 색들이 섞이기 전의 물 워터파컷",
+    "owner": "김익 님 @rl221_ig",
+    "ownerLineRaw": "[파트너: 김익 님 @rl221_ig]",
+    "classification": "hot",
+    "description": "물감 색들이 섞이기 전의 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 밝고 낙천적이며 매사에 긍정적인 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "147",
+    "name": "청룡의 맑은 샘물 워터파컷",
+    "owner": "쿠도쿠로 님 @KudoKuro1468",
+    "ownerLineRaw": "[파트너: 쿠도쿠로 님 @KudoKuro1468]",
+    "classification": "hot",
+    "description": "청룡의 맑은 샘물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 다정하고 너그러운 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "148",
+    "name": "청룡의 맑은 바닷물",
+    "owner": "쿠도쿠로 님 @KudoKuro1468",
+    "ownerLineRaw": "[파트너: 쿠도쿠로 님 @KudoKuro1468]",
+    "classification": "cold",
+    "description": "청룡의 맑은 바닷물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 차분하고 꼼꼼한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "149",
+    "name": "복숭아티 워터파컷",
+    "owner": "고냥코 님 @Conaco__S2",
+    "ownerLineRaw": "[파트너: 고냥코 님 @Conaco__S2]",
+    "classification": "hot",
+    "description": "복숭아티를 맛 보여 주기 위해 탄생한 워터파컷입니다. 온화하고 친절한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "150",
+    "name": "교만의 길로 이끄는 악마의 주스 워터파컷",
+    "owner": "미리내 님 @me_li_neh",
+    "ownerLineRaw": "[파트너: 미리내 님 @me_li_neh]",
+    "classification": "cold",
+    "description": "<날개가 달린 특수 개체> 교만의 길로 이끄는 악마의 주스를 맛 보여 주기 위해 탄생한 워터파컷입니다. 교만하고 냉정한 성격을 가졌습니다. 다른'종족'의 탄생에 의해 어떠한 사건으로 태어난 워터파컷 입니다. 그들은 그저, 자신의 ‘물’을 원하는 이들에게 맛보여줄 뿐인 순수한 존재입니다. 그들을 미워하지 말아주세요.",
+    "notes": []
+  },
+  {
+    "num": "151",
+    "name": "탐욕의 길로 이끄는 악마의 주스 워터파컷",
+    "owner": "ZederQuan 님 @ZederQuan",
+    "ownerLineRaw": "[파트너: ZederQuan 님 @ZederQuan]",
+    "classification": "hot",
+    "description": "<날개가 달린 특수 개체> 탐욕의 길로 이끄는 악마의 주스를 맛 보여 주기 위해 탄생한 워터파컷입니다. 욕심많고 탐욕적인 성격을 가졌습니다. 다른'종족'의 탄생에 의해 어떠한 사건으로 태어난 워터파컷 입니다. 그들은 그저, 자신의 ‘물’을 원하는 이들에게 맛보여줄 뿐인 순수한 존재입니다. 그들을 미워하지 말아주세요.",
+    "notes": []
+  },
+  {
+    "num": "152",
+    "name": "질투의 길로 이끄는 악마의 주스 워터파컷",
+    "owner": "달콤한슈크림 님 @i_hate_the_test",
+    "ownerLineRaw": "[파트너: 달콤한슈크림 님 @i_hate_the_test]",
+    "classification": "hot",
+    "description": "<날개가 달린 특수 개체> 질투의 길로 이끄는 악마의 주스를 맛 보여 주기 위해 탄생한 워터파컷입니다. 질투가 많고 잘난체하는 성격을 가졌습니다. 다른'종족'의 탄생에 의해 어떠한 사건으로 태어난 워터파컷 입니다. 그들은 그저, 자신의 ‘물’을 원하는 이들에게 맛보여줄 뿐인 순수한 존재입니다. 그들을 미워하지 말아주세요.",
+    "notes": []
+  },
+  {
+    "num": "153",
+    "name": "분노의 길로 이끄는 악마의 주스 워터파컷",
+    "owner": "버찌랑 님 @Buzz_iii",
+    "ownerLineRaw": "[파트너: 버찌랑 님 @Buzz_iii]",
+    "classification": "hot",
+    "description": "<날개가 달린 특수 개체> 분노의 길로 이끄는 악마의 주스를 맛 보여 주기 위해 탄생한 워터파컷입니다. 분노가 많은 성격을 가졌습니다. 다른'종족'의 탄생에 의해 어떠한 사건으로 태어난 워터파컷 입니다. 그들은 그저, 자신의 ‘물’을 원하는 이들에게 맛보여줄 뿐인 순수한 존재입니다. 그들을 미워하지 말아주세요.",
+    "notes": []
+  },
+  {
+    "num": "154",
+    "name": "색욕의 길로 이끄는 악마의 주스 워터파컷",
+    "owner": "미리내 님 @me_li_neh",
+    "ownerLineRaw": "[파트너: 미리내 님 @me_li_neh]",
+    "classification": "hot",
+    "description": "<날개가 달린 특수 개체> 색욕의 길로 이끄는 악마의 주스를 맛 보여 주기 위해 탄생한 워터파컷입니다. 심술궂고 어린아이 같은 성격을 가졌습니다. 다른'종족'의 탄생에 의해 어떠한 사건으로 태어난 워터파컷 입니다. 그들은 그저, 자신의 ‘물’을 원하는 이들에게 맛보여줄 뿐인 순수한 존재입니다. 그들을 미워하지 말아주세요.",
+    "notes": []
+  },
+  {
+    "num": "155",
+    "name": "식탐의 길로 이끄는 악마의 주스 워터파컷",
+    "owner": "롸미 님 @da_rami_07",
+    "ownerLineRaw": "[파트너: 롸미 님 @da_rami_07]",
+    "classification": "cold",
+    "description": "<날개가 달린 특수 개체> 식탐의 길로 이끄는 악마의 주스를 맛 보여 주기 위해 탄생한 워터파컷입니다. 깐깐하고 완고한 성격을 가졌습니다. 다른'종족'의 탄생에 의해 어떠한 사건으로 태어난 워터파컷 입니다. 그들은 그저, 자신의 ‘물’을 원하는 이들에게 맛보여줄 뿐인 순수한 존재입니다. 그들을 미워하지 말아주세요.",
+    "notes": []
+  },
+  {
+    "num": "156",
+    "name": "나태의 길로 이끄는 악마의 주스 워터파컷",
+    "owner": "삐약 님 @fkdlfn456",
+    "ownerLineRaw": "[파트너: 삐약 님 @fkdlfn456]",
+    "classification": "cold",
+    "description": "<날개가 달린 특수 개체> 나태의 길로 이끄는 악마의 주스를 맛 보여 주기 위해 탄생한 워터파컷입니다. 조용하고 나태한 성격을 가졌습니다. 다른'종족'의 탄생에 의해 어떠한 사건으로 태어난 워터파컷 입니다. 그들은 그저, 자신의 ‘물’을 원하는 이들에게 맛보여줄 뿐인 순수한 존재입니다. 그들을 미워하지 말아주세요.",
+    "notes": []
+  },
+  {
+    "num": "157",
+    "name": "검푸른색 꽃차 워터파컷",
+    "owner": "개힘드네 님 @yeounyang1018",
+    "ownerLineRaw": "[파트너:  개힘드네 님 @yeounyang1018]",
+    "classification": "cold",
+    "description": "검푸른색 꽃차를 맛 보여 주기위해 탄생한 워터파컷입니다. 도도하고 조용하며 냉정한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "158",
+    "name": "추억이 담긴 쌀뜨물 워터파컷",
+    "owner": "버찌랑 님 @Buzz_iii",
+    "ownerLineRaw": "[파트너:  버찌랑 님 @Buzz_iii]",
+    "classification": "hot",
+    "description": "추억이 담긴 쌀뜨물을 맛 보여 주기위해 탄생한 워터파컷입니다. 정이 많고 따스한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용> (리드로잉A)"
+    ]
+  },
+  {
+    "num": "159",
+    "name": "귤젤리 물 워터파컷",
+    "owner": "미리내 님 @me_li_neh",
+    "ownerLineRaw": "[파트너: 미리내 님 @me_li_neh]",
+    "classification": "hot",
+    "description": "귤젤리 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 친절하고 밝고 활기찬 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용> (리드로잉A)"
+    ]
+  },
+  {
+    "num": "160",
+    "name": "롭이어가 한모금 마신 홍차 워터파컷",
+    "owner": "쿠도쿠로 님 @KudoKuro1468",
+    "ownerLineRaw": "[파트너: 쿠도쿠로 님 @KudoKuro1468]",
+    "classification": "hot",
+    "description": "롭이어가 한모금 마신 홍차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 나긋하고 정이 많은 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "161",
+    "name": "가오리가 마시고 간 밀키스 워터파컷",
+    "owner": "낑깡 님 @Float_stingray",
+    "ownerLineRaw": "[파트너: 낑깡 님 @Float_stingray]",
+    "classification": "cold",
+    "description": "가오리가 마시고 간 밀키스를 맛 보여 주기 위해 탄생한 워터파컷입니다. 차분하고 무뚝뚝한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "162",
+    "name": "씁쓸한 빨간장미 차 워터파컷",
+    "owner": "언쿠",
+    "ownerLineRaw": "[파트너: 언쿠]",
+    "classification": "hot",
+    "description": "<볼의 물주머니가 귀에 있는 특별 개체> 씁쓸한 빨간장미 차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 다정하며 포근한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <삐약님 DA>"
+    ]
+  },
+  {
+    "num": "163",
+    "name": "애도하는 이의 마지막 꽃잎차 워터파컷",
+    "owner": "김컁 님 @kimkyang_0531",
+    "ownerLineRaw": "[파트너: 김컁 님 @kimkyang_0531]",
+    "classification": "cold",
+    "description": "애도하는 이의 마지막 꽃잎차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 약간의 경계성과 예민한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "164",
+    "name": "허브밭에 내린 여우비 워터파컷",
+    "owner": "사이버파상풍전파자 님 @sonsang_kk0kk",
+    "ownerLineRaw": "[파트너: 사이버파상풍전파자 님 @sonsang_kk0kk]",
+    "classification": "cold",
+    "description": "허브밭에 내린 여우비를 맛 보여 주기 위해 탄생한 워터파컷입니다. 항상 슬퍼하고 소심한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "165",
+    "name": "시골소녀가 마셨던 보리차 워터파컷",
+    "owner": "슐류 님 @schullu0910",
+    "ownerLineRaw": "[파트너: 슐류 님 @schullu0910]",
+    "classification": "hot",
+    "description": "시골소녀가 마셨던 보리차를 맛보여 주시위해 탄생한 워터파컷입니다. 친절하고 다정하며 공감적인 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "166",
+    "name": "곰이 따온 꿀차 워터파컷",
+    "owner": "곰곰콩 님 @gomgomcong",
+    "ownerLineRaw": "[파트너: 곰곰콩 님 @gomgomcong]",
+    "classification": "hot",
+    "description": "곰이 따온 꿀차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 상냥하고 부끄러움 많은 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용> (리드로잉A)"
+    ]
+  },
+  {
+    "num": "167",
+    "name": "수면제를 탄 물 워터파컷",
+    "owner": "달뉴우우 님 @dalneww",
+    "ownerLineRaw": "[파트너: 달뉴우우 님 @dalneww]",
+    "classification": "cold",
+    "description": "수면제를 탄 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 조용하고 차분한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "168",
+    "name": "어린 설표가 만든 눈덩이의 물 워터파컷",
+    "owner": "cherry 님 @cherry10g",
+    "ownerLineRaw": "[파트너: cherry 님 @cherry10g]",
+    "classification": "cold",
+    "description": "어린 설표가 만든 눈덩이의 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 소심하고 걱정많은 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "169",
+    "name": "끝없는 풀장의 물 워터파컷",
+    "owner": "사이버파상풍전파자 님 @sonsang_kk0kk",
+    "ownerLineRaw": "[파트너: 사이버파상풍전파자 님 @sonsang_kk0kk]",
+    "classification": "cold",
+    "description": "<인어의 몸을 가진 특수개체> 끝없는 풀장의 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 무심하고 공허한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "170",
+    "name": "끝없는 볼풀장의 물 워터파컷",
+    "owner": "cherry 님 @cherry10g",
+    "ownerLineRaw": "[파트너: cherry 님 @cherry10g]",
+    "classification": "hot",
+    "description": "<인어의 몸을 가진 특수개체> 끝없는 볼풀장의 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 밝고 활기찬 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "171",
+    "name": "별주부가 용궁으로 돌아가기 전 토끼에게 받아 마신 술 워터파컷",
+    "owner": "라비 님 @fahwieu",
+    "ownerLineRaw": "[파트너: 라비 님 @fahwieu]",
+    "classification": "cold",
+    "description": "<인어의 몸을 가진 특수개체> 별주부가 용궁으로 돌아가기 전 토끼에게 받아 마신 술을 맛 보여 주기위해 탄생한 워터파컷입니다. 눈치빠르고 조금 냉정한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "172",
+    "name": "인어로 돌아가기 위해 죽인 사랑하는 사람의 피 워터파컷",
+    "owner": "마타 님 @MataH_R__",
+    "ownerLineRaw": "[파트너: 마타 님 @MataH_R__]",
+    "classification": "hot",
+    "description": "<인어의 몸을 가진 특수개체> 인어로 돌아가기 위해 죽인 사랑하는 사람의 피를 맛 보여 주기 위해 탄생한 워터파컷입니다. 다정하고 가족애 강한 성격을 가졌습니다. 다른'종족'들과 함께하는 워터파컷 입니다. 가족과 같은 그 '종족'들을 의지해 보이는 편 입니다.",
+    "notes": []
+  },
+  {
+    "num": "173",
+    "name": "빈티지 케이크 크림 워터파컷",
+    "owner": "님 @",
+    "ownerLineRaw": "[파트너: 님 @]",
+    "classification": "cold",
+    "description": "빈티지 케이크 크림을 맛 보여 주기 위해 탄생한 워터파컷입니다. 차분하고 꼼꼼한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <나일악어님 D>"
+    ]
+  },
+  {
+    "num": "174",
+    "name": "생일 양초 물 워터파컷",
+    "owner": "님 @",
+    "ownerLineRaw": "[파트너: 님 @]",
+    "classification": "hot",
+    "description": "생일 양초 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 나긋하고 따뜻한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <나일악어님 D>"
+    ]
+  },
+  {
+    "num": "175",
+    "name": "파티 주인공의 생일 주스 워터파컷",
+    "owner": "님 @",
+    "ownerLineRaw": "[파트너: 님 @]",
+    "classification": "hot",
+    "description": "<꼬리 물주머니가 3개인 특수개체> 파티 주인공의 생일 주스를 맛 보여 주기 위해 탄생한 워터파컷입니다. 밝고 활기찬 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <나일악어님 D>"
+    ]
+  },
+  {
+    "num": "176",
+    "name": "유성이 닿은 물 워터파컷",
+    "owner": "언쿠",
+    "ownerLineRaw": "[파트너: 언쿠]",
+    "classification": "hot",
+    "description": "유성이 닿은 물을 맛 보여주기 위해 탄생한 워터파컷 입니다. 다정하고 여행하는 것을 즐기는 성격을 가졌습니다. 다른'종족'들과 함께 탄생한 워터파컷 입니다. 가족과 같은 그 '종족'들과 먼 여정을 함께하고 있습니다.",
+    "notes": [
+      "PRE_TAGS: <Dreamnight 님 AD>"
+    ]
+  },
+  {
+    "num": "177",
+    "name": "별빛이 머문 개울의 물 워터파컷",
+    "owner": "라비 님 @fahwieu",
+    "ownerLineRaw": "[파트너: 라비 님 @fahwieu]",
+    "classification": "cold",
+    "description": "별빛이 머문 개울의 물을 맛 보여주기 위해 탄생한 워터파컷 입니다. 조용하고 차분한 성격을 가졌습니다. 다른'종족'들과 함께 탄생한 워터파컷 입니다. 가족과 같은 그 '종족'들과 먼 여정을 함께하고 있습니다.",
+    "notes": [
+      "PRE_TAGS: <Dreamnight 님 AD>"
+    ]
+  },
+  {
+    "num": "178",
+    "name": "눈토끼의 열매 과즙 워터파컷",
+    "owner": "cherry 님 @cherry10g",
+    "ownerLineRaw": "[파트너: cherry 님 @cherry10g]",
+    "classification": "cold",
+    "description": "눈토끼의 열매 과즙을 맛 보여 주기 위해 탄생한 워터파컷입니다. 겁이 많으며 조심성도 많은 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "179",
+    "name": "푸른 달빛이 머문 지하호수 물 워터파컷",
+    "owner": "제이 님 @flavor_2018",
+    "ownerLineRaw": "[파트너: 제이 님 @flavor_2018]",
+    "classification": "hot",
+    "description": "푸른 달빛이 머문 지하호수 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 느긋하고 다정한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "180",
+    "name": "블루베리 맛 물약 워터파컷",
+    "owner": "제이 님 @flavor_2018",
+    "ownerLineRaw": "[파트너: 제이 님 @flavor_2018]",
+    "classification": "cold",
+    "description": "블루베리 맛 물약을 맛 보여 주기 위해 탄생한 워터파컷입니다. 차분하고 꼼꼼한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "181",
+    "name": "연주하는 은방울꽃에 모인 아침 이슬 물 워터파컷",
+    "owner": "슈가 님 @SUGAR_0503_",
+    "ownerLineRaw": "[파트너: 슈가 님 @SUGAR_0503_]",
+    "classification": "cold",
+    "description": "연주하는 은방울꽃에 모인 아침 이슬 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 침착한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "182",
+    "name": "검은 해골에 담긴 물 워터파컷",
+    "owner": "버찌랑 님 @Buzz_iii",
+    "ownerLineRaw": "[파트너: 버찌랑 님 @Buzz_iii]",
+    "classification": "cold",
+    "description": "검은 해골에 담긴 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 냉정한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "183",
+    "name": "연 푸른 소나무 수액 워터파컷",
+    "owner": "버찌랑 님 @Buzz_iii",
+    "ownerLineRaw": "[파트너: 버찌랑 님 @Buzz_iii]",
+    "classification": "hot",
+    "description": "연 푸른 소나무 수액을 맛 보여 주기 위해 탄생한 워터파컷입니다. 당당하고 힘찬 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "184",
+    "name": "인연이 이어질 때 마신 술 워터파컷",
+    "owner": "Luu 님 @Luu_round_M",
+    "ownerLineRaw": "[파트너: Luu 님 @Luu_round_M]",
+    "classification": "hot",
+    "description": "인연이 이어질 때 마신 술을 맛 보여 주기위해 탄생한 워터파컷입니다. 다정하고 온화한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "185",
+    "name": "블루베리 에이드 워터파컷",
+    "owner": "제이 님 @flavor_2018",
+    "ownerLineRaw": "[파트너: 제이 님 @flavor_2018]",
+    "classification": "cold",
+    "description": "블루베리 에이드를 맛 보여 주기 위해 탄생한 워터파컷입니다. 냉철하고 세심한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "186",
+    "name": "우파루파가 즐겨먹는 아이스 레몬 티 워터파컷",
+    "owner": "웨일리아 님 @waillia230524",
+    "ownerLineRaw": "[파트너: 웨일리아 님 @waillia230524]",
+    "classification": "hot",
+    "description": "우파루파가 즐겨먹는 아이스 레몬 티를 맛 보여 주기 위해 탄생한 워터파컷입니다. 짜증이 많고 쉽게 화내는 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "187",
+    "name": "포슬한 고구마라떼 워터파컷",
+    "owner": "수라감자 님 @POTATOTO_72",
+    "ownerLineRaw": "[파트너: 수라감자 님 @POTATOTO_72]",
+    "classification": "hot",
+    "description": "포슬한 고구마라떼를 맛 보여 주기 위해 탄생한 워터파컷입니다. 포근하고 다정한 성격을 가졌습니다. 다른'종족'과 함께 하는 워터파컷 입니다. 가족과 같은 그 '종족'과 평생을 함께 합니다.",
+    "notes": []
+  },
+  {
+    "num": "188",
+    "name": "구름을 섞은 달콤한 우유 워터파컷",
+    "owner": "슷큐 님 @SQ_12221",
+    "ownerLineRaw": "[파트너: 슷큐 님 @SQ_12221]",
+    "classification": "cold",
+    "description": "구름을섞은 달콤한 우유를 맛 보여 주기 위해 탄생한 워터파컷입니다. 깐깐하고 냉정한 성격을 가졌습니다. 다른'종족'과 함께 하는 워터파컷 입니다. 가족과 같은 그 '종족'과 평생을 함께 합니다.",
+    "notes": []
+  },
+  {
+    "num": "189",
+    "name": "설표 유령의 눈물 워터파컷",
+    "owner": "롸미 님 @da_rami_07",
+    "ownerLineRaw": "[파트너: 롸미 님 @da_rami_07]",
+    "classification": "cold",
+    "description": "설표 유령의 눈물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 냉정하지만 눈물 많은 성격을 가졌습니다. 다른'종족'과 함께 하는 워터파컷 입니다. 가족과 같은 그 '종족'과 평생을 함께 합니다.",
+    "notes": []
+  },
+  {
+    "num": "190",
+    "name": "강아지 유령의 눈물 워터파컷",
+    "owner": "롸미 님 @da_rami_07",
+    "ownerLineRaw": "[파트너: 롸미 님 @da_rami_07]",
+    "classification": "cold",
+    "description": "강아지 유령의 눈물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 외로움 많고 눈물 많은 성격을 가졌습니다. 다른'종족'과 함께 하는 워터파컷 입니다. 가족과 같은 그 '종족'과 평생을 함께 합니다.",
+    "notes": []
+  },
+  {
+    "num": "191",
+    "name": "마녀의 호박죽 워터파컷",
+    "owner": "쥬엘 님 @Joel_Fursuit",
+    "ownerLineRaw": "[파트너: 쥬엘 님 @Joel_Fursuit]",
+    "classification": "hot",
+    "description": "마녀의 호박죽을 맛 보여 주기 위해 탄생한 워터파컷입니다. 다정하고 장난끼 있는 성격을 가졌습니다. 다른'종족'과 함께 하는 워터파컷 입니다. 가족과 같은 그 '종족'과 평생을 함께 합니다.",
+    "notes": []
+  },
+  {
+    "num": "192",
+    "name": "듀라한이 마신 블루베리 주스 워터파컷",
+    "owner": "짭짭이 님 @Jjapjjap_owo",
+    "ownerLineRaw": "[파트너: 짭짭이 님 @Jjapjjap_owo]",
+    "classification": "cold",
+    "description": "듀라한이 마신 블루베리 주스를 맛 보여 주기 위해 탄생한 워터파컷입니다. 다른'종족'과 함께 하는 워터파컷 입니다. 가족과 같은 그 '종족'과 평생을 함께 합니다.",
+    "notes": []
+  },
+  {
+    "num": "193",
+    "name": "유령 신랑이 사랑을 맹세하며 마신 장미꽃 차 워터파컷",
+    "owner": "쥬엘 님 @Joel_Fursuit",
+    "ownerLineRaw": "[파트너: 쥬엘 님 @Joel_Fursuit]",
+    "classification": "hot",
+    "description": "유령 신랑이 사랑을 맹세하며 마신 장미꽃 차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 다정하고 성실한 성격을 가졌습니다. 한 워터파컷과 평생을 함께합니다.",
+    "notes": []
+  },
+  {
+    "num": "194",
+    "name": "유령 신부가 사랑을 맹세하며 마신 장미꽃 차 워터파컷",
+    "owner": "쥬엘 님 @Joel_Fursuit",
+    "ownerLineRaw": "[파트너: 쥬엘 님 @Joel_Fursuit]",
+    "classification": "hot",
+    "description": "유령 신부가 사랑을 맹세하며 마신 장미꽃 차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 다정하고 나긋한 성격을 가졌습니다. 한 워터파컷과 평생을 함께합니다.",
+    "notes": []
+  },
+  {
+    "num": "195",
+    "name": "천호가 일을 쉴때 마신 술 워터파컷",
+    "owner": "롸미 님 @da_rami_07",
+    "ownerLineRaw": "[파트너: 롸미 님 @da_rami_07]",
+    "classification": "hot",
+    "description": "<꼬리 물주머니가 큰 특별개체> 천호가 일을 쉴때 마신 술을 맛 보여 주기 위해 탄생한 워터파컷입니다. 성실하고 나름 친절한 성격을 가졌습니다. 다른'종족'과 함께 하는 워터파컷 입니다. 가족과 같은 그 '종족'과 평생을 함께 합니다.",
+    "notes": []
+  },
+  {
+    "num": "196",
+    "name": "선비가 초승달이 뜬 밤 청룡과 함께 마신 맑은 차 워터파컷",
+    "owner": "롸미 님 @da_rami_07",
+    "ownerLineRaw": "[파트너: 롸미 님 @da_rami_07]",
+    "classification": "hot",
+    "description": "<용의 손을 가진 특수개체> 선비가 초승달이 뜬 밤 청룡과 함께 마신 맑은 차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 온화하고 정 많은 성격을 가졌습니다. 다른'종족'과 함께 하는 워터파컷 입니다. 가족과 같은 그 '종족'과 평생을 함께 합니다.",
+    "notes": []
+  },
+  {
+    "num": "197",
+    "name": "아씨가 초승달이 뜬 낮 백룡과 함께 마신 맑은 차 워터파컷",
+    "owner": "롸미 님 @da_rami_07",
+    "ownerLineRaw": "[파트너: 롸미 님 @da_rami_07]",
+    "classification": "hot",
+    "description": "<용의 발을 가진 특수개체> 아씨가 초승달이 뜬 낮 백룡과 함께 마신 맑은 차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 온화하고 친절한 성격을 가졌습니다. 다른'종족'과 함께 하는 워터파컷 입니다. 가족과 같은 그 '종족'과 평생을 함께 합니다.",
+    "notes": []
+  },
+  {
+    "num": "198",
+    "name": "성스러운 황금피 워터파컷",
+    "owner": "cherry 님 @cherry10g",
+    "ownerLineRaw": "[파트너: cherry 님 @cherry10g]",
+    "classification": "hot",
+    "description": "성스러운 황금피를 맛 보여 주기 위해 탄생한 워터파컷입니다. 정많고 온화한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "199",
+    "name": "수상한 신의 부름 칵테일 워터파컷",
+    "owner": "알고 님 @Algoring_",
+    "ownerLineRaw": "[파트너: 알고 님 @Algoring_ ]",
+    "classification": "cold",
+    "description": "<꼬리물주머니가 4개 있는 특수개체> 수상한 신의 부름 칵테일을 맛 보여주기 위해 탄생한 워터파컷입니다. 어쩐지 감정을 파악하기 어렵고 상대방을 뚫어져라 쳐다보며 불편할 정도로 상대방을 차갑게 관찰하는 성격을 가졌습니다. 다른 ‘종족'의 일부가 들어가버린 모양입니다.",
+    "notes": [
+      "PRE_TAGS: <이상어 님 AD>"
+    ]
+  },
+  {
+    "num": "200",
+    "name": "200번째 공연 웰컴 주스 워터파컷",
+    "owner": "님 @",
+    "ownerLineRaw": "[파트너: 님 @]",
+    "classification": "hot & cold",
+    "description": "<인간의 몸을 가진 개체, '물'에 원하는 감정을 담을수 있는 ??? 개체> 200번째 공연 웰컴 주스를 맛 보여 주기 위해 탄생한 워터파컷입니다. 성격 또한 hot과 cold가 공존하는 듯 합니다. 원하는 ‘감정’을 담고, 그 ‘감정’을 느낄수 있게해주는 주스를 맛 보여 주는 워터파컷 입니다.",
+    "notes": [
+      "CLASSIFICATION_INVALID: hot & cold"
+    ]
+  },
+  {
+    "num": "201",
+    "name": "호위무사가 잠시 목축인 물 워터파컷",
+    "owner": "롸미 님 @da_rami_07",
+    "ownerLineRaw": "[파트너: 롸미 님 @da_rami_07]",
+    "classification": "hot",
+    "description": "<날개를 가진 특수개체> 호위무사가 잠시 목축인 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 정직하고 당찬 성격을 가졌습니다. 다른'종족'과 함께 하는 워터파컷 입니다. 가족과 같은 그 '종족'과 평생을 함께 합니다.",
+    "notes": []
+  },
+  {
+    "num": "202",
+    "name": "은하수를 담은 맑은 물 워터파컷",
+    "owner": "언쿠",
+    "ownerLineRaw": "[파트너: 언쿠]",
+    "classification": "hot",
+    "description": "<인간의 몸을 가진 특수개체> 은하수를 담은 맑은 물을 맛 보여 주기 위해 탄생한 워터파컷입니다. 온화하고 친절한 성격을 가졌습니다. 다른'종족'과 함께 하던 워터파컷 입니다. 가족과 같은 그 '종족'과 다시 만날 날을 기다립니다.",
+    "notes": []
+  },
+  {
+    "num": "203",
+    "name": "악마 고양이가 마신 이온음료 워터파컷",
+    "owner": "김컁 님 @kimkyang_0531",
+    "ownerLineRaw": "[파트너: 김컁 님 @kimkyang_0531]",
+    "classification": "cold",
+    "description": "악마 고양이가 마신 이온음료를 맛 보여 주기 위해 탄생한 워터파컷입니다. 시원시원하고 털털한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "204",
+    "name": "사랑의 묘약 워터파컷",
+    "owner": "룰루럴러 님 @Crt__S2",
+    "ownerLineRaw": "[파트너: 룰루럴러 님 @Crt__S2]",
+    "classification": "hot",
+    "description": "<물 배출 구멍이 꼬리물주머니에 더 있는 특별 개체> 사랑의 묘약을 맛 보여 주기 위해 탄생한 워터파컷입니다. 감정이 잘 동하고 잘 격해지는 성격을 가졌습니다. 다른'종족'과 함께 하는 워터파컷 입니다. ‘증발’하기 위해 그 '종족'과 평생을 함께 하고 있습니다.",
+    "notes": []
+  },
+  {
+    "num": "205",
+    "name": "달밤에 친구가 보내온 편지를 읽으며 마신 차 워터파컷",
+    "owner": "무명님 @nonamed_404",
+    "ownerLineRaw": "[파트너: 무명님 @nonamed_404]",
+    "classification": "hot",
+    "description": "달밤에 친구가 보내온 편지를 읽으며 마신 차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 다정하고 정많은 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "206",
+    "name": "어느 대부호의 비싼 차 워터파컷",
+    "owner": "마타님 @MataH_R__",
+    "ownerLineRaw": "[파트너: 마타님 @MataH_R__]",
+    "classification": "cold",
+    "description": "어느 대부호의 비싼 차를 맛 보여 주기 위해 탄생한 워터파컷입니다. 냉정하고 계산적인 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "207",
+    "name": "누군가 원한 ‘물’ 워터파컷",
+    "owner": "언쿠",
+    "ownerLineRaw": "[파트너: 언쿠]",
+    "classification": "hot & cold",
+    "description": "<'물'의 맛을 바꾸는 게 가능한 ??? 개체> 누군가 원한 ‘물'을 맛 보여주기 위해 탄생한 워터파컷입니다. 성격 또한 hot과 cold가 공존하는 듯 합니다. 다른'종족'과 함께 하는 워터파컷 입니다. 태어나는 그 순간 마주한 그 ‘종족'과 가족이 되어 함께 살아가고 있습니다.",
+    "notes": [
+      "CLASSIFICATION_INVALID: hot & cold"
+    ]
+  },
+  {
+    "num": "208",
+    "name": "용감한 전사가 마신 당근주스 워터파컷",
+    "owner": "롸미 님 @da_rami_07",
+    "ownerLineRaw": "[파트너: 롸미 님 @da_rami_07]",
+    "classification": "hot",
+    "description": "용감한 전사가 마신 당근주스를 맛 보여 주기 위해 탄생한 워터파컷입니다. 강인하고 열정적인 성격을 가졌습니다. 다른'종족'과 함께 하는 워터파컷 입니다. 그 ‘종족'과 함께 기생 생물을 처치하며 살아가고 있습니다. 함께하는 ‘종족'의 상사로 ‘파렐'등급 입니다.",
+    "notes": []
+  },
+  {
+    "num": "209",
+    "name": "트로피컬 파인애플 주스 워터파컷",
+    "owner": "뫽끼 님 @Amu_nickname",
+    "ownerLineRaw": "[파트너: 뫽끼 님 @Amu_nickname]",
+    "classification": "hot",
+    "description": "트로피칼컬 파인애플 주스를 맛 보여 주기 위해 탄생한 워터파컷입니다. 발랄하고 사교적인 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용>"
+    ]
+  },
+  {
+    "num": "210",
+    "name": "예뻐지고 싶었던 달팽이 눈물 워터파컷",
+    "owner": "유공 님 @yuri0ye",
+    "ownerLineRaw": "[파트너: 유공 님 @yuri0ye]",
+    "classification": "cold",
+    "description": "예뻐지고 싶었던 달팽이 눈물을 맛 보여주기 위해 탄생한 워터파컷입니다. 톡 쏘고 뾰족한 성격을 가졌습니다.",
+    "notes": [
+      "PRE_TAGS: <디자인권 사용> (리드로잉A)"
+    ]
+  },
+  {
+    "num": "211",
+    "name": "범고래를 보며 마신 이온음료 워터파컷",
+    "owner": "율하 님 @yulha_aaaa",
+    "ownerLineRaw": "[파트너: 율하 님 @yulha_aaaa]",
+    "classification": "cold",
+    "description": "범고래를 보며 마신 이온음료를 맛 보여 주기 위해 탄생한 워터파컷입니다. 차분하고 냉정한 성격을 가졌습니다.",
+    "notes": []
+  },
+  {
+    "num": "212",
+    "name": "",
+    "owner": null,
+    "ownerLineRaw": null,
+    "classification": null,
+    "description": "",
+    "notes": [
+      "OWNER_MISSING",
+      "CLASSIFICATION_MISSING_OR_UNRECOGNIZED",
+      "DESCRIPTION_EMPTY",
+      "NAME_EMPTY"
+    ]
+  },
+  {
+    "num": "213",
+    "name": "",
+    "owner": null,
+    "ownerLineRaw": null,
+    "classification": null,
+    "description": "",
+    "notes": [
+      "OWNER_MISSING",
+      "CLASSIFICATION_MISSING_OR_UNRECOGNIZED",
+      "DESCRIPTION_EMPTY",
+      "NAME_EMPTY"
+    ]
+  },
+  {
+    "num": "214",
+    "name": "",
+    "owner": null,
+    "ownerLineRaw": null,
+    "classification": null,
+    "description": "",
+    "notes": [
+      "OWNER_MISSING",
+      "CLASSIFICATION_MISSING_OR_UNRECOGNIZED",
+      "DESCRIPTION_EMPTY",
+      "NAME_EMPTY"
+    ]
+  }
+]
