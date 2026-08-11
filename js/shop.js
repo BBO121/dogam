@@ -4,7 +4,7 @@ let _ownedSet    = new Set();
 let _qtyByKey    = {};   // item_key → 보유 수량 (stackable 아이템 잔고)
 let _pendingItem = null;
 let _allItems    = [];
-let _activeTab   = 'item'; // 'item' | 'decorate'
+let _activeTab   = 'decorate'; // 'item' | 'decorate'
 let _showSensitive = localStorage.getItem('shopShowSensitive') === 'true';
 
 const TAB_ITEM_TYPES = {

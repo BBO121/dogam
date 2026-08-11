@@ -2,7 +2,7 @@ let _user              = null;
 let _equippedFrameId   = null;
 let _equippedStickerId = null;
 let _itemsByType       = {};
-let _activeTab         = 'item'; // 'item' | 'decorate'
+let _activeTab         = 'decorate'; // 'item' | 'decorate'
 
 const TAB_ITEM_TYPES = {
   item: ['consumable'],

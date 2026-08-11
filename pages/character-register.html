@@ -94,6 +94,13 @@
             <p class="form-hint" style="margin-top:8px;">업로드된 상세 이미지는 무단 도용 방지를 위해 워터마크가 적용됩니다.<br>개인 워터마크는 <a href="profile.html" style="color:var(--sky-deep);">프로필 설정</a>에서 등록할 수 있으며, 설정하지 않은 경우 연구소 기본 워터마크가 사용됩니다.</p>
           </div>
 
+          <!-- 대표 이미지 성장 단계 -->
+          <div class="form-group" id="representativeStepSection" style="display:none;">
+            <label class="form-label">대표 이미지 성장 단계</label>
+            <p class="form-hint">위 메인 이미지가 어느 성장 단계인지 선택해주세요.</p>
+            <select class="form-input" id="representativeStepSelect" style="max-width:260px;" onchange="onRepresentativeStepChange()"></select>
+          </div>
+
           <!-- 성장 Step 이미지 -->
           <div class="form-group" id="stepImageSection" style="display:none;">
             <label class="form-label">성장 Step 이미지 <span class="form-hint" style="display:inline; margin:0 0 0 6px;">선택사항</span></label>
@@ -698,27 +705,59 @@
       await Promise.all([loadUsers(), loadCustomFields(), loadExistingCategories(), loadSpeciesSteps()]);
     }
 
-    // 성장 Step 이미지 업로드 영역 — 대표 이미지로 지정된 Step은 업로드 칸 없이 안내만, 나머지만 업로드 가능.
+    // 종족별 species_steps 조회 요청이 중복으로 겹칠 때, 늦게 도착한(오래된) 응답이
+    // 나중에 시작된 최신 요청 결과를 덮어쓰지 않도록 막는 토큰.
+    let _stepLoadToken = 0;
+
+    // 성장 Step 이미지 업로드 영역 — 대표 이미지 성장 단계로 지정된 Step은 업로드 칸 없이 안내만, 나머지만 업로드 가능.
     // 성장 Step 이미지는 크롭하지 않고 원본 구도 그대로 저장하므로 썸네일도 생성하지 않는다.
+    // (단, 우선순위가 설정된 종족은 대표 후보가 될 수 있어 handleImageFileSelected에서 별도로 크롭한다.)
     async function loadSpeciesSteps() {
       if (!speciesId) return;
+      const myToken = ++_stepLoadToken;
       const [{ data: sp }, { data }] = await Promise.all([
         sb.from('species').select('main_image_step_id').eq('id', speciesId).single(),
         sb.from('species_steps').select('id, step_order, name').eq('species_id', speciesId).order('step_order'),
       ]);
-      speciesSteps = data || [];
-      if (speciesSteps.length < 2) return; // 이 종족은 Step 기능 미사용
+      if (myToken !== _stepLoadToken) return; // 이전 요청보다 늦게 도착한 응답 — 무시
 
-      // 대표 이미지 Step 판별은 항상 species.main_image_step_id(=species_steps.id) 기준으로 한다.
-      // 배열의 첫 항목이나 step_order로 판단하지 않는다 — 순서를 바꿔도 대표 이미지 Step은 그대로 유지되어야 한다.
-      // 하위 호환: main_image_step_id가 아직 없는 기존 데이터만 step_order가 가장 낮은 Step으로 대체한다.
+      speciesSteps = data || [];
+      if (speciesSteps.length < 2) return; // 이 종족은 Step 기능 미사용(선택지가 1개뿐이면 선택 의미가 없음)
+
+      // 대표 이미지 성장 단계의 기본값 판별은 항상 species.main_image_step_id(=species_steps.id) 기준으로 한다.
+      // 배열의 첫 항목이나 step_order로 판단하지 않는다 — 순서를 바꿔도 종족 기본 대표 Step은 그대로 유지되어야 한다.
+      // 하위 호환: main_image_step_id가 아직 없는 기존 데이터만 step_order가 가장 낮은 Step을 기본값으로 한다.
       mainImageStepId = sp?.main_image_step_id || speciesSteps[0].id;
 
-      // 대표 이미지 Step은 기존 대표 이미지 입력 영역에서 이미 등록하므로 이 목록에는 표시하지 않는다.
-      const extraSteps = speciesSteps.filter(s => s.id !== mainImageStepId);
-      if (!extraSteps.length) return;
+      renderRepresentativeStepSelect();
+      renderStepImageUploads();
+    }
 
-      document.getElementById('stepImageSection').style.display = '';
+    // "대표 이미지 성장 단계" 드롭다운 렌더 — species_steps를 step_order 순으로 그대로 나열한다.
+    // 종족명·Step명을 코드에 직접 넣지 않고 항상 조회된 speciesSteps만 사용한다.
+    function renderRepresentativeStepSelect() {
+      document.getElementById('representativeStepSection').style.display = '';
+      const select = document.getElementById('representativeStepSelect');
+      select.innerHTML = speciesSteps.map(s =>
+        `<option value="${s.id}" ${s.id === mainImageStepId ? 'selected' : ''}>${s.name || `Step ${s.step_order}`}</option>`
+      ).join('');
+    }
+
+    // 대표 이미지 성장 단계 변경 시 — 이전 선택 상태를 남기지 않고 즉시 갱신,
+    // 성장 Step 이미지 업로드 목록도 새 선택 기준으로 다시 그린다.
+    function onRepresentativeStepChange() {
+      mainImageStepId = Number(document.getElementById('representativeStepSelect').value);
+      renderStepImageUploads();
+    }
+
+    // 대표 이미지 성장 단계는 위 대표 이미지 입력 영역에서 이미 등록하므로 이 목록에는 표시하지 않는다.
+    // 이미 파일을 골라둔 Step은 목록에서 빠졌다 다시 나타나도 미리보기를 복원한다.
+    function renderStepImageUploads() {
+      const extraSteps = speciesSteps.filter(s => s.id !== mainImageStepId);
+      const section = document.getElementById('stepImageSection');
+      if (!extraSteps.length) { section.style.display = 'none'; return; }
+
+      section.style.display = '';
       document.getElementById('stepImageList').innerHTML = extraSteps.map(s => {
         const label = s.name || `Step ${s.step_order}`;
         return `
@@ -740,6 +779,15 @@
           if (!file) return;
           handleImageFileSelected(file, s.step_order, document.getElementById('registerError'));
         });
+
+        // 대표 Step 재선택으로 목록이 바뀌기 전에 이미 골라둔 파일이 있으면 미리보기 복원
+        const existing = stepThumbnailBlobs[s.step_order] || stepFiles[s.step_order];
+        if (existing) {
+          const url = URL.createObjectURL(existing);
+          document.getElementById(`stepImagePreview_${s.step_order}`).src           = url;
+          document.getElementById(`stepImagePreview_${s.step_order}`).style.display = 'block';
+          document.getElementById(`stepUploadPlaceholder_${s.step_order}`).style.display = 'none';
+        }
       });
     }
 
@@ -1340,7 +1388,9 @@
         // 우선순위가 설정된 종족(현재 융용)은 대표 이미지 슬롯 + 업로드된 Step들 중
         // 우선순위가 가장 높은 것을 대표로 승격한다. 대표가 바뀌면 원래 대표 이미지 슬롯은
         // character_step_images로 강등되어 여전히 Step 전환 버튼으로 볼 수 있다.
-        let representative_step_id = null;
+        // 공통 기능: 종족에 species_steps가 있으면 사용자가 고른 "대표 이미지 성장 단계"를 그대로 저장한다.
+        // 우선순위가 설정된 종족(현재 융용)은 아래 블록에서 기존 자동 승격 정책이 이 값을 덮어쓸 수 있다.
+        let representative_step_id = mainImageStepId || null;
         if (usesStepPriority && mainImageStepId) {
           const mainStepDef = speciesSteps.find(s => s.id === mainImageStepId);
           const candidates  = [];
@@ -1367,6 +1417,15 @@
               thumbnail_url       = winner._row.thumbnail_url;
             }
           }
+        }
+
+        // 저장 직전 안전장치: representative_step_id가 실제로 현재 선택된 종족(species_id)의
+        // Step인지 다시 확인한다. species_steps는 항상 이 speciesId로 필터링해 조회하므로
+        // 정상적인 흐름에서는 항상 일치하지만, 비동기 조회가 늦게 겹쳐 도착하는 경우까지
+        // 대비해 요청 직전에 한 번 더 검증한다.
+        if (representative_step_id && !speciesSteps.some(s => s.id === representative_step_id)) {
+          await loadSpeciesSteps();
+          throw new Error('대표 이미지 성장 단계 정보가 최신 상태가 아니었어요. 다시 불러왔으니 선택을 확인하고 다시 등록해주세요.');
         }
 
         // DB 저장
