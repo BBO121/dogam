@@ -139,6 +139,11 @@
   <script>
     const speciesId = new URLSearchParams(window.location.search).get('id');
 
+    // 이 계정만 종족 소유권과 무관하게 모든 종족의 개체 등록/일괄 등록/디자인권 등록/
+    // 종족 정보 수정/삭제/관리 기능에 접근할 수 있다. role(admin/staff)이 아니라
+    // 계정 식별자로 직접 지정 — 다른 admin/staff role 계정에는 적용되지 않는다.
+    const SUPER_ADMIN_USER_ID = '78ad7670-847e-4347-b50c-8d8cb2131861';
+
     // 리치텍스트 렌더링 직전 방어: data:/blob: 이미지만 제거 (Storage URL 등 외부 https 이미지는 그대로 표시)
     // DOMPurify 기본 설정은 img의 data: URI를 막지 않으므로, sanitize와 별개로 이 필터를 함께 적용한다.
     function stripUnsafeRenderedImages(html) {
@@ -154,6 +159,7 @@
 
     let allChars       = [];
     let isOwner        = false;
+    let isSuperAdmin   = false;
     let manageMode     = false;
     let activeCategory = null;
     let siteUserNicks  = new Set();
@@ -176,7 +182,7 @@
     async function loadPage() {
       const user = await getUser();
       const userNickname = user?.user_metadata?.display_name || user?.user_metadata?.nickname || null;
-      const isAdminUser  = isAdminOrStaff(user?.user_metadata?.role);
+      isSuperAdmin = user?.id === SUPER_ADMIN_USER_ID;
 
       // 종족 정보
       const { data: s, error } = await sb
@@ -314,7 +320,7 @@
                 <span class="meta-value">${s.design_rights}</span>
               </div>` : ''}
             </div>
-            ${isOwner ? `
+            ${(isOwner || isSuperAdmin) ? `
             <div class="species-detail-actions">
               <a href="character-register.html?species_id=${speciesId}&species=${encodeURIComponent(s.name)}" class="btn-secondary">개체 등록</a>
               <a href="bulk-import.html?species_id=${speciesId}&species=${encodeURIComponent(s.name)}" class="btn-ghost">일괄 등록</a>
@@ -407,7 +413,7 @@
 
       document.getElementById('charactersSection').style.display = '';
       updateCategoryClamp(); // 섹션이 보이기 전엔 줄바꿈 높이를 정확히 잴 수 없어 여기서 다시 계산
-      if (isOwner) document.getElementById('manageBtn').style.display = '';
+      if (isOwner || isSuperAdmin) document.getElementById('manageBtn').style.display = '';
 
       // 디자인권 섹션
       const { data: slots } = await sb
@@ -417,7 +423,7 @@
         .order('slot_number', { ascending: true, nullsFirst: false });
 
       const visibleSlots = (slots || []).filter(sl => sl.status === 'active' || sl.status === 'used');
-      if (visibleSlots.length > 0 || isOwner) {
+      if (visibleSlots.length > 0 || isOwner || isSuperAdmin) {
         document.getElementById('slotsSection').style.display = '';
         renderSlots(visibleSlots);
       }
