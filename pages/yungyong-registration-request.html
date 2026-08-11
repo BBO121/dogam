@@ -227,8 +227,9 @@
             <!-- 2-A: 예 -->
             <div id="existingCharBlock" style="display:none;">
               <div class="form-group">
-                <label class="form-label">등록되어 있는 성장 개체명 <span class="required">*</span></label>
-                <input type="text" id="existingCharacterName" class="form-input" placeholder="종족연구소에 등록된 개체명을 입력하세요">
+                <label class="form-label">등록되어 있는 성장 개체 링크 <span class="required">*</span></label>
+                <input type="text" id="existingCharacterName" class="form-input" placeholder="예: https://thespecieslab.com/pages/character.html?id=1234">
+                <p class="form-hint">개체 상세 페이지에 들어가서 주소창의 링크를 그대로 복사해서 붙여넣어주세요. (개체명은 나중에 바뀔 수 있어서 링크로 받아요)</p>
               </div>
               <p class="yr-notice-box">제출한 아기융 이미지는 해당 개체의 '아기융' Step으로 추가됩니다.</p>
             </div>
@@ -425,6 +426,16 @@
       reader.readAsDataURL(file);
     }
 
+    // 링크(또는 순수 숫자)에서 개체 id만 뽑아낸다. 개체명은 나중에 바뀔 수 있어서
+    // 이름 대신 id로 저장해야 관리자가 나중에 정확히 찾을 수 있다.
+    function extractCharacterId(text) {
+      const trimmed = String(text || '').trim();
+      const m = trimmed.match(/[?&]id=(\d+)/);
+      if (m) return m[1];
+      if (/^\d+$/.test(trimmed)) return trimmed;
+      return null;
+    }
+
     // ── 검증 ──────────────────────────────────────────
     function validateForm() {
       const growthRegistered = document.querySelector('input[name="growthRegistered"]:checked')?.value;
@@ -435,8 +446,11 @@
       if (!growthRegistered)                       return '성장 버전이 등록되어 있는지 선택해주세요.';
 
       if (growthRegistered === 'yes') {
-        if (!document.getElementById('existingCharacterName').value.trim())
-          return '등록되어 있는 성장 개체명을 입력해주세요.';
+        const linkVal = document.getElementById('existingCharacterName').value.trim();
+        if (!linkVal)
+          return '등록되어 있는 성장 개체 링크를 입력해주세요.';
+        if (!extractCharacterId(linkVal))
+          return '링크에서 개체를 찾을 수 없어요. character.html?id=숫자 형태의 링크를 붙여넣어주세요.';
         return null;
       }
 
@@ -536,8 +550,10 @@
           species_name: SPECIES_NAME,
           applicant_user_id: currentUser.id,
           applicant_nickname: nickname,
+          // DB 컬럼명은 그대로 existing_character_name이지만, 개체명이 나중에 바뀔 수 있어서
+          // 실제로는 링크에서 뽑은 개체 id(문자열)를 저장한다.
           existing_character_name: requestType === 'existing_character_baby_step'
-            ? document.getElementById('existingCharacterName').value.trim()
+            ? extractCharacterId(document.getElementById('existingCharacterName').value.trim())
             : null,
           baby_image_url,
           baby_designer_nickname: document.getElementById('babyDesigner').value.trim(),

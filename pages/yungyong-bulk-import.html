@@ -159,6 +159,60 @@
           <div class="yy-log" id="repairLog" style="display:none;"></div>
         </div>
 
+        <!-- 6. 아기융 추가 등록 신청 일괄 처리 -->
+        <div class="yy-section" id="requestImportSection">
+          <h2>6. 아기융 추가 등록 신청 처리</h2>
+          <p class="yy-hint" style="margin-bottom:10px;">
+            register/yungyong/yungyong_registration_requests_pending.json 내용을 아래에 붙여넣고 불러오세요.
+            전체 일괄이 아니라 선택한 항목만, 또는 한 건씩 등록할 수 있어요.
+            등록해도 character_registration_requests의 status는 자동으로 바뀌지 않으니 별도로 확인해주세요.
+          </p>
+          <textarea id="requestJsonInput" class="form-input" style="width:100%; min-height:120px; font-family:monospace; font-size:12px; box-sizing:border-box;" placeholder="[ ...여기에 pending JSON 붙여넣기... ]"></textarea>
+          <div class="yy-inline-row" style="margin:10px 0;">
+            <button type="button" class="btn-field-add" style="width:auto;" onclick="loadRequestJson()">JSON 불러오기</button>
+            <span class="yy-hint" id="requestJsonStatus"></span>
+          </div>
+          <p class="auth-error" id="requestJsonError"></p>
+
+          <div id="requestImportTableWrap" style="display:none;">
+            <div class="yy-inline-row" style="margin-bottom:12px;">
+              <button type="button" class="btn-secondary" onclick="registerSelectedRequests()">선택한 항목 등록</button>
+              <button type="button" class="btn-ghost" onclick="toggleAllRequestChecks(true)">전체 선택</button>
+              <button type="button" class="btn-ghost" onclick="toggleAllRequestChecks(false)">전체 해제</button>
+            </div>
+            <div class="yy-table-wrap">
+              <table class="yy-table">
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th>name</th>
+                    <th>request_type</th>
+                    <th>신청자</th>
+                    <th>대상 / 디자이너</th>
+                    <th>분류(신규개체만, 선택)</th>
+                    <th>상태</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="requestImportBody"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="yy-log" id="requestImportLog" style="display:none;"></div>
+        </div>
+
+        <!-- 7. 중복 정리 (아기융용-01~11, 1회성) -->
+        <div class="yy-section" id="dupCleanupSection">
+          <h2>7. 중복 정리 — 아기융용-01~11 (1회성)</h2>
+          <p class="yy-hint" style="margin-bottom:10px;">
+            신청 일괄 처리 중 같은 항목이 두 번 등록된 11건(아기융용-01~11)을 정리합니다.
+            먼저 등록된 것(char_number 578~588)은 남기고, 나중에 중복으로 등록된 것(char_number 632~642)만
+            Storage 파일까지 포함해서 삭제해요. 12번 이후는 중복이 없어서 대상이 아니에요.
+          </p>
+          <button type="button" class="btn-secondary" id="dupCleanupBtn" onclick="cleanupDuplicateRequests()">중복 11건 삭제</button>
+          <div class="yy-log" id="dupCleanupLog" style="display:none;"></div>
+        </div>
+
       </div>
     </main>
   </div>
@@ -774,6 +828,487 @@
       }
 
       logRepair(`완료. 이제 "미리보기/검증 실행"을 다시 눌러서 577개 기준으로 재계산한 뒤, 4번에서 시작 521 / 끝 577로 재등록하세요.`);
+      btn.disabled = false;
+    }
+
+    // ── 6. 아기융 추가 등록 신청 일괄 처리 ──────────────────────────────
+    // yungyong_registration_requests_pending.json 형태를 그대로 읽어서 처리한다.
+    // 이미지가 로컬 파일이 아니라 이미 Storage에 올라간 URL이라, fetch로 받아
+    // Blob으로 만든 뒤 기존 compressImage/applyWatermark/autoCenterCropToBlob을
+    // 그대로 재사용한다(둘 다 File/Blob이면 동작에 차이가 없음).
+    let pendingRequests = [];
+    let nextCharNumberCounter = null;
+    let allYungyongCharsCache = null;
+
+    async function loadRequestJson() {
+      const errorEl  = document.getElementById('requestJsonError');
+      const statusEl = document.getElementById('requestJsonStatus');
+      errorEl.textContent = '';
+      statusEl.textContent = '';
+
+      const raw = document.getElementById('requestJsonInput').value.trim();
+      if (!raw) { errorEl.textContent = 'JSON을 붙여넣어주세요.'; return; }
+
+      let parsed;
+      try { parsed = JSON.parse(raw); } catch (e) { errorEl.textContent = 'JSON 파싱 실패: ' + e.message; return; }
+      if (!Array.isArray(parsed)) { errorEl.textContent = '배열(JSON array) 형태여야 해요.'; return; }
+
+      pendingRequests = parsed.map(e => ({ ...e, _status: 'pending', _error: '', _category: '' }));
+
+      // char_number는 text 컬럼이라 텍스트 정렬로는 최댓값을 신뢰할 수 없어 전부 받아서 숫자로 계산한다.
+      const { data: allNums, error: numErr } = await sb.from('characters')
+        .select('char_number').eq('species_name', SPECIES_NAME).not('char_number', 'is', null);
+      if (numErr) { errorEl.textContent = `개체번호 조회 실패: ${numErr.message}`; return; }
+      const maxNum = Math.max(0, ...(allNums || []).map(r => parseInt(r.char_number, 10) || 0));
+      nextCharNumberCounter = maxNum + 1;
+
+      statusEl.textContent = `${pendingRequests.length}건 로드됨 — 다음 개체번호 ${nextCharNumberCounter}부터 이어서 사용됩니다. 이미 등록된 항목 확인 중...`;
+      document.getElementById('requestImportTableWrap').style.display = '';
+      renderRequestImportTable();
+
+      await checkAlreadyRegistered();
+      statusEl.textContent = `${pendingRequests.length}건 로드됨 — 다음 개체번호 ${nextCharNumberCounter}부터 이어서 사용됩니다.`;
+      renderRequestImportTable();
+    }
+
+    // 재실행으로 인한 중복 등록을 막기 위해, 불러온 직후 이미 DB에 있는지 미리 확인해서 표시한다.
+    // - baby_only / new_growth_character: 같은 이름의 개체가 이미 있으면 이미등록됨
+    // - existing_character_baby_step: 대상 개체를 못 찾거나, 이미 아기융 Step이 있으면 표시
+    async function checkAlreadyRegistered() {
+      const namesToCheck = [...new Set(
+        pendingRequests.filter(e => e.request_type !== 'existing_character_baby_step' && e.name).map(e => e.name)
+      )];
+      let existingNames = new Set();
+      if (namesToCheck.length) {
+        const { data } = await sb.from('characters').select('name').eq('species_name', SPECIES_NAME).in('name', namesToCheck);
+        existingNames = new Set((data || []).map(r => r.name));
+      }
+      pendingRequests.forEach(e => {
+        if (e.request_type !== 'existing_character_baby_step') {
+          e._alreadyExists = !!(e.name && existingNames.has(e.name));
+          e._notFound = false;
+        }
+      });
+
+      const stepDef = speciesSteps.find(s => s.name === '아기융');
+      const existingTargets = pendingRequests.filter(e => e.request_type === 'existing_character_baby_step' && e.existing_character_name);
+      if (existingTargets.length && stepDef) {
+        const charIdByRequestId = new Map();
+        for (const e of existingTargets) {
+          const found = await findCharacterByNameOrId(e.existing_character_name);
+          if (found.character) charIdByRequestId.set(e.request_id, found.character.id);
+        }
+
+        const charIds = [...new Set(charIdByRequestId.values())];
+        const alreadyHasBabyStep = new Set();
+        if (charIds.length) {
+          const { data: stepRows } = await sb.from('character_step_images')
+            .select('character_id').eq('species_step_id', stepDef.id).in('character_id', charIds);
+          (stepRows || []).forEach(r => alreadyHasBabyStep.add(r.character_id));
+        }
+
+        pendingRequests.forEach(e => {
+          if (e.request_type === 'existing_character_baby_step') {
+            const cid = charIdByRequestId.get(e.request_id);
+            e._notFound = !cid;
+            e._alreadyExists = cid ? alreadyHasBabyStep.has(cid) : false;
+          }
+        });
+      }
+    }
+
+    function renderRequestImportTable() {
+      const tbody = document.getElementById('requestImportBody');
+      tbody.innerHTML = pendingRequests.map((e, idx) => {
+        const target = e.request_type === 'existing_character_baby_step' ? e.existing_character_name : e.name;
+        const designerNames = [e.baby && e.baby.designer_nickname, ...((e.growth_steps || []).map(s => s.designer_nickname))].filter(Boolean);
+        const invalid = e.validation && e.validation.status !== 'ok';
+        const disabled = e._status === 'done' || e._status === 'running' || invalid || e._alreadyExists || e._notFound;
+
+        let statusBadge;
+        if (e._status === 'done')         statusBadge = '<span class="yy-badge done">완료</span>';
+        else if (e._status === 'failed')  statusBadge = '<span class="yy-badge fail">실패</span>';
+        else if (e._status === 'running') statusBadge = '<span class="yy-badge check">처리중</span>';
+        else if (e._alreadyExists)        statusBadge = '<span class="yy-badge exists">이미등록됨</span>';
+        else if (e._notFound)             statusBadge = '<span class="yy-badge stepbad">대상 개체 없음</span>';
+        else if (invalid)                 statusBadge = '<span class="yy-badge stepbad">needs_review</span>';
+        else                              statusBadge = '<span class="yy-badge new">대기</span>';
+
+        const categoryCell = e.request_type === 'new_growth_character'
+          ? `<input type="text" class="form-input" style="width:150px;" value="${e._category || ''}" oninput="pendingRequests[${idx}]._category=this.value" placeholder="분류 입력(없으면 미지정)">`
+          : '-';
+
+        return `<tr>
+          <td><input type="checkbox" class="req-check" data-idx="${idx}" ${disabled ? 'disabled' : ''}></td>
+          <td>${e.name || '-'}</td>
+          <td>${e.request_type}</td>
+          <td>${(e.applicant && e.applicant.nickname) || '-'}</td>
+          <td class="wrap">${target || '-'}<br><span class="yy-hint">${designerNames.join(' / ') || '(미상)'}</span></td>
+          <td>${categoryCell}</td>
+          <td>${statusBadge}${e._error ? `<br><span style="color:#b91c1c; font-size:11px;">${e._error}</span>` : ''}</td>
+          <td><button type="button" class="btn-ghost" onclick="registerOneRequest(${idx})" ${disabled ? 'disabled' : ''}>등록</button></td>
+        </tr>`;
+      }).join('');
+    }
+
+    function logRequestImport(msg) {
+      const log = document.getElementById('requestImportLog');
+      log.style.display = '';
+      log.textContent += msg + '\n';
+      log.scrollTop = log.scrollHeight;
+    }
+
+    async function fetchAsBlob(url) {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`이미지를 가져오지 못했어요 (HTTP ${res.status})`);
+      return res.blob();
+    }
+
+    // registerRow()의 Step별 업로드 로직과 동일한 파이프라인(compressImage → applyWatermark
+    // → autoCenterCropToBlob)을 원격 Blob 대상으로 재사용한다.
+    async function uploadRequestStepBlob(labelSeq, stepDef, rawBlob, wmSrc) {
+      const ts = Date.now(), rnd = Math.random().toString(36).slice(2);
+      const isGif = rawBlob.type === 'image/gif';
+      const ext = isGif ? 'gif' : 'jpg';
+      const blob = await compressImage(rawBlob);
+
+      const safeLabel = String(labelSeq).replace(/[^\w가-힣.-]/g, '_');
+      const origName = `yyreq_${safeLabel}_${ts}_${rnd}_s${stepDef.step_order}_orig.${ext}`;
+      const { error: origErr } = await sb.storage.from('images').upload(origName, blob, { contentType: isGif ? 'image/gif' : 'image/jpeg' });
+      if (origErr) throw new Error(`[${stepDef.name}] 원본 업로드 실패: ${origErr.message}`);
+      const original_image_url = sb.storage.from('images').getPublicUrl(origName).data.publicUrl;
+
+      let image_url, watermark_type = null;
+      if (isGif) {
+        image_url = original_image_url;
+      } else {
+        const wmBlob = await applyWatermark(blob, wmSrc);
+        const mainName = `yyreq_${safeLabel}_${ts}_${rnd}_s${stepDef.step_order}.jpg`;
+        const { error: mainErr } = await sb.storage.from('images').upload(mainName, wmBlob, { contentType: 'image/jpeg' });
+        if (mainErr) throw new Error(`[${stepDef.name}] 워터마크 이미지 업로드 실패: ${mainErr.message}`);
+        image_url = sb.storage.from('images').getPublicUrl(mainName).data.publicUrl;
+        watermark_type = 'lab_black';
+      }
+
+      const thumbBlob = await autoCenterCropToBlob(rawBlob, 3 / 4, 600, 0.85);
+      const thumbName = `yyreq_${safeLabel}_${ts}_${rnd}_s${stepDef.step_order}_thumb.jpg`;
+      const { error: thumbErr } = await sb.storage.from('images').upload(thumbName, thumbBlob, { contentType: 'image/jpeg' });
+      if (thumbErr) throw new Error(`[${stepDef.name}] 썸네일 업로드 실패: ${thumbErr.message}`);
+      const thumbnail_url = sb.storage.from('images').getPublicUrl(thumbName).data.publicUrl;
+
+      return { id: stepDef.id, step_order: stepDef.step_order, name: stepDef.name, image_url, thumbnail_url, original_image_url, watermark_type, isGif };
+    }
+
+    // 여러 Step에 서로 다른 디자이너가 있을 수 있어, 유니크한 닉네임을 모아
+    // designer_external 배열 항목으로 각각 넣고 designer_nickname은 "이름1 / 이름2"로 합쳐 표시한다.
+    // (기존 "후쿠세 / 보라여우" 같은 표기 방식과 동일 — designer_user_ids는 추후 매칭 프로그램으로 채운다)
+    function collectDesigners(names) {
+      const unique = [];
+      (names || []).forEach(n => {
+        const t = (n || '').trim();
+        if (t && !unique.includes(t)) unique.push(t);
+      });
+      return {
+        designer_nickname: unique.length ? unique.join(' / ') : '(미상)',
+        designer_external: unique.map(n => ({ name: n, contact: '' })),
+      };
+    }
+
+    function takeNextCharNumber() {
+      const n = String(nextCharNumberCounter).padStart(3, '0');
+      nextCharNumberCounter++;
+      return n;
+    }
+
+    // 카탈로그에 있으면 그대로, 없으면 새 분류로 취급(기존 카탈로그가 전부 #9b59b6 한 색이라 동일하게 사용)
+    function resolveOrCreateCategory(text) {
+      const found = resolveCategory(text);
+      if (found) return found;
+      return { label: text, color: '#9b59b6' };
+    }
+
+    async function getAllYungyongChars() {
+      if (allYungyongCharsCache) return allYungyongCharsCache;
+      const chars = [];
+      const pageSize = 1000;
+      let from = 0;
+      while (true) {
+        const { data: page, error } = await sb.from('characters')
+          .select('id, name, char_number').eq('species_name', SPECIES_NAME).range(from, from + pageSize - 1);
+        if (error) throw new Error(error.message);
+        if (!page || !page.length) break;
+        chars.push(...page);
+        if (page.length < pageSize) break;
+        from += pageSize;
+      }
+      allYungyongCharsCache = chars;
+      return chars;
+    }
+
+    // yungyong-bulk-transfer.html의 canonName과 동일한 규칙(공백 제거 + "[아이콘] / " 접두부 무시)
+    // — 정확히 일치하는 경우만 인정하고, 비슷한 이름을 추측해서 연결하지 않는다.
+    function canonCharName(name) {
+      return String(name || '')
+        .replace(/^\[[^\]]*\]\s*\/\s*/, '')
+        .replace(/\s+/g, '');
+    }
+
+    async function findCharacterByName(name) {
+      const chars = await getAllYungyongChars();
+      const target = canonCharName(name);
+      const matches = chars.filter(c => canonCharName(c.name) === target);
+      if (matches.length === 0) return { error: `"${name}" 개체를 찾지 못했어요.` };
+      if (matches.length > 1)  return { error: `"${name}"과 일치하는 개체가 ${matches.length}건이라 자동으로 고르지 않았어요.` };
+      return { character: matches[0] };
+    }
+
+    // existing_character_name에는 신청 폼이 링크로 바뀐 이후로 개체 id(숫자 문자열)가 들어온다.
+    // id는 개체명이 나중에 바뀌어도 안 흔들리지만, 링크로 바뀌기 전에 이름으로 제출된 예전
+    // 신청 데이터도 있어서 숫자가 아니면 기존 이름 기반 매칭으로 폴백한다.
+    async function findCharacterByNameOrId(value) {
+      const trimmed = String(value || '').trim();
+      if (/^\d+$/.test(trimmed)) {
+        const chars = await getAllYungyongChars();
+        const match = chars.find(c => String(c.id) === trimmed);
+        if (!match) return { error: `id=${trimmed} 개체를 찾지 못했어요.` };
+        return { character: match };
+      }
+      return findCharacterByName(trimmed);
+    }
+
+    async function registerBabyOnlyRequest(entry) {
+      const wmSrc = '../images/watermark.png';
+      const stepDef = speciesSteps.find(s => s.name === '아기융');
+      if (!stepDef) throw new Error('species_steps에 "아기융" 정의가 없어요.');
+      if (!entry.baby || !entry.baby.image_url) throw new Error('아기융 이미지가 없어요.');
+
+      const rawBlob = await fetchAsBlob(entry.baby.image_url);
+      const step = await uploadRequestStepBlob(entry.request_id, stepDef, rawBlob, wmSrc);
+      const { designer_nickname, designer_external } = collectDesigners([entry.baby.designer_nickname]);
+
+      const { data: inserted, error } = await sb.from('characters').insert({
+        name: entry.name,
+        species_name: SPECIES_NAME,
+        char_number: takeNextCharNumber(),
+        owner_user_id: entry.applicant.user_id,
+        owner_nickname: entry.applicant.nickname,
+        owner_is_offsite: false,
+        designer_nickname,
+        designer_external,
+        designer_user_ids: [],
+        image_url: step.image_url,
+        thumbnail_url: step.thumbnail_url,
+        original_image_url: step.original_image_url,
+        representative_step_id: step.id,
+        ...(step.watermark_type ? { watermark_type: step.watermark_type } : {}),
+      }).select('id').single();
+      if (error) throw new Error(`DB 저장 실패: ${error.message}`);
+      return inserted.id;
+    }
+
+    async function registerNewGrowthCharacterRequest(entry) {
+      const wmSrc = '../images/watermark.png';
+      const candidates = [];
+
+      if (entry.baby && entry.baby.image_url) {
+        const stepDef = speciesSteps.find(s => s.name === '아기융');
+        if (!stepDef) throw new Error('species_steps에 "아기융" 정의가 없어요.');
+        const rawBlob = await fetchAsBlob(entry.baby.image_url);
+        candidates.push(await uploadRequestStepBlob(entry.request_id, stepDef, rawBlob, wmSrc));
+      }
+
+      for (const gs of (entry.growth_steps || [])) {
+        const stepDef = speciesSteps.find(s => s.name === gs.step_name);
+        if (!stepDef) throw new Error(`species_steps에 "${gs.step_name}" 정의가 없어요.`);
+        if (!gs.image_url) throw new Error(`${gs.step_name} 이미지가 없어요.`);
+        const rawBlob = await fetchAsBlob(gs.image_url);
+        candidates.push(await uploadRequestStepBlob(entry.request_id, stepDef, rawBlob, wmSrc));
+      }
+
+      if (!candidates.length) throw new Error('등록할 이미지가 하나도 없어요 (baby도 growth_steps도 비어있음).');
+
+      const winner = pickHighestPriorityStep(SPECIES_ID, candidates) || candidates[0];
+      const designerNames = [entry.baby && entry.baby.designer_nickname, ...((entry.growth_steps || []).map(s => s.designer_nickname))];
+      const { designer_nickname, designer_external } = collectDesigners(designerNames);
+      const description = entry.post_growth_trait ? `후용성: ${entry.post_growth_trait}` : null;
+      const categoryText = (entry._category || '').trim();
+
+      const { data: inserted, error } = await sb.from('characters').insert({
+        name: entry.name,
+        species_name: SPECIES_NAME,
+        char_number: takeNextCharNumber(),
+        owner_user_id: entry.applicant.user_id,
+        owner_nickname: entry.applicant.nickname,
+        owner_is_offsite: false,
+        designer_nickname,
+        designer_external,
+        designer_user_ids: [],
+        image_url: winner.image_url,
+        thumbnail_url: winner.thumbnail_url,
+        original_image_url: winner.original_image_url,
+        representative_step_id: winner.id,
+        ...(winner.watermark_type ? { watermark_type: winner.watermark_type } : {}),
+        ...(description ? { description } : {}),
+        char_categories: categoryText ? [resolveOrCreateCategory(categoryText)] : null,
+      }).select('id').single();
+      if (error) throw new Error(`DB 저장 실패: ${error.message}`);
+
+      const stepRows = candidates.filter(c => c.id !== winner.id).map(c => ({
+        character_id: inserted.id,
+        species_step_id: c.id,
+        image_url: c.image_url,
+        original_image_url: c.original_image_url,
+        thumbnail_url: c.thumbnail_url,
+      }));
+      if (stepRows.length) {
+        const { error: stepErr } = await sb.from('character_step_images').insert(stepRows);
+        if (stepErr) throw new Error(`개체는 등록됐지만(id=${inserted.id}) Step 이미지 저장 실패: ${stepErr.message}`);
+      }
+      return inserted.id;
+    }
+
+    async function registerExistingCharacterBabyStepRequest(entry) {
+      const wmSrc = '../images/watermark.png';
+      const stepDef = speciesSteps.find(s => s.name === '아기융');
+      if (!stepDef) throw new Error('species_steps에 "아기융" 정의가 없어요.');
+      if (!entry.baby || !entry.baby.image_url) throw new Error('아기융 이미지가 없어요.');
+      if (!entry.existing_character_name) throw new Error('existing_character_name이 비어있어요.');
+
+      const found = await findCharacterByNameOrId(entry.existing_character_name);
+      if (found.error) throw new Error(found.error);
+
+      // 업로드 전에 먼저 확인 — 이미 아기융 Step이 있으면 불필요한 업로드 없이 바로 알려준다.
+      const { data: existingStep, error: existingErr } = await sb
+        .from('character_step_images')
+        .select('id, image_url')
+        .eq('character_id', found.character.id)
+        .eq('species_step_id', stepDef.id)
+        .maybeSingle();
+      if (existingErr) throw new Error(`기존 Step 확인 실패: ${existingErr.message}`);
+      if (existingStep) {
+        throw new Error(`"${entry.existing_character_name}"(id=${found.character.id})는 이미 아기융 Step 이미지가 등록되어 있어요 — 건너뛰었어요. 다른 이미지로 바꾸려면 character-edit.html에서 직접 확인해주세요.`);
+      }
+
+      const rawBlob = await fetchAsBlob(entry.baby.image_url);
+      const step = await uploadRequestStepBlob(entry.request_id, stepDef, rawBlob, wmSrc);
+
+      const { error } = await sb.from('character_step_images').insert({
+        character_id: found.character.id,
+        species_step_id: stepDef.id,
+        image_url: step.image_url,
+        original_image_url: step.original_image_url,
+        thumbnail_url: step.thumbnail_url,
+      });
+      if (error) throw new Error(`Step 이미지 저장 실패: ${error.message}`);
+      return found.character.id;
+    }
+
+    async function registerOneRequest(idx) {
+      const entry = pendingRequests[idx];
+      if (!entry || entry._status === 'done' || entry._status === 'running') return;
+      if (entry.validation && entry.validation.status !== 'ok') {
+        entry._error = 'needs_review 상태라 건너뛰었어요.';
+        renderRequestImportTable();
+        return;
+      }
+      if (entry._alreadyExists) {
+        entry._error = '이미 등록된 항목이라 건너뛰었어요.';
+        renderRequestImportTable();
+        return;
+      }
+      if (entry._notFound) {
+        entry._error = '대상 개체를 찾지 못해 건너뛰었어요.';
+        renderRequestImportTable();
+        return;
+      }
+
+      entry._status = 'running'; entry._error = '';
+      renderRequestImportTable();
+
+      try {
+        let resultId;
+        if (entry.request_type === 'baby_only')                    resultId = await registerBabyOnlyRequest(entry);
+        else if (entry.request_type === 'new_growth_character')    resultId = await registerNewGrowthCharacterRequest(entry);
+        else if (entry.request_type === 'existing_character_baby_step') resultId = await registerExistingCharacterBabyStepRequest(entry);
+        else throw new Error(`알 수 없는 request_type: ${entry.request_type}`);
+
+        entry._status = 'done';
+        logRequestImport(`✅ ${entry.name || entry.existing_character_name} (${entry.request_id}) → id=${resultId}`);
+      } catch (err) {
+        entry._status = 'failed';
+        entry._error = err.message;
+        logRequestImport(`❌ ${entry.name || entry.existing_character_name} (${entry.request_id}) 실패: ${err.message}`);
+      }
+      renderRequestImportTable();
+    }
+
+    async function registerSelectedRequests() {
+      const checks = [...document.querySelectorAll('.req-check:checked')];
+      if (!checks.length) { alert('선택된 항목이 없어요.'); return; }
+      const ok = confirm(`${checks.length}건을 실제로 등록합니다. 계속할까요?`);
+      if (!ok) return;
+      for (const chk of checks) {
+        await registerOneRequest(parseInt(chk.dataset.idx, 10));
+      }
+    }
+
+    function toggleAllRequestChecks(state) {
+      document.querySelectorAll('.req-check').forEach(chk => { if (!chk.disabled) chk.checked = state; });
+    }
+
+    // ── 7. 중복 정리 (1회성) ──────────────────────────────
+    // 신청 일괄 처리를 재실행하면서 아기융용-01~11이 두 번씩 등록됐다. 나중에 만들어진(중복) 쪽 id만 삭제한다.
+    const DUPLICATE_REQUEST_CHAR_IDS = [3947, 3948, 3949, 3950, 3951, 3952, 3953, 3954, 3955, 3956, 3957];
+
+    function logDupCleanup(msg) {
+      const log = document.getElementById('dupCleanupLog');
+      log.style.display = '';
+      log.textContent += msg + '\n';
+      log.scrollTop = log.scrollHeight;
+    }
+
+    async function cleanupDuplicateRequests() {
+      const ok = confirm(`중복 등록된 ${DUPLICATE_REQUEST_CHAR_IDS.length}건(id: ${DUPLICATE_REQUEST_CHAR_IDS.join(', ')})을 Storage 파일까지 포함해서 완전히 삭제합니다. 되돌릴 수 없어요. 계속할까요?`);
+      if (!ok) return;
+
+      const btn = document.getElementById('dupCleanupBtn');
+      btn.disabled = true;
+      document.getElementById('dupCleanupLog').textContent = '';
+
+      const { data: targets, error: fetchErr } = await sb
+        .from('characters')
+        .select('id, char_number, name, image_url, thumbnail_url, original_image_url')
+        .in('id', DUPLICATE_REQUEST_CHAR_IDS);
+      if (fetchErr) {
+        logDupCleanup(`❌ 대상 조회 실패: ${fetchErr.message}`);
+        btn.disabled = false;
+        return;
+      }
+      logDupCleanup(`대상 ${targets.length}건 조회됨`);
+
+      for (const c of targets) {
+        try {
+          const { data: stepRows } = await sb.from('character_step_images')
+            .select('image_url, original_image_url, thumbnail_url')
+            .eq('character_id', c.id);
+
+          const paths = [
+            c.image_url, c.thumbnail_url, c.original_image_url,
+            ...(stepRows || []).flatMap(s => [s.image_url, s.original_image_url, s.thumbnail_url]),
+          ].map(storagePathFromUrl).filter(Boolean);
+
+          if (paths.length) await sb.storage.from('images').remove(paths).catch(() => {});
+
+          const { error: delErr } = await sb.from('characters').delete().eq('id', c.id);
+          if (delErr) throw new Error(delErr.message);
+
+          logDupCleanup(`✅ ${c.char_number} ${c.name} (id=${c.id}) 삭제 완료`);
+        } catch (err) {
+          logDupCleanup(`❌ ${c.char_number} ${c.name} (id=${c.id}) 삭제 실패: ${err.message}`);
+        }
+      }
+
+      logDupCleanup('완료.');
       btn.disabled = false;
     }
 
