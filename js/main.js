@@ -176,9 +176,25 @@ function getUserBadgesHtml(u) {
   return badges.join('');
 }
 
+// url은 개체/종족 썸네일, 유저 avatar_url까지 여러 출처에서 오는데, 셋 다 결국
+// user_profiles/characters/species 테이블 값을 그대로 읽어온 것이라 정상 업로드
+// 플로우를 거치지 않고 임의 문자열이 들어가 있을 수 있음 — http/https 절대 URL인지
+// 검증 후, 정규화된 href(위험 문자가 퍼센트 인코딩됨)를 escapeHtml로 한 번 더 감싼다.
+function ddSafeThumbUrl(url) {
+  if (!url) return null;
+  try {
+    const u = new URL(url);
+    if (u.protocol !== 'http:' && u.protocol !== 'https:') return null;
+    return u.href;
+  } catch {
+    return null;   // 상대경로/깨진 문자열 등 절대 URL로 파싱 안 되면 무조건 fallback
+  }
+}
+
 function ddThumb(url) {
-  return url
-    ? `<span class="dd-thumb" style="background-image:url('${url}')"></span>`
+  const safeUrl = ddSafeThumbUrl(url);
+  return safeUrl
+    ? `<span class="dd-thumb" style="background-image:url('${escapeHtml(safeUrl)}')"></span>`
     : `<span class="dd-thumb dd-thumb--empty"></span>`;
 }
 

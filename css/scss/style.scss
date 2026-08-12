@@ -3460,6 +3460,951 @@ button.btn-more {
   margin: 0;
 }
 
+/* ═══════════════════════════════════════
+   DM/채팅 — 헤더 아이콘 + 우측 슬라이드 패널
+═══════════════════════════════════════ */
+.dm-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  // margin-right 없음 — header-nav의 flex gap(8px)만으로 바로 다음 요소(알림벨)와의
+  // 간격을 만든다. 여기에 margin-right까지 더하면 다른 header-nav 자식 쌍(예: 알림↔연구기록,
+  // 둘 다 각자 margin-right:8px를 가짐)보다 DM↔알림 간격만 두 배(16px)로 벌어지게 됨.
+}
+
+.mobile-dm-icon {
+  display: none;
+}
+
+.dm-icon-btn {
+  position: relative;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--text-sub);
+  transition: background 0.15s, color 0.15s;
+}
+
+.dm-icon-btn:hover {
+  background: var(--sky-light);
+  color: var(--sky-dark);
+}
+
+.dm-badge {
+  position: absolute;
+  top: 4px;
+  right: 3px;
+  min-width: 16px;
+  height: 16px;
+  background: #EF4444;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 3px;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.dm-panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.25);
+  z-index: 300;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.dm-panel {
+  width: 380px;
+  max-width: 100%;
+  height: 100%;
+  background: var(--white);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  animation: dmPanelIn 0.2s ease;
+}
+
+@keyframes dmPanelIn {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+
+.dm-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.dm-panel-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.dm-panel-close-btn {
+  border: none;
+  background: none;
+  font-size: 18px;
+  color: var(--text-mute);
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+}
+
+.dm-panel-close-btn:hover {
+  color: var(--text);
+}
+
+.dm-panel-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+#dmRoomListSection {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dm-panel-placeholder {
+  padding: 60px 20px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-mute);
+  line-height: 1.6;
+}
+
+/* 대화방 헤더 — 뒤로가기 / 상대 정보 / 메뉴 */
+.dm-back-btn {
+  border: none;
+  background: none;
+  font-size: 24px;
+  color: var(--text-sub);
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px 6px 4px 0;
+}
+
+.dm-back-btn:hover {
+  color: var(--text);
+}
+
+.dm-room-header-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.dm-room-header-user .dm-panel-title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dm-room-menu-btn {
+  border: none;
+  background: none;
+  font-size: 18px;
+  color: var(--text-mute);
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px 6px;
+}
+
+.dm-room-menu-btn:hover {
+  color: var(--text);
+}
+
+.dm-room-menu-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.dm-room-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  z-index: 10;
+  min-width: 130px;
+}
+
+.dm-room-menu-item {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-family: inherit;
+  text-align: left;
+  white-space: nowrap;
+  color: var(--text);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.dm-room-menu-item:hover {
+  background: var(--sky-pale);
+}
+
+.dm-room-blocked-tag {
+  font-size: 10px;
+  font-weight: 700;
+  color: #EF4444;
+  background: #FEE2E2;
+  border-radius: 4px;
+  padding: 1px 6px;
+  vertical-align: middle;
+  margin-left: 2px;
+}
+
+.dm-block-notice {
+  padding: 8px 18px 0;
+  font-size: 12px;
+  color: var(--text-mute);
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.dm-msg-input:disabled,
+.dm-attach-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* 검색 */
+.dm-search-wrap {
+  padding: 14px 18px 8px;
+  flex-shrink: 0;
+}
+
+.dm-search-input {
+  width: 100%;
+  padding: 9px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 13px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+  background: var(--sky-pale);
+}
+
+.dm-search-input:focus {
+  border-color: var(--sky);
+  background: var(--white);
+}
+
+.dm-search-results {
+  overflow-y: auto;
+  padding-bottom: 8px;
+}
+
+.dm-user-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.dm-user-item:hover {
+  background: var(--sky-pale);
+}
+
+.dm-user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.dm-user-nickname {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dm-user-login {
+  font-size: 11px;
+  color: var(--text-mute);
+}
+
+/* 최근 채팅 목록 */
+.dm-section-label {
+  padding: 4px 18px 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-mute);
+}
+
+.dm-room-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.dm-room-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.dm-room-item:hover {
+  background: var(--sky-pale);
+}
+
+.dm-room-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.dm-room-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dm-room-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dm-room-time {
+  font-size: 11px;
+  color: var(--text-mute);
+  flex-shrink: 0;
+}
+
+.dm-room-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.dm-room-preview {
+  font-size: 12px;
+  color: var(--text-sub);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dm-room-unread-badge {
+  flex-shrink: 0;
+  min-width: 18px;
+  height: 18px;
+  background: #EF4444;
+  color: #fff;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 5px;
+}
+
+/* 아바타 (목록/검색/방헤더 공용) */
+.dm-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+.dm-avatar--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sky-light);
+  color: var(--sky-deep);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.dm-avatar--sm {
+  width: 30px;
+  height: 30px;
+  font-size: 13px;
+}
+
+/* 개별 대화방 — 메시지 목록/입력창 */
+.dm-messages {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dm-msg-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.dm-msg-row--mine {
+  flex-direction: row-reverse;
+}
+
+.dm-msg-bubble {
+  max-width: 72%;
+  padding: 9px 13px;
+  border-radius: 16px;
+  font-size: 13px;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.dm-msg-bubble--theirs {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+}
+
+.dm-msg-bubble--mine {
+  background: var(--sky);
+  color: #fff;
+  border-bottom-right-radius: 4px;
+}
+
+.dm-msg-bubble--deleted {
+  background: none;
+  border: 1px dashed var(--border);
+  color: var(--text-mute);
+  font-style: italic;
+}
+
+.dm-msg-unsupported {
+  color: var(--text-mute);
+  font-style: italic;
+}
+
+.dm-msg-time {
+  font-size: 10px;
+  color: var(--text-mute);
+  flex-shrink: 0;
+  padding-bottom: 3px;
+}
+
+.dm-msg-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  flex-shrink: 0;
+}
+
+.dm-msg-menu-wrap {
+  position: relative;
+}
+
+.dm-msg-menu-btn {
+  border: none;
+  background: none;
+  color: var(--text-mute);
+  font-size: 13px;
+  line-height: 1;
+  padding: 2px 4px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.dm-msg-menu-btn:hover {
+  color: var(--text);
+  background: var(--sky-pale);
+}
+
+.dm-msg-menu {
+  position: absolute;
+  bottom: calc(100% + 4px);
+  right: 0;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  z-index: 10;
+  min-width: 110px;
+}
+
+.dm-msg-row--mine .dm-msg-menu {
+  right: auto;
+  left: 0;
+}
+
+.dm-msg-menu-item {
+  display: block;
+  width: 100%;
+  padding: 9px 14px;
+  font-size: 12px;
+  font-family: inherit;
+  text-align: left;
+  white-space: nowrap;
+  color: #EF4444;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.dm-msg-menu-item:hover {
+  background: #FEE2E2;
+}
+
+.dm-input-area {
+  flex-shrink: 0;
+  border-top: 1px solid var(--border);
+  padding: 10px 14px 14px;
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+}
+
+.dm-msg-input {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 9px 14px;
+  font-size: 13px;
+  outline: none;
+  resize: none;
+  max-height: 120px;
+  overflow-y: auto;
+  font-family: inherit;
+  line-height: 1.5;
+  background: var(--white);
+}
+
+.dm-msg-input:focus {
+  border-color: var(--sky);
+}
+
+.dm-send-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--sky);
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+
+.dm-send-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* + 버튼 / 공유 메뉴 */
+.dm-attach-menu-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.dm-attach-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: none;
+  color: var(--text-sub);
+  font-size: 22px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.dm-attach-btn:hover {
+  background: var(--sky-light);
+}
+
+.dm-attach-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  z-index: 10;
+  min-width: 150px;
+}
+
+.dm-attach-menu-item {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-family: inherit;
+  text-align: left;
+  white-space: nowrap;
+  color: var(--text);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.dm-attach-menu-item:hover {
+  background: var(--sky-pale);
+}
+
+/* 개체/종족/분양글 선택 화면 */
+.dm-picker-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 0 18px 10px;
+  flex-shrink: 0;
+}
+
+.dm-picker-tab {
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--white);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-sub);
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.dm-picker-tab--active {
+  background: var(--sky);
+  border-color: var(--sky);
+  color: #fff;
+}
+
+.dm-picker-list {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.dm-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 18px;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.dm-picker-item:hover {
+  background: var(--sky-pale);
+}
+
+.dm-picker-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.dm-picker-thumb--empty {
+  background: var(--sky-light);
+}
+
+.dm-picker-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.dm-picker-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dm-picker-sub {
+  font-size: 11px;
+  color: var(--text-mute);
+}
+
+/* 채팅 안 공유 카드 (개체/종족/분양글) */
+.dm-msg-bubble--reference {
+  padding: 0;
+  background: none;
+  border: none;
+  max-width: 78%;
+}
+
+.dm-ref-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+  transition: background 0.1s;
+}
+
+.dm-ref-card:hover {
+  background: var(--sky-pale);
+}
+
+.dm-ref-card--missing {
+  padding: 12px 14px;
+  cursor: default;
+}
+
+.dm-ref-card--missing:hover {
+  background: var(--white);
+}
+
+.dm-ref-missing-text {
+  font-size: 12px;
+  color: var(--text-mute);
+  font-style: italic;
+}
+
+.dm-ref-thumb {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.dm-ref-thumb--empty {
+  background: var(--sky-light);
+}
+
+.dm-ref-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.dm-ref-type {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--sky-deep);
+}
+
+.dm-ref-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dm-ref-sub {
+  font-size: 11px;
+  color: var(--text-mute);
+}
+
+/* 첨부 이미지 — 전송 전 미리보기 */
+.dm-pending-images {
+  display: none;
+  gap: 8px;
+  padding: 10px 14px 0;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.dm-pending-item {
+  position: relative;
+  width: 56px;
+  height: 56px;
+}
+
+.dm-pending-thumb {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  object-fit: cover;
+  display: block;
+  border: 1px solid var(--border);
+}
+
+.dm-pending-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 첨부 이미지 — 채팅 내 표시 */
+.dm-msg-bubble--image {
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+.dm-img-grid {
+  display: grid;
+  gap: 4px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.dm-img-grid img {
+  cursor: pointer;
+}
+
+.dm-img-grid--1 {
+  grid-template-columns: 1fr;
+  max-width: 220px;
+}
+
+.dm-img-grid--1 .dm-img-cell img {
+  width: 100%;
+  height: auto;
+  max-height: 280px;
+  object-fit: contain;
+  background: var(--sky-pale);
+  display: block;
+}
+
+.dm-img-grid--2,
+.dm-img-grid--multi {
+  grid-template-columns: repeat(2, 1fr);
+  width: 220px;
+}
+
+.dm-img-grid--2 .dm-img-cell,
+.dm-img-grid--multi .dm-img-cell {
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+}
+
+.dm-img-grid--2 .dm-img-cell img,
+.dm-img-grid--multi .dm-img-cell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.dm-img-cell--expired {
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--sky-pale);
+  color: var(--text-mute);
+  font-size: 11px;
+  text-align: center;
+  padding: 8px;
+  border-radius: 12px;
+}
+
+.dm-img-grid--1 .dm-img-cell--expired {
+  aspect-ratio: auto;
+  min-height: 100px;
+  width: 220px;
+}
+
+/* 이미지 확대 뷰어 */
+.dm-img-viewer-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  z-index: 400;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.dm-img-viewer-img {
+  max-width: 100%;
+  max-height: 100%;
+  border-radius: 8px;
+  object-fit: contain;
+}
+
+.dm-img-viewer-close {
+  position: absolute;
+  top: 16px;
+  right: 20px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* 분양 상태 — 확인 대기중 */
 .adoption-status--pending {
   background: #FEF3C7;
@@ -3885,6 +4830,26 @@ button.btn-more {
     color: var(--text-sub);
     text-decoration: none;
     flex-shrink: 0;
+  }
+  /* DM 아이콘 — 알림벨 바로 왼쪽. margin-left:auto는 DM 아이콘 쪽으로 옮기고
+     벨은 인접 선택자로 margin 제거해 둘이 붙어 보이게 함 */
+  .mobile-dm-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    margin-left: auto;
+    width: 38px;
+    height: 38px;
+    color: var(--text-sub);
+    text-decoration: none;
+    flex-shrink: 0;
+  }
+  .mobile-dm-icon + .mobile-notif-bell {
+    margin-left: 0;
+  }
+  .dm-panel {
+    width: 100%;
   }
   /* 사이드바 유저 블록 표시 */
   .sidebar-user-block {
