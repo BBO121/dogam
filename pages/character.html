@@ -143,6 +143,11 @@
         <input type="text" id="galleryCategory" class="form-input" placeholder="커미션, 연성, 추가외관 등">
       </div>
 
+      <div>
+        <label class="form-label">설명</label>
+        <textarea id="galleryDescription" class="form-input" rows="4" style="display:block; width:100%; box-sizing:border-box; resize:vertical; font-family:inherit;" placeholder="그림에 대한 설명 (선택)"></textarea>
+      </div>
+
       <p id="galleryAddError" style="margin:0; font-size:12px; color:#ef4444;"></p>
 
       <div style="display:flex; gap:8px; justify-content:flex-end;">
@@ -161,6 +166,7 @@
       <div style="padding:14px 18px; display:flex; flex-direction:column; gap:6px; font-size:13px; color:var(--text-sub);">
         <div id="galleryLightboxDesigner"></div>
         <div id="galleryLightboxCategory"></div>
+        <div id="galleryLightboxDescription" style="white-space:pre-wrap; color:var(--text);"></div>
         <div id="galleryLightboxUploader" style="color:var(--text-mute); font-size:12px;"></div>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
           <button class="btn-ghost" onclick="closeGalleryLightbox()">닫기</button>
@@ -442,6 +448,9 @@
       const catEl = document.getElementById('galleryLightboxCategory');
       catEl.textContent   = item.category ? ('분류 · ' + item.category) : '';
       catEl.style.display = item.category ? '' : 'none';
+      const descEl = document.getElementById('galleryLightboxDescription');
+      descEl.textContent   = item.description || '';
+      descEl.style.display = item.description ? '' : 'none';
       const uploaderNick = _idToNick[item.uploaded_by] || '(알수없음)';
       document.getElementById('galleryLightboxUploader').textContent = '올린 사람 · ' + uploaderNick;
       document.getElementById('galleryLightboxDeleteBtn').style.display = _canManageGallery ? '' : 'none';
@@ -489,6 +498,7 @@
       document.getElementById('galleryDesignerExternalName').value = '';
       document.getElementById('galleryDesignerExternalContact').value = '';
       document.getElementById('galleryCategory').value = '';
+      document.getElementById('galleryDescription').value = '';
       document.getElementById('galleryAddError').textContent = '';
       renderGalleryDesignerItems();
       const btn = document.getElementById('galleryAddConfirmBtn');
@@ -634,7 +644,8 @@
         const designer_user_ids = _galleryDesigners.filter(d => d.type === 'site').map(d => d.userId);
         const designer_external = _galleryDesigners.filter(d => d.type === 'external').map(d => ({ name: d.name, contact: d.contact || '' }));
         const designer_nickname = _galleryDesigners.map(d => d.type === 'site' ? d.nickname : d.name).join(' / ');
-        const category = document.getElementById('galleryCategory').value.trim() || null;
+        const category    = document.getElementById('galleryCategory').value.trim() || null;
+        const description = document.getElementById('galleryDescription').value.trim() || null;
 
         const { data: inserted, error: insErr } = await sb.from('character_gallery').insert({
           character_id: charId,
@@ -643,6 +654,7 @@
           designer_external,
           designer_nickname,
           category,
+          description,
           image_url,
           thumbnail_url,
         }).select().single();
@@ -785,7 +797,7 @@
 
       // original_image_url 제외 — 권한자가 토글 시 on-demand 조회
       const CHAR_SELECT = 'id,name,species_name,image_url,thumbnail_url,additional_images,owner_nickname,owner_user_id,owner_is_offsite,owner_contact,designer_nickname,designer_user_ids,designer_external,designer_contact,char_number,description,owner_description,is_sensitive,sensitive_note,char_sections,custom_field_values,char_categories,allow_free_adoption,allow_resale,allow_paid_adoption,allow_other_adoption,pending_transfer,created_at,representative_step_id';
-      const GALLERY_SELECT = 'id,character_id,uploaded_by,designer_user_ids,designer_external,designer_nickname,category,image_url,thumbnail_url,created_at';
+      const GALLERY_SELECT = 'id,character_id,uploaded_by,designer_user_ids,designer_external,designer_nickname,category,description,image_url,thumbnail_url,created_at';
       const [{ data: c, error }, { data: siteUserData }, { data: galleryRows }] = await Promise.all([
         sb.from('characters').select(CHAR_SELECT).eq('id', charId).single(),
         sb.rpc('get_all_users'),

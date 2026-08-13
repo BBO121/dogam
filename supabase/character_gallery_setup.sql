@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS public.character_gallery (
   designer_nickname   text,
 
   category            text,
+  description         text,      -- 선택 입력. 그림에 대한 설명.
 
   image_url           text        NOT NULL,
   thumbnail_url       text,       -- GIF는 애니메이션 보존을 위해 썸네일을 만들지 않고 null (그리드에서 image_url 사용)
