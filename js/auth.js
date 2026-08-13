@@ -154,6 +154,9 @@ async function logAdminAction(actionType, targetType, targetId, targetName, deta
   const user = await getUser();
   if (!user || !isAdminOrStaff(user.user_metadata?.role)) return;
   try {
+    // 결과의 error는 의도적으로 확인하지 않음 — role이 탭이 열린 사이 회수되어 RLS 403이 나더라도
+    // 로그 한 건이 누락될 뿐 본 기능(삭제/승인 등)은 계속 진행되어야 하므로 조용히 무시한다.
+    // (재검증을 위해 매 호출마다 auth 네트워크 왕복을 추가하지 않는다)
     await sb.from('admin_logs').insert({
       admin_id:       user.id,
       admin_nickname: user.user_metadata?.display_name || user.user_metadata?.nickname || '',
@@ -164,6 +167,7 @@ async function logAdminAction(actionType, targetType, targetId, targetName, deta
       details,
     });
   } catch (e) {
+    // insert() 자체는 API 에러(403 등)로 reject하지 않으므로 여기 도달하는 건 네트워크/예외 상황뿐
     console.warn('[logAdminAction] 로그 기록 실패:', e);
   }
 }

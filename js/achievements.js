@@ -28,18 +28,28 @@ window.awardAchievement = async function(code, { pending = false } = {}) {
     console.log('[업적DBG] session user:', user?.id ?? 'null(비로그인)');
     if (!user) { console.warn('[업적DBG] user 없음 → return'); return; }
 
-    console.log('[업적DBG] insert 시도 — user_id:', user.id, '/ achievement_code:', code);
-    const { error } = await sb.from('user_achievements').insert({
-      user_id: user.id,
-      achievement_code: code,
-    });
+    console.log('[업적DBG] upsert 시도 — user_id:', user.id, '/ achievement_code:', code);
+    // upsert + ignoreDuplicates: 이미 획득한 업적이면 충돌을 조용히 무시(DO NOTHING)하여 409 자체를 발생시키지 않음.
+    // 신규 지급 여부는 반환된 row 유무(select())로 판별 — 중복 시 row가 반환되지 않으므로 아래에서 토스트/보상 지급을 건너뜀.
+    const { data: inserted, error } = await sb.from('user_achievements')
+      .upsert(
+        { user_id: user.id, achievement_code: code },
+        { onConflict: 'user_id,achievement_code', ignoreDuplicates: true }
+      )
+      .select();
 
     if (error) {
+      // 23505는 fallback 안전망 — ignoreDuplicates 적용 후에는 정상적으로는 발생하지 않아야 함
       if (error.code === '23505') {
         console.log('[업적DBG] 23505 중복 — 이미 획득한 업적:', code);
         return;
       }
-      console.error('[업적DBG] insert 실패 — code:', code, '/ error.code:', error.code, '/ message:', error.message, '/ details:', error.details);
+      console.error('[업적DBG] upsert 실패 — code:', code, '/ error.code:', error.code, '/ message:', error.message, '/ details:', error.details);
+      return;
+    }
+
+    if (!inserted || inserted.length === 0) {
+      console.log('[업적DBG] upsert 무시(이미 획득한 업적) — code:', code);
       return;
     }
     console.log('[업적DBG] insert 성공 ✓ — code:', code);
