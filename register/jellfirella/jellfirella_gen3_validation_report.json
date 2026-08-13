@@ -1,0 +1,94 @@
+{
+  "summary": {
+    "total": 197,
+    "numRange": "401 ~ 600",
+    "duplicates": [],
+    "missing": [
+      575,
+      576,
+      577
+    ],
+    "placeholderSlots": [],
+    "starEntities": [
+      "429"
+    ],
+    "daDesignerApplied": [
+      {
+        "char_number": "446",
+        "designer": "박약",
+        "raw": "박약님 DA"
+      },
+      {
+        "char_number": "447",
+        "designer": "박약",
+        "raw": "박약님 DA"
+      },
+      {
+        "char_number": "448",
+        "designer": "박약",
+        "raw": "박약님 DA"
+      },
+      {
+        "char_number": "512",
+        "designer": "시로네뀨",
+        "raw": "시로네뀨님 DA"
+      }
+    ],
+    "offsiteDesignerCount": 5,
+    "defaultDesignerCount": 192,
+    "errors": [],
+    "resolvedByPo": [
+      "407/412/511/553: 이미지 없음 확정 → gen1 178/gen2 269와 동일하게 등록 시 자동 제외. JSON 내용(이름/독 등 파싱된 값)은 그대로 남겨둠.",
+      "511 '키사라기역': 실존 개체(아직 이미지 미완성)로 확정 — 이미지없음 처리로 등록 대상에서 자동 제외(내용은 유지).",
+      "464 owner='error': 실제 닉네임 맞음(오류 아님), 원문 그대로 유지.",
+      "429: name='세룸 해파리 - 루미나레 & 움브라', poison='섬광독 & 암흑독'으로 정정 반영(뽀 확인).",
+      "469/478/526/529/531/538/539/540/541/543/544/581/584 (아기/성체 이중 이미지 13건): 대표 이미지를 성체 쪽으로, 아기 이미지를 _alt로 스왑 완료.",
+      "소유주 닉네임 공란(407/412/447/463/476/511/547/553/568)은 전부 '새'로 채움 — 뽀 확정 규칙: 앞으로도 소유주 표기가 비어있으면 기본값 '새'로 처리.",
+      "뽀가 2세대=전부 특수개체 규칙을 철회하고 gen1과 동일하게 description에 \"특수(개체)로 분류되었습니다\" 문구 유무로 classification을 재판정하기로 확정(2026-08-13). 이 규칙에 따라 로컬 JSON classification을 전부 재계산 반영함(이미 DB에 등록된 것은 별도 보정 스크립트로 처리)."
+    ]
+  },
+  "issues": [
+    {
+      "ctx": "char_number=510",
+      "field": "note",
+      "note": "원문에 \"무료분양 개체입니다.\" 메모 있음(참고용, 데이터에는 영향 없음)"
+    },
+    {
+      "ctx": "char_number=412",
+      "field": "poison",
+      "note": "헤더 괄호 안 표기가 \"무분\" — 표준 6독도 아니고 다른 특수능력 텍스트와도 다름. \"무독\"의 오타로 추정되나 확정하지 않고 원문 그대로 보존함(이미지 없어서 어차피 등록 제외)."
+    },
+    {
+      "ctx": "char_number=460",
+      "field": "poison",
+      "note": "헤더 괄호 안 표기가 \"무독성\"(독 없음을 명시) — 표준 6독 아니지만 원문 의도가 명확해서 그대로 poison=\"무독성\"으로 보존함."
+    }
+  ],
+  "imagesGen3": {
+    "note": "gen2와 동일 방식(구글독스 zip export → HTML 내 [번호] 마커 뒤에 오는 이미지로 매칭). register/jellfirella/image_extract_report_gen3.json 참고.",
+    "autoMatched": 193,
+    "dualImageEntries13": [
+      "469",
+      "478",
+      "526",
+      "529",
+      "531",
+      "538",
+      "539",
+      "540",
+      "541",
+      "543",
+      "544",
+      "581",
+      "584"
+    ],
+    "dualImageRepresentative": "성체(두 번째 이미지)를 대표로, 아기(첫 번째 이미지)를 _alt로 스왑 완료",
+    "noImageFound": [
+      "407",
+      "412",
+      "511",
+      "553"
+    ],
+    "bannerDiscardedAt401": true
+  }
+}

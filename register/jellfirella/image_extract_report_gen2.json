@@ -1,0 +1,757 @@
+{
+  "convention": "이미지는 뒤따르는 [번호] 마커에 귀속 (이미지 먼저, 캡션 나중)",
+  "copied": [
+    {
+      "char_number": "201",
+      "src": "images/image79.png"
+    },
+    {
+      "char_number": "202",
+      "src": "images/image59.png"
+    },
+    {
+      "char_number": "203",
+      "src": "images/image147.png"
+    },
+    {
+      "char_number": "204",
+      "src": "images/image97.png"
+    },
+    {
+      "char_number": "205",
+      "src": "images/image105.png"
+    },
+    {
+      "char_number": "206",
+      "src": "images/image46.png"
+    },
+    {
+      "char_number": "207",
+      "src": "images/image91.png"
+    },
+    {
+      "char_number": "208",
+      "src": "images/image65.png"
+    },
+    {
+      "char_number": "209",
+      "src": "images/image18.png"
+    },
+    {
+      "char_number": "210",
+      "src": "images/image21.png"
+    },
+    {
+      "char_number": "211",
+      "src": "images/image31.png"
+    },
+    {
+      "char_number": "212",
+      "src": "images/image142.png"
+    },
+    {
+      "char_number": "213",
+      "src": "images/image176.png"
+    },
+    {
+      "char_number": "214",
+      "src": "images/image14.png"
+    },
+    {
+      "char_number": "215",
+      "src": "images/image101.png"
+    },
+    {
+      "char_number": "216",
+      "src": "images/image167.png"
+    },
+    {
+      "char_number": "217",
+      "src": "images/image145.png"
+    },
+    {
+      "char_number": "218",
+      "src": "images/image121.png"
+    },
+    {
+      "char_number": "219",
+      "src": "images/image72.png"
+    },
+    {
+      "char_number": "220",
+      "src": "images/image181.png"
+    },
+    {
+      "char_number": "221",
+      "src": "images/image114.png"
+    },
+    {
+      "char_number": "222",
+      "src": "images/image25.png"
+    },
+    {
+      "char_number": "223",
+      "src": "images/image169.png"
+    },
+    {
+      "char_number": "224",
+      "src": "images/image103.png"
+    },
+    {
+      "char_number": "225",
+      "src": "images/image57.png"
+    },
+    {
+      "char_number": "226",
+      "src": "images/image166.png"
+    },
+    {
+      "char_number": "227",
+      "src": "images/image48.png"
+    },
+    {
+      "char_number": "228",
+      "src": "images/image109.png"
+    },
+    {
+      "char_number": "229",
+      "src": "images/image99.png"
+    },
+    {
+      "char_number": "230",
+      "src": "images/image87.png"
+    },
+    {
+      "char_number": "231",
+      "src": "images/image32.png"
+    },
+    {
+      "char_number": "232",
+      "src": "images/image30.png"
+    },
+    {
+      "char_number": "233",
+      "src": "images/image84.png"
+    },
+    {
+      "char_number": "234",
+      "src": "images/image62.png"
+    },
+    {
+      "char_number": "235",
+      "src": "images/image124.png"
+    },
+    {
+      "char_number": "236",
+      "src": "images/image146.png"
+    },
+    {
+      "char_number": "237",
+      "src": "images/image112.png"
+    },
+    {
+      "char_number": "238",
+      "src": "images/image71.png"
+    },
+    {
+      "char_number": "239",
+      "src": "images/image77.png"
+    },
+    {
+      "char_number": "240",
+      "src": "images/image70.png"
+    },
+    {
+      "char_number": "241",
+      "src": "images/image134.png"
+    },
+    {
+      "char_number": "242",
+      "src": "images/image160.png"
+    },
+    {
+      "char_number": "243",
+      "src": "images/image82.png"
+    },
+    {
+      "char_number": "244",
+      "src": "images/image5.png"
+    },
+    {
+      "char_number": "245",
+      "src": "images/image125.png"
+    },
+    {
+      "char_number": "246",
+      "src": "images/image45.png"
+    },
+    {
+      "char_number": "247",
+      "src": "images/image150.png"
+    },
+    {
+      "char_number": "248",
+      "src": "images/image17.png"
+    },
+    {
+      "char_number": "249",
+      "src": "images/image154.png"
+    },
+    {
+      "char_number": "250",
+      "src": "images/image132.png"
+    },
+    {
+      "char_number": "251",
+      "src": "images/image55.png"
+    },
+    {
+      "char_number": "252",
+      "src": "images/image89.png"
+    },
+    {
+      "char_number": "253",
+      "src": "images/image38.png"
+    },
+    {
+      "char_number": "254",
+      "src": "images/image111.png"
+    },
+    {
+      "char_number": "255",
+      "src": "images/image178.png"
+    },
+    {
+      "char_number": "256",
+      "src": "images/image51.png"
+    },
+    {
+      "char_number": "257",
+      "src": "images/image66.png"
+    },
+    {
+      "char_number": "258",
+      "src": "images/image6.png"
+    },
+    {
+      "char_number": "259",
+      "src": "images/image144.png"
+    },
+    {
+      "char_number": "260",
+      "src": "images/image39.png"
+    },
+    {
+      "char_number": "261",
+      "src": "images/image16.png"
+    },
+    {
+      "char_number": "262",
+      "src": "images/image27.png"
+    },
+    {
+      "char_number": "270",
+      "src": "images/image168.png"
+    },
+    {
+      "char_number": "271",
+      "src": "images/image177.png"
+    },
+    {
+      "char_number": "272",
+      "src": "images/image170.png"
+    },
+    {
+      "char_number": "273",
+      "src": "images/image116.png"
+    },
+    {
+      "char_number": "274",
+      "src": "images/image24.png"
+    },
+    {
+      "char_number": "275",
+      "src": "images/image179.png"
+    },
+    {
+      "char_number": "276",
+      "src": "images/image93.png"
+    },
+    {
+      "char_number": "277",
+      "src": "images/image42.png"
+    },
+    {
+      "char_number": "278",
+      "src": "images/image184.png"
+    },
+    {
+      "char_number": "280",
+      "src": "images/image172.png"
+    },
+    {
+      "char_number": "283",
+      "src": "images/image131.png"
+    },
+    {
+      "char_number": "284",
+      "src": "images/image11.png"
+    },
+    {
+      "char_number": "285",
+      "src": "images/image151.png"
+    },
+    {
+      "char_number": "288",
+      "src": "images/image4.png"
+    },
+    {
+      "char_number": "291",
+      "src": "images/image173.png"
+    },
+    {
+      "char_number": "292",
+      "src": "images/image85.png"
+    },
+    {
+      "char_number": "293",
+      "src": "images/image95.png"
+    },
+    {
+      "char_number": "294",
+      "src": "images/image83.png"
+    },
+    {
+      "char_number": "295",
+      "src": "images/image94.png"
+    },
+    {
+      "char_number": "296",
+      "src": "images/image157.png"
+    },
+    {
+      "char_number": "297",
+      "src": "images/image61.png"
+    },
+    {
+      "char_number": "298",
+      "src": "images/image159.png"
+    },
+    {
+      "char_number": "299",
+      "src": "images/image20.png"
+    },
+    {
+      "char_number": "300",
+      "src": "images/image171.png"
+    },
+    {
+      "char_number": "301",
+      "src": "images/image40.png"
+    },
+    {
+      "char_number": "302",
+      "src": "images/image133.png"
+    },
+    {
+      "char_number": "303",
+      "src": "images/image174.png"
+    },
+    {
+      "char_number": "304",
+      "src": "images/image92.png"
+    },
+    {
+      "char_number": "305",
+      "src": "images/image107.png"
+    },
+    {
+      "char_number": "306",
+      "src": "images/image98.png"
+    },
+    {
+      "char_number": "307",
+      "src": "images/image129.png"
+    },
+    {
+      "char_number": "308",
+      "src": "images/image128.png"
+    },
+    {
+      "char_number": "309",
+      "src": "images/image52.png"
+    },
+    {
+      "char_number": "310",
+      "src": "images/image54.png"
+    },
+    {
+      "char_number": "311",
+      "src": "images/image164.png"
+    },
+    {
+      "char_number": "312",
+      "src": "images/image165.png"
+    },
+    {
+      "char_number": "313",
+      "src": "images/image127.png"
+    },
+    {
+      "char_number": "314",
+      "src": "images/image156.png"
+    },
+    {
+      "char_number": "315",
+      "src": "images/image141.png"
+    },
+    {
+      "char_number": "316",
+      "src": "images/image126.png"
+    },
+    {
+      "char_number": "317",
+      "src": "images/image149.png"
+    },
+    {
+      "char_number": "320",
+      "src": "images/image138.png"
+    },
+    {
+      "char_number": "321",
+      "src": "images/image162.png"
+    },
+    {
+      "char_number": "322",
+      "src": "images/image2.png"
+    },
+    {
+      "char_number": "324",
+      "src": "images/image136.png"
+    },
+    {
+      "char_number": "325",
+      "src": "images/image80.png"
+    },
+    {
+      "char_number": "326",
+      "src": "images/image152.png"
+    },
+    {
+      "char_number": "327",
+      "src": "images/image15.png"
+    },
+    {
+      "char_number": "328",
+      "src": "images/image175.png"
+    },
+    {
+      "char_number": "329",
+      "src": "images/image7.png"
+    },
+    {
+      "char_number": "330",
+      "src": "images/image110.png"
+    },
+    {
+      "char_number": "331",
+      "src": "images/image135.png"
+    },
+    {
+      "char_number": "332",
+      "src": "images/image13.png"
+    },
+    {
+      "char_number": "333",
+      "src": "images/image102.png"
+    },
+    {
+      "char_number": "334",
+      "src": "images/image155.png"
+    },
+    {
+      "char_number": "335",
+      "src": "images/image50.png"
+    },
+    {
+      "char_number": "336",
+      "src": "images/image75.png"
+    },
+    {
+      "char_number": "337",
+      "src": "images/image44.png"
+    },
+    {
+      "char_number": "338",
+      "src": "images/image49.png"
+    },
+    {
+      "char_number": "339",
+      "src": "images/image56.png"
+    },
+    {
+      "char_number": "340",
+      "src": "images/image35.png"
+    },
+    {
+      "char_number": "341",
+      "src": "images/image104.png"
+    },
+    {
+      "char_number": "342",
+      "src": "images/image153.png"
+    },
+    {
+      "char_number": "343",
+      "src": "images/image163.png"
+    },
+    {
+      "char_number": "344",
+      "src": "images/image88.png"
+    },
+    {
+      "char_number": "345",
+      "src": "images/image60.png"
+    },
+    {
+      "char_number": "346",
+      "src": "images/image100.png"
+    },
+    {
+      "char_number": "347",
+      "src": "images/image115.png"
+    },
+    {
+      "char_number": "348",
+      "src": "images/image137.png"
+    },
+    {
+      "char_number": "349",
+      "src": "images/image29.png"
+    },
+    {
+      "char_number": "350",
+      "src": "images/image76.png"
+    },
+    {
+      "char_number": "351",
+      "src": "images/image117.png"
+    },
+    {
+      "char_number": "352",
+      "src": "images/image58.png"
+    },
+    {
+      "char_number": "353",
+      "src": "images/image3.png"
+    },
+    {
+      "char_number": "354",
+      "src": "images/image73.png"
+    },
+    {
+      "char_number": "355",
+      "src": "images/image47.png"
+    },
+    {
+      "char_number": "356",
+      "src": "images/image158.png"
+    },
+    {
+      "char_number": "357",
+      "src": "images/image118.png"
+    },
+    {
+      "char_number": "358",
+      "src": "images/image122.png"
+    },
+    {
+      "char_number": "359",
+      "src": "images/image106.png"
+    },
+    {
+      "char_number": "360",
+      "src": "images/image123.png"
+    },
+    {
+      "char_number": "361",
+      "src": "images/image1.png"
+    },
+    {
+      "char_number": "362",
+      "src": "images/image28.png"
+    },
+    {
+      "char_number": "363",
+      "src": "images/image68.png"
+    },
+    {
+      "char_number": "364",
+      "src": "images/image41.png"
+    },
+    {
+      "char_number": "365",
+      "src": "images/image53.png"
+    },
+    {
+      "char_number": "366",
+      "src": "images/image108.png"
+    },
+    {
+      "char_number": "367",
+      "src": "images/image12.png"
+    },
+    {
+      "char_number": "368",
+      "src": "images/image81.png"
+    },
+    {
+      "char_number": "369",
+      "src": "images/image140.png"
+    },
+    {
+      "char_number": "370",
+      "src": "images/image19.png"
+    },
+    {
+      "char_number": "371",
+      "src": "images/image64.png"
+    },
+    {
+      "char_number": "372",
+      "src": "images/image119.png"
+    },
+    {
+      "char_number": "373",
+      "src": "images/image34.png"
+    },
+    {
+      "char_number": "374",
+      "src": "images/image180.png"
+    },
+    {
+      "char_number": "375",
+      "src": "images/image130.png"
+    },
+    {
+      "char_number": "376",
+      "src": "images/image90.png"
+    },
+    {
+      "char_number": "377",
+      "src": "images/image33.png"
+    },
+    {
+      "char_number": "378",
+      "src": "images/image182.png"
+    },
+    {
+      "char_number": "379",
+      "src": "images/image23.png"
+    },
+    {
+      "char_number": "380",
+      "src": "images/image120.png"
+    },
+    {
+      "char_number": "381",
+      "src": "images/image67.png"
+    },
+    {
+      "char_number": "382",
+      "src": "images/image63.png"
+    },
+    {
+      "char_number": "383",
+      "src": "images/image113.png"
+    },
+    {
+      "char_number": "384",
+      "src": "images/image74.png"
+    },
+    {
+      "char_number": "385",
+      "src": "images/image43.png"
+    },
+    {
+      "char_number": "386",
+      "src": "images/image69.png"
+    },
+    {
+      "char_number": "387",
+      "src": "images/image78.png"
+    },
+    {
+      "char_number": "388",
+      "src": "images/image8.png"
+    },
+    {
+      "char_number": "389",
+      "src": "images/image36.png"
+    },
+    {
+      "char_number": "390",
+      "src": "images/image22.png"
+    },
+    {
+      "char_number": "391",
+      "src": "images/image96.png"
+    },
+    {
+      "char_number": "392",
+      "src": "images/image10.png"
+    },
+    {
+      "char_number": "394",
+      "src": "images/image26.png"
+    },
+    {
+      "char_number": "395",
+      "src": "images/image86.png"
+    },
+    {
+      "char_number": "396",
+      "src": "images/image37.png"
+    },
+    {
+      "char_number": "397",
+      "src": "images/image143.png"
+    },
+    {
+      "char_number": "398",
+      "src": "images/image139.png"
+    },
+    {
+      "char_number": "400",
+      "src": "images/image148.png"
+    }
+  ],
+  "noImage": [
+    "269"
+  ],
+  "orphanedDiscarded": {
+    "201": [
+      "images/image9.png",
+      "images/image183.png"
+    ],
+    "288": [
+      "images/image161.png"
+    ]
+  },
+  "placeholdersSkipped": [
+    "267",
+    "268",
+    "279",
+    "281",
+    "282",
+    "286",
+    "287",
+    "289",
+    "290",
+    "318",
+    "319",
+    "323",
+    "393",
+    "399"
+  ]
+}

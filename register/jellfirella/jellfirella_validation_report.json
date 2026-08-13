@@ -1,0 +1,68 @@
+{
+  "summary": {
+    "total": 201,
+    "numRange": "000 ~ 200",
+    "duplicates": [],
+    "missing": [],
+    "starEntities": [
+      "033",
+      "036",
+      "037",
+      "059",
+      "089",
+      "144",
+      "150",
+      "175",
+      "178",
+      "179",
+      "180",
+      "192"
+    ],
+    "exceptionBApplied": [
+      { "num": "019", "expected": "클라론", "actual": "클라론", "ok": true },
+      { "num": "020", "expected": "퍼언", "actual": "퍼언", "ok": true },
+      { "num": "041", "expected": "로문", "actual": "로문", "ok": true },
+      { "num": "042", "expected": "로문", "actual": "로문", "ok": true }
+    ],
+    "generalCount": 53,
+    "specialCount": 148,
+    "defaultDesignerCount": 183,
+    "offsiteDesignerCount": 18,
+    "errors": [],
+    "issuesCount": 5,
+    "resolvedByPo": [
+      "054/137: 소유주 닉네임 없음 → 뽀 확인 결과 '새'로 확정",
+      "084/089/110/145/159/178/192: 독/능력 원문 표기 없음 → 뽀 확인 결과 공란이 맞음(파싱 오류 아님)",
+      "084/178: description 원문 없음 → 뽀 확인 결과 공란이 맞음(파싱 오류 아님)",
+      "200: 특수개체 뒤 '1세대 분양 끝' 문구로 문장 끝 규칙에 안 걸렸던 것 → 뽀 확인 결과 특수개체로 확정, classification 값 수정 반영",
+      "신규 규칙(뽀): description에 '~님 DA' 문구가 있으면 '~'가 디자이너(사이트오프). 이 규칙으로 144(오캉님 DA)/186(여우님 DA)/187(여우님 DA)/192(블래키님 DA) 4건이 기본 디자이너('새')로 잘못 들어가 있던 것을 발견해 designer_nickname 수정, designer_user_id=null, designer_is_site_user=false로 정정함. 041/042(블래키 로문DA 콜라보 개체)는 기존에 이미 '로문'으로 정확히 파싱되어 있었음(수정 불필요)."
+    ]
+  },
+  "issues": [
+    {
+      "ctx": "char_number=178",
+      "field": "entity",
+      "note": "이름/독/설명/이미지 전부 없음. 원문이 '‘에반스’ 님의 친구가 될 예정'(미래시제)으로 끝나는 미확정 예정 개체. 뽀 확인: 아직 확정 전이라 소유주는 '새'로 유지, 디자이너는 '에반스'(사이트오프) 유지. 이미지가 없어 대량등록 페이지에서 자동으로 등록 대상에서 제외됨(그 번호만 건너뛰고 등록)."
+    },
+    {
+      "ctx": "char_number=192",
+      "field": "designer",
+      "note": "* 개체라 예외A(소유주=디자이너, 사이트오프) 적용되어 소유주 표시는 '새'로 유지. description에 '블래키님 DA' 문구 있음 → 뽀 확인: '~님 DA' 규칙 적용해 designer_nickname을 '블래키'로 정정(사이트오프, designer_user_id=null). 해결됨."
+    },
+    {
+      "ctx": "char_number=19,77,184,186,187,190",
+      "field": "image",
+      "note": "문서에 이미지가 2개씩 존재. 문서 순서상 첫 번째를 대표 이미지(jellfi_XXX.png)로 선정하고 두 번째는 jellfi_XXX_alt.png로 별도 보관함. 19번은 콜라보 상대 종족과 함께 있는 그림이 두 번째라 첫 번째(단독 컷)를 선택한 것이 명확하나, 77/184/186/187/190은 두 이미지가 색상만 미세하게 다른 근접 변형이라 어느 쪽이 최종본인지 확인 필요"
+    },
+    {
+      "ctx": "char_number=084",
+      "field": "entity",
+      "note": "이름/소유주만 있고 독/능력, description 모두 원문 자체에 내용 없음(미완성 개체). 뽀 확인: 공란이 맞음 - 이미지는 있으므로 이름/소유주만으로 등록됨(독/능력, description은 비워둠)."
+    },
+    {
+      "ctx": "char_number=089,110,145,159,192",
+      "field": "poison",
+      "note": "독/능력 원문 표기 없음. 뽀 확인: 공란이 맞음 - custom_field_values에 '독/능력' 키 자체를 넣지 않고 등록됨."
+    }
+  ]
+}

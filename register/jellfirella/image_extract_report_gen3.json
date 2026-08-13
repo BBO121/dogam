@@ -1,0 +1,890 @@
+{
+  "convention": "이미지는 뒤따르는 [번호] 마커에 귀속 (이미지 먼저, 캡션 나중). 아기+성체 이중 이미지 개체는 첫 장을 대표, 둘째 장을 _alt로 보관.",
+  "copied": [
+    {
+      "char_number": "401",
+      "src": "images/image121.png"
+    },
+    {
+      "char_number": "402",
+      "src": "images/image85.png"
+    },
+    {
+      "char_number": "403",
+      "src": "images/image106.png"
+    },
+    {
+      "char_number": "404",
+      "src": "images/image140.png"
+    },
+    {
+      "char_number": "405",
+      "src": "images/image190.png"
+    },
+    {
+      "char_number": "406",
+      "src": "images/image65.png"
+    },
+    {
+      "char_number": "408",
+      "src": "images/image59.png"
+    },
+    {
+      "char_number": "409",
+      "src": "images/image28.png"
+    },
+    {
+      "char_number": "410",
+      "src": "images/image201.png"
+    },
+    {
+      "char_number": "411",
+      "src": "images/image171.png"
+    },
+    {
+      "char_number": "413",
+      "src": "images/image146.png"
+    },
+    {
+      "char_number": "414",
+      "src": "images/image78.png"
+    },
+    {
+      "char_number": "415",
+      "src": "images/image118.png"
+    },
+    {
+      "char_number": "416",
+      "src": "images/image112.png"
+    },
+    {
+      "char_number": "417",
+      "src": "images/image191.png"
+    },
+    {
+      "char_number": "418",
+      "src": "images/image147.png"
+    },
+    {
+      "char_number": "419",
+      "src": "images/image101.png"
+    },
+    {
+      "char_number": "420",
+      "src": "images/image82.png"
+    },
+    {
+      "char_number": "421",
+      "src": "images/image177.png"
+    },
+    {
+      "char_number": "422",
+      "src": "images/image142.png"
+    },
+    {
+      "char_number": "423",
+      "src": "images/image122.png"
+    },
+    {
+      "char_number": "424",
+      "src": "images/image196.png"
+    },
+    {
+      "char_number": "425",
+      "src": "images/image203.png"
+    },
+    {
+      "char_number": "426",
+      "src": "images/image17.png"
+    },
+    {
+      "char_number": "427",
+      "src": "images/image127.png"
+    },
+    {
+      "char_number": "428",
+      "src": "images/image141.png"
+    },
+    {
+      "char_number": "429",
+      "src": "images/image7.png"
+    },
+    {
+      "char_number": "430",
+      "src": "images/image115.png"
+    },
+    {
+      "char_number": "431",
+      "src": "images/image116.png"
+    },
+    {
+      "char_number": "432",
+      "src": "images/image30.png"
+    },
+    {
+      "char_number": "433",
+      "src": "images/image202.png"
+    },
+    {
+      "char_number": "434",
+      "src": "images/image48.png"
+    },
+    {
+      "char_number": "435",
+      "src": "images/image53.png"
+    },
+    {
+      "char_number": "436",
+      "src": "images/image137.png"
+    },
+    {
+      "char_number": "437",
+      "src": "images/image98.png"
+    },
+    {
+      "char_number": "438",
+      "src": "images/image192.png"
+    },
+    {
+      "char_number": "439",
+      "src": "images/image2.png"
+    },
+    {
+      "char_number": "440",
+      "src": "images/image130.png"
+    },
+    {
+      "char_number": "441",
+      "src": "images/image126.png"
+    },
+    {
+      "char_number": "442",
+      "src": "images/image34.png"
+    },
+    {
+      "char_number": "443",
+      "src": "images/image179.png"
+    },
+    {
+      "char_number": "444",
+      "src": "images/image161.png"
+    },
+    {
+      "char_number": "445",
+      "src": "images/image160.png"
+    },
+    {
+      "char_number": "446",
+      "src": "images/image103.png"
+    },
+    {
+      "char_number": "447",
+      "src": "images/image166.png"
+    },
+    {
+      "char_number": "448",
+      "src": "images/image10.png"
+    },
+    {
+      "char_number": "449",
+      "src": "images/image63.png"
+    },
+    {
+      "char_number": "450",
+      "src": "images/image168.png"
+    },
+    {
+      "char_number": "451",
+      "src": "images/image58.png"
+    },
+    {
+      "char_number": "452",
+      "src": "images/image6.png"
+    },
+    {
+      "char_number": "453",
+      "src": "images/image46.png"
+    },
+    {
+      "char_number": "454",
+      "src": "images/image42.png"
+    },
+    {
+      "char_number": "455",
+      "src": "images/image108.png"
+    },
+    {
+      "char_number": "456",
+      "src": "images/image45.png"
+    },
+    {
+      "char_number": "457",
+      "src": "images/image1.png"
+    },
+    {
+      "char_number": "458",
+      "src": "images/image3.png"
+    },
+    {
+      "char_number": "459",
+      "src": "images/image13.png"
+    },
+    {
+      "char_number": "460",
+      "src": "images/image80.png"
+    },
+    {
+      "char_number": "461",
+      "src": "images/image204.png"
+    },
+    {
+      "char_number": "462",
+      "src": "images/image88.png"
+    },
+    {
+      "char_number": "463",
+      "src": "images/image182.png"
+    },
+    {
+      "char_number": "464",
+      "src": "images/image120.png"
+    },
+    {
+      "char_number": "465",
+      "src": "images/image128.png"
+    },
+    {
+      "char_number": "466",
+      "src": "images/image170.png"
+    },
+    {
+      "char_number": "467",
+      "src": "images/image154.png"
+    },
+    {
+      "char_number": "468",
+      "src": "images/image54.png"
+    },
+    {
+      "char_number": "469",
+      "src": "images/image178.png",
+      "note": "아기 이미지(대표)"
+    },
+    {
+      "char_number": "470",
+      "src": "images/image208.png"
+    },
+    {
+      "char_number": "471",
+      "src": "images/image67.png"
+    },
+    {
+      "char_number": "472",
+      "src": "images/image49.png"
+    },
+    {
+      "char_number": "473",
+      "src": "images/image207.png"
+    },
+    {
+      "char_number": "474",
+      "src": "images/image41.png"
+    },
+    {
+      "char_number": "475",
+      "src": "images/image162.png"
+    },
+    {
+      "char_number": "476",
+      "src": "images/image157.png"
+    },
+    {
+      "char_number": "477",
+      "src": "images/image173.png"
+    },
+    {
+      "char_number": "478",
+      "src": "images/image123.png",
+      "note": "아기 이미지(대표)"
+    },
+    {
+      "char_number": "479",
+      "src": "images/image136.png"
+    },
+    {
+      "char_number": "480",
+      "src": "images/image165.png"
+    },
+    {
+      "char_number": "481",
+      "src": "images/image117.png"
+    },
+    {
+      "char_number": "482",
+      "src": "images/image149.png"
+    },
+    {
+      "char_number": "483",
+      "src": "images/image74.png"
+    },
+    {
+      "char_number": "484",
+      "src": "images/image20.png"
+    },
+    {
+      "char_number": "485",
+      "src": "images/image61.png"
+    },
+    {
+      "char_number": "486",
+      "src": "images/image76.png"
+    },
+    {
+      "char_number": "487",
+      "src": "images/image174.png"
+    },
+    {
+      "char_number": "488",
+      "src": "images/image198.png"
+    },
+    {
+      "char_number": "489",
+      "src": "images/image184.png"
+    },
+    {
+      "char_number": "490",
+      "src": "images/image77.png"
+    },
+    {
+      "char_number": "491",
+      "src": "images/image94.png"
+    },
+    {
+      "char_number": "492",
+      "src": "images/image29.png"
+    },
+    {
+      "char_number": "493",
+      "src": "images/image8.png"
+    },
+    {
+      "char_number": "494",
+      "src": "images/image14.png"
+    },
+    {
+      "char_number": "495",
+      "src": "images/image150.png"
+    },
+    {
+      "char_number": "496",
+      "src": "images/image81.png"
+    },
+    {
+      "char_number": "497",
+      "src": "images/image109.png"
+    },
+    {
+      "char_number": "498",
+      "src": "images/image99.png"
+    },
+    {
+      "char_number": "499",
+      "src": "images/image87.png"
+    },
+    {
+      "char_number": "500",
+      "src": "images/image32.png"
+    },
+    {
+      "char_number": "501",
+      "src": "images/image83.png"
+    },
+    {
+      "char_number": "502",
+      "src": "images/image25.png"
+    },
+    {
+      "char_number": "503",
+      "src": "images/image100.png"
+    },
+    {
+      "char_number": "504",
+      "src": "images/image107.png"
+    },
+    {
+      "char_number": "505",
+      "src": "images/image114.png"
+    },
+    {
+      "char_number": "506",
+      "src": "images/image44.png"
+    },
+    {
+      "char_number": "507",
+      "src": "images/image189.png"
+    },
+    {
+      "char_number": "508",
+      "src": "images/image144.png"
+    },
+    {
+      "char_number": "509",
+      "src": "images/image38.png"
+    },
+    {
+      "char_number": "510",
+      "src": "images/image66.png"
+    },
+    {
+      "char_number": "512",
+      "src": "images/image139.png"
+    },
+    {
+      "char_number": "513",
+      "src": "images/image31.png"
+    },
+    {
+      "char_number": "514",
+      "src": "images/image15.png"
+    },
+    {
+      "char_number": "515",
+      "src": "images/image200.png"
+    },
+    {
+      "char_number": "516",
+      "src": "images/image113.png"
+    },
+    {
+      "char_number": "517",
+      "src": "images/image36.png"
+    },
+    {
+      "char_number": "518",
+      "src": "images/image24.png"
+    },
+    {
+      "char_number": "519",
+      "src": "images/image133.png"
+    },
+    {
+      "char_number": "520",
+      "src": "images/image138.png"
+    },
+    {
+      "char_number": "521",
+      "src": "images/image18.png"
+    },
+    {
+      "char_number": "522",
+      "src": "images/image104.png"
+    },
+    {
+      "char_number": "523",
+      "src": "images/image158.png"
+    },
+    {
+      "char_number": "524",
+      "src": "images/image187.png"
+    },
+    {
+      "char_number": "525",
+      "src": "images/image206.png"
+    },
+    {
+      "char_number": "526",
+      "src": "images/image96.png",
+      "note": "아기 이미지(대표)"
+    },
+    {
+      "char_number": "527",
+      "src": "images/image72.png"
+    },
+    {
+      "char_number": "528",
+      "src": "images/image55.png"
+    },
+    {
+      "char_number": "529",
+      "src": "images/image151.png",
+      "note": "아기 이미지(대표)"
+    },
+    {
+      "char_number": "530",
+      "src": "images/image60.png"
+    },
+    {
+      "char_number": "531",
+      "src": "images/image35.png",
+      "note": "아기 이미지(대표)"
+    },
+    {
+      "char_number": "532",
+      "src": "images/image148.png"
+    },
+    {
+      "char_number": "533",
+      "src": "images/image131.png"
+    },
+    {
+      "char_number": "534",
+      "src": "images/image175.png"
+    },
+    {
+      "char_number": "535",
+      "src": "images/image43.png"
+    },
+    {
+      "char_number": "536",
+      "src": "images/image153.png"
+    },
+    {
+      "char_number": "537",
+      "src": "images/image97.png"
+    },
+    {
+      "char_number": "538",
+      "src": "images/image205.png",
+      "note": "아기 이미지(대표)"
+    },
+    {
+      "char_number": "539",
+      "src": "images/image33.png",
+      "note": "아기 이미지(대표)"
+    },
+    {
+      "char_number": "540",
+      "src": "images/image105.png",
+      "note": "아기 이미지(대표)"
+    },
+    {
+      "char_number": "541",
+      "src": "images/image155.png",
+      "note": "아기 이미지(대표)"
+    },
+    {
+      "char_number": "542",
+      "src": "images/image73.png"
+    },
+    {
+      "char_number": "543",
+      "src": "images/image79.png",
+      "note": "아기 이미지(대표)"
+    },
+    {
+      "char_number": "544",
+      "src": "images/image159.png",
+      "note": "아기 이미지(대표)"
+    },
+    {
+      "char_number": "545",
+      "src": "images/image124.png"
+    },
+    {
+      "char_number": "546",
+      "src": "images/image195.png"
+    },
+    {
+      "char_number": "547",
+      "src": "images/image91.png"
+    },
+    {
+      "char_number": "548",
+      "src": "images/image12.png"
+    },
+    {
+      "char_number": "549",
+      "src": "images/image143.png"
+    },
+    {
+      "char_number": "550",
+      "src": "images/image93.png"
+    },
+    {
+      "char_number": "551",
+      "src": "images/image19.png"
+    },
+    {
+      "char_number": "552",
+      "src": "images/image51.png"
+    },
+    {
+      "char_number": "554",
+      "src": "images/image163.png"
+    },
+    {
+      "char_number": "555",
+      "src": "images/image188.png"
+    },
+    {
+      "char_number": "556",
+      "src": "images/image90.png"
+    },
+    {
+      "char_number": "557",
+      "src": "images/image47.png"
+    },
+    {
+      "char_number": "558",
+      "src": "images/image167.png"
+    },
+    {
+      "char_number": "559",
+      "src": "images/image176.png"
+    },
+    {
+      "char_number": "560",
+      "src": "images/image193.png"
+    },
+    {
+      "char_number": "561",
+      "src": "images/image169.png"
+    },
+    {
+      "char_number": "562",
+      "src": "images/image84.png"
+    },
+    {
+      "char_number": "563",
+      "src": "images/image102.png"
+    },
+    {
+      "char_number": "564",
+      "src": "images/image62.png"
+    },
+    {
+      "char_number": "565",
+      "src": "images/image111.png"
+    },
+    {
+      "char_number": "566",
+      "src": "images/image5.png"
+    },
+    {
+      "char_number": "567",
+      "src": "images/image52.png"
+    },
+    {
+      "char_number": "568",
+      "src": "images/image4.png"
+    },
+    {
+      "char_number": "569",
+      "src": "images/image134.png"
+    },
+    {
+      "char_number": "570",
+      "src": "images/image27.png"
+    },
+    {
+      "char_number": "571",
+      "src": "images/image71.png"
+    },
+    {
+      "char_number": "572",
+      "src": "images/image50.png"
+    },
+    {
+      "char_number": "573",
+      "src": "images/image145.png"
+    },
+    {
+      "char_number": "574",
+      "src": "images/image86.png"
+    },
+    {
+      "char_number": "578",
+      "src": "images/image180.png"
+    },
+    {
+      "char_number": "579",
+      "src": "images/image68.png"
+    },
+    {
+      "char_number": "580",
+      "src": "images/image56.png"
+    },
+    {
+      "char_number": "581",
+      "src": "images/image95.png",
+      "note": "아기 이미지(대표)"
+    },
+    {
+      "char_number": "582",
+      "src": "images/image64.png"
+    },
+    {
+      "char_number": "583",
+      "src": "images/image194.png"
+    },
+    {
+      "char_number": "584",
+      "src": "images/image69.png",
+      "note": "아기 이미지(대표)"
+    },
+    {
+      "char_number": "585",
+      "src": "images/image16.png"
+    },
+    {
+      "char_number": "586",
+      "src": "images/image135.png"
+    },
+    {
+      "char_number": "587",
+      "src": "images/image21.png"
+    },
+    {
+      "char_number": "588",
+      "src": "images/image39.png"
+    },
+    {
+      "char_number": "589",
+      "src": "images/image70.png"
+    },
+    {
+      "char_number": "590",
+      "src": "images/image11.png"
+    },
+    {
+      "char_number": "591",
+      "src": "images/image199.png"
+    },
+    {
+      "char_number": "592",
+      "src": "images/image125.png"
+    },
+    {
+      "char_number": "593",
+      "src": "images/image110.png"
+    },
+    {
+      "char_number": "594",
+      "src": "images/image186.png"
+    },
+    {
+      "char_number": "595",
+      "src": "images/image9.png"
+    },
+    {
+      "char_number": "596",
+      "src": "images/image152.png"
+    },
+    {
+      "char_number": "597",
+      "src": "images/image164.png"
+    },
+    {
+      "char_number": "598",
+      "src": "images/image89.png"
+    },
+    {
+      "char_number": "599",
+      "src": "images/image129.png"
+    },
+    {
+      "char_number": "600",
+      "src": "images/image156.png"
+    }
+  ],
+  "copiedAlt": [
+    {
+      "char_number": "469",
+      "src": "images/image57.png",
+      "note": "성체 이미지(_alt)"
+    },
+    {
+      "char_number": "478",
+      "src": "images/image197.png",
+      "note": "성체 이미지(_alt)"
+    },
+    {
+      "char_number": "526",
+      "src": "images/image75.png",
+      "note": "성체 이미지(_alt)"
+    },
+    {
+      "char_number": "529",
+      "src": "images/image132.png",
+      "note": "성체 이미지(_alt)"
+    },
+    {
+      "char_number": "531",
+      "src": "images/image92.png",
+      "note": "성체 이미지(_alt)"
+    },
+    {
+      "char_number": "538",
+      "src": "images/image183.png",
+      "note": "성체 이미지(_alt)"
+    },
+    {
+      "char_number": "539",
+      "src": "images/image172.png",
+      "note": "성체 이미지(_alt)"
+    },
+    {
+      "char_number": "540",
+      "src": "images/image185.png",
+      "note": "성체 이미지(_alt)"
+    },
+    {
+      "char_number": "541",
+      "src": "images/image22.png",
+      "note": "성체 이미지(_alt)"
+    },
+    {
+      "char_number": "543",
+      "src": "images/image119.png",
+      "note": "성체 이미지(_alt)"
+    },
+    {
+      "char_number": "544",
+      "src": "images/image23.png",
+      "note": "성체 이미지(_alt)"
+    },
+    {
+      "char_number": "581",
+      "src": "images/image26.png",
+      "note": "성체 이미지(_alt)"
+    },
+    {
+      "char_number": "584",
+      "src": "images/image37.png",
+      "note": "성체 이미지(_alt)"
+    }
+  ],
+  "noImage": [
+    "407",
+    "412",
+    "511",
+    "553"
+  ],
+  "dualImageEntries": [
+    "469",
+    "478",
+    "526",
+    "529",
+    "531",
+    "538",
+    "539",
+    "540",
+    "541",
+    "543",
+    "544",
+    "581",
+    "584"
+  ],
+  "bannerDiscarded": {
+    "401": [
+      "images/image181.png",
+      "images/image40.png"
+    ]
+  },
+  "stillOrphaned": {
+    "401": [
+      "images/image181.png",
+      "images/image40.png"
+    ]
+  }
+}

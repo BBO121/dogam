@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <link rel="icon" href="../images/favicon.png" type="image/png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>젤피렐라 대량 등록 — 종족연구소</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .jf-wrap { max-width: 1200px; margin: 0 auto; padding: 24px 16px 60px; }
+    .jf-section {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+      padding: 18px 20px;
+      margin-bottom: 20px;
+    }
+    .jf-section h2 { font-size: 16px; margin: 0 0 12px; }
+    .jf-hint { font-size: 12px; color: var(--text-mute); margin: 4px 0 0; }
+    .jf-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .jf-stat {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: var(--bg-sub);
+    }
+    .jf-stat .n { font-size: 20px; font-weight: 700; }
+    .jf-stat .l { font-size: 11px; color: var(--text-mute); margin-top: 2px; }
+    .jf-badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:11px; font-weight:600; white-space:nowrap; }
+    .jf-badge.ok       { background:#dcfce7; color:#15803d; }
+    .jf-badge.check    { background:#fef9c3; color:#a16207; }
+    .jf-badge.nofile   { background:#fee2e2; color:#b91c1c; }
+    .jf-badge.exists   { background:#e5e7eb; color:#4b5563; }
+    .jf-badge.new      { background:#dbeafe; color:#1d4ed8; }
+    .jf-badge.done     { background:#dcfce7; color:#15803d; }
+    .jf-badge.fail     { background:#fee2e2; color:#b91c1c; }
+    .jf-table-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: var(--radius); }
+    table.jf-table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    table.jf-table th, table.jf-table td { padding: 7px 9px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; white-space: nowrap; }
+    table.jf-table th { background: var(--bg-sub); position: sticky; top: 0; }
+    table.jf-table td.wrap { white-space: normal; max-width: 260px; }
+    table.jf-table tr.row-fail { background: #fff7f7; }
+    .jf-inline-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .jf-inline-row input[type="number"] { width: 90px; }
+    .jf-log { font-size:12px; white-space:pre-wrap; background:var(--bg-sub); border:1px solid var(--border); border-radius:8px; padding:10px; max-height:220px; overflow-y:auto; margin-top:10px; }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">종족연구소</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    <main class="main">
+      <div class="jf-wrap">
+
+        <div class="breadcrumb" style="margin-bottom:20px;">
+          <a href="index.html">홈</a>
+          <span>/</span>
+          <a href="species-list.html">전체 종족</a>
+          <span>/</span>
+          <a href="species.html?id=176">젤피렐라</a>
+          <span>/</span>
+          <span>대량 등록</span>
+        </div>
+
+        <h1 class="register-title">젤피렐라 대량 등록</h1>
+        <p class="register-subtitle" style="margin-bottom:20px;">파싱 JSON + 이미지 폴더 → 자동 매칭 → 검증 → 소량 배치 등록</p>
+
+        <!-- 1. 파일 선택 -->
+        <div class="jf-section">
+          <h2>1. 파일 선택</h2>
+          <div class="form-group">
+            <label class="form-label" style="font-size:13px;">개체 JSON 파일 (jellfirella_parsed.json)</label>
+            <input type="file" id="jsonInput" accept="application/json,.json">
+            <p class="jf-hint" id="jsonStatus"></p>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label" style="font-size:13px;">이미지 폴더 (register/jellfirella/images)</label>
+            <input type="file" id="imagesInput" webkitdirectory multiple>
+            <p class="jf-hint" id="imagesStatus"></p>
+          </div>
+          <button type="button" class="btn-field-add" style="margin-top:14px;" onclick="buildPreview()">미리보기 / 검증 실행</button>
+          <p class="auth-error" id="prepError" style="white-space:pre-line;"></p>
+        </div>
+
+        <!-- 2. 검증 결과 -->
+        <div class="jf-section" id="statsSection" style="display:none;">
+          <h2>2. 검증 결과 (실제 등록 아님 — 통계만 계산)</h2>
+          <div class="jf-stats-grid" id="statsGrid"></div>
+        </div>
+
+        <!-- 3. 미리보기 테이블 -->
+        <div class="jf-section" id="previewSection" style="display:none;">
+          <h2>3. 개체별 미리보기</h2>
+
+          <p class="jf-hint" id="issuesCount" style="margin-bottom:8px; font-weight:600; color:var(--text);"></p>
+          <div class="jf-table-wrap" style="margin-bottom:16px;">
+            <table class="jf-table">
+              <thead id="previewTheadIssues"></thead>
+              <tbody id="previewBodyIssues"></tbody>
+            </table>
+          </div>
+
+          <details id="normalDetails">
+            <summary id="normalSummary" style="cursor:pointer; font-size:13px; font-weight:600; color:var(--text-sub); margin-bottom:8px;"></summary>
+            <div class="jf-table-wrap" style="margin-top:10px;">
+              <table class="jf-table">
+                <thead id="previewTheadNormal"></thead>
+                <tbody id="previewBodyNormal"></tbody>
+              </table>
+            </div>
+          </details>
+        </div>
+
+        <!-- 4. 배치 등록 -->
+        <div class="jf-section" id="batchSection" style="display:none;">
+          <h2>4. 배치 등록</h2>
+          <p class="jf-hint" style="margin-bottom:10px;">검증 상태가 "정상"이고, 아직 DB에 없는(char_number 미존재) 행만 실제로 등록됩니다. 나머지는 자동으로 건너뜁니다.</p>
+          <div class="jf-inline-row" style="margin-bottom:12px;">
+            <label style="font-size:13px;">시작 개체번호</label>
+            <input type="number" id="rangeStart" class="form-input" min="0" value="0">
+            <label style="font-size:13px;">끝 개체번호</label>
+            <input type="number" id="rangeEnd" class="form-input" min="0" value="9">
+            <button type="button" class="btn-secondary" onclick="checkDupInRange()">범위 내 중복 확인</button>
+            <button type="button" class="btn-secondary" id="registerBtn" onclick="runBatchRegister()">이 범위 등록 실행</button>
+          </div>
+          <div id="batchProgressWrap" style="display:none; margin-bottom:10px;">
+            <div style="background:var(--border); border-radius:99px; height:8px; margin-bottom:8px; overflow:hidden;">
+              <div id="batchProgressBar" style="height:100%; background:var(--sky); width:0%; transition:width 0.3s; border-radius:99px;"></div>
+            </div>
+            <p id="batchProgressText" style="font-size:13px; color:var(--text-sub);"></p>
+          </div>
+          <div class="jf-log" id="batchLog" style="display:none;"></div>
+        </div>
+
+        <!-- 5. 데이터 보정 — 소유주 사이트유저 자동매칭 버그 수정 (1회성) -->
+        <div class="jf-section" id="repairSection">
+          <h2>5. 데이터 보정 — 소유주 전체 사이트오프로 되돌리기 (1회성)</h2>
+          <p class="jf-hint" style="margin-bottom:10px;">
+            버그로 인해 소유주 닉네임이 사이트 유저 닉네임과 우연히 같으면 그 유저 계정으로 잘못 연결(owner_user_id 채워짐)된 채 등록된 개체들이 있어요.
+            소유주는 '새'를 포함해 전부 사이트오프여야 합니다. 아래 버튼을 누르면 이 종족의 개체 중 owner_user_id가 채워진 행을 전부
+            owner_user_id = null / owner_is_offsite = true 로 되돌립니다(owner_nickname 텍스트는 그대로 유지). 새로 등록되는 개체는
+            위 로직 수정으로 이미 처음부터 사이트오프로 등록돼요.
+          </p>
+          <button type="button" class="btn-secondary" id="repairOwnerBtn" onclick="repairOwnerOffsite()">소유주 사이트오프 일괄 보정 실행</button>
+          <div class="jf-log" id="repairLog" style="display:none;"></div>
+        </div>
+
+        <!-- 6. 데이터 보정 — 추가 이미지(_alt) 업로드 (1회성) -->
+        <div class="jf-section" id="extraImageRepairSection">
+          <h2>6. 데이터 보정 — 추가 이미지(_alt) 업로드 (1회성)</h2>
+          <p class="jf-hint" style="margin-bottom:10px;">
+            아기/성체처럼 이미지가 2장인 개체는 대표 이미지 외 나머지가 로컬에 "jellfi_XXX_alt.png"로 있어도 지금까지는 등록 시 무시됐어요(버그).
+            위 "2. 이미지 폴더"에서 폴더를 다시 선택한 상태(_alt 파일 포함)에서 아래 버튼을 누르면, 이미 이 종족으로 등록됐고
+            additional_images가 비어있는 개체 중 로컬에 _alt 파일이 있는 것만 찾아서 개별 등록 페이지와 동일한 방식(원본+워터마크 적용본)으로
+            추가 이미지 업로드 후 해당 행의 additional_images를 채웁니다.
+          </p>
+          <button type="button" class="btn-secondary" id="extraImageRepairBtn" onclick="repairAdditionalImages()">추가 이미지 일괄 업로드 실행</button>
+          <div class="jf-log" id="extraImageRepairLog" style="display:none;"></div>
+        </div>
+
+        <!-- 7. 데이터 보정 — 분류(일반/특수개체) 재판정 (1회성) -->
+        <div class="jf-section" id="classificationRepairSection">
+          <h2>7. 데이터 보정 — 분류(일반/특수개체) 재판정 (1회성)</h2>
+          <p class="jf-hint" style="margin-bottom:10px;">
+            "2세대는 전부 특수개체"로 등록했던 걸 철회하고, 1세대와 동일한 원래 규칙으로 되돌립니다:
+            description에 "특수(개체)로 분류되었습니다" 문구가 있으면 특수개체, 없으면 일반개체. 아래 버튼을 누르면
+            이 종족의 등록된 개체 전체를 훑어서 이 규칙과 다르게 분류된 행만 char_categories를 정정합니다.
+          </p>
+          <button type="button" class="btn-secondary" id="classificationRepairBtn" onclick="repairClassification()">분류 재판정 일괄 실행</button>
+          <div class="jf-log" id="classificationRepairLog" style="display:none;"></div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p>© 2026 종족연구소 &nbsp;·&nbsp; <a href="terms.html">약관</a> &nbsp;·&nbsp; <a href="credits.html">운영진</a> &nbsp;·&nbsp; ver.2.1</p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/chat.js"></script>
+  <script src="../js/main.js"></script>
+  <script src="../js/utils.js"></script>
+  <script>
+    // ── 젤피렐라 대량 등록 전용 설정 ──────────────────────────────
+    const SPECIES_ID    = 176;
+    const SPECIES_NAME  = '젤피렐라';
+    const DEFAULT_DESIGNER_NICK    = '새';
+    const POISON_FIELD_KEY = '독/능력';
+
+    let categoryCatalog = new Map(); // label -> color
+    let speciesWatermarkUrl = null;
+    let allImageFiles = []; // File[] (webkitdirectory로 선택된 전체, jellfi_ 접두사만)
+    let allAltImageFiles = []; // File[] (jellfi_XXX_alt 접두사만, 추가 이미지 보정용)
+    let jsonRawItems = []; // 로드된 JSON 그대로
+    let rows = []; // 분석된 행 배열
+
+    async function initPage() {
+      const user = await getUser();
+      if (!user) { window.location.href = 'login.html'; return; }
+      const role = user.user_metadata?.role;
+      if (!isAdminOrStaff(role)) { window.location.href = 'index.html'; return; }
+
+      const [{ data: sp }, { data: existingChars }] = await Promise.all([
+        sb.from('species').select('owner_user_id').eq('id', SPECIES_ID).single(),
+        sb.from('characters').select('char_categories').eq('species_name', SPECIES_NAME).not('char_categories', 'is', null),
+      ]);
+
+      if (sp?.owner_user_id) {
+        const { data: profile } = await sb.from('user_profiles')
+          .select('watermark_url').eq('user_id', sp.owner_user_id).maybeSingle();
+        speciesWatermarkUrl = profile?.watermark_url || null;
+      }
+
+      // character-register.html의 loadExistingCategories()와 동일한 방식: 특정 개체 하나에만 의존하지 않고
+      // 이 종족에 이미 등록된 모든 개체의 char_categories를 훑어서 라벨→색상 카탈로그를 만든다.
+      (existingChars || []).forEach(c => (c.char_categories || []).forEach(cat => {
+        if (cat.label) categoryCatalog.set(cat.label, cat.color);
+      }));
+      // 아직 등록된 개체가 하나도 없거나(=최초 등록) 카탈로그에서 특수개체 라벨을 못 찾은 경우를 대비한 기본값.
+      // (기존 예시 개체 000번 아샤에서 확인된 라벨/색상)
+      if (!categoryCatalog.has('일반개체')) categoryCatalog.set('일반개체', '#4a90d9');
+      if (!categoryCatalog.has('특수개체')) categoryCatalog.set('특수개체', '#87ceeb');
+    }
+
+    // ── 파일 로드 ──────────────────────────────
+    document.getElementById('jsonInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      const statusEl = document.getElementById('jsonStatus');
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const parsed = JSON.parse(ev.target.result);
+          if (!Array.isArray(parsed)) throw new Error('JSON 최상위는 배열이어야 해요.');
+          jsonRawItems = parsed;
+          statusEl.textContent = `${jsonRawItems.length}개 항목 로드됨`;
+          statusEl.style.color = 'var(--sky-deep)';
+        } catch (err) {
+          jsonRawItems = [];
+          statusEl.textContent = 'JSON 파싱 실패: ' + err.message;
+          statusEl.style.color = '#ef4444';
+        }
+      };
+      reader.readAsText(file, 'utf-8');
+    });
+
+    document.getElementById('imagesInput').addEventListener('change', (e) => {
+      allImageFiles = [...e.target.files].filter(f => /^jellfi_\d+\.(png|jpg|jpeg|webp|gif)$/i.test(f.name));
+      allAltImageFiles = [...e.target.files].filter(f => /^jellfi_\d+_alt\.(png|jpg|jpeg|webp|gif)$/i.test(f.name));
+      document.getElementById('imagesStatus').textContent =
+        `${e.target.files.length}개 파일 선택됨 (jellfi_XXX 형식 매칭 ${allImageFiles.length}개, _alt 파일 ${allAltImageFiles.length}개는 대표 등록 시엔 무시되고 아래 6번 추가 이미지 보정에서만 사용됨)`;
+    });
+
+    function findImageFile(char_number) {
+      return allImageFiles.find(f => f.name.toLowerCase() === `jellfi_${char_number}.png`.toLowerCase())
+        || allImageFiles.find(f => new RegExp(`^jellfi_${char_number}\\.`, 'i').test(f.name));
+    }
+
+    function findAltImageFile(char_number) {
+      return allAltImageFiles.find(f => f.name.toLowerCase() === `jellfi_${char_number}_alt.png`.toLowerCase())
+        || allAltImageFiles.find(f => new RegExp(`^jellfi_${char_number}_alt\\.`, 'i').test(f.name));
+    }
+
+    // ── 행 빌드 ──────────────────────────────
+    function buildRows() {
+      return jsonRawItems.map((it) => {
+        const char_number = String(it.char_number || '').padStart(3, '0');
+        const file = findImageFile(char_number);
+
+        const categoryHit = it.classification ? categoryCatalog.get(it.classification) : null;
+        const categoryOk = !it.classification || !!categoryHit;
+
+        // issues: 등록을 막는 실제 문제(이미지/이름/소유주 없음, 분류 라벨 불일치).
+        // notes: 뽀가 이미 "원문 자체가 공란이 맞다"고 확인해준 항목 — 정보성으로만 표시하고 등록은 막지 않음.
+        const issues = [];
+        if (!file) issues.push('이미지 없음');
+        if (!it.name) issues.push('이름 없음');
+        if (!it.owner_nickname) issues.push('소유주 없음');
+        if (it.classification && !categoryOk) issues.push(`분류 라벨 매칭 실패: ${it.classification}`);
+
+        const notes = [];
+        if (!it.description) notes.push('description 없음(원문 공란 확인됨)');
+        if (!it.poison) notes.push('독/능력 없음(원문 공란 확인됨)');
+
+        return {
+          char_number,
+          name: it.name || '',
+          poison: it.poison || null,
+          owner_nickname: it.owner_nickname || '',
+          // 소유주는 '새'를 포함해 전부 사이트오프로 등록한다 — 사이트 유저 자동매칭을 하지 않는다.
+          // (닉네임이 사이트 유저와 우연히 같아도 실제로는 동일인이 아닌 경우가 많음)
+          owner_user_id: null,
+          owner_is_offsite: true,
+          designer_nickname: it.designer_nickname || DEFAULT_DESIGNER_NICK,
+          designer_user_id: it.designer_user_id || null,
+          designer_is_site_user: !!it.designer_is_site_user,
+          classification: it.classification || null,
+          category: categoryHit ? { label: it.classification, color: categoryHit } : null,
+          description: it.description || '',
+          file,
+          issues,
+          notes,
+          get overallOk() { return this.issues.length === 0; },
+          dbStatus: 'unknown', // unknown | new | exists
+          regStatus: 'pending', // pending | skipped | done | failed
+          regError: '',
+        };
+      });
+    }
+
+    // ── 통계 ──────────────────────────────
+    function computeStats() {
+      const validCount = rows.length;
+      const normal     = rows.filter(r => r.overallOk).length;
+      const needCheck  = rows.filter(r => !r.overallOk).length;
+      const noFile     = rows.filter(r => !r.file).length;
+      const general    = rows.filter(r => r.classification === '일반개체').length;
+      const special    = rows.filter(r => r.classification === '특수개체').length;
+      const defaultDesigner = rows.filter(r => r.designer_nickname === DEFAULT_DESIGNER_NICK && r.designer_is_site_user).length;
+      const offsiteDesigner = rows.filter(r => !r.designer_is_site_user).length;
+
+      const numSet = new Set(rows.map(r => r.char_number));
+      const orphanFiles = allImageFiles.filter(f => {
+        const m = f.name.match(/^jellfi_(\d+)\./i);
+        return !m || !numSet.has(m[1].padStart(3, '0'));
+      });
+
+      return { validCount, normal, needCheck, noFile, general, special, defaultDesigner, offsiteDesigner, orphanFiles };
+    }
+
+    function renderStats(stats) {
+      const grid = document.getElementById('statsGrid');
+      const items = [
+        ['JSON 개체 수', stats.validCount],
+        ['정상 매칭', stats.normal],
+        ['확인 필요', stats.needCheck],
+        ['이미지 파일 없음', stats.noFile],
+        ['일반개체', stats.general],
+        ['특수개체', stats.special],
+        ['기본 디자이너(새)', stats.defaultDesigner],
+        ['사이트오프 디자이너', stats.offsiteDesigner],
+        ['고아 이미지(JSON에 없음)', stats.orphanFiles.length],
+      ];
+      grid.innerHTML = items.map(([l, n]) => `
+        <div class="jf-stat"><div class="n">${n}</div><div class="l">${l}</div></div>
+      `).join('');
+      document.getElementById('statsSection').style.display = '';
+      if (stats.orphanFiles.length) {
+        console.warn('[고아 이미지]', stats.orphanFiles.map(f => f.name));
+      }
+    }
+
+    const DB_LABEL = {
+      unknown: '<span class="jf-badge check">미확인</span>',
+      new: '<span class="jf-badge new">신규</span>',
+      exists: '<span class="jf-badge exists">이미 등록됨</span>',
+    };
+    const REG_LABEL = {
+      pending: '-',
+      skipped: '<span class="jf-badge exists">건너뜀</span>',
+      done: '<span class="jf-badge done">등록완료</span>',
+      failed: '<span class="jf-badge fail">실패</span>',
+    };
+
+    const PREVIEW_THEAD_HTML = `
+      <tr>
+        <th>번호</th>
+        <th>이름</th>
+        <th>소유주</th>
+        <th>독/능력</th>
+        <th>분류</th>
+        <th>디자이너</th>
+        <th>이미지</th>
+        <th>확인사항</th>
+        <th>DB 상태</th>
+        <th>등록 상태</th>
+      </tr>`;
+
+    function renderRowHtml(r) {
+      const ownerText = r.owner_nickname
+        ? `${r.owner_nickname}${r.owner_user_id ? '' : ' <span class="jf-hint">(사이트 밖)</span>'}`
+        : '<span style="color:#ef4444;">(없음)</span>';
+      const designerText = `${r.designer_nickname}${r.designer_is_site_user ? '' : ' <span class="jf-hint">(사이트오프)</span>'}`;
+      const imgText = r.file ? `✅ ${r.file.name}` : '❌ 없음';
+      const issuesText = [...r.issues, ...r.notes].length ? [...r.issues, ...r.notes].join(', ') : '-';
+      return `
+      <tr class="${r.overallOk ? '' : 'row-fail'}" data-num="${r.char_number}">
+        <td>${r.char_number}</td>
+        <td class="wrap">${r.name || '<span style="color:#ef4444;">(없음)</span>'}</td>
+        <td class="wrap">${ownerText}</td>
+        <td>${r.poison || '-'}</td>
+        <td>${r.classification || '-'}</td>
+        <td class="wrap">${designerText}</td>
+        <td>${imgText}</td>
+        <td class="wrap">${issuesText}</td>
+        <td class="db-cell">${DB_LABEL[r.dbStatus]}</td>
+        <td class="reg-cell">${REG_LABEL[r.regStatus]}</td>
+      </tr>`;
+    }
+
+    // 정상 행은 접이식(details)으로 숨기고, 확인이 필요한 행(정상이 아닌 전부)만 바로 보이게 렌더링한다.
+    function renderPreview() {
+      const issues = rows.filter(r => !r.overallOk);
+      const normal = rows.filter(r => r.overallOk);
+
+      document.getElementById('previewTheadIssues').innerHTML = PREVIEW_THEAD_HTML;
+      document.getElementById('previewTheadNormal').innerHTML = PREVIEW_THEAD_HTML;
+      document.getElementById('previewBodyIssues').innerHTML = issues.map(renderRowHtml).join('');
+      document.getElementById('previewBodyNormal').innerHTML = normal.map(renderRowHtml).join('');
+
+      document.getElementById('issuesCount').textContent = `확인 필요 등 ${issues.length}건`;
+      document.getElementById('normalSummary').textContent = `정상 ${normal.length}건 (펼치기)`;
+
+      document.getElementById('previewSection').style.display = '';
+      document.getElementById('batchSection').style.display = '';
+    }
+
+    async function buildPreview() {
+      const errorEl = document.getElementById('prepError');
+      errorEl.textContent = '';
+      if (!jsonRawItems.length) { errorEl.textContent = 'JSON 파일을 먼저 선택해주세요.'; return; }
+      if (!allImageFiles.length) { errorEl.textContent = '이미지 폴더를 먼저 선택해주세요.'; return; }
+      if (!categoryCatalog.size) { errorEl.textContent = '분류 카탈로그를 불러오지 못했어요. 페이지를 새로고침해주세요.'; return; }
+
+      rows = buildRows();
+      const stats = computeStats();
+      renderStats(stats);
+      renderPreview();
+
+      const maxNum = Math.max(...rows.map(r => parseInt(r.char_number, 10)));
+      document.getElementById('rangeEnd').max = maxNum;
+      document.getElementById('rangeStart').max = maxNum;
+    }
+
+    // ── 중복 확인 ──────────────────────────────
+    async function checkDupInRange() {
+      const start = parseInt(document.getElementById('rangeStart').value, 10);
+      const end   = parseInt(document.getElementById('rangeEnd').value, 10);
+      const target = rows.filter(r => {
+        const n = parseInt(r.char_number, 10);
+        return n >= start && n <= end;
+      });
+      if (!target.length) return;
+
+      const { data, error } = await sb.from('characters')
+        .select('char_number')
+        .eq('species_name', SPECIES_NAME)
+        .in('char_number', target.map(r => r.char_number));
+      if (error) { document.getElementById('prepError').textContent = `중복 확인 실패: ${error.message}`; return; }
+
+      const existing = new Set((data || []).map(r => r.char_number));
+      target.forEach(r => { r.dbStatus = existing.has(r.char_number) ? 'exists' : 'new'; });
+      renderPreview();
+    }
+
+    // ── 개체 1건 등록 (기존 등록 파이프라인과 동일한 compressImage/applyWatermark/autoCenterCropToBlob 재사용) ──
+    async function registerRow(row) {
+      const wmSrc = speciesWatermarkUrl || '../images/watermark.png';
+      const ts = Date.now(), rnd = Math.random().toString(36).slice(2);
+      const file = row.file;
+      const isGif = file.type === 'image/gif';
+      const ext = isGif ? 'gif' : 'jpg';
+      const blob = await compressImage(file);
+
+      const origName = `jf${row.char_number}_${ts}_${rnd}_orig.${ext}`;
+      const { error: origErr } = await sb.storage.from('images').upload(origName, blob, { contentType: isGif ? 'image/gif' : 'image/jpeg' });
+      if (origErr) throw new Error(`원본 업로드 실패: ${origErr.message}`);
+      const original_image_url = sb.storage.from('images').getPublicUrl(origName).data.publicUrl;
+
+      let image_url, watermark_type = null;
+      if (isGif) {
+        image_url = original_image_url;
+      } else {
+        const wmBlob = await applyWatermark(blob, wmSrc);
+        const mainName = `jf${row.char_number}_${ts}_${rnd}.jpg`;
+        const { error: mainErr } = await sb.storage.from('images').upload(mainName, wmBlob, { contentType: 'image/jpeg' });
+        if (mainErr) throw new Error(`워터마크 이미지 업로드 실패: ${mainErr.message}`);
+        image_url = sb.storage.from('images').getPublicUrl(mainName).data.publicUrl;
+        watermark_type = speciesWatermarkUrl ? 'personal' : 'lab_black';
+      }
+
+      const thumbBlob = await autoCenterCropToBlob(file, 3 / 4, 600, 0.85);
+      const thumbName = `jf${row.char_number}_${ts}_${rnd}_thumb.jpg`;
+      const { error: thumbErr } = await sb.storage.from('images').upload(thumbName, thumbBlob, { contentType: 'image/jpeg' });
+      if (thumbErr) throw new Error(`썸네일 업로드 실패: ${thumbErr.message}`);
+      const thumbnail_url = sb.storage.from('images').getPublicUrl(thumbName).data.publicUrl;
+
+      const designerUserIds = row.designer_is_site_user && row.designer_user_id ? [row.designer_user_id] : [];
+      const designerExternal = row.designer_is_site_user ? [] : [{ name: row.designer_nickname, contact: '' }];
+
+      const { data: inserted, error: insErr } = await sb.from('characters').insert({
+        name: row.name,
+        species_name: SPECIES_NAME,
+        char_number: row.char_number,
+        owner_nickname: row.owner_nickname || '(미상)',
+        owner_user_id: row.owner_user_id,
+        owner_is_offsite: row.owner_is_offsite,
+        designer_nickname: row.designer_nickname,
+        designer_user_ids: designerUserIds,
+        designer_external: designerExternal,
+        description: row.description || null,
+        custom_field_values: row.poison ? { [POISON_FIELD_KEY]: row.poison } : null,
+        char_categories: row.category ? [row.category] : null,
+        image_url, thumbnail_url, original_image_url,
+        ...(watermark_type ? { watermark_type } : {}),
+      }).select('id').single();
+      if (insErr) throw new Error(`DB 저장 실패: ${insErr.message}`);
+
+      return inserted.id;
+    }
+
+    function logBatch(msg) {
+      const log = document.getElementById('batchLog');
+      log.style.display = '';
+      log.textContent += msg + '\n';
+      log.scrollTop = log.scrollHeight;
+    }
+
+    async function runBatchRegister() {
+      const errorEl = document.getElementById('prepError');
+      errorEl.textContent = '';
+      const start = parseInt(document.getElementById('rangeStart').value, 10);
+      const end   = parseInt(document.getElementById('rangeEnd').value, 10);
+      if (Number.isNaN(start) || Number.isNaN(end) || end < start) { errorEl.textContent = '시작/끝 개체번호를 올바르게 입력해주세요.'; return; }
+
+      await checkDupInRange();
+
+      const target = rows.filter(r => {
+        const n = parseInt(r.char_number, 10);
+        return n >= start && n <= end;
+      });
+
+      const toRegister = target.filter(r => r.overallOk && r.dbStatus === 'new');
+      const skipped = target.filter(r => !(r.overallOk && r.dbStatus === 'new'));
+      skipped.forEach(r => { r.regStatus = 'skipped'; });
+      renderPreview();
+
+      if (!toRegister.length) {
+        errorEl.textContent = '이 범위에 실제로 등록할 항목이 없어요 (검증 실패 또는 이미 등록됨).';
+        return;
+      }
+
+      const ok = confirm(`${toRegister.length}건을 실제로 등록합니다 (범위 내 ${target.length}건 중 ${skipped.length}건은 자동 건너뜀). 계속할까요?`);
+      if (!ok) return;
+
+      const btn = document.getElementById('registerBtn');
+      btn.disabled = true;
+      const progressWrap = document.getElementById('batchProgressWrap');
+      const progressBar  = document.getElementById('batchProgressBar');
+      const progressText = document.getElementById('batchProgressText');
+      progressWrap.style.display = '';
+      document.getElementById('batchLog').textContent = '';
+
+      let done = 0;
+      for (const row of toRegister) {
+        progressText.textContent = `${done + 1} / ${toRegister.length} 처리 중... (${row.char_number} ${row.name})`;
+        try {
+          const newId = await registerRow(row);
+          row.regStatus = 'done';
+          logBatch(`✅ ${row.char_number} ${row.name} → id=${newId}`);
+        } catch (err) {
+          row.regStatus = 'failed';
+          row.regError = err.message;
+          logBatch(`❌ ${row.char_number} ${row.name} 실패: ${err.message}`);
+        }
+        done++;
+        progressBar.style.width = `${(done / toRegister.length) * 100}%`;
+        renderPreview();
+      }
+
+      progressText.textContent = `완료 — ${toRegister.length}건 시도 (성공 ${toRegister.filter(r=>r.regStatus==='done').length} / 실패 ${toRegister.filter(r=>r.regStatus==='failed').length})`;
+      btn.disabled = false;
+    }
+
+    // ── 5. 데이터 보정: 소유주 사이트유저 자동매칭 버그로 잘못 연결된 owner_user_id 되돌리기 (1회성) ──────────────────────────────
+    function logRepair(msg) {
+      const log = document.getElementById('repairLog');
+      log.style.display = '';
+      log.textContent += msg + '\n';
+      log.scrollTop = log.scrollHeight;
+    }
+
+    async function repairOwnerOffsite() {
+      const { data: targets, error: fetchErr } = await sb.from('characters')
+        .select('id, char_number, name, owner_nickname')
+        .eq('species_name', SPECIES_NAME)
+        .not('owner_user_id', 'is', null);
+      if (fetchErr) { document.getElementById('repairLog').style.display = ''; logRepair(`❌ 대상 조회 실패: ${fetchErr.message}`); return; }
+
+      if (!targets.length) {
+        document.getElementById('repairLog').style.display = '';
+        logRepair('보정할 대상이 없어요 — 이미 전부 사이트오프예요.');
+        return;
+      }
+
+      const ok = confirm(`owner_user_id가 채워진 개체 ${targets.length}건을 owner_user_id=null / owner_is_offsite=true 로 되돌립니다(owner_nickname 텍스트는 그대로 유지). 계속할까요?`);
+      if (!ok) return;
+
+      const btn = document.getElementById('repairOwnerBtn');
+      btn.disabled = true;
+      document.getElementById('repairLog').textContent = '';
+      logRepair(`대상 ${targets.length}건 조회됨`);
+
+      const { error: updErr } = await sb.from('characters')
+        .update({ owner_user_id: null, owner_is_offsite: true })
+        .eq('species_name', SPECIES_NAME)
+        .not('owner_user_id', 'is', null);
+
+      if (updErr) {
+        logRepair(`❌ 일괄 보정 실패: ${updErr.message}`);
+      } else {
+        targets.forEach(t => logRepair(`✅ ${t.char_number} ${t.name} (${t.owner_nickname}) 사이트오프로 보정됨`));
+        logRepair(`완료 — ${targets.length}건 보정됨.`);
+      }
+      btn.disabled = false;
+    }
+
+    // ── 6. 데이터 보정: _alt 이미지를 additional_images로 업로드 (1회성) ──────────────────────────────
+    function logExtra(msg) {
+      const log = document.getElementById('extraImageRepairLog');
+      log.style.display = '';
+      log.textContent += msg + '\n';
+      log.scrollTop = log.scrollHeight;
+    }
+
+    // gen1의 019/077/184/186/187/190번은 "색상만 다른 중복 변형" _alt 이미지라 원래부터 등록에 안 쓰기로 한 것들.
+    // 아래 화이트리스트는 gen3의 "아기/성체" 2장 구조라 실제로 additional_images에 올려야 하는 13건만 명시적으로 지정.
+    const EXTRA_IMAGE_WHITELIST = ['469','478','526','529','531','538','539','540','541','543','544','581','584'];
+
+    async function repairAdditionalImages() {
+      const logEl = document.getElementById('extraImageRepairLog');
+      logEl.style.display = '';
+      logEl.textContent = '';
+
+      if (!allAltImageFiles.length) {
+        logExtra('❌ 로컬 _alt 이미지가 로드되지 않았어요. 위 "2. 이미지 폴더"에서 jellfi_XXX_alt.png 파일이 포함된 폴더를 다시 선택해주세요.');
+        return;
+      }
+
+      const { data: candidates, error: fetchErr } = await sb.from('characters')
+        .select('id, char_number, name')
+        .eq('species_name', SPECIES_NAME)
+        .is('additional_images', null)
+        .in('char_number', EXTRA_IMAGE_WHITELIST);
+      if (fetchErr) { logExtra(`❌ 대상 조회 실패: ${fetchErr.message}`); return; }
+
+      const targets = candidates
+        .map(c => ({ ...c, altFile: findAltImageFile(c.char_number) }))
+        .filter(c => c.altFile);
+
+      if (!targets.length) {
+        logExtra('보정할 대상이 없어요 — additional_images가 비어있으면서 로컬에 _alt 파일이 있는 개체가 없습니다.');
+        return;
+      }
+
+      const ok = confirm(`_alt 이미지가 있고 additional_images가 비어있는 ${targets.length}건에 추가 이미지를 업로드합니다. 계속할까요?`);
+      if (!ok) return;
+
+      const btn = document.getElementById('extraImageRepairBtn');
+      btn.disabled = true;
+      logExtra(`대상 ${targets.length}건 조회됨`);
+
+      const wmSrc = speciesWatermarkUrl || '../images/watermark.png';
+      let okCount = 0, failCount = 0;
+
+      for (const t of targets) {
+        try {
+          const ts = Date.now(), rnd = Math.random().toString(36).slice(2);
+          const file = t.altFile;
+          const isGif = file.type === 'image/gif';
+          const ext = isGif ? 'gif' : 'jpg';
+          const blob = await compressImage(file);
+
+          const origName = `jf${t.char_number}_${ts}_${rnd}_extra_orig.${ext}`;
+          const { error: origErr } = await sb.storage.from('images').upload(origName, blob, { contentType: isGif ? 'image/gif' : 'image/jpeg' });
+          if (origErr) throw new Error(`원본 업로드 실패: ${origErr.message}`);
+          const origUrl = sb.storage.from('images').getPublicUrl(origName).data.publicUrl;
+
+          let extraUrl;
+          if (isGif) {
+            extraUrl = origUrl;
+          } else {
+            const wmBlob = await applyWatermark(blob, wmSrc);
+            const fileName = `jf${t.char_number}_${ts}_${rnd}_extra.jpg`;
+            const { error: uploadErr } = await sb.storage.from('images').upload(fileName, wmBlob, { contentType: 'image/jpeg' });
+            if (uploadErr) throw new Error(`워터마크 이미지 업로드 실패: ${uploadErr.message}`);
+            extraUrl = sb.storage.from('images').getPublicUrl(fileName).data.publicUrl;
+          }
+
+          const { error: updErr } = await sb.from('characters')
+            .update({ additional_images: [extraUrl], original_additional_images: [origUrl] })
+            .eq('id', t.id);
+          if (updErr) throw new Error(`DB 업데이트 실패: ${updErr.message}`);
+
+          okCount++;
+          logExtra(`✅ ${t.char_number} ${t.name} → 추가 이미지 업로드 완료`);
+        } catch (err) {
+          failCount++;
+          logExtra(`❌ ${t.char_number} ${t.name} 실패: ${err.message}`);
+        }
+      }
+
+      logExtra(`완료 — 성공 ${okCount} / 실패 ${failCount}`);
+      btn.disabled = false;
+    }
+
+    // ── 7. 데이터 보정: classification(일반/특수개체) 재판정 (1회성) ──────────────────────────────
+    function logClass(msg) {
+      const log = document.getElementById('classificationRepairLog');
+      log.style.display = '';
+      log.textContent += msg + '\n';
+      log.scrollTop = log.scrollHeight;
+    }
+
+    const SPECIAL_PHRASE_RE = /특수\s*개체로\s*분류되었습니다/;
+
+    async function repairClassification() {
+      const logEl = document.getElementById('classificationRepairLog');
+      logEl.style.display = '';
+      logEl.textContent = '';
+
+      const { data: chars, error: fetchErr } = await sb.from('characters')
+        .select('id, char_number, name, description, char_categories')
+        .eq('species_name', SPECIES_NAME);
+      if (fetchErr) { logClass(`❌ 대상 조회 실패: ${fetchErr.message}`); return; }
+
+      const generalCat = { label: '일반개체', color: categoryCatalog.get('일반개체') || '#4a90d9' };
+      const specialCat = { label: '특수개체', color: categoryCatalog.get('특수개체') || '#87ceeb' };
+
+      const mismatches = chars.map(c => {
+        const hasPhrase = c.description ? SPECIAL_PHRASE_RE.test(c.description) : false;
+        const correctCat = hasPhrase ? specialCat : generalCat;
+        const currentLabel = (c.char_categories || []).find(cat => cat.label === '일반개체' || cat.label === '특수개체')?.label || null;
+        return { ...c, correctCat, currentLabel };
+      }).filter(c => c.currentLabel !== c.correctCat.label);
+
+      if (!mismatches.length) {
+        logClass('보정할 대상이 없어요 — 전부 규칙과 일치합니다.');
+        return;
+      }
+
+      const toGeneral = mismatches.filter(m => m.correctCat.label === '일반개체').length;
+      const toSpecial = mismatches.filter(m => m.correctCat.label === '특수개체').length;
+      const ok = confirm(`분류가 규칙과 다른 ${mismatches.length}건을 정정합니다 (일반개체로: ${toGeneral}건 / 특수개체로: ${toSpecial}건). 계속할까요?`);
+      if (!ok) return;
+
+      const btn = document.getElementById('classificationRepairBtn');
+      btn.disabled = true;
+      logClass(`대상 ${mismatches.length}건 조회됨`);
+
+      let okCount = 0, failCount = 0;
+      for (const m of mismatches) {
+        const { error: updErr } = await sb.from('characters')
+          .update({ char_categories: [m.correctCat] })
+          .eq('id', m.id);
+        if (updErr) {
+          failCount++;
+          logClass(`❌ ${m.char_number} ${m.name} 실패: ${updErr.message}`);
+        } else {
+          okCount++;
+          logClass(`✅ ${m.char_number} ${m.name}: ${m.currentLabel || '(없음)'} → ${m.correctCat.label}`);
+        }
+      }
+
+      logClass(`완료 — 성공 ${okCount} / 실패 ${failCount}`);
+      btn.disabled = false;
+    }
+
+    initPage();
+  </script>
+</body>
+</html>

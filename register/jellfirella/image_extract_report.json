@@ -1,0 +1,1070 @@
+{
+  "copied": [
+    {
+      "char_number": "001",
+      "src": "media/image196.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "002",
+      "src": "media/image148.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "003",
+      "src": "media/image205.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "004",
+      "src": "media/image128.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "005",
+      "src": "media/image55.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "006",
+      "src": "media/image71.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "007",
+      "src": "media/image90.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "008",
+      "src": "media/image43.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "009",
+      "src": "media/image108.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "010",
+      "src": "media/image51.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "011",
+      "src": "media/image14.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "012",
+      "src": "media/image52.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "013",
+      "src": "media/image207.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "014",
+      "src": "media/image113.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "015",
+      "src": "media/image151.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "016",
+      "src": "media/image208.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "017",
+      "src": "media/image193.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "018",
+      "src": "media/image203.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "019",
+      "src": "media/image10.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "020",
+      "src": "media/image56.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "021",
+      "src": "media/image170.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "022",
+      "src": "media/image40.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "023",
+      "src": "media/image88.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "024",
+      "src": "media/image177.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "025",
+      "src": "media/image158.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "026",
+      "src": "media/image20.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "027",
+      "src": "media/image206.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "028",
+      "src": "media/image111.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "029",
+      "src": "media/image50.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "030",
+      "src": "media/image185.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "031",
+      "src": "media/image129.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "032",
+      "src": "media/image137.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "033",
+      "src": "media/image150.jpg",
+      "ext": ".jpg"
+    },
+    {
+      "char_number": "034",
+      "src": "media/image156.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "035",
+      "src": "media/image140.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "036",
+      "src": "media/image171.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "037",
+      "src": "media/image179.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "038",
+      "src": "media/image6.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "039",
+      "src": "media/image27.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "040",
+      "src": "media/image97.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "041",
+      "src": "media/image133.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "042",
+      "src": "media/image30.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "043",
+      "src": "media/image117.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "044",
+      "src": "media/image183.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "045",
+      "src": "media/image157.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "046",
+      "src": "media/image99.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "047",
+      "src": "media/image77.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "048",
+      "src": "media/image70.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "049",
+      "src": "media/image41.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "050",
+      "src": "media/image69.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "051",
+      "src": "media/image186.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "052",
+      "src": "media/image1.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "053",
+      "src": "media/image60.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "054",
+      "src": "media/image7.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "055",
+      "src": "media/image31.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "056",
+      "src": "media/image123.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "057",
+      "src": "media/image101.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "058",
+      "src": "media/image61.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "059",
+      "src": "media/image192.jpg",
+      "ext": ".jpg"
+    },
+    {
+      "char_number": "060",
+      "src": "media/image169.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "061",
+      "src": "media/image2.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "062",
+      "src": "media/image68.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "063",
+      "src": "media/image107.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "064",
+      "src": "media/image109.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "065",
+      "src": "media/image84.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "066",
+      "src": "media/image160.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "067",
+      "src": "media/image162.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "068",
+      "src": "media/image188.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "069",
+      "src": "media/image63.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "070",
+      "src": "media/image142.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "071",
+      "src": "media/image100.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "072",
+      "src": "media/image67.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "073",
+      "src": "media/image135.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "074",
+      "src": "media/image34.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "075",
+      "src": "media/image168.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "076",
+      "src": "media/image112.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "077",
+      "src": "media/image22.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "078",
+      "src": "media/image66.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "079",
+      "src": "media/image201.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "080",
+      "src": "media/image74.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "081",
+      "src": "media/image194.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "082",
+      "src": "media/image78.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "083",
+      "src": "media/image24.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "084",
+      "src": "media/image11.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "085",
+      "src": "media/image105.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "086",
+      "src": "media/image59.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "087",
+      "src": "media/image175.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "088",
+      "src": "media/image54.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "089",
+      "src": "media/image141.jpg",
+      "ext": ".jpg"
+    },
+    {
+      "char_number": "090",
+      "src": "media/image138.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "091",
+      "src": "media/image53.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "092",
+      "src": "media/image197.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "093",
+      "src": "media/image159.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "094",
+      "src": "media/image89.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "095",
+      "src": "media/image154.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "096",
+      "src": "media/image23.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "097",
+      "src": "media/image73.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "098",
+      "src": "media/image195.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "099",
+      "src": "media/image81.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "100",
+      "src": "media/image102.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "101",
+      "src": "media/image76.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "102",
+      "src": "media/image182.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "103",
+      "src": "media/image178.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "104",
+      "src": "media/image44.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "105",
+      "src": "media/image85.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "106",
+      "src": "media/image127.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "107",
+      "src": "media/image174.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "108",
+      "src": "media/image95.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "109",
+      "src": "media/image106.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "110",
+      "src": "media/image94.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "111",
+      "src": "media/image144.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "112",
+      "src": "media/image37.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "113",
+      "src": "media/image103.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "114",
+      "src": "media/image161.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "115",
+      "src": "media/image38.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "116",
+      "src": "media/image116.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "117",
+      "src": "media/image146.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "118",
+      "src": "media/image172.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "119",
+      "src": "media/image190.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "120",
+      "src": "media/image125.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "121",
+      "src": "media/image119.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "122",
+      "src": "media/image72.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "123",
+      "src": "media/image62.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "124",
+      "src": "media/image191.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "125",
+      "src": "media/image4.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "126",
+      "src": "media/image9.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "127",
+      "src": "media/image198.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "128",
+      "src": "media/image87.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "129",
+      "src": "media/image130.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "130",
+      "src": "media/image91.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "131",
+      "src": "media/image33.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "132",
+      "src": "media/image143.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "133",
+      "src": "media/image8.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "134",
+      "src": "media/image19.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "135",
+      "src": "media/image134.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "136",
+      "src": "media/image131.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "137",
+      "src": "media/image152.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "138",
+      "src": "media/image5.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "139",
+      "src": "media/image25.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "140",
+      "src": "media/image47.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "141",
+      "src": "media/image36.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "142",
+      "src": "media/image167.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "143",
+      "src": "media/image165.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "144",
+      "src": "media/image163.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "145",
+      "src": "media/image176.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "146",
+      "src": "media/image17.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "147",
+      "src": "media/image149.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "148",
+      "src": "media/image75.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "149",
+      "src": "media/image202.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "150",
+      "src": "media/image96.jpg",
+      "ext": ".jpg"
+    },
+    {
+      "char_number": "151",
+      "src": "media/image189.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "152",
+      "src": "media/image35.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "153",
+      "src": "media/image147.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "154",
+      "src": "media/image45.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "155",
+      "src": "media/image82.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "156",
+      "src": "media/image121.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "157",
+      "src": "media/image136.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "158",
+      "src": "media/image166.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "159",
+      "src": "media/image39.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "160",
+      "src": "media/image57.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "161",
+      "src": "media/image104.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "162",
+      "src": "media/image12.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "163",
+      "src": "media/image118.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "164",
+      "src": "media/image180.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "165",
+      "src": "media/image16.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "166",
+      "src": "media/image64.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "167",
+      "src": "media/image126.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "168",
+      "src": "media/image181.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "169",
+      "src": "media/image204.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "170",
+      "src": "media/image115.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "171",
+      "src": "media/image80.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "172",
+      "src": "media/image46.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "173",
+      "src": "media/image153.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "174",
+      "src": "media/image58.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "175",
+      "src": "media/image86.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "176",
+      "src": "media/image98.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "177",
+      "src": "media/image42.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "179",
+      "src": "media/image18.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "180",
+      "src": "media/image3.jpg",
+      "ext": ".jpg"
+    },
+    {
+      "char_number": "181",
+      "src": "media/image145.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "182",
+      "src": "media/image13.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "183",
+      "src": "media/image21.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "184",
+      "src": "media/image110.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "185",
+      "src": "media/image15.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "186",
+      "src": "media/image173.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "187",
+      "src": "media/image184.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "188",
+      "src": "media/image122.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "189",
+      "src": "media/image28.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "190",
+      "src": "media/image139.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "191",
+      "src": "media/image200.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "192",
+      "src": "media/image114.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "193",
+      "src": "media/image199.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "194",
+      "src": "media/image49.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "195",
+      "src": "media/image93.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "196",
+      "src": "media/image83.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "197",
+      "src": "media/image48.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "198",
+      "src": "media/image187.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "199",
+      "src": "media/image65.png",
+      "ext": ".png"
+    },
+    {
+      "char_number": "200",
+      "src": "media/image124.png",
+      "ext": ".png"
+    }
+  ],
+  "skippedExisting": [
+    "000: 기존 파일 유지 (덮어쓰지 않음)"
+  ],
+  "multiImage": [
+    {
+      "char_number": "019",
+      "primary": "media/image10.png",
+      "alt": "media/image120.png",
+      "note": "문서에 이미지 2개 존재 - 첫 번째(문서 순서상 먼저 나오는 것)를 대표 이미지로 선택, 두 번째는 _alt.png로 별도 저장. 육안 확인 결과 두 이미지가 거의 동일한 근접 변형(중복 업로드 또는 미세 색상 차이)으로 보임 - 최종 선택은 검수 필요."
+    },
+    {
+      "char_number": "077",
+      "primary": "media/image22.png",
+      "alt": "media/image92.png",
+      "note": "문서에 이미지 2개 존재 - 첫 번째(문서 순서상 먼저 나오는 것)를 대표 이미지로 선택, 두 번째는 _alt.png로 별도 저장. 육안 확인 결과 두 이미지가 거의 동일한 근접 변형(중복 업로드 또는 미세 색상 차이)으로 보임 - 최종 선택은 검수 필요."
+    },
+    {
+      "char_number": "184",
+      "primary": "media/image110.png",
+      "alt": "media/image155.png",
+      "note": "문서에 이미지 2개 존재 - 첫 번째(문서 순서상 먼저 나오는 것)를 대표 이미지로 선택, 두 번째는 _alt.png로 별도 저장. 육안 확인 결과 두 이미지가 거의 동일한 근접 변형(중복 업로드 또는 미세 색상 차이)으로 보임 - 최종 선택은 검수 필요."
+    },
+    {
+      "char_number": "186",
+      "primary": "media/image173.png",
+      "alt": "media/image164.png",
+      "note": "문서에 이미지 2개 존재 - 첫 번째(문서 순서상 먼저 나오는 것)를 대표 이미지로 선택, 두 번째는 _alt.png로 별도 저장. 육안 확인 결과 두 이미지가 거의 동일한 근접 변형(중복 업로드 또는 미세 색상 차이)으로 보임 - 최종 선택은 검수 필요."
+    },
+    {
+      "char_number": "187",
+      "primary": "media/image184.png",
+      "alt": "media/image132.png",
+      "note": "문서에 이미지 2개 존재 - 첫 번째(문서 순서상 먼저 나오는 것)를 대표 이미지로 선택, 두 번째는 _alt.png로 별도 저장. 육안 확인 결과 두 이미지가 거의 동일한 근접 변형(중복 업로드 또는 미세 색상 차이)으로 보임 - 최종 선택은 검수 필요."
+    },
+    {
+      "char_number": "190",
+      "primary": "media/image139.png",
+      "alt": "media/image79.png",
+      "note": "문서에 이미지 2개 존재 - 첫 번째(문서 순서상 먼저 나오는 것)를 대표 이미지로 선택, 두 번째는 _alt.png로 별도 저장. 육안 확인 결과 두 이미지가 거의 동일한 근접 변형(중복 업로드 또는 미세 색상 차이)으로 보임 - 최종 선택은 검수 필요."
+    }
+  ],
+  "nonPngConverted": [
+    {
+      "char_number": "033",
+      "originalExt": ".jpg",
+      "note": "원본이 png가 아님 - 바이트 그대로 복사했으나 확장자만 .png로 강제됨, 실제 포맷 확인 필요"
+    },
+    {
+      "char_number": "059",
+      "originalExt": ".jpg",
+      "note": "원본이 png가 아님 - 바이트 그대로 복사했으나 확장자만 .png로 강제됨, 실제 포맷 확인 필요"
+    },
+    {
+      "char_number": "089",
+      "originalExt": ".jpg",
+      "note": "원본이 png가 아님 - 바이트 그대로 복사했으나 확장자만 .png로 강제됨, 실제 포맷 확인 필요"
+    },
+    {
+      "char_number": "150",
+      "originalExt": ".jpg",
+      "note": "원본이 png가 아님 - 바이트 그대로 복사했으나 확장자만 .png로 강제됨, 실제 포맷 확인 필요"
+    },
+    {
+      "char_number": "180",
+      "originalExt": ".jpg",
+      "note": "원본이 png가 아님 - 바이트 그대로 복사했으나 확장자만 .png로 강제됨, 실제 포맷 확인 필요"
+    }
+  ],
+  "errors": [
+    "178: 이미지 없음"
+  ]
+}
