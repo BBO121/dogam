@@ -5,7 +5,7 @@
 
 let _dmChannel          = null;   // 전역 채널 — recipient_id=eq.<내 uid> 필터, 헤더 배지 전용 (5단계)
 let _dmRoomChannel      = null;   // 현재 열려있는 방 전용 채널 — room_id=eq.<방> 필터, 메시지 목록 실시간 반영 (5단계)
-let _dmDirectoryPromise = null;   // { id, nickname, login_id, avatar_url }[] 캐시 (페이지 1회 로드)
+let _dmDirectoryPromise = null;   // { id, nickname, avatar_url }[] 캐시 (페이지 1회 로드) — 기존 대화 상대 표시용
 
 // ────────────────────────────────
 // 헤더 아이콘 삽입 (1단계)
@@ -221,7 +221,9 @@ function dmAvatarHtml(nickname, avatarUrl, extraClass) {
 }
 
 // user_profiles(최신 닉네임/아바타) + get_all_users_full(아이디, user_profiles 없는 유저 fallback) 병합
-// 패널을 열 때만 최초 1회 로드하고 페이지 내에서 재사용
+// 패널을 열 때만 최초 1회 로드하고 페이지 내에서 재사용.
+// 기존 대화방 목록(내가 이미 대화 중인 상대)의 닉네임/아바타 표시 전용 — 새 대화 상대
+// "검색"은 전체 목록을 여기서 걸러내지 않고 search_users()로 서버에서 처리한다(dmSearchUsers).
 function dmLoadUserDirectory() {
   if (!_dmDirectoryPromise) {
     _dmDirectoryPromise = Promise.all([
@@ -233,8 +235,7 @@ function dmLoadUserDirectory() {
         const p = profileMap.get(u.id);
         return {
           id: u.id,
-          nickname: (p && p.nickname) || u.nickname || u.login_id || '(알수없음)',
-          login_id: u.login_id,
+          nickname: (p && p.nickname) || u.nickname || '(알수없음)',
           avatar_url: p ? p.avatar_url : null,
         };
       });
@@ -339,16 +340,17 @@ async function dmSearchUsers(q) {
   resultsEl.style.display   = 'block';
   resultsEl.innerHTML = '<p class="dm-panel-placeholder">검색 중...</p>';
 
-  const [user, directory] = await Promise.all([getUser(), dmLoadUserDirectory()]);
+  // js/search.js의 searchUsers()가 쓰는 것과 동일한 search_users RPC를 직접 호출한다
+  // (search.js는 이 파일이 로드되는 모든 페이지에는 없어서, 새로 의존시키는 대신
+  // 이미 로그인 화면 어디서나 쓸 수 있는 sb.rpc를 그대로 사용 — RPC 자체는 공용)
+  const [user, { data, error }] = await Promise.all([
+    getUser(),
+    sb.rpc('search_users', { p_query: query, p_limit: 30 }),
+  ]);
   if (!document.getElementById('dmSearchResults')) return;
+  if (error) { console.warn('[DM] 유저 검색 실패:', error); dmRenderUserResults([]); return; }
 
-  const qLow = query.toLowerCase();
-  const matched = directory
-    .filter(u => u.id !== user.id)
-    .filter(u => (u.nickname || '').toLowerCase().includes(qLow) || (u.login_id || '').toLowerCase().includes(qLow))
-    .slice(0, 30);
-
-  dmRenderUserResults(matched);
+  dmRenderUserResults((data || []).filter(u => u.id !== user.id));
 }
 
 function dmRenderUserResults(list) {
@@ -365,7 +367,6 @@ function dmRenderUserResults(list) {
       ${dmAvatarHtml(u.nickname, u.avatar_url)}
       <div class="dm-user-info">
         <span class="dm-user-nickname">${dmEscapeHtml(u.nickname)}</span>
-        ${u.login_id ? `<span class="dm-user-login">@${dmEscapeHtml(u.login_id)}</span>` : ''}
       </div>
     </div>
   `).join('');

@@ -1458,7 +1458,7 @@
               // UUID 보유 항목: designer_nickname을 split하지 않고, uuid별 "현재" 닉네임 +
               // designer_external 이름으로 표시 캐시를 새로 만든다.
               const [{ data: uuidDesigns }, { data: allUsersData }] = await Promise.all([
-                sb.from('characters').select('id, designer_user_ids, designer_external')
+                sb.from('characters_public').select('id, designer_user_ids, designer_external')
                   .filter('designer_user_ids', 'cs', `{${currentUser.id}}`),
                 sb.rpc('get_all_users'),
               ]);
@@ -1566,7 +1566,7 @@
           // 디자이너 삭제 처리: UUID 제거 + display string 갱신 (비동기)
           (async () => {
             const [{ data: uuidDesigns }, { data: allUsersData }] = await Promise.all([
-              sb.from('characters').select('id, designer_user_ids, designer_external')
+              sb.from('characters_public').select('id, designer_user_ids, designer_external')
                 .filter('designer_user_ids', 'cs', `{${currentUser.id}}`),
               sb.rpc('get_all_users'),
             ]);

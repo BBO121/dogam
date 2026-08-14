@@ -293,7 +293,11 @@
       document.getElementById('pageLoading').style.display = 'none';
       document.getElementById('pageContent').style.display  = 'block';
 
-      if (error || !chars) { document.getElementById('emptyState').style.display = 'flex'; return; }
+      if (error || !chars) {
+        console.error('[my-characters] getMyCharacters 실패:', error);
+        document.getElementById('emptyState').style.display = 'flex';
+        return;
+      }
 
       allChars   = chars;
       allFolders = applySavedFolderOrder(folders || []);

@@ -373,6 +373,7 @@
   <script src="../js/chat.js"></script>
   <script src="../js/main.js"></script>
   <script src="../js/utils.js?v=2"></script>
+  <script src="../js/search.js"></script>
   <script src="../js/step-priority.js"></script>
   <script>
     const charId = new URLSearchParams(window.location.search).get('id');
@@ -384,7 +385,6 @@
     let ownerType            = 'site';
     let selectedNick         = null;
     let designers            = []; // { type:'site', userId, nickname } | { type:'external', name, contact }
-    let allUsers             = [];
     let selectedNickId       = null;
     let userWatermarkUrl     = null;
     let originalOwnerUserId  = null;
@@ -933,7 +933,10 @@
       const user = await getUser();
       if (!user) { window.location.href = 'login.html'; return; }
 
-      const { data: c, error } = await sb.from('characters').select('*').eq('id', charId).single();
+      // 연락처(owner_contact/designer_contact/designer_external.contact) 포함 전체 데이터가
+      // 필요한 편집 화면이라 공개 뷰 대신 본인/관리자 전용 RPC를 사용한다 —
+      // 본인/관리자가 아니면 RPC가 예외를 던지고 아래에서 목록으로 리다이렉트된다.
+      const { data: c, error } = await sb.rpc('get_character_for_edit', { p_character_id: charId }).single();
       if (error || !c) { window.location.href = 'character-list.html'; return; }
 
       const isAdminEd = isAdminOrStaff(user.user_metadata?.role);
@@ -1332,21 +1335,23 @@
     }
 
     async function loadUsers(currentOwner, currentContact, currentOwnerIsOffsite) {
-      const { data } = await sb.rpc('get_all_users');
-      allUsers = (data || [])
-        .map(u => ({ nickname: u.nickname || '', loginId: u.login_id || u.nickname || '', id: u.id || '' }))
-        .filter(u => u.nickname)
-        .sort((a, b) => a.nickname.localeCompare(b.nickname, 'ko'));
-
       renderUserList([]);
 
-      // 기존 소유주 판별 — owner_is_offsite=false면 allUsers 매칭 실패와 무관하게 site 유지
+      // 기존 소유주 판별 — 정확히 일치하는 닉네임의 사이트 유저가 있는지 검색으로 확인
+      // (owner_is_offsite=false면 검색 실패와 무관하게 site 유지 — id는 submit 시
+      //  selectedNickId가 없으면 originalOwnerUserId로 폴백된다)
+      let ownerMatch = null;
+      if (currentOwner) {
+        const { data } = await searchUsers(currentOwner, { limit: 5 });
+        ownerMatch = (data || []).find(u => u.nickname === currentOwner) || null;
+      }
+
       if (!currentOwnerIsOffsite) {
         setOwnerType('site');
-        if (currentOwner) selectUser(currentOwner);
-      } else if (allUsers.some(u => u.nickname === currentOwner)) {
+        if (currentOwner) selectUser(currentOwner, ownerMatch?.id || null);
+      } else if (ownerMatch) {
         setOwnerType('site');
-        selectUser(currentOwner);
+        selectUser(currentOwner, ownerMatch.id);
       } else {
         setOwnerType('external');
         document.getElementById('ownerExternalName').value    = currentOwner || '';
@@ -1361,8 +1366,9 @@
       //             남는 부분이 있으면 외부 디자이너 1개 항목으로만 보존
       const c = originalCharData;
       const existingIds = c.designer_user_ids || [];
+      const resolvedDesigners = existingIds.length ? await resolveUsersByIds(existingIds) : [];
       existingIds.forEach(uid => {
-        const user = allUsers.find(u => u.id === uid);
+        const user = resolvedDesigners.find(u => u.id === uid);
         designers.push({ type: 'site', userId: uid, nickname: user ? user.nickname : '(알수없음)' });
       });
 
@@ -1371,8 +1377,9 @@
           if (ext && ext.name) designers.push({ type: 'external', name: ext.name, contact: ext.contact || '' });
         });
       } else if (existingIds.length === 0 && c.designer_nickname) {
-        // 완전 레거시 단일 텍스트: allUsers에서 찾으면 site, 없으면 external (분리하지 않음)
-        const found = allUsers.find(u => u.nickname === c.designer_nickname);
+        // 완전 레거시 단일 텍스트: 검색해서 찾으면 site, 없으면 external (분리하지 않음)
+        const { data: legacyData } = await searchUsers(c.designer_nickname, { limit: 5 });
+        const found = (legacyData || []).find(u => u.nickname === c.designer_nickname);
         if (found) {
           designers.push({ type: 'site', userId: found.id, nickname: found.nickname });
         } else {
@@ -1393,36 +1400,40 @@
         return;
       }
       el.innerHTML = list.map(u => `
-        <div onclick="selectUser('${u.nickname}')" id="userItem_${u.nickname}"
+        <div onclick="selectUser('${u.nickname.replace(/'/g,"\\'")}','${u.id}')" id="userItem_${u.id}"
           style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border); transition:background 0.1s;"
-          onmouseover="this.style.background='var(--sky-pale)'" onmouseout="this.style.background= selectedNick==='${u.nickname}' ? 'var(--sky-light)' : ''">
-          ${u.nickname}${u.loginId !== u.nickname ? `<span style="color:var(--text-mute); font-size:11px; margin-left:6px;">(${u.loginId})</span>` : ''}
+          onmouseover="this.style.background='var(--sky-pale)'" onmouseout="this.style.background= selectedNickId==='${u.id}' ? 'var(--sky-light)' : ''">
+          ${u.nickname}
         </div>
       `).join('');
+      highlightSelectedUser();
     }
 
-    function selectUser(nick) {
-      selectedNick   = nick;
-      selectedNickId = allUsers.find(u => u.nickname === nick)?.id || null;
+    function highlightSelectedUser() {
       document.querySelectorAll('#ownerUserList > div').forEach(el => {
-        el.style.background = el.id === `userItem_${nick}` ? 'var(--sky-light)' : '';
-        el.style.fontWeight  = el.id === `userItem_${nick}` ? '600' : '';
+        const isSel = el.id === `userItem_${selectedNickId}`;
+        el.style.background = isSel ? 'var(--sky-light)' : '';
+        el.style.fontWeight  = isSel ? '600' : '';
       });
+    }
+
+    function selectUser(nick, id) {
+      selectedNick   = nick;
+      selectedNickId = id;
+      highlightSelectedUser();
       const disp = document.getElementById('ownerSelectedDisplay');
       disp.textContent = `선택됨: ${nick}`;
       disp.style.display = 'block';
     }
 
+    const filterUsersDebounced = debounce(async (q) => {
+      const { data } = await searchUsers(q, { limit: 20 });
+      renderUserList(data || []);
+    }, 250);
+
     function filterUsers(q) {
-      const qLow = q.toLowerCase();
-      const filtered = q
-        ? allUsers.filter(u =>
-            u.nickname.toLowerCase().includes(qLow) ||
-            u.loginId.toLowerCase().includes(qLow)
-          )
-        : [];
-      renderUserList(filtered);
-      if (selectedNick) selectUser(selectedNick);
+      if (!q.trim()) { renderUserList([]); return; }
+      filterUsersDebounced(q);
     }
 
     function renderDesignerItems() {
@@ -1439,15 +1450,11 @@
       `).join('');
     }
 
-    function filterDesigners(q) {
+    const filterDesignersDebounced = debounce(async (q) => {
       const dropdown = document.getElementById('designerDropdown');
-      const qTrim = q.trim();
-      if (!qTrim) { dropdown.style.display = 'none'; return; }
-      const qLow = qTrim.toLowerCase();
-      const results = allUsers.filter(u => {
-        if (designers.some(d => d.type === 'site' && d.userId === u.id)) return false;
-        return u.nickname.toLowerCase().includes(qLow) || u.loginId.toLowerCase().includes(qLow);
-      }).slice(0, 10);
+      const { data } = await searchUsers(q, { limit: 15 });
+      const results = (data || [])
+        .filter(u => !designers.some(d => d.type === 'site' && d.userId === u.id));
       if (!results.length) {
         dropdown.innerHTML = '<p style="padding:10px 14px; font-size:13px; color:var(--text-mute);">일치하는 유저가 없어요</p>';
         dropdown.style.display = '';
@@ -1457,10 +1464,17 @@
         <div onclick="addSiteDesigner('${u.id}','${u.nickname.replace(/'/g,"\\'")}')"
           style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border); transition:background 0.1s;"
           onmouseover="this.style.background='var(--sky-pale)'" onmouseout="this.style.background=''">
-          ${u.nickname}${u.loginId !== u.nickname ? `<span style="color:var(--text-mute);font-size:11px;margin-left:6px;">(${u.loginId})</span>` : ''}
+          ${u.nickname}
         </div>
       `).join('');
       dropdown.style.display = '';
+    }, 250);
+
+    function filterDesigners(q) {
+      const dropdown = document.getElementById('designerDropdown');
+      const qTrim = q.trim();
+      if (!qTrim) { dropdown.style.display = 'none'; return; }
+      filterDesignersDebounced(qTrim);
     }
 
     function addSiteDesigner(userId, nickname) {

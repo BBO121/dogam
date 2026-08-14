@@ -156,7 +156,6 @@
   <script src="../js/utils.js"></script>
   <script src="../js/main.js"></script>
   <script>
-    let allUsers    = [];
     let lastResults = [];
 
     async function initPage() {
@@ -166,11 +165,6 @@
 
       document.getElementById('pageLoading').style.display = 'none';
       document.getElementById('pageContent').style.display = 'block';
-
-      const { data } = await sb.rpc('get_all_users');
-      allUsers = (data || []).map(u => ({
-        id: u.id, nickname: u.nickname || '', loginId: u.login_id || u.nickname || '',
-      })).filter(u => u.nickname);
     }
 
     // "0101" / "101" / "1" 을 모두 같은 개체번호로 취급
@@ -219,16 +213,6 @@
       return { rows, errors };
     }
 
-    function findUsers(identifier) {
-      const idLower = identifier.trim().toLowerCase();
-      const matchedIds = new Set(
-        allUsers
-          .filter(u => u.nickname.toLowerCase() === idLower || u.loginId.toLowerCase() === idLower)
-          .map(u => u.id)
-      );
-      return [...matchedIds].map(id => allUsers.find(u => u.id === id));
-    }
-
     async function runValidation() {
       const errorEl = document.getElementById('pageError');
       errorEl.textContent = '';
@@ -250,6 +234,10 @@
           seen.add(key);
           pairs.push({ ...r, cls: classifyToken(r.raw) });
         });
+
+        // 입력된 유저 식별자(닉네임/아이디)를 한 번에 서버에서 매칭 — 전체 회원 목록을
+        // 클라이언트로 받아오지 않고, 입력된 식별자에 대한 결과만 돌려받는다.
+        const userMatchMap = await resolveUsersByIdentifiers(pairs.map(p => p.user));
 
         // 융용 개체만 조회 대상으로 고정 (1000행 기본 제한을 넘는 경우를 대비해 페이지네이션)
         const chars = [];
@@ -331,7 +319,7 @@
             continue;
           }
 
-          const matchedUsers = findUsers(p.user);
+          const matchedUsers = userMatchMap.get(p.user.trim()) || [];
           if (matchedUsers.length === 0) {
             results.push({ ...base, 판정: '확인 필요', 사유: '유저를 찾지 못함 (해당 닉네임/아이디의 사이트 계정 없음)' });
             continue;

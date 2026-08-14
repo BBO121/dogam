@@ -188,6 +188,7 @@
   <script src="../js/notifications.js"></script>
   <script src="../js/chat.js"></script>
   <script src="../js/utils.js"></script>
+  <script src="../js/search.js"></script>
   <script src="../js/main.js"></script>
   <script>
     const charId = new URLSearchParams(window.location.search).get('id');
@@ -359,30 +360,33 @@
       const siteItems = (c.designer_user_ids || []).map(uid => ({
         uid, name: _idToNick[uid] || '(알수없음)'
       }));
+      // designer_external은 공개 뷰(characters_public)에서 contact 키가 제거된 채로
+      // 내려오므로(이름만 존재) 여기서는 이름 크레딧만 표시한다 — 연락처는 본인/관리자
+      // 편집 화면(get_character_for_edit RPC)에서만 확인할 수 있다.
       let externalItems = [];
       if (Array.isArray(c.designer_external) && c.designer_external.length) {
         externalItems = c.designer_external
           .filter(e => e && e.name)
-          .map(e => ({ name: e.name, contact: e.contact || '' }));
+          .map(e => ({ name: e.name }));
       } else if (!siteItems.length && c.designer_nickname) {
         // 완전 레거시(uuid 없음) 단일 텍스트: 현재 연구소 닉네임과 일치하면 site로, 아니면 external 1개로
         const uuid = _nickToId[c.designer_nickname];
         if (uuid) {
           siteItems.push({ uid: uuid, name: c.designer_nickname });
         } else {
-          externalItems = [{ name: c.designer_nickname, contact: c.designer_contact || '' }];
+          externalItems = [{ name: c.designer_nickname }];
         }
       } else if (siteItems.length && c.designer_nickname) {
         // 부분 레거시(uuid는 있지만 designer_external 데이터가 없음): 임의 분리 없이 leftover 1개만 추출
         const leftover = extractLegacyDesignerLeftover(c.designer_nickname, siteItems.map(s => s.name));
-        if (leftover) externalItems = [{ name: leftover, contact: c.designer_contact || '' }];
+        if (leftover) externalItems = [{ name: leftover }];
       }
 
       const siteHtml = siteItems.map(item =>
         `<a href="profile.html?user=${item.uid}" style="color:inherit;text-decoration:none;">${item.name}</a>`
       );
       const externalHtml = externalItems.map(item =>
-        `<span style="display:inline-block;font-size:10px;font-weight:600;color:#555;background:#e8e8e8;border-radius:4px;padding:1px 5px;margin-right:3px;vertical-align:middle;line-height:1.6;">Site-OFF</span>${item.name}${item.contact ? ` <span style="color:var(--text-mute);font-size:12px;">(${item.contact})</span>` : ''}`
+        `<span style="display:inline-block;font-size:10px;font-weight:600;color:#555;background:#e8e8e8;border-radius:4px;padding:1px 5px;margin-right:3px;vertical-align:middle;line-height:1.6;">Site-OFF</span>${item.name}`
       );
       const all = [...siteHtml, ...externalHtml];
       return all.length ? all.join(' <span style="color:var(--text-mute);margin:0 1px;">/</span> ') : (c.designer_nickname || '');
@@ -395,7 +399,7 @@
       const siteNames = (item.designer_user_ids || []).map(uid => _idToNick[uid] || '(알수없음)');
       const extNames  = (item.designer_external || [])
         .filter(e => e && e.name)
-        .map(e => e.name + (e.contact ? ` (${e.contact})` : ''));
+        .map(e => e.name);
       const all = [...siteNames, ...extNames];
       return all.length ? all.join(' / ') : (item.designer_nickname || '-');
     }
@@ -546,16 +550,11 @@
       `).join('');
     }
 
-    function filterGalleryDesigners(q) {
+    const filterGalleryDesignersDebounced = debounce(async (q) => {
       const dropdown = document.getElementById('galleryDesignerDropdown');
-      const qTrim = q.trim();
-      if (!qTrim) { dropdown.style.display = 'none'; return; }
-      const qLow = qTrim.toLowerCase();
-      const results = (_siteUserData || [])
-        .filter(u => u.nickname)
-        .filter(u => !_galleryDesigners.some(d => d.type === 'site' && d.userId === u.id))
-        .filter(u => u.nickname.toLowerCase().includes(qLow) || (u.login_id || '').toLowerCase().includes(qLow))
-        .slice(0, 10);
+      const { data } = await searchUsers(q, { limit: 15 });
+      const results = (data || [])
+        .filter(u => !_galleryDesigners.some(d => d.type === 'site' && d.userId === u.id));
       if (!results.length) {
         dropdown.innerHTML = '<p style="padding:10px 14px; font-size:13px; color:var(--text-mute);">일치하는 유저가 없어요</p>';
         dropdown.style.display = '';
@@ -564,10 +563,17 @@
       dropdown.innerHTML = results.map(u => `
         <div onclick="addGallerySiteDesigner('${u.id}','${u.nickname.replace(/'/g,"\\'")}')"
           style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border);">
-          ${u.nickname}${u.login_id && u.login_id !== u.nickname ? `<span style="color:var(--text-mute);font-size:11px;margin-left:6px;">(${u.login_id})</span>` : ''}
+          ${u.nickname}
         </div>
       `).join('');
       dropdown.style.display = '';
+    }, 250);
+
+    function filterGalleryDesigners(q) {
+      const dropdown = document.getElementById('galleryDesignerDropdown');
+      const qTrim = q.trim();
+      if (!qTrim) { dropdown.style.display = 'none'; return; }
+      filterGalleryDesignersDebounced(qTrim);
     }
 
     function addGallerySiteDesigner(userId, nickname) {
@@ -796,12 +802,14 @@
       const isAdminUser  = isAdminOrStaff(user?.user_metadata?.role);
 
       // original_image_url 제외 — 권한자가 토글 시 on-demand 조회
-      const CHAR_SELECT = 'id,name,species_name,image_url,thumbnail_url,default_image_index,additional_images,owner_nickname,owner_user_id,owner_is_offsite,owner_contact,designer_nickname,designer_user_ids,designer_external,designer_contact,char_number,description,owner_description,is_sensitive,sensitive_note,char_sections,custom_field_values,char_categories,allow_free_adoption,allow_resale,allow_paid_adoption,allow_other_adoption,pending_transfer,created_at,representative_step_id';
+      // owner_contact/designer_contact는 연락처라 공개 뷰(characters_public)에 없음 —
+      // 본인/관리자가 연락처를 포함해 봐야 하는 편집 화면은 get_character_for_edit() RPC를 쓴다.
+      const CHAR_SELECT = 'id,name,species_name,image_url,thumbnail_url,default_image_index,additional_images,owner_nickname,owner_user_id,owner_is_offsite,designer_nickname,designer_user_ids,designer_external,char_number,description,owner_description,is_sensitive,sensitive_note,char_sections,custom_field_values,char_categories,allow_free_adoption,allow_resale,allow_paid_adoption,allow_other_adoption,pending_transfer,created_at,representative_step_id';
       const GALLERY_SELECT = 'id,character_id,uploaded_by,designer_user_ids,designer_external,designer_nickname,category,description,image_url,thumbnail_url,created_at';
       const [{ data: c, error }, { data: siteUserData }, { data: galleryRows }] = await Promise.all([
-        sb.from('characters').select(CHAR_SELECT).eq('id', charId).single(),
+        sb.from('characters_public').select(CHAR_SELECT).eq('id', charId).single(),
         sb.rpc('get_all_users'),
-        sb.from('character_gallery').select(GALLERY_SELECT).eq('character_id', charId).order('created_at', { ascending: false }),
+        sb.from('character_gallery_public').select(GALLERY_SELECT).eq('character_id', charId).order('created_at', { ascending: false }),
       ]);
 
       if (error || !c) {
@@ -1013,7 +1021,7 @@
                         ? `<a href="profile.html?user=${c.owner_user_id}" style="color:inherit;text-decoration:none;">${ownerDisplayNick}</a>`
                         : `${ownerDisplayNick}`))
                 : '—'
-              }${c.owner_contact ? ` <span style="color:var(--text-mute);font-size:12px;">(${c.owner_contact})</span>` : ''}</span>
+              }</span>
             </div>
             <div class="char-info-row">
               <span class="char-info-label">등록일</span>

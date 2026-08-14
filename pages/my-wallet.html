@@ -163,6 +163,7 @@
   <script src="../js/notifications.js"></script>
   <script src="../js/chat.js"></script>
   <script src="../js/utils.js"></script>
+  <script src="../js/search.js"></script>
   <script src="../js/main.js"></script>
   <script>
     const TYPE_LABEL = {
@@ -193,7 +194,6 @@
     let myKeys            = 0;
     let selectedCurrency  = 'research_records';
     let allLogs           = [];
-    let allUsers          = [];
     let selectedRecipient = null;
     let _filteredUsers    = [];
     let _myId             = null;
@@ -218,10 +218,9 @@
 
       _myId = user.id;
 
-      const [{ data: wallet }, { data: logs }, { data: userData }] = await Promise.all([
+      const [{ data: wallet }, { data: logs }] = await Promise.all([
         getMyWallet(user.id),
         getMyCurrencyLogs(user.id),
-        sb.rpc('get_all_users'),
       ]);
 
       document.getElementById('pageLoading').style.display = 'none';
@@ -233,11 +232,6 @@
       document.getElementById('researchAmount').textContent = fmt(myBalance);
       document.getElementById('keysAmount').textContent     = fmt(myKeys);
       updateBalanceHint();
-
-      // 유저 목록 (자기 자신 제외)
-      allUsers = (userData || [])
-        .filter(u => u.nickname && u.id !== user.id)
-        .sort((a, b) => a.nickname.localeCompare(b.nickname, 'ko'));
 
       // 거래 내역
       allLogs = logs ?? [];
@@ -268,16 +262,10 @@
     }
 
     /* ── 유저 검색 드롭다운 ── */
-    function filterRecipients(q) {
+    const filterRecipientsDebounced = debounce(async (q) => {
       const el = document.getElementById('recipientList');
-      selectedRecipient = null;
-      if (!q.trim()) { el.style.display = 'none'; return; }
-
-      const qLow = q.toLowerCase();
-      _filteredUsers = allUsers.filter(u =>
-        u.nickname.toLowerCase().includes(qLow) ||
-        (u.login_id || '').toLowerCase().includes(qLow)
-      ).slice(0, 8);
+      const { data } = await searchUsers(q, { limit: 8 });
+      _filteredUsers = (data || []).filter(u => u.id !== _myId);
 
       if (!_filteredUsers.length) {
         el.innerHTML = '<div class="wallet-recipient-empty">검색 결과가 없어요</div>';
@@ -285,12 +273,17 @@
         return;
       }
 
-      el.innerHTML = _filteredUsers.map((u, i) => {
-        const sub = u.login_id && u.login_id !== u.nickname
-          ? `<span class="wallet-recipient-sub">(${u.login_id})</span>` : '';
-        return `<div class="wallet-recipient-item" onclick="selectRecipient(${i})">${u.nickname}${sub}</div>`;
-      }).join('');
+      el.innerHTML = _filteredUsers.map((u, i) =>
+        `<div class="wallet-recipient-item" onclick="selectRecipient(${i})">${u.nickname}</div>`
+      ).join('');
       el.style.display = 'block';
+    }, 250);
+
+    function filterRecipients(q) {
+      const el = document.getElementById('recipientList');
+      selectedRecipient = null;
+      if (!q.trim()) { el.style.display = 'none'; return; }
+      filterRecipientsDebounced(q);
     }
 
     function selectRecipient(i) {

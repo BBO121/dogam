@@ -156,13 +156,13 @@
   <script src="../js/notifications.js"></script>
   <script src="../js/chat.js"></script>
   <script src="../js/utils.js"></script>
+  <script src="../js/search.js"></script>
   <script src="../js/main.js"></script>
   <script>
     const charId = new URLSearchParams(window.location.search).get('id');
 
     let currentUser      = null;
     let charData         = null;
-    let allUsers         = [];
     let selectedRecipient = null;
     let selectedMethod   = '선물';
 
@@ -175,7 +175,8 @@
 
       if (!charId) { window.location.href = 'index.html'; return; }
 
-      const { data: c, error } = await sb.from('characters').select('*').eq('id', charId).single();
+      // 연락처 포함 전체 데이터가 필요해 본인/관리자 전용 RPC로 조회한다.
+      const { data: c, error } = await sb.rpc('get_character_for_edit', { p_character_id: charId }).single();
       if (error || !c) { window.location.href = 'index.html'; return; }
       charData = c;
 
@@ -194,42 +195,36 @@
       document.getElementById('charThumb').innerHTML =
         `<img src="${resolveCharacterImage(c, { thumb: false })}" alt="${c.name}">`;
 
-      // 유저 목록 로드 (현재 소유주 제외 — owner_user_id 기준)
-      const { data: userData } = await sb.rpc('get_all_users');
-      allUsers = (userData || [])
-        .map(u => ({ id: u.id, nickname: u.nickname || '', loginId: u.login_id || u.nickname || '' }))
-        .filter(u => u.nickname && u.id !== c.owner_user_id)
-        .sort((a, b) => a.nickname.localeCompare(b.nickname, 'ko'));
     }
+
+    const filterRecipientsDebounced = debounce(async (q) => {
+      const el = document.getElementById('recipientList');
+      const { data } = await searchUsers(q, { limit: 20 });
+      const filtered = (data || []).filter(u => u.id !== charData?.owner_user_id);
+      el.innerHTML = filtered.length
+        ? filtered.map(u => `
+            <div onclick="selectRecipient('${u.nickname.replace(/'/g,"\\'")}','${u.id}')" id="rItem_${u.id}"
+              style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border);"
+              onmouseover="this.style.background='var(--sky-pale)'"
+              onmouseout="this.style.background= selectedRecipient?.id==='${u.id}' ? 'var(--sky-light)' : ''">
+              ${u.nickname}
+            </div>`).join('')
+        : '<p style="padding:12px; color:var(--text-mute); font-size:13px;">검색 결과가 없어요</p>';
+    }, 250);
 
     function filterRecipients(q) {
       const el = document.getElementById('recipientList');
-      if (!q) {
+      if (!q.trim()) {
         el.innerHTML = '<p style="padding:12px; color:var(--text-mute); font-size:13px;">닉네임 또는 아이디를 입력하세요</p>';
         return;
       }
-      const qLow = q.toLowerCase();
-      const filtered = allUsers.filter(u =>
-        u.nickname.toLowerCase().includes(qLow) ||
-        u.loginId.toLowerCase().includes(qLow)
-      );
-      el.innerHTML = filtered.length
-        ? filtered.map(u => `
-            <div onclick="selectRecipient('${u.nickname}')" id="rItem_${u.nickname}"
-              style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border);"
-              onmouseover="this.style.background='var(--sky-pale)'"
-              onmouseout="this.style.background= selectedRecipient?.nick==='${u.nickname}' ? 'var(--sky-light)' : ''">
-              ${u.nickname}${u.loginId !== u.nickname
-                ? `<span style="color:var(--text-mute); font-size:11px; margin-left:6px;">(${u.loginId})</span>` : ''}
-            </div>`).join('')
-        : '<p style="padding:12px; color:var(--text-mute); font-size:13px;">검색 결과가 없어요</p>';
+      filterRecipientsDebounced(q);
     }
 
-    function selectRecipient(nick) {
-      const found = allUsers.find(u => u.nickname === nick);
-      selectedRecipient = found ? { nick: found.nickname, id: found.id } : { nick, id: null };
+    function selectRecipient(nick, id) {
+      selectedRecipient = { nick, id };
       document.querySelectorAll('#recipientList > div').forEach(el => {
-        const sel = el.id === `rItem_${nick}`;
+        const sel = el.id === `rItem_${id}`;
         el.style.background = sel ? 'var(--sky-light)' : '';
         el.style.fontWeight  = sel ? '600' : '';
       });

@@ -215,8 +215,9 @@
 
       if (!charId || !fromNick) { showExpired(); return; }
 
-      // 개체 조회
-      const { data: c, error } = await sb.from('characters').select('*').eq('id', charId).single();
+      // 개체 조회 — 이 화면은 받는 사람(아직 소유자가 아님)이 보므로 연락처가 빠진
+      // 공개 뷰를 쓴다(get_character_for_edit는 "현재" 소유자/관리자만 허용해서 여기서는 못 씀)
+      const { data: c, error } = await sb.from('characters_public').select('*').eq('id', charId).single();
       if (error || !c) { showExpired('개체를 찾을 수 없어요.'); return; }
 
       // 소유주 유효성 검증 — owner_user_id 우선, 없으면 nickname fallback

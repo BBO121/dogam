@@ -133,7 +133,7 @@
         for (const u of targetUsers) {
           if (_stop) { log('\n[중단됨]', 'log-info'); break; }
 
-          const nick = u.nickname || u.login_id || String(u.id).slice(0, 8);
+          const nick = u.nickname || String(u.id).slice(0, 8);
           log(`→ ${nick}`, 'log-step');
 
           try {

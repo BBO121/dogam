@@ -291,6 +291,7 @@
   <script src="../js/chat.js"></script>
   <script src="../js/main.js"></script>
   <script src="../js/utils.js"></script>
+  <script src="../js/search.js"></script>
   <script>
     const params      = new URLSearchParams(window.location.search);
     const speciesId   = params.get('species_id');
@@ -300,7 +301,6 @@
     let customFields                = [];
     let speciesWatermarkUrl         = null; // 종족주의 개인 워터마크 URL (없으면 null → 연구소 기본)
     let itemCount                   = 0;
-    let allUsers                    = [];
     let defaultDesignerType         = 'site';
     let selectedDefaultDesignerNick = null;
     let defaultOwnerType            = 'site';
@@ -343,24 +343,19 @@
 
     async function loadBulkUsers() {
       const myName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
-      const { data } = await sb.rpc('get_all_users');
-      allUsers = (data || [])
-        .map(u => ({ nickname: u.nickname || '', loginId: u.login_id || u.nickname || '', id: u.id || '' }))
-        .filter(u => u.nickname)
-        .sort((a, b) => a.nickname.localeCompare(b.nickname, 'ko'));
       renderDefaultDesignerList([]);
       renderDefaultOwnerList([]);
-      if (myName) selectDefaultOwner(myName);
+      if (myName) selectDefaultOwner(myName, currentUser.id);
     }
 
     function renderDefaultDesignerList(list) {
       const el = document.getElementById('defaultDesignerUserList');
       el.innerHTML = list.length
         ? list.map(u => `
-            <div onclick="selectDefaultDesigner('${u.nickname}')" id="ddItem_${u.nickname}"
-              style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border);"
+            <div onclick="selectDefaultDesigner('${u.nickname.replace(/'/g,"\\'")}')" id="ddItem_${u.nickname}"
+              style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border); background:${selectedDefaultDesignerNick===u.nickname?'var(--sky-light)':''};"
               onmouseover="this.style.background='var(--sky-pale)'" onmouseout="this.style.background= selectedDefaultDesignerNick==='${u.nickname}' ? 'var(--sky-light)' : ''">
-              ${u.nickname}${u.loginId !== u.nickname ? `<span style="color:var(--text-mute); font-size:11px; margin-left:6px;">(${u.loginId})</span>` : ''}
+              ${u.nickname}
             </div>`).join('')
         : '<p style="padding:12px; color:var(--text-mute); font-size:13px;">닉네임 또는 아이디를 입력하세요</p>';
     }
@@ -376,16 +371,14 @@
       disp.style.display = 'block';
     }
 
+    const filterDefaultDesignersDebounced = debounce(async (q) => {
+      const { data } = await searchUsers(q, { limit: 20 });
+      renderDefaultDesignerList(data || []);
+    }, 250);
+
     function filterDefaultDesigners(q) {
-      const qLow = q.toLowerCase();
-      const filtered = q
-        ? allUsers.filter(u =>
-            u.nickname.toLowerCase().includes(qLow) ||
-            u.loginId.toLowerCase().includes(qLow)
-          )
-        : [];
-      renderDefaultDesignerList(filtered);
-      if (selectedDefaultDesignerNick) selectDefaultDesigner(selectedDefaultDesignerNick);
+      if (!q.trim()) { renderDefaultDesignerList([]); return; }
+      filterDefaultDesignersDebounced(q);
     }
 
     function setDefaultDesignerType(type) {
@@ -401,36 +394,34 @@
       const el = document.getElementById('defaultOwnerUserList');
       el.innerHTML = list.length
         ? list.map(u => `
-            <div onclick="selectDefaultOwner('${u.nickname}')" id="doItem_${u.nickname}"
+            <div onclick="selectDefaultOwner('${u.nickname.replace(/'/g,"\\'")}','${u.id}')" id="doItem_${u.id}"
               style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border);"
-              onmouseover="this.style.background='var(--sky-pale)'" onmouseout="this.style.background= selectedDefaultOwnerNick==='${u.nickname}' ? 'var(--sky-light)' : ''">
-              ${u.nickname}${u.loginId !== u.nickname ? `<span style="color:var(--text-mute); font-size:11px; margin-left:6px;">(${u.loginId})</span>` : ''}
+              onmouseover="this.style.background='var(--sky-pale)'" onmouseout="this.style.background= selectedDefaultOwnerNickId==='${u.id}' ? 'var(--sky-light)' : ''">
+              ${u.nickname}
             </div>`).join('')
         : '<p style="padding:12px; color:var(--text-mute); font-size:13px;">닉네임 또는 아이디를 입력하세요</p>';
     }
 
-    function selectDefaultOwner(nick) {
+    function selectDefaultOwner(nick, id) {
       selectedDefaultOwnerNick   = nick;
-      selectedDefaultOwnerNickId = allUsers.find(u => u.nickname === nick)?.id || null;
+      selectedDefaultOwnerNickId = id;
       document.querySelectorAll('#defaultOwnerUserList > div').forEach(el => {
-        el.style.background = el.id === `doItem_${nick}` ? 'var(--sky-light)' : '';
-        el.style.fontWeight  = el.id === `doItem_${nick}` ? '600' : '';
+        el.style.background = el.id === `doItem_${id}` ? 'var(--sky-light)' : '';
+        el.style.fontWeight  = el.id === `doItem_${id}` ? '600' : '';
       });
       const disp = document.getElementById('defaultOwnerSelectedDisplay');
       disp.textContent = `선택됨: ${nick}`;
       disp.style.display = 'block';
     }
 
+    const filterDefaultOwnersDebounced = debounce(async (q) => {
+      const { data } = await searchUsers(q, { limit: 20 });
+      renderDefaultOwnerList(data || []);
+    }, 250);
+
     function filterDefaultOwners(q) {
-      const qLow = q.toLowerCase();
-      const filtered = q
-        ? allUsers.filter(u =>
-            u.nickname.toLowerCase().includes(qLow) ||
-            u.loginId.toLowerCase().includes(qLow)
-          )
-        : [];
-      renderDefaultOwnerList(filtered);
-      if (selectedDefaultOwnerNick) selectDefaultOwner(selectedDefaultOwnerNick);
+      if (!q.trim()) { renderDefaultOwnerList([]); return; }
+      filterDefaultOwnersDebounced(q);
     }
 
     function setDefaultOwnerType(type) {
@@ -584,11 +575,11 @@
       const el = document.getElementById(`itemDList_${id}`);
       if (!el) return;
       el.innerHTML = list.length
-        ? list.map(u => `<div onclick="selectItemDesigner(${id},'${u.nickname}')" id="idItem_${id}_${u.nickname}"
+        ? list.map(u => `<div onclick="selectItemDesigner(${id},'${u.nickname.replace(/'/g,"\\'")}')" id="idItem_${id}_${u.nickname}"
             style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);"
             onmouseover="this.style.background='var(--sky-pale)'"
             onmouseout="this.style.background=(itemStates[${id}]&&itemStates[${id}].selectedDesigner==='${u.nickname}')?'var(--sky-light)':''">
-            ${u.nickname}${u.loginId!==u.nickname?`<span style="color:var(--text-mute);font-size:11px;margin-left:6px;">(${u.loginId})</span>`:''}
+            ${u.nickname}
           </div>`).join('')
         : '<p style="padding:10px 14px;color:var(--text-mute);font-size:13px;">닉네임 또는 아이디를 입력하세요</p>';
     }
@@ -606,12 +597,16 @@
       disp.style.display = 'block';
     }
 
+    const _filterItemDesignersDebounced = {};
     function filterItemDesigners(id, q) {
-      const qLow = q.toLowerCase();
-      const filtered = q ? allUsers.filter(u => u.nickname.toLowerCase().includes(qLow) || u.loginId.toLowerCase().includes(qLow)) : [];
-      renderItemDesignerList(id, filtered);
-      const sel = itemStates[id]?.selectedDesigner;
-      if (sel) selectItemDesigner(id, sel);
+      if (!q.trim()) { renderItemDesignerList(id, []); return; }
+      if (!_filterItemDesignersDebounced[id]) {
+        _filterItemDesignersDebounced[id] = debounce(async (qq) => {
+          const { data } = await searchUsers(qq, { limit: 20 });
+          renderItemDesignerList(id, data || []);
+        }, 250);
+      }
+      _filterItemDesignersDebounced[id](q);
     }
 
     function setItemOwnerType(id, type) {
@@ -628,21 +623,21 @@
       const el = document.getElementById(`itemOList_${id}`);
       if (!el) return;
       el.innerHTML = list.length
-        ? list.map(u => `<div onclick="selectItemOwner(${id},'${u.nickname}')" id="ioItem_${id}_${u.nickname}"
+        ? list.map(u => `<div onclick="selectItemOwner(${id},'${u.nickname.replace(/'/g,"\\'")}','${u.id}')" id="ioItem_${id}_${u.id}"
             style="padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--border);"
             onmouseover="this.style.background='var(--sky-pale)'"
-            onmouseout="this.style.background=(itemStates[${id}]&&itemStates[${id}].selectedOwner==='${u.nickname}')?'var(--sky-light)':''">
-            ${u.nickname}${u.loginId!==u.nickname?`<span style="color:var(--text-mute);font-size:11px;margin-left:6px;">(${u.loginId})</span>`:''}
+            onmouseout="this.style.background=(itemStates[${id}]&&itemStates[${id}].selectedOwnerId==='${u.id}')?'var(--sky-light)':''">
+            ${u.nickname}
           </div>`).join('')
         : '<p style="padding:10px 14px;color:var(--text-mute);font-size:13px;">닉네임 또는 아이디를 입력하세요</p>';
     }
 
-    function selectItemOwner(id, nick) {
+    function selectItemOwner(id, nick, ownerId) {
       if (!itemStates[id]) itemStates[id] = {};
       itemStates[id].selectedOwner   = nick;
-      itemStates[id].selectedOwnerId = allUsers.find(u => u.nickname === nick)?.id || null;
+      itemStates[id].selectedOwnerId = ownerId;
       document.querySelectorAll(`#itemOList_${id} > div`).forEach(el => {
-        const sel = el.id === `ioItem_${id}_${nick}`;
+        const sel = el.id === `ioItem_${id}_${ownerId}`;
         el.style.background = sel ? 'var(--sky-light)' : '';
         el.style.fontWeight  = sel ? '600' : '';
       });
@@ -651,12 +646,16 @@
       disp.style.display = 'block';
     }
 
+    const _filterItemOwnersDebounced = {};
     function filterItemOwners(id, q) {
-      const qLow = q.toLowerCase();
-      const filtered = q ? allUsers.filter(u => u.nickname.toLowerCase().includes(qLow) || u.loginId.toLowerCase().includes(qLow)) : [];
-      renderItemOwnerList(id, filtered);
-      const sel = itemStates[id]?.selectedOwner;
-      if (sel) selectItemOwner(id, sel);
+      if (!q.trim()) { renderItemOwnerList(id, []); return; }
+      if (!_filterItemOwnersDebounced[id]) {
+        _filterItemOwnersDebounced[id] = debounce(async (qq) => {
+          const { data } = await searchUsers(qq, { limit: 20 });
+          renderItemOwnerList(id, data || []);
+        }, 250);
+      }
+      _filterItemOwnersDebounced[id](q);
     }
 
     async function submitAll() {

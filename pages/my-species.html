@@ -69,6 +69,7 @@
   <script src="../js/notifications.js"></script>
   <script src="../js/chat.js"></script>
   <script src="../js/utils.js"></script>
+  <script src="../js/search.js"></script>
   <script src="../js/main.js"></script>
   <script>
     const _qs          = new URLSearchParams(window.location.search);
@@ -83,12 +84,12 @@
 
       if (ownerIdParam) {
         // login_id → UUID 조회 (URL에 UUID 비노출)
+        // search_users는 login_id를 내부 매칭에만 쓰고 값 자체는 응답에 포함하지 않으므로
+        // 정확히 일치하는 결과를 서버가 우선순위로 반환한 것 중 첫 건을 사용한다.
         document.getElementById('registerBtn').style.display = 'none';
 
-        const { data: userList } = await sb.rpc('get_all_users');
-        const found = (userList || []).find(u =>
-          u.login_id?.toLowerCase() === ownerIdParam.toLowerCase()
-        );
+        const { data } = await searchUsers(ownerIdParam, { limit: 5 });
+        const found = (data || [])[0] || null;
         targetUserId = found?.id || null;
         const displayLabel = found?.nickname || ownerIdParam;
         document.querySelector('.list-page-title').textContent = `${displayLabel}님의 종족`;
@@ -105,8 +106,8 @@
         document.querySelector('.list-page-title').textContent = `${ownerParam}님의 종족`;
         document.getElementById('registerBtn').style.display = 'none';
 
-        const { data: userList } = await sb.rpc('get_all_users');
-        const found = (userList || []).find(u => u.nickname === ownerParam);
+        const { data } = await searchUsers(ownerParam, { limit: 5 });
+        const found = (data || []).find(u => u.nickname === ownerParam) || null;
         targetUserId = found?.id || null;
 
         if (!targetUserId) {

@@ -932,7 +932,6 @@
     let allAdminUsers = [];
 
     function adminUserPriority(u) {
-      if (u.login_id === 'admin')          return 0;
       if (u.role === 'admin')              return 1;
       if (u.role === 'staff')              return 2;
       if (STAFF_GEN1.includes(u.nickname)) return 3;
@@ -945,7 +944,7 @@
       return [...list].sort((a, b) => {
         const diff = adminUserPriority(a) - adminUserPriority(b);
         if (diff !== 0) return diff;
-        return (a.nickname || a.login_id || '').localeCompare(b.nickname || b.login_id || '', 'ko');
+        return (a.nickname || '').localeCompare(b.nickname || '', 'ko');
       });
     }
 
@@ -1007,7 +1006,6 @@
       const filtered = q
         ? allAdminUsers.filter(u =>
             (u.nickname  || '').toLowerCase().includes(qLow) ||
-            (u.login_id  || '').toLowerCase().includes(qLow) ||
             (u.email     || '').toLowerCase().includes(qLow) ||
             (u.id        || '').toLowerCase().includes(qLow))
         : allAdminUsers;
@@ -1072,7 +1070,7 @@
       // ③ 연관 데이터 정리 (디자이너 정보, 거래 내역)
       try {
         const [{ data: uuidDesigns }, { data: allUsersData }] = await Promise.all([
-          sb.from('characters').select('id, designer_user_ids, designer_external')
+          sb.from('characters_public').select('id, designer_user_ids, designer_external')
             .filter('designer_user_ids', 'cs', `{${userId}}`),
           sb.rpc('get_all_users'),
         ]);

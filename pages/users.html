@@ -152,7 +152,7 @@
       el.style.display    = '';
 
       el.innerHTML = list.map(u => {
-        const displayName = u.nickname || u.login_id || '—';
+        const displayName = u.nickname || '—';
 
         const joinDate = new Date(u.created_at).toLocaleDateString('ko-KR', {
           year: 'numeric', month: '2-digit', day: '2-digit'
@@ -169,7 +169,6 @@
     }
 
     function badgePriority(u) {
-      if (u.login_id === 'admin')       return 0;
       if (u.role === 'admin')           return 1;
       if (u.role === 'staff')           return 2;
       if (STAFF_GEN1.includes(u.nickname)) return 3;
@@ -182,14 +181,14 @@
       return [...list].sort((a, b) => {
         const diff = badgePriority(a) - badgePriority(b);
         if (diff !== 0) return diff;
-        return (a.nickname || a.login_id || '').localeCompare(b.nickname || b.login_id || '', 'ko');
+        return (a.nickname || '').localeCompare(b.nickname || '', 'ko');
       });
     }
 
     function filterUsers(q) {
       const qLow = q.toLowerCase().trim();
       const filtered = qLow
-        ? allUsers.filter(u => (u.nickname || u.login_id || '').toLowerCase().includes(qLow))
+        ? allUsers.filter(u => (u.nickname || '').toLowerCase().includes(qLow))
         : allUsers;
 
       const count = document.getElementById('usersCount');

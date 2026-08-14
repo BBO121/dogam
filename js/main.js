@@ -219,7 +219,6 @@ function renderDropdown(q, result) {
     .map(u => ({
       id:             u.id,
       nickname:       u.nickname || '(닉네임 미설정)',
-      loginId:        u.login_id || '',
       role:           u.role || '',
       avatar_url:     u.avatar_url || '',
       isSpeciesOwner: !!u.is_species_owner,
@@ -261,7 +260,6 @@ function renderDropdown(q, result) {
         ${ddThumb(u.avatar_url)}
         <span class="dd-text">
           <span class="dd-label">${getUserBadgesHtml(u)} ${highlight(u.nickname, q)}</span>
-          <span class="dd-meta">${escapeHtml(u.loginId)}</span>
         </span>
       </a></li>
     `).join('')}

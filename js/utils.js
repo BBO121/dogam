@@ -1,3 +1,35 @@
+// ============================================
+// 유저 검색/매칭 공용 헬퍼
+// 검색어로 유저를 찾는 기능은 js/search.js의 searchUsers(query, options)/debounce()를
+// 그대로 쓴다(중복 구현 금지 — js/search.js 상단 주석 참고). 여기 있는 건 "검색"이
+// 아니라 "이미 알고 있는 식별자(uuid/닉네임/아이디) 목록을 한 번에 매칭"이 필요한
+// 화면 전용 헬퍼다. login_id는 매칭에만 쓰고 응답에는 포함되지 않는다.
+// ============================================
+
+// 이미 알고 있는 UUID 목록 → {id, nickname} 목록 (캐릭터에 저장된 designer_user_ids 등 표시용)
+async function resolveUsersByIds(ids) {
+  const list = [...new Set((ids || []).filter(Boolean))];
+  if (!list.length) return [];
+  const { data, error } = await sb.rpc('resolve_users_by_ids', { p_ids: list });
+  if (error) { console.warn('[resolveUsersByIds] 오류:', error); return []; }
+  return data || [];
+}
+
+// 닉네임/login_id 문자열 목록(붙여넣은 대량이전 목록 등) → 입력값별 매칭 유저 맵
+// admin/staff 전용 RPC. 반환: Map<원본identifier, [{id,nickname}, ...]>
+async function resolveUsersByIdentifiers(identifiers) {
+  const list = [...new Set((identifiers || []).map(s => (s || '').trim()).filter(Boolean))];
+  const map = new Map();
+  if (!list.length) return map;
+  const { data, error } = await sb.rpc('resolve_users_by_identifiers', { p_identifiers: list });
+  if (error) { console.warn('[resolveUsersByIdentifiers] 오류:', error); return map; }
+  (data || []).forEach(row => {
+    if (!map.has(row.matched_identifier)) map.set(row.matched_identifier, []);
+    map.get(row.matched_identifier).push({ id: row.id, nickname: row.nickname });
+  });
+  return map;
+}
+
 const ALLOWED_IMAGE_TYPES = ['image/png', 'image/gif', 'image/jpeg', 'image/webp'];
 const MAX_IMAGE_DIMENSION  = 2000;
 const MAX_BLOB_BYTES       = 2 * 1024 * 1024;

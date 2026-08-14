@@ -329,6 +329,7 @@
   <script src="../js/chat.js"></script>
   <script src="../js/main.js"></script>
   <script src="../js/utils.js"></script>
+  <script src="../js/search.js"></script>
   <script src="../js/step-priority.js"></script>
   <script>
     let currentUser   = null;
@@ -336,7 +337,6 @@
     let selectedNick  = null;
     let selectedNickId = null;
     let designers     = []; // { type:'site', userId, nickname } | { type:'external', name, contact }
-    let allUsers      = [];
     let allSpecies           = [];
     let addedCategories      = [];
     let selectedMainFile     = null;
@@ -937,23 +937,15 @@
     async function loadUsers() {
       const myName = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
 
-      const { data } = await sb.rpc('get_all_users');
-      allUsers = (data || [])
-        .map(u => ({ nickname: u.nickname || '', loginId: u.login_id || u.nickname || '', id: u.id || '' }))
-        .filter(u => u.nickname)
-        .sort((a, b) => a.nickname.localeCompare(b.nickname, 'ko'));
-
       renderUserList([]);
 
-      // display_name ≠ nickname 계정 대응: ID 기준으로 현재 유저를 찾아 자동 선택
-      const myEntry = allUsers.find(u => u.id === currentUser.id);
-      if (myEntry) {
-        selectedNick   = myName || myEntry.nickname;
-        selectedNickId = myEntry.id;
+      // 검색 없이도 기본값은 "나"로 자동 선택 (전체 유저 목록을 미리 받지 않으므로
+      // currentUser 정보만으로 채운다 — 검색은 다른 유저로 바꿀 때만 필요)
+      if (myName) {
+        selectedNick   = myName;
+        selectedNickId = currentUser.id;
         const disp = document.getElementById('ownerSelectedDisplay');
         if (disp) { disp.textContent = `선택됨: ${selectedNick}`; disp.style.display = 'block'; }
-      } else if (myName) {
-        selectUser(myName);
       }
     }
 
@@ -964,36 +956,40 @@
         return;
       }
       el.innerHTML = list.map(u => `
-        <div onclick="selectUser('${u.nickname}')" id="userItem_${u.nickname}"
+        <div onclick="selectUser('${u.nickname.replace(/'/g,"\\'")}','${u.id}')" id="userItem_${u.id}"
           style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border); transition:background 0.1s;"
-          onmouseover="this.style.background='var(--sky-pale)'" onmouseout="this.style.background= selectedNick==='${u.nickname}' ? 'var(--sky-light)' : ''">
-          ${u.nickname}${u.loginId !== u.nickname ? `<span style="color:var(--text-mute); font-size:11px; margin-left:6px;">(${u.loginId})</span>` : ''}
+          onmouseover="this.style.background='var(--sky-pale)'" onmouseout="this.style.background= selectedNickId==='${u.id}' ? 'var(--sky-light)' : ''">
+          ${u.nickname}
         </div>
       `).join('');
+      highlightSelectedUser();
     }
 
-    function selectUser(nick) {
-      selectedNick   = nick;
-      selectedNickId = allUsers.find(u => u.nickname === nick)?.id || null;
+    function highlightSelectedUser() {
       document.querySelectorAll('#ownerUserList > div').forEach(el => {
-        el.style.background = el.id === `userItem_${nick}` ? 'var(--sky-light)' : '';
-        el.style.fontWeight  = el.id === `userItem_${nick}` ? '600' : '';
+        const isSel = el.id === `userItem_${selectedNickId}`;
+        el.style.background = isSel ? 'var(--sky-light)' : '';
+        el.style.fontWeight  = isSel ? '600' : '';
       });
+    }
+
+    function selectUser(nick, id) {
+      selectedNick   = nick;
+      selectedNickId = id;
+      highlightSelectedUser();
       const disp = document.getElementById('ownerSelectedDisplay');
       disp.textContent = `선택됨: ${nick}`;
       disp.style.display = 'block';
     }
 
+    const filterUsersDebounced = debounce(async (q) => {
+      const { data } = await searchUsers(q, { limit: 20 });
+      renderUserList(data || []);
+    }, 250);
+
     function filterUsers(q) {
-      const qLow = q.toLowerCase();
-      const filtered = q
-        ? allUsers.filter(u =>
-            u.nickname.toLowerCase().includes(qLow) ||
-            u.loginId.toLowerCase().includes(qLow)
-          )
-        : [];
-      renderUserList(filtered);
-      if (selectedNick) selectUser(selectedNick);
+      if (!q.trim()) { renderUserList([]); return; }
+      filterUsersDebounced(q);
     }
 
     function renderDesignerItems() {
@@ -1010,15 +1006,11 @@
       `).join('');
     }
 
-    function filterDesigners(q) {
+    const filterDesignersDebounced = debounce(async (q) => {
       const dropdown = document.getElementById('designerDropdown');
-      const qTrim = q.trim();
-      if (!qTrim) { dropdown.style.display = 'none'; return; }
-      const qLow = qTrim.toLowerCase();
-      const results = allUsers.filter(u => {
-        if (designers.some(d => d.type === 'site' && d.userId === u.id)) return false;
-        return u.nickname.toLowerCase().includes(qLow) || u.loginId.toLowerCase().includes(qLow);
-      }).slice(0, 10);
+      const { data } = await searchUsers(q, { limit: 15 });
+      const results = (data || [])
+        .filter(u => !designers.some(d => d.type === 'site' && d.userId === u.id));
       if (!results.length) {
         dropdown.innerHTML = '<p style="padding:10px 14px; font-size:13px; color:var(--text-mute);">일치하는 유저가 없어요</p>';
         dropdown.style.display = '';
@@ -1028,10 +1020,17 @@
         <div onclick="addSiteDesigner('${u.id}','${u.nickname.replace(/'/g,"\\'")}')"
           style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border); transition:background 0.1s;"
           onmouseover="this.style.background='var(--sky-pale)'" onmouseout="this.style.background=''">
-          ${u.nickname}${u.loginId !== u.nickname ? `<span style="color:var(--text-mute);font-size:11px;margin-left:6px;">(${u.loginId})</span>` : ''}
+          ${u.nickname}
         </div>
       `).join('');
       dropdown.style.display = '';
+    }, 250);
+
+    function filterDesigners(q) {
+      const dropdown = document.getElementById('designerDropdown');
+      const qTrim = q.trim();
+      if (!qTrim) { dropdown.style.display = 'none'; return; }
+      filterDesignersDebounced(qTrim);
     }
 
     function addSiteDesigner(userId, nickname) {
