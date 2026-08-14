@@ -75,10 +75,26 @@
 
 .footer a {
   color: inherit;
-  text-decoration: underline;
-  text-underline-offset: 2px;
+  text-decoration: none;
 }
 
 .footer a:hover {
   color: var(--sky-dark);
+}
+
+/* 푸터 항목이 늘어나도(약관/방침/운영진/문의/X 등) 좁은 화면에서
+   자연스럽게 줄바꿈되도록 각 항목을 개별 flex item으로 분리한다.
+   구분점(·)은 첫 항목을 제외한 각 항목 앞에 가상요소로 붙여서,
+   줄바꿈이 일어나도 구분점만 혼자 남는 일이 없게 한다. */
+.footer-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  row-gap: 8px;
+}
+
+.footer-links > *:not(:first-child)::before {
+  content: '·';
+  margin: 0 10px;
+  color: var(--text-mute);
 }
