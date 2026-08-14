@@ -121,6 +121,14 @@
               <p class="form-hint" style="margin-top:8px;">업로드된 상세 이미지는 무단 도용 방지를 위해 워터마크가 적용됩니다.<br>개인 워터마크는 <a href="profile.html" style="color:var(--sky-deep);">프로필 설정</a>에서 등록할 수 있으며, 설정하지 않은 경우 연구소 기본 워터마크가 사용됩니다.</p>
             </div>
 
+            <!-- 기본 이미지 선택 -->
+            <div class="form-group">
+              <label class="form-label">메인 이미지가 없나요? <span class="form-hint-inline">선택사항</span></label>
+              <p class="form-hint">이미지가 없는 개체는 연구소 기본 이미지를 사용할 수 있습니다.<br>기본 이미지를 선택하면 이미 등록된 메인 이미지보다 우선 표시돼요. 선택 해제하면 다시 메인 이미지가 보여요.</p>
+              <div class="default-img-grid" id="defaultImgGrid"></div>
+              <button type="button" class="default-img-clear" id="defaultImgClearBtn" onclick="selectDefaultImage(null)" disabled>선택 해제</button>
+            </div>
+
             <!-- 대표 이미지 성장 단계 -->
             <div class="form-group" id="representativeStepSection" style="display:none;">
               <label class="form-label">대표 이미지 성장 단계</label>
@@ -390,6 +398,7 @@
     let sectionDragSrc       = null;
     let currentThumbnailUrl  = null;
     let selectedMainFile     = null;
+    let selectedDefaultImageIndex = null;
     let pendingThumbnailBlob = null;
     let cropperInstance      = null;
     let cropTargetStep       = null; // null = 대표 이미지, 아니면 크롭 중인 Step의 step_order (우선순위 종족 전용)
@@ -428,6 +437,22 @@
     const QuillDelta = Quill.import('delta');
 
     // ── char_sections 이미지 첨부 (Storage 업로드, base64/blob 저장 금지) ──
+    function renderDefaultImgGrid() {
+      const grid = document.getElementById('defaultImgGrid');
+      grid.innerHTML = [1, 2, 3, 4, 5].map(n => `
+        <div class="default-img-item default-img-item--portrait ${selectedDefaultImageIndex === n ? 'selected' : ''}" onclick="selectDefaultImage(${n})">
+          <img src="${characterDefaultImageUrl(n)}" alt="기본 이미지 ${n}">
+          <span class="default-img-check">✓</span>
+        </div>
+      `).join('');
+      document.getElementById('defaultImgClearBtn').disabled = selectedDefaultImageIndex === null;
+    }
+
+    function selectDefaultImage(n) {
+      selectedDefaultImageIndex = n;
+      renderDefaultImgGrid();
+    }
+
     async function uploadSectionImage(file) {
       if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
         throw new Error('PNG, GIF, JPG, WebP 형식의 이미지만 첨부할 수 있어요.');
@@ -950,6 +975,9 @@
       document.getElementById('charDesc').value   = c.description || '';
       document.getElementById('ownerDesc').value  = c.owner_description || '';
 
+
+      selectedDefaultImageIndex = c.default_image_index || null;
+      renderDefaultImgGrid();
 
       if (c.image_url || c.thumbnail_url) {
         currentImageUrl     = c.image_url;
@@ -1720,7 +1748,7 @@
       const file      = document.getElementById('imageFile').files[0];
 
       if (!name) { errorEl.textContent = '이름을 입력해주세요.'; return; }
-      if (!currentImageUrl && !file) { errorEl.textContent = '대표 이미지를 등록해주세요.'; return; }
+      if (!currentImageUrl && !file && !selectedDefaultImageIndex) { errorEl.textContent = '메인 이미지를 등록하거나 기본 이미지를 선택해주세요.'; return; }
 
       let owner = null;
       let externalContact = null;
@@ -1946,6 +1974,7 @@
           ...((editRole !== 'species_owner' || isOffsiteChar) && { owner_description: ownerDesc || null }),
           image_url,
           thumbnail_url,
+          default_image_index: selectedDefaultImageIndex,
           ...(newOriginalUrl && { original_image_url: newOriginalUrl }),
           ...(newWatermarkType && { watermark_type: newWatermarkType }),
           // 공통 기능: 종족에 species_steps가 있으면 사용자가 고른 "대표 이미지 성장 단계"를 그대로 저장한다.

@@ -55,7 +55,7 @@ async function searchCharacters(query, options = {}) {
 
   try {
     let builder = sb.from('characters').select(
-      'id, name, species_name, owner_nickname, owner_user_id, image_url, thumbnail_url, created_at, is_sensitive, sensitive_note',
+      'id, name, species_name, owner_nickname, owner_user_id, image_url, thumbnail_url, default_image_index, created_at, is_sensitive, sensitive_note',
       { count: 'exact' }
     );
 
@@ -107,7 +107,7 @@ async function searchSpecies(query, options = {}) {
 
   try {
     let builder = sb.from('species').select(
-      'id, name, image_url, thumbnail_url, created_at, is_sensitive, sensitive_note, open_type, age_limit, owner_nickname',
+      'id, name, image_url, thumbnail_url, default_image_index, created_at, is_sensitive, sensitive_note, open_type, age_limit, owner_nickname',
       { count: 'exact' }
     );
 

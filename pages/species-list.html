@@ -105,7 +105,7 @@
     let ageFilter     = 'all';
     let searchController = null;
     let searchToken   = 0;
-    const pager = createPager(render);
+    const pager = createPager(render, 'paginationWrap', 'page', 28);
 
     // 전체 종족을 미리 캐싱해 브라우저에서 필터링하는 대신, 검색어/필터가
     // 바뀔 때마다 searchSpecies()로 서버에 직접 요청한다.
@@ -195,7 +195,7 @@
 
     function speciesImgHtml(s) {
       const imgSrc = s.thumbnail_url || s.image_url;
-      if (s.is_sensitive && imgSrc) {
+      if (s.is_sensitive && speciesHasVisibleRealImage(s)) {
         const ageBadge = s.age_limit > 0 ? `<span class="species-age-badge">${s.age_limit}세 이상</span>` : '';
         return `
           <div style="position:relative; overflow:hidden; border-radius:var(--radius);">
@@ -203,10 +203,16 @@
             <div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span>${ageBadge}${s.sensitive_note ? '<span class="sensitive-overlay-note">' + s.sensitive_note + '</span>' : ''}<span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div>
           </div>`;
       }
+      const displaySrc = resolveSpeciesImage(s);
       if (s.age_limit > 0) {
-        return `<div class="species-img species-img--restricted"><span class="species-age-badge">${s.age_limit}세 이상</span></div>`;
+        // 실제 이미지는 계속 숨기지만, 연구소썸네일(기본 이미지)/자동 fallback을 쓰는 경우는
+        // 실제 콘텐츠가 아니므로 이미지를 보여주고 연령 배지만 위에 겹쳐 표시한다.
+        if (speciesHasVisibleRealImage(s)) {
+          return `<div class="species-img species-img--restricted"><span class="species-age-badge">${s.age_limit}세 이상</span></div>`;
+        }
+        return `<div class="species-img" style="position:relative; background-image:url('${displaySrc}'); background-size:cover; background-position:center;"><span class="species-age-badge species-age-badge--overlay">${s.age_limit}세 이상</span></div>`;
       }
-      return `<div class="species-img" ${imgSrc ? `style="background-image:url('${imgSrc}'); background-size:cover; background-position:center;"` : ''}></div>`;
+      return `<div class="species-img" style="background-image:url('${displaySrc}'); background-size:cover; background-position:center;"></div>`;
     }
 
     function render(data) {

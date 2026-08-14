@@ -62,6 +62,14 @@
             <p class="img-upload-meta">PNG · GIF · JPG · WebP &nbsp;·&nbsp; 최대 2MB · 2000×2000px 이하</p>
           </div>
 
+          <!-- 기본 이미지 선택 -->
+          <div class="form-group">
+            <label class="form-label">대표 이미지가 없나요? <span class="form-hint-inline">선택사항</span></label>
+            <p class="form-hint">이미지가 없는 종족은 연구소 기본 이미지를 사용할 수 있습니다.<br>기본 이미지를 선택하면 업로드한 대표 이미지보다 우선 표시돼요.</p>
+            <div class="default-img-grid" id="defaultImgGrid"></div>
+            <button type="button" class="default-img-clear" id="defaultImgClearBtn" onclick="selectDefaultImage(null)" disabled>선택 해제</button>
+          </div>
+
           <!-- 종족명 -->
           <div class="form-group">
             <label class="form-label">종족명 <span class="required">*</span></label>
@@ -295,6 +303,23 @@
     let currentUser       = null;
     let affiliatedSpecies = [];
     let allSpeciesList    = [];
+    let selectedDefaultImageIndex = null;
+
+    function renderDefaultImgGrid() {
+      const grid = document.getElementById('defaultImgGrid');
+      grid.innerHTML = [1, 2, 3, 4, 5].map(n => `
+        <div class="default-img-item ${selectedDefaultImageIndex === n ? 'selected' : ''}" onclick="selectDefaultImage(${n})">
+          <img src="${speciesDefaultImageUrl(n)}" alt="기본 이미지 ${n}">
+          <span class="default-img-check">✓</span>
+        </div>
+      `).join('');
+      document.getElementById('defaultImgClearBtn').disabled = selectedDefaultImageIndex === null;
+    }
+
+    function selectDefaultImage(n) {
+      selectedDefaultImageIndex = n;
+      renderDefaultImgGrid();
+    }
 
     async function loadAllSpecies() {
       const { data } = await sb.from('species').select('id, name').order('name');
@@ -381,6 +406,7 @@
       const role = currentUser.user_metadata?.role;
       if (!isAdminOrStaff(role) && role !== 'species_owner') { window.location.href = 'index.html'; return; }
       renderStepFields();
+      renderDefaultImgGrid();
       await loadAllSpecies();
     }
 
@@ -687,6 +713,7 @@
           description:    desc || null,
           image_url:      imageUrl,
           thumbnail_url:  thumbnailUrl,
+          default_image_index: selectedDefaultImageIndex,
           owner_nickname: nickname,
           owner_user_id:  currentUser.id,
           custom_fields:  fields.length ? fields : null,

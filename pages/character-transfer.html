@@ -191,10 +191,8 @@
       document.getElementById('charNameDisp').textContent = c.name;
       document.getElementById('charSpeciesDisp').textContent = c.species_name || '';
       document.getElementById('currentOwnerDisp').textContent = c.owner_nickname || '—';
-      if (c.image_url) {
-        document.getElementById('charThumb').innerHTML =
-          `<img src="${c.image_url}" alt="${c.name}">`;
-      }
+      document.getElementById('charThumb').innerHTML =
+        `<img src="${resolveCharacterImage(c, { thumb: false })}" alt="${c.name}">`;
 
       // 유저 목록 로드 (현재 소유주 제외 — owner_user_id 기준)
       const { data: userData } = await sb.rpc('get_all_users');

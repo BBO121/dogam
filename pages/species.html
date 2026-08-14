@@ -250,7 +250,7 @@
         const internalIds = s.affiliated_species.filter(a => a.type === 'internal').map(a => a.species_id);
         const internalMap = {};
         if (internalIds.length) {
-          const { data: spData } = await sb.from('species').select('id, name, image_url, thumbnail_url, age_limit').in('id', internalIds);
+          const { data: spData } = await sb.from('species').select('id, name, image_url, thumbnail_url, age_limit, default_image_index').in('id', internalIds);
           (spData || []).forEach(sp => { internalMap[sp.id] = sp; });
         }
         const items = s.affiliated_species.map(item => {
@@ -261,7 +261,7 @@
               <div style="width:56px; height:56px; border-radius:10px; overflow:hidden; border:1px solid var(--border); background:#f1f5f9; flex-shrink:0; display:flex; align-items:center; justify-content:center;">
                 ${sp.age_limit > 0
                   ? `<span class="species-age-badge" style="font-size:10px; padding:2px 5px; line-height:1.3; white-space:normal;">${sp.age_limit}세</span>`
-                  : ((sp.thumbnail_url || sp.image_url) ? `<img src="${sp.thumbnail_url || sp.image_url}" style="width:100%; height:100%; object-fit:cover;">` : '')}
+                  : `<img src="${resolveSpeciesImage(sp)}" style="width:100%; height:100%; object-fit:cover;">`}
               </div>
               <span style="font-size:12px; color:var(--text); font-weight:500; text-align:center; word-break:break-all; line-height:1.4;">${sp.name}</span>
             </a>`;
@@ -285,12 +285,12 @@
 
       document.getElementById('speciesDetail').innerHTML = `
         <div class="species-detail-top">
-          ${s.is_sensitive && s.image_url ? `
+          ${s.is_sensitive && speciesHasVisibleRealImage(s, { thumb: false }) ? `
           <div style="position:relative; overflow:hidden; border-radius:var(--radius);">
             <div class="species-detail-img blurred" style="background-image:url('${s.image_url}'); background-size:contain; background-position:center; background-repeat:no-repeat;"></div>
             <div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span>${s.sensitive_note ? '<span class="sensitive-overlay-note">' + s.sensitive_note + '</span>' : ''}<span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div>
           </div>` : `
-          <div class="species-detail-img" ${s.image_url ? `style="background-image:url('${s.image_url}'); background-size:contain; background-position:center; background-repeat:no-repeat;"` : ''}></div>`}
+          <div class="species-detail-img" style="background-image:url('${resolveSpeciesImage(s, { thumb: false })}'); background-size:contain; background-position:center; background-repeat:no-repeat;"></div>`}
           <div class="species-detail-info">
             <div class="breadcrumb">
               <a href="index.html">홈</a>
@@ -402,7 +402,7 @@
         while (true) {
           const { data: page } = await sb
             .from('characters')
-            .select('id, name, species_name, owner_nickname, owner_user_id, image_url, thumbnail_url, created_at, is_sensitive, sensitive_note, char_categories, char_number')
+            .select('id, name, species_name, owner_nickname, owner_user_id, image_url, thumbnail_url, default_image_index, created_at, is_sensitive, sensitive_note, char_categories, char_number')
             .eq('species_name', s.name)
             .order('created_at', { ascending: false })
             .range(from, from + pageSize - 1);
@@ -638,12 +638,12 @@
           <a href="${manageMode ? 'javascript:void(0)' : `character.html?id=${c.id}`}" class="character-card"
             style="${manageMode ? 'cursor:default;' : ''}"
             onclick="${manageMode ? `toggleCheck('${c.id}'); return false;` : ''}">
-            ${c.is_sensitive && c.image_url ? `
+            ${c.is_sensitive && characterHasVisibleRealImage(c) ? `
             <div style="position:relative; overflow:hidden; border-radius:var(--radius);">
               <div class="character-img blurred" style="background-image:url('${c.thumbnail_url || c.image_url}'); background-size:cover; background-position:center;"></div>
               <div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span>${c.sensitive_note ? '<span class="sensitive-overlay-note">' + c.sensitive_note + '</span>' : ''}<span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div>
             </div>` : `
-            <div class="character-img" ${(c.thumbnail_url || c.image_url) ? `style="background-image:url('${c.thumbnail_url || c.image_url}'); background-size:cover; background-position:center;"` : ''}></div>`}
+            <div class="character-img" style="background-image:url('${resolveCharacterImage(c)}'); background-size:cover; background-position:center;"></div>`}
             <div class="character-info">
               <p class="character-name">${c.name}</p>
               <p class="character-species">${c.species_name || ''}</p>

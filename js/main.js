@@ -230,7 +230,7 @@ function renderDropdown(q, result) {
     <li class="dd-group-title">개체</li>
     ${characters.map(c => `
       <li><a href="character.html?id=${c.id}">
-        ${ddThumb(c.thumbnail_url || c.image_url)}
+        ${ddThumb(new URL(resolveCharacterImage(c), location.href).href)}
         <span class="dd-text">
           <span class="dd-label">${highlight(c.name, q)}</span>
           <span class="dd-meta">${[escapeHtml(c.species_name || ''), escapeHtml(c.owner_nickname || '')].filter(Boolean).join(' · ')}</span>
@@ -244,7 +244,7 @@ function renderDropdown(q, result) {
     <li class="dd-group-title">종족</li>
     ${species.map(s => `
       <li><a href="species.html?id=${s.id}">
-        ${ddThumb(s.thumbnail_url || s.image_url)}
+        ${ddThumb(new URL(resolveSpeciesImage(s), location.href).href)}
         <span class="dd-text">
           <span class="dd-label">${highlight(s.name, q)}</span>
           <span class="dd-meta">${escapeHtml(s.owner_nickname || '')}</span>

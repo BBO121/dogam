@@ -818,10 +818,10 @@ async function dmFetchReferenceRows(pairs) {
 
   const [charRes, spRes, adRes] = await Promise.all([
     byType.character.length
-      ? sb.from('characters').select('id, name, species_name, image_url, thumbnail_url, char_number').in('id', byType.character)
+      ? sb.from('characters').select('id, name, species_name, image_url, thumbnail_url, default_image_index, char_number').in('id', byType.character)
       : Promise.resolve({ data: [] }),
     byType.species.length
-      ? sb.from('species').select('id, name, owner_nickname, thumbnail_url').in('id', byType.species)
+      ? sb.from('species').select('id, name, owner_nickname, image_url, thumbnail_url, default_image_index').in('id', byType.species)
       : Promise.resolve({ data: [] }),
     byType.adoption.length
       ? sb.from('adoptions').select('id, character_name, species_name, image_url, thumbnail_url, status').in('id', byType.adoption)
@@ -854,7 +854,9 @@ function dmRenderReferenceCard(type, id, refDataMap) {
     `;
   }
 
-  const img = data.thumbnail_url || data.image_url || '';
+  const img = type === 'character' ? resolveCharacterImage(data)
+            : type === 'species'   ? resolveSpeciesImage(data)
+            : (data.thumbnail_url || data.image_url || '');
   const thumbHtml = img
     ? `<img src="${dmEscapeHtml(img)}" class="dm-ref-thumb" alt="">`
     : `<div class="dm-ref-thumb dm-ref-thumb--empty"></div>`;
@@ -971,7 +973,7 @@ async function dmLoadPickerList(q) {
   try {
     if (kind === 'character') {
       let sel = sb.from('characters')
-        .select('id, name, species_name, image_url, thumbnail_url, char_number, owner_user_id');
+        .select('id, name, species_name, image_url, thumbnail_url, default_image_index, char_number, owner_user_id');
       if (_dmPickerScope === 'mine') sel = sel.eq('owner_user_id', user.id);
       if (query) {
         const orParts = [`name.ilike.%${query}%`, `species_name.ilike.%${query}%`];
@@ -982,7 +984,7 @@ async function dmLoadPickerList(q) {
       if (error) throw error;
       items = data || [];
     } else if (kind === 'species') {
-      let sel = sb.from('species').select('id, name, owner_nickname, thumbnail_url');
+      let sel = sb.from('species').select('id, name, owner_nickname, image_url, thumbnail_url, default_image_index');
       if (query) sel = sel.ilike('name', `%${query}%`);
       const { data, error } = await sel.order('name', { ascending: true }).limit(30);
       if (error) throw error;
@@ -1018,7 +1020,9 @@ async function dmLoadPickerList(q) {
 }
 
 function dmRenderPickerItem(kind, it) {
-  const img = it.thumbnail_url || it.image_url || '';
+  const img = kind === 'character' ? resolveCharacterImage(it)
+            : kind === 'species'   ? resolveSpeciesImage(it)
+            : (it.thumbnail_url || it.image_url || '');
   const thumbHtml = img
     ? `<img src="${dmEscapeHtml(img)}" class="dm-picker-thumb" alt="">`
     : `<div class="dm-picker-thumb dm-picker-thumb--empty"></div>`;

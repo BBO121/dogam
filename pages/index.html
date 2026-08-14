@@ -156,7 +156,7 @@
         { data: noticeList },
         { data: updateNoteList },
       ] = await Promise.all([
-        sb.from('species').select('id, name, image_url, thumbnail_url, is_sensitive, sensitive_note, age_limit').order('created_at', { ascending: false }).limit(18),
+        sb.from('species').select('id, name, image_url, thumbnail_url, default_image_index, is_sensitive, sensitive_note, age_limit').order('created_at', { ascending: false }).limit(18),
         sb.from('adoptions').select('id, character_name, species_name, adoption_type, status, image_url, thumbnail_url, characters(is_sensitive, sensitive_note)').or('status.is.null,status.neq.완료').order('created_at', { ascending: false }).limit(8),
         sb.from('notices').select('id, title').eq('is_pinned', true).order('created_at', { ascending: false }),
         sb.from('update_notes').select('id, title').eq('is_pinned', true).order('created_at', { ascending: false }).limit(2),
@@ -214,7 +214,7 @@
 
         function speciesImgHtml(s) {
           const imgSrc = s.thumbnail_url || s.image_url;
-          if (s.is_sensitive && imgSrc) {
+          if (s.is_sensitive && speciesHasVisibleRealImage(s)) {
             const ageBadge = s.age_limit > 0 ? `<span class="species-age-badge">${s.age_limit}세 이상</span>` : '';
             return `
             <div style="position:relative; overflow:hidden; border-radius:var(--radius);">
@@ -222,10 +222,14 @@
               ${buildSensitiveOverlay(s.sensitive_note, ageBadge)}
             </div>`;
           }
+          const displaySrc = resolveSpeciesImage(s);
           if (s.age_limit > 0) {
-            return `<div class="species-img species-img--restricted"><span class="species-age-badge">${s.age_limit}세 이상</span></div>`;
+            if (speciesHasVisibleRealImage(s)) {
+              return `<div class="species-img species-img--restricted"><span class="species-age-badge">${s.age_limit}세 이상</span></div>`;
+            }
+            return `<div class="species-img" style="position:relative; background-image:url('${displaySrc}');background-size:cover;background-position:center;"><span class="species-age-badge species-age-badge--overlay">${s.age_limit}세 이상</span></div>`;
           }
-          return `<div class="species-img"${imgSrc ? ` style="background-image:url('${imgSrc}');background-size:cover;background-position:center;"` : ''}></div>`;
+          return `<div class="species-img" style="background-image:url('${displaySrc}');background-size:cover;background-position:center;"></div>`;
         }
 
 2      }

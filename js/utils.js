@@ -178,6 +178,69 @@ function storagePathFromUrl(url) {
   return idx === -1 ? null : url.slice(idx + marker.length);
 }
 
+// ============================================
+// 대표/메인 이미지가 없을 때 쓰는 연구소 기본 이미지
+// (species: 1:1 text_species_01~05.png, characters: 3:4 text_species_character_01~05.png)
+//
+// 우선순위: 사용자가 지정한 default_image_index(연구소 기본 이미지) > 실제 이미지
+//          (image_url/thumbnail_url) > id 기반 자동 fallback(같은 id는 항상 같은 번호
+//          — 렌더링마다 바뀌지 않음)
+//
+// default_image_index를 지정하면 실제 이미지가 있어도 연구소 기본 이미지가 우선 표시된다
+// (실제 이미지는 DB에서 지워지지 않고 그대로 남아있음 — "선택 해제"하면 다시 실제 이미지가 보임).
+//
+// 나이제한(age_limit>0) 숨김, 민감요소(is_sensitive) 블러 등 화면별 특수 처리는
+// "실제 이미지가 지금 화면에 쓰이고 있는지" 기준으로 적용해야 하므로 speciesHasVisibleRealImage /
+// characterHasVisibleRealImage로 판단한다 — 연구소 기본 이미지는 실제 콘텐츠가 아니므로
+// 블러/숨김/워터마크 대상이 되지 않는다.
+// ============================================
+
+const DEFAULT_IMAGE_COUNT = 5;
+
+function speciesDefaultImageUrl(index) {
+  return `../images/text_species_${String(index).padStart(2, '0')}.png`;
+}
+
+function characterDefaultImageUrl(index) {
+  return `../images/text_species_character_${String(index).padStart(2, '0')}.png`;
+}
+
+function autoDefaultImageIndex(id) {
+  const n = Number(id);
+  if (!Number.isFinite(n)) return 1;
+  return (Math.abs(n) % DEFAULT_IMAGE_COUNT) + 1;
+}
+
+// 종족 대표 이미지 URL (지정 기본 이미지 > 실제 이미지 > id 기반 자동 fallback). 항상 값을 반환한다.
+function resolveSpeciesImage(sp, { thumb = true } = {}) {
+  if (!sp) return null;
+  if (sp.default_image_index) return speciesDefaultImageUrl(sp.default_image_index);
+  const real = thumb ? (sp.thumbnail_url || sp.image_url) : sp.image_url;
+  if (real) return real;
+  return speciesDefaultImageUrl(autoDefaultImageIndex(sp.id));
+}
+
+// 개체 메인 이미지 URL (지정 기본 이미지 > 실제 이미지 > id 기반 자동 fallback). 항상 값을 반환한다.
+function resolveCharacterImage(c, { thumb = true } = {}) {
+  if (!c) return null;
+  if (c.default_image_index) return characterDefaultImageUrl(c.default_image_index);
+  const real = thumb ? (c.thumbnail_url || c.image_url) : c.image_url;
+  if (real) return real;
+  return characterDefaultImageUrl(autoDefaultImageIndex(c.id));
+}
+
+// 지금 화면에 "실제 이미지"가 쓰이고 있는지 (연구소 기본 이미지를 지정했다면 false).
+// 블러/나이제한 숨김처럼 실제 콘텐츠에만 적용해야 하는 처리의 조건으로 사용한다.
+function speciesHasVisibleRealImage(sp, { thumb = true } = {}) {
+  if (!sp || sp.default_image_index) return false;
+  return !!(thumb ? (sp.thumbnail_url || sp.image_url) : sp.image_url);
+}
+
+function characterHasVisibleRealImage(c, { thumb = true } = {}) {
+  if (!c || c.default_image_index) return false;
+  return !!(thumb ? (c.thumbnail_url || c.image_url) : c.image_url);
+}
+
 // 중앙 자동 크롭 (팝업 없이) → JPEG blob
 function autoCenterCropToBlob(file, aspectRatio = 3/4, maxSize = 600, quality = 0.85) {
   return new Promise((resolve, reject) => {

@@ -105,6 +105,14 @@
             <p class="form-hint" style="margin-top:8px;">업로드된 상세 이미지는 무단 도용 방지를 위해 워터마크가 적용됩니다.<br>개인 워터마크는 <a href="profile.html" style="color:var(--sky-deep);">프로필 설정</a>에서 등록할 수 있으며, 설정하지 않은 경우 연구소 기본 워터마크가 사용됩니다.</p>
           </div>
 
+          <!-- 기본 이미지 선택 -->
+          <div class="form-group">
+            <label class="form-label">메인 이미지가 없나요? <span class="form-hint-inline">선택사항</span></label>
+            <p class="form-hint">이미지가 없는 개체는 연구소 기본 이미지를 사용할 수 있습니다.<br>기본 이미지를 선택하면 업로드한 메인 이미지보다 우선 표시돼요.</p>
+            <div class="default-img-grid" id="defaultImgGrid"></div>
+            <button type="button" class="default-img-clear" id="defaultImgClearBtn" onclick="selectDefaultImage(null)" disabled>선택 해제</button>
+          </div>
+
           <!-- 대표 이미지 성장 단계 -->
           <div class="form-group" id="representativeStepSection" style="display:none;">
             <label class="form-label">대표 이미지 성장 단계</label>
@@ -332,6 +340,7 @@
     let allSpecies           = [];
     let addedCategories      = [];
     let selectedMainFile     = null;
+    let selectedDefaultImageIndex = null;
     let pendingThumbnailBlob = null;
     let cropperInstance      = null;
     let cropTargetStep       = null; // null = 대표 이미지, 아니면 크롭 중인 Step의 step_order (융용 등 우선순위 종족 전용)
@@ -383,6 +392,22 @@
       const { error } = await sb.storage.from('images').upload(path, blob, { contentType: blob.type });
       if (error) throw new Error('이미지 업로드 실패: ' + error.message);
       return sb.storage.from('images').getPublicUrl(path).data.publicUrl;
+    }
+
+    function renderDefaultImgGrid() {
+      const grid = document.getElementById('defaultImgGrid');
+      grid.innerHTML = [1, 2, 3, 4, 5].map(n => `
+        <div class="default-img-item default-img-item--portrait ${selectedDefaultImageIndex === n ? 'selected' : ''}" onclick="selectDefaultImage(${n})">
+          <img src="${characterDefaultImageUrl(n)}" alt="기본 이미지 ${n}">
+          <span class="default-img-check">✓</span>
+        </div>
+      `).join('');
+      document.getElementById('defaultImgClearBtn').disabled = selectedDefaultImageIndex === null;
+    }
+
+    function selectDefaultImage(n) {
+      selectedDefaultImageIndex = n;
+      renderDefaultImgGrid();
     }
 
     function setSectionQuillBusy(quill, busy) {
@@ -707,6 +732,7 @@
       }
 
       initColorSwatches();
+      renderDefaultImgGrid();
       const { data: spList } = await sb.from('species').select('id, name').order('name');
       allSpecies = spList || [];
       const myNick = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
@@ -1217,7 +1243,7 @@
 
       errorEl.textContent = '';
       if (!name) { errorEl.textContent = '이름을 입력해주세요.'; return; }
-      if (!file) { errorEl.textContent = '대표 이미지를 등록해주세요.'; return; }
+      if (!file && !selectedDefaultImageIndex) { errorEl.textContent = '메인 이미지를 등록하거나 기본 이미지를 선택해주세요.'; return; }
 
       let owner = currentUser.user_metadata?.nickname;
       if (ownerType === 'site') {
@@ -1458,6 +1484,7 @@
           image_url,
           thumbnail_url,
           original_image_url,
+          default_image_index: selectedDefaultImageIndex,
           ...(watermark_type ? { watermark_type } : {}),
           additional_images:            additional_images.length ? additional_images : null,
           original_additional_images:   original_additional_images.length ? original_additional_images : null,

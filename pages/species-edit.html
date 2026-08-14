@@ -81,6 +81,14 @@
             <p class="img-upload-meta">PNG · GIF · JPG · WebP &nbsp;·&nbsp; 최대 2MB · 2000×2000px 이하</p>
           </div>
 
+          <!-- 기본 이미지 선택 -->
+          <div class="form-group">
+            <label class="form-label">대표 이미지가 없나요? <span class="form-hint-inline">선택사항</span></label>
+            <p class="form-hint">이미지가 없는 종족은 연구소 기본 이미지를 사용할 수 있습니다.<br>기본 이미지를 선택하면 이미 등록된 대표 이미지보다 우선 표시돼요. 선택 해제하면 다시 대표 이미지가 보여요.</p>
+            <div class="default-img-grid" id="defaultImgGrid"></div>
+            <button type="button" class="default-img-clear" id="defaultImgClearBtn" onclick="selectDefaultImage(null)" disabled>선택 해제</button>
+          </div>
+
           <!-- 종족명 -->
           <div class="form-group">
             <label class="form-label">종족명 <span class="required">*</span></label>
@@ -331,6 +339,7 @@
     const speciesId = new URLSearchParams(window.location.search).get('id');
     let currentImageUrl  = null;
     let currentThumbnailUrl = null;
+    let selectedDefaultImageIndex = null;
     let originalName     = null;
     let isAdminEditor    = false;
     let affiliatedSpecies = [];
@@ -524,6 +533,8 @@
         document.getElementById('imgPreview').style.display = 'block';
         document.getElementById('imgPlaceholder').style.display = 'none';
       }
+      selectedDefaultImageIndex = s.default_image_index || null;
+      renderDefaultImgGrid();
 
       if (s.custom_fields?.length) s.custom_fields.forEach(f => addField(f));
       if (s.guide?.length) s.guide.forEach(g => loadGuideData(g));
@@ -605,6 +616,22 @@
         img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('이미지 크기를 확인할 수 없어요.')); };
         img.src = url;
       });
+    }
+
+    function renderDefaultImgGrid() {
+      const grid = document.getElementById('defaultImgGrid');
+      grid.innerHTML = [1, 2, 3, 4, 5].map(n => `
+        <div class="default-img-item ${selectedDefaultImageIndex === n ? 'selected' : ''}" onclick="selectDefaultImage(${n})">
+          <img src="${speciesDefaultImageUrl(n)}" alt="기본 이미지 ${n}">
+          <span class="default-img-check">✓</span>
+        </div>
+      `).join('');
+      document.getElementById('defaultImgClearBtn').disabled = selectedDefaultImageIndex === null;
+    }
+
+    function selectDefaultImage(n) {
+      selectedDefaultImageIndex = n;
+      renderDefaultImgGrid();
     }
 
     function previewImage(input) {
@@ -1083,6 +1110,7 @@
           description:    desc || null,
           image_url:      imageUrl,
           thumbnail_url:  thumbnailUrl,
+          default_image_index: selectedDefaultImageIndex,
           custom_fields:  fields.length ? fields : null,
           link:           link || null,
           design_rights:  designRights || null,
