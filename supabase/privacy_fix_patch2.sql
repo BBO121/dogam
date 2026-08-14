@@ -108,6 +108,13 @@ GRANT EXECUTE ON FUNCTION public.delete_user(UUID) TO authenticated;
 -- ============================================
 -- C-1. resolve_users_by_identifiers — 재생성 (search_path='' + schema-qualified)
 --       CREATE 직후 같은 트랜잭션 안에서 바로 REVOKE/GRANT까지 처리합니다.
+--
+-- ⚠️ [2026-08-15 추가 패치 있음] 이 함수의 매칭 조건(닉네임/아이디 비교)이
+-- 유니코드 정규화(NFC/NFD)를 하지 않아 한글 매칭 실패 사례가 발견되어
+-- supabase/fix_resolve_users_identifiers_nfc.sql에서 다시 CREATE OR REPLACE
+-- 했습니다. 이 아래 정의는 더 이상 라이브 정의가 아닙니다 — 현재 정의는
+-- 그 패치 파일을 참고하세요. (권한 체크/반환 컬럼/search_path 설정은
+-- 이 버전과 동일하게 유지됨 — 매칭 조건 로직만 바뀜)
 -- ============================================
 CREATE OR REPLACE FUNCTION public.resolve_users_by_identifiers(p_identifiers text[])
 RETURNS TABLE (

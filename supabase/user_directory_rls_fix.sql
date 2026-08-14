@@ -254,6 +254,12 @@ GRANT EXECUTE ON FUNCTION public.search_users(text, int) TO authenticated;
 --    admin/staff 전용. 대량이전 도구의 일괄 매칭용.
 --    (기존에 없던 함수 이름이라 CREATE OR REPLACE 그대로 사용 — DROP 불필요)
 --
+-- ⚠️ 이후 두 차례 더 패치됨 — 이 아래 정의는 라이브 정의가 아닙니다.
+--    1) supabase/privacy_fix_patch2.sql: search_path='' + schema-qualified로 재생성
+--    2) supabase/fix_resolve_users_identifiers_nfc.sql (2026-08-15): 매칭 조건에
+--       유니코드 정규화(NFC) 추가 — 한글 NFC/NFD 표현 차이로 매칭 실패하던 문제 수정.
+--    현재 정의는 fix_resolve_users_identifiers_nfc.sql을 참고하세요.
+--
 --    matched_identifier(입력한 원본 문자열)를 함께 반환한다 — login_id는 응답에
 --    포함하지 않으므로, 클라이언트가 "어떤 입력값이 어떤 유저에 매칭됐는지"를
 --    다시 구성하려면 이 매칭 키가 필요하다(닉네임만으로는 login_id로 매칭된
