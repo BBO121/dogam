@@ -1852,5 +1852,335 @@
       "issues": []
     },
     "admin_note": null
+  },
+  {
+    "request_id": "31ffa7b9-93dd-479b-84fe-c38de57682cf",
+    "request_type": "baby_only",
+    "name": "아기융용-66",
+    "applicant": {
+      "user_id": "38b83923-ee4d-4157-88c8-5f909cfb0778",
+      "nickname": "M4CH1N4"
+    },
+    "existing_character_name": null,
+    "baby": {
+      "image_url": "https://tnvkfcqphdxdyvswbkfe.supabase.co/storage/v1/object/public/images/registration-requests/yungyong/38b83923-ee4d-4157-88c8-5f909cfb0778/31ffa7b9-93dd-479b-84fe-c38de57682cf/baby.jpg",
+      "designer_nickname": "유떡"
+    },
+    "growth_steps": [],
+    "post_growth_trait": null,
+    "created_at": "2026-08-13 13:35:24.363367+00",
+    "validation": {
+      "status": "ok",
+      "issues": []
+    },
+    "admin_note": null
+  },
+  {
+    "request_id": "c45cc121-fdc1-45ed-bc4b-25f456985ac7",
+    "request_type": "baby_only",
+    "name": "아기융용-67",
+    "applicant": {
+      "user_id": "38b83923-ee4d-4157-88c8-5f909cfb0778",
+      "nickname": "M4CH1N4"
+    },
+    "existing_character_name": null,
+    "baby": {
+      "image_url": "https://tnvkfcqphdxdyvswbkfe.supabase.co/storage/v1/object/public/images/registration-requests/yungyong/38b83923-ee4d-4157-88c8-5f909cfb0778/c45cc121-fdc1-45ed-bc4b-25f456985ac7/baby.jpg",
+      "designer_nickname": "유떡"
+    },
+    "growth_steps": [],
+    "post_growth_trait": null,
+    "created_at": "2026-08-13 13:35:55.437037+00",
+    "validation": {
+      "status": "ok",
+      "issues": []
+    },
+    "admin_note": null
+  },
+  {
+    "request_id": "cd5df697-6f76-430f-9b0f-179acb6bd5b6",
+    "request_type": "baby_only",
+    "name": "아기융용-68",
+    "applicant": {
+      "user_id": "38b83923-ee4d-4157-88c8-5f909cfb0778",
+      "nickname": "M4CH1N4"
+    },
+    "existing_character_name": null,
+    "baby": {
+      "image_url": "https://tnvkfcqphdxdyvswbkfe.supabase.co/storage/v1/object/public/images/registration-requests/yungyong/38b83923-ee4d-4157-88c8-5f909cfb0778/cd5df697-6f76-430f-9b0f-179acb6bd5b6/baby.jpg",
+      "designer_nickname": "유떡"
+    },
+    "growth_steps": [],
+    "post_growth_trait": null,
+    "created_at": "2026-08-13 13:36:11.669289+00",
+    "validation": {
+      "status": "ok",
+      "issues": []
+    },
+    "admin_note": null
+  },
+  {
+    "request_id": "83a244f2-c2d6-4f36-b705-dab9401921aa",
+    "request_type": "baby_only",
+    "name": "아기융용-69",
+    "applicant": {
+      "user_id": "38b83923-ee4d-4157-88c8-5f909cfb0778",
+      "nickname": "M4CH1N4"
+    },
+    "existing_character_name": null,
+    "baby": {
+      "image_url": "https://tnvkfcqphdxdyvswbkfe.supabase.co/storage/v1/object/public/images/registration-requests/yungyong/38b83923-ee4d-4157-88c8-5f909cfb0778/83a244f2-c2d6-4f36-b705-dab9401921aa/baby.jpg",
+      "designer_nickname": "유떡"
+    },
+    "growth_steps": [],
+    "post_growth_trait": null,
+    "created_at": "2026-08-13 13:36:24.766826+00",
+    "validation": {
+      "status": "ok",
+      "issues": []
+    },
+    "admin_note": null
+  },
+  {
+    "request_id": "de358e47-5c93-47c5-a3d9-d3053d4c5aa8",
+    "request_type": "baby_only",
+    "name": "아기융용-70",
+    "applicant": {
+      "user_id": "38b83923-ee4d-4157-88c8-5f909cfb0778",
+      "nickname": "M4CH1N4"
+    },
+    "existing_character_name": null,
+    "baby": {
+      "image_url": "https://tnvkfcqphdxdyvswbkfe.supabase.co/storage/v1/object/public/images/registration-requests/yungyong/38b83923-ee4d-4157-88c8-5f909cfb0778/de358e47-5c93-47c5-a3d9-d3053d4c5aa8/baby.jpg",
+      "designer_nickname": "유떡"
+    },
+    "growth_steps": [],
+    "post_growth_trait": null,
+    "created_at": "2026-08-13 13:36:45.067744+00",
+    "validation": {
+      "status": "ok",
+      "issues": []
+    },
+    "admin_note": null
+  },
+  {
+    "request_id": "6e3bec2b-6d6a-4128-b132-74965efa9633",
+    "request_type": "baby_only",
+    "name": "아기융용-71",
+    "applicant": {
+      "user_id": "38b83923-ee4d-4157-88c8-5f909cfb0778",
+      "nickname": "M4CH1N4"
+    },
+    "existing_character_name": null,
+    "baby": {
+      "image_url": "https://tnvkfcqphdxdyvswbkfe.supabase.co/storage/v1/object/public/images/registration-requests/yungyong/38b83923-ee4d-4157-88c8-5f909cfb0778/6e3bec2b-6d6a-4128-b132-74965efa9633/baby.jpg",
+      "designer_nickname": "유떡"
+    },
+    "growth_steps": [],
+    "post_growth_trait": null,
+    "created_at": "2026-08-13 13:37:11.442685+00",
+    "validation": {
+      "status": "ok",
+      "issues": []
+    },
+    "admin_note": null
+  },
+  {
+    "request_id": "a2ef8535-466e-41bb-9c43-fbd91d0db7b7",
+    "request_type": "baby_only",
+    "name": "아기융용-72",
+    "applicant": {
+      "user_id": "6e0af369-207f-47c4-bed8-e98d39b6154d",
+      "nickname": "슐류"
+    },
+    "existing_character_name": null,
+    "baby": {
+      "image_url": "https://tnvkfcqphdxdyvswbkfe.supabase.co/storage/v1/object/public/images/registration-requests/yungyong/6e0af369-207f-47c4-bed8-e98d39b6154d/a2ef8535-466e-41bb-9c43-fbd91d0db7b7/baby.jpg",
+      "designer_nickname": "유떡님"
+    },
+    "growth_steps": [],
+    "post_growth_trait": null,
+    "created_at": "2026-08-13 15:14:17.654005+00",
+    "validation": {
+      "status": "ok",
+      "issues": []
+    },
+    "admin_note": null
+  },
+  {
+    "request_id": "21028fb9-211b-4f8d-9725-bfd7854a98f5",
+    "request_type": "baby_only",
+    "name": "아기융용-73",
+    "applicant": {
+      "user_id": "16286b7e-f664-4659-9db1-e9e5f047efc6",
+      "nickname": "여늑댐"
+    },
+    "existing_character_name": null,
+    "baby": {
+      "image_url": "https://tnvkfcqphdxdyvswbkfe.supabase.co/storage/v1/object/public/images/registration-requests/yungyong/16286b7e-f664-4659-9db1-e9e5f047efc6/21028fb9-211b-4f8d-9725-bfd7854a98f5/baby.jpg",
+      "designer_nickname": "유떡"
+    },
+    "growth_steps": [],
+    "post_growth_trait": null,
+    "created_at": "2026-08-13 15:42:15.677392+00",
+    "validation": {
+      "status": "ok",
+      "issues": []
+    },
+    "admin_note": null
+  },
+  {
+    "request_id": "57f9e737-8d45-4d0c-b155-a5189c47a8c7",
+    "request_type": "baby_only",
+    "name": "아기융용-74",
+    "applicant": {
+      "user_id": "16286b7e-f664-4659-9db1-e9e5f047efc6",
+      "nickname": "여늑댐"
+    },
+    "existing_character_name": null,
+    "baby": {
+      "image_url": "https://tnvkfcqphdxdyvswbkfe.supabase.co/storage/v1/object/public/images/registration-requests/yungyong/16286b7e-f664-4659-9db1-e9e5f047efc6/57f9e737-8d45-4d0c-b155-a5189c47a8c7/baby.jpg",
+      "designer_nickname": "시로"
+    },
+    "growth_steps": [],
+    "post_growth_trait": null,
+    "created_at": "2026-08-13 15:42:40.312792+00",
+    "validation": {
+      "status": "ok",
+      "issues": []
+    },
+    "admin_note": null
+  },
+  {
+    "request_id": "162b95b6-136c-41f6-b925-93f241612b32",
+    "request_type": "baby_only",
+    "name": "아기융용-75",
+    "applicant": {
+      "user_id": "16286b7e-f664-4659-9db1-e9e5f047efc6",
+      "nickname": "여늑댐"
+    },
+    "existing_character_name": null,
+    "baby": {
+      "image_url": "https://tnvkfcqphdxdyvswbkfe.supabase.co/storage/v1/object/public/images/registration-requests/yungyong/16286b7e-f664-4659-9db1-e9e5f047efc6/162b95b6-136c-41f6-b925-93f241612b32/baby.jpg",
+      "designer_nickname": "시로"
+    },
+    "growth_steps": [],
+    "post_growth_trait": null,
+    "created_at": "2026-08-13 15:42:51.04093+00",
+    "validation": {
+      "status": "ok",
+      "issues": []
+    },
+    "admin_note": null
+  },
+  {
+    "request_id": "81719d8d-3f10-4e2b-ab34-487bc4b1d687",
+    "request_type": "existing_character_baby_step",
+    "name": null,
+    "applicant": {
+      "user_id": "16286b7e-f664-4659-9db1-e9e5f047efc6",
+      "nickname": "여늑댐"
+    },
+    "existing_character_name": "3648",
+    "baby": {
+      "image_url": "https://tnvkfcqphdxdyvswbkfe.supabase.co/storage/v1/object/public/images/registration-requests/yungyong/16286b7e-f664-4659-9db1-e9e5f047efc6/81719d8d-3f10-4e2b-ab34-487bc4b1d687/baby.jpg",
+      "designer_nickname": "유떡"
+    },
+    "growth_steps": [],
+    "post_growth_trait": null,
+    "created_at": "2026-08-13 15:43:18.880258+00",
+    "validation": {
+      "status": "ok",
+      "issues": []
+    },
+    "admin_note": null
+  },
+  {
+    "request_id": "9c3febab-c428-4bba-aaba-1cc05ee554dc",
+    "request_type": "baby_only",
+    "name": "아기융용-76",
+    "applicant": {
+      "user_id": "16286b7e-f664-4659-9db1-e9e5f047efc6",
+      "nickname": "여늑댐"
+    },
+    "existing_character_name": null,
+    "baby": {
+      "image_url": "https://tnvkfcqphdxdyvswbkfe.supabase.co/storage/v1/object/public/images/registration-requests/yungyong/16286b7e-f664-4659-9db1-e9e5f047efc6/9c3febab-c428-4bba-aaba-1cc05ee554dc/baby.jpg",
+      "designer_nickname": "유떡"
+    },
+    "growth_steps": [],
+    "post_growth_trait": null,
+    "created_at": "2026-08-13 15:43:36.892417+00",
+    "validation": {
+      "status": "ok",
+      "issues": []
+    },
+    "admin_note": null
+  },
+  {
+    "request_id": "e2997c19-ab1e-4e5d-b3c6-68e8498fb8f4",
+    "request_type": "baby_only",
+    "name": "아기융용-77",
+    "applicant": {
+      "user_id": "16286b7e-f664-4659-9db1-e9e5f047efc6",
+      "nickname": "여늑댐"
+    },
+    "existing_character_name": null,
+    "baby": {
+      "image_url": "https://tnvkfcqphdxdyvswbkfe.supabase.co/storage/v1/object/public/images/registration-requests/yungyong/16286b7e-f664-4659-9db1-e9e5f047efc6/e2997c19-ab1e-4e5d-b3c6-68e8498fb8f4/baby.jpg",
+      "designer_nickname": "유떡"
+    },
+    "growth_steps": [],
+    "post_growth_trait": null,
+    "created_at": "2026-08-13 15:43:45.381313+00",
+    "validation": {
+      "status": "ok",
+      "issues": []
+    },
+    "admin_note": null
+  },
+  {
+    "request_id": "def8d410-c2e2-4885-b1a5-c89881aa8aa9",
+    "request_type": "existing_character_baby_step",
+    "name": null,
+    "applicant": {
+      "user_id": "16286b7e-f664-4659-9db1-e9e5f047efc6",
+      "nickname": "여늑댐"
+    },
+    "existing_character_name": "3331",
+    "baby": {
+      "image_url": "https://tnvkfcqphdxdyvswbkfe.supabase.co/storage/v1/object/public/images/registration-requests/yungyong/16286b7e-f664-4659-9db1-e9e5f047efc6/def8d410-c2e2-4885-b1a5-c89881aa8aa9/baby.jpg",
+      "designer_nickname": "유떡"
+    },
+    "growth_steps": [],
+    "post_growth_trait": null,
+    "created_at": "2026-08-13 15:44:25.082242+00",
+    "validation": {
+      "status": "ok",
+      "issues": []
+    },
+    "admin_note": null
+  },
+  {
+    "request_id": "ba5df99c-9ffb-4af3-a5af-d700428bab7f",
+    "request_type": "baby_only",
+    "name": "아기융용-78",
+    "applicant": {
+      "user_id": "16286b7e-f664-4659-9db1-e9e5f047efc6",
+      "nickname": "여늑댐"
+    },
+    "existing_character_name": null,
+    "baby": {
+      "image_url": "https://tnvkfcqphdxdyvswbkfe.supabase.co/storage/v1/object/public/images/registration-requests/yungyong/16286b7e-f664-4659-9db1-e9e5f047efc6/ba5df99c-9ffb-4af3-a5af-d700428bab7f/baby.jpg",
+      "designer_nickname": "유떡"
+    },
+    "growth_steps": [],
+    "post_growth_trait": null,
+    "created_at": "2026-08-13 15:44:41.048805+00",
+    "validation": {
+      "status": "ok",
+      "issues": []
+    },
+    "admin_note": null
   }
 ]
