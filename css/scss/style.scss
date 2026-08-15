@@ -875,6 +875,52 @@
     border-radius: 0;
 }
 
+.profile-avatar-wrap.frame-sp-octomonster::after {
+    border: none;
+    inset: -13.0208%;
+    background-image: url('../images/shop/frame_sp_octomonster.png');
+    /* 원본 아트 여백이 다른 종족 프레임보다 좁아(테두리가 굵어) 동일 배율이면 더 커 보임 — 88%로 축소해 시각 크기를 맞춤 */
+    background-size: 88% 88%;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 0;
+}
+
+.profile-avatar-wrap.frame-sp-petitarachne::after {
+    border: none;
+    inset: -13.0208%;
+    background-image: url('../images/shop/frame_sp_petitarachne.png');
+    /* 원본 아트 여백이 다른 종족 프레임보다 좁아 동일 배율이면 더 커 보임 — 90%로 축소해 시각 크기를 맞춤 */
+    background-size: 90% 90%;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 0;
+}
+
+.profile-avatar-wrap.frame-sp-bbogi::after {
+    border: none;
+    inset: -13.0208%;
+    background-image: url('../images/shop/frame_sp_bbogi.png');
+    background-size: 100% 100%;
+    border-radius: 0;
+}
+
+.profile-avatar-wrap.frame-sp-bexolotl::after {
+    border: none;
+    inset: -13.0208%;
+    background-image: url('../images/shop/frame_sp_Bexolotl.png');
+    background-size: 100% 100%;
+    border-radius: 0;
+}
+
+.profile-avatar-wrap.frame-sp-bubblere::after {
+    border: none;
+    inset: -13.0208%;
+    background-image: url('../images/shop/frame_sp_bubblere.png');
+    background-size: 100% 100%;
+    border-radius: 0;
+}
+
 .profile-avatar-wrap.frame-li-bbo::after {
     border: none;
     inset: -13.0208%;
@@ -7324,6 +7370,11 @@ button.btn-more {
 .frame-preview.frame-ai-gerong       { border: none; background-image: url('../images/shop/frame_ai_gerong.png');   background-size: cover; background-position: center; }
 .frame-preview.frame-sp-marenight    { border: none; background-image: url('../images/shop/frame_sp_marenight.png'); background-size: cover; background-position: center; }
 .frame-preview.frame-sp-tails        { border: none; background-image: url('../images/shop/frame_sp_tails.png');     background-size: cover; background-position: center; }
+.frame-preview.frame-sp-octomonster  { border: none; background-image: url('../images/shop/frame_sp_octomonster.png'); background-size: 88% 88%; background-position: center; background-repeat: no-repeat; }
+.frame-preview.frame-sp-petitarachne { border: none; background-image: url('../images/shop/frame_sp_petitarachne.png'); background-size: 90% 90%; background-position: center; background-repeat: no-repeat; }
+.frame-preview.frame-sp-bbogi        { border: none; background-image: url('../images/shop/frame_sp_bbogi.png');      background-size: cover; background-position: center; }
+.frame-preview.frame-sp-bexolotl     { border: none; background-image: url('../images/shop/frame_sp_Bexolotl.png');   background-size: cover; background-position: center; }
+.frame-preview.frame-sp-bubblere     { border: none; background-image: url('../images/shop/frame_sp_bubblere.png');  background-size: cover; background-position: center; }
 .frame-preview.frame-li-bbo          { border: none; background-image: url('../images/shop/frame_li_bbo.png');      background-size: cover; background-position: center; }
 
 /* 상품 상세 모달 */
@@ -7561,10 +7612,10 @@ button.btn-more {
   object-fit: cover;
 }
 
-/* 스티커는 contain으로 */
+/* 스티커는 contain으로 — 박스 비율은 .frame-preview(72%)와 동일하게 맞춤 */
 .shop-thumb-img .shop-sticker-img {
-  width: 80%;
-  height: 80%;
+  width: 72%;
+  height: 72%;
   object-fit: contain;
 }
 
@@ -7819,6 +7870,21 @@ button.btn-more {
 .bag-ep-preview-wrap.frame-sp-tails              { overflow: visible; }
 .bag-ep-preview-wrap.frame-sp-tails .bag-ep-avatar { border-radius: 20px; overflow: hidden; }
 .bag-ep-preview-wrap.frame-sp-tails::after        { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_sp_tails.png');     background-size: 100% 100%; border-radius: 0; }
+.bag-ep-preview-wrap.frame-sp-octomonster        { overflow: visible; }
+.bag-ep-preview-wrap.frame-sp-octomonster .bag-ep-avatar { border-radius: 20px; overflow: hidden; }
+.bag-ep-preview-wrap.frame-sp-octomonster::after  { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_sp_octomonster.png'); background-size: 88% 88%; background-position: center; background-repeat: no-repeat; border-radius: 0; }
+.bag-ep-preview-wrap.frame-sp-petitarachne       { overflow: visible; }
+.bag-ep-preview-wrap.frame-sp-petitarachne .bag-ep-avatar { border-radius: 20px; overflow: hidden; }
+.bag-ep-preview-wrap.frame-sp-petitarachne::after { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_sp_petitarachne.png'); background-size: 90% 90%; background-position: center; background-repeat: no-repeat; border-radius: 0; }
+.bag-ep-preview-wrap.frame-sp-bbogi              { overflow: visible; }
+.bag-ep-preview-wrap.frame-sp-bbogi .bag-ep-avatar { border-radius: 20px; overflow: hidden; }
+.bag-ep-preview-wrap.frame-sp-bbogi::after        { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_sp_bbogi.png');      background-size: 100% 100%; border-radius: 0; }
+.bag-ep-preview-wrap.frame-sp-bexolotl           { overflow: visible; }
+.bag-ep-preview-wrap.frame-sp-bexolotl .bag-ep-avatar { border-radius: 20px; overflow: hidden; }
+.bag-ep-preview-wrap.frame-sp-bexolotl::after     { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_sp_Bexolotl.png');   background-size: 100% 100%; border-radius: 0; }
+.bag-ep-preview-wrap.frame-sp-bubblere           { overflow: visible; }
+.bag-ep-preview-wrap.frame-sp-bubblere .bag-ep-avatar { border-radius: 20px; overflow: hidden; }
+.bag-ep-preview-wrap.frame-sp-bubblere::after     { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_sp_bubblere.png');   background-size: 100% 100%; border-radius: 0; }
 .bag-ep-preview-wrap.frame-li-bbo                { overflow: visible; }
 .bag-ep-preview-wrap.frame-li-bbo .bag-ep-avatar  { border-radius: 20px; overflow: hidden; }
 .bag-ep-preview-wrap.frame-li-bbo::after          { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_li_bbo.png');      background-size: 100% 100%; border-radius: 0; }
@@ -7910,6 +7976,11 @@ button.btn-more {
 .bag-ep-frame-wrap.frame-ai-gerong::after       { border: none; background-image: url('../images/shop/frame_ai_gerong.png');   background-size: cover; background-position: center; }
 .bag-ep-frame-wrap.frame-sp-marenight::after    { border: none; background-image: url('../images/shop/frame_sp_marenight.png'); background-size: cover; background-position: center; }
 .bag-ep-frame-wrap.frame-sp-tails::after        { border: none; background-image: url('../images/shop/frame_sp_tails.png');     background-size: cover; background-position: center; }
+.bag-ep-frame-wrap.frame-sp-octomonster::after  { border: none; background-image: url('../images/shop/frame_sp_octomonster.png'); background-size: 88% 88%; background-position: center; background-repeat: no-repeat; }
+.bag-ep-frame-wrap.frame-sp-petitarachne::after { border: none; background-image: url('../images/shop/frame_sp_petitarachne.png'); background-size: 90% 90%; background-position: center; background-repeat: no-repeat; }
+.bag-ep-frame-wrap.frame-sp-bbogi::after        { border: none; background-image: url('../images/shop/frame_sp_bbogi.png');      background-size: cover; background-position: center; }
+.bag-ep-frame-wrap.frame-sp-bexolotl::after     { border: none; background-image: url('../images/shop/frame_sp_Bexolotl.png');   background-size: cover; background-position: center; }
+.bag-ep-frame-wrap.frame-sp-bubblere::after     { border: none; background-image: url('../images/shop/frame_sp_bubblere.png');  background-size: cover; background-position: center; }
 .bag-ep-frame-wrap.frame-li-bbo::after          { border: none; background-image: url('../images/shop/frame_li_bbo.png');      background-size: cover; background-position: center; }
 
 .bag-ep-avatar {
@@ -8303,6 +8374,11 @@ button.btn-more {
 .deco-modal-frame-preview.frame-ai-gerong       { border: none; background-image: url('../images/shop/frame_ai_gerong.png');   background-size: cover; background-position: center; }
 .deco-modal-frame-preview.frame-sp-marenight    { border: none; background-image: url('../images/shop/frame_sp_marenight.png'); background-size: cover; background-position: center; }
 .deco-modal-frame-preview.frame-sp-tails        { border: none; background-image: url('../images/shop/frame_sp_tails.png');     background-size: cover; background-position: center; }
+.deco-modal-frame-preview.frame-sp-octomonster  { border: none; background-image: url('../images/shop/frame_sp_octomonster.png'); background-size: 88% 88%; background-position: center; background-repeat: no-repeat; }
+.deco-modal-frame-preview.frame-sp-petitarachne { border: none; background-image: url('../images/shop/frame_sp_petitarachne.png'); background-size: 90% 90%; background-position: center; background-repeat: no-repeat; }
+.deco-modal-frame-preview.frame-sp-bbogi        { border: none; background-image: url('../images/shop/frame_sp_bbogi.png');      background-size: cover; background-position: center; }
+.deco-modal-frame-preview.frame-sp-bexolotl     { border: none; background-image: url('../images/shop/frame_sp_Bexolotl.png');   background-size: cover; background-position: center; }
+.deco-modal-frame-preview.frame-sp-bubblere     { border: none; background-image: url('../images/shop/frame_sp_bubblere.png');  background-size: cover; background-position: center; }
 .deco-modal-frame-preview.frame-li-bbo          { border: none; background-image: url('../images/shop/frame_li_bbo.png');      background-size: cover; background-position: center; }
 
 .deco-modal-sticker-img {

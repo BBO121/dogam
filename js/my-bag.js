@@ -36,7 +36,9 @@ const TYPE_LABEL = {
 function formatBagNameThumb(name) {
   return name
     .replace(/^(분양 끌올 티켓) /, '$1<br>')
-    .replace(/^(메어나이트\d?)\(Marenight\)$/, '$1<br>(Marenight)');
+    .replace(/^(메어나이트\d?)\(Marenight\)$/, '$1<br>(Marenight)')
+    .replace(/^(옥토몬스터)\(Octomonster\)$/, '$1<br>(Octomonster)')
+    .replace(/^(쁘띠아라크네)\(Petit Arachne\)$/, '$1<br>(Petit Arachne)');
 }
 
 // ── 초기화 ──────────────────────────────────────────────

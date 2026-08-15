@@ -16,11 +16,13 @@ function formatShopName(name) {
   return name.replace(/^(분양 끌올 티켓) /, '$1<br>');
 }
 
-// 카드(썸네일) 전용: "메어나이트(1/2)(Marenight)"는 괄호 앞에서 줄바꿈해
-// 다른 아이템과 박스 높이를 맞춤. 상세 모달에서는 줄바꿈하지 않음.
+// 카드(썸네일) 전용: "메어나이트(Marenight)"처럼 한글명(영문명) 형태는 괄호 앞에서
+// 줄바꿈해 다른 아이템과 박스 높이를 맞춤. 상세 모달에서는 줄바꿈하지 않음.
 function formatShopNameThumb(name) {
   return formatShopName(name)
-    .replace(/^(메어나이트\d?)\(Marenight\)$/, '$1<br>(Marenight)');
+    .replace(/^(메어나이트\d?)\(Marenight\)$/, '$1<br>(Marenight)')
+    .replace(/^(옥토몬스터)\(Octomonster\)$/, '$1<br>(Octomonster)')
+    .replace(/^(쁘띠아라크네)\(Petit Arachne\)$/, '$1<br>(Petit Arachne)');
 }
 
 const TICKET_BUMP_CONDITION_HTML =
@@ -183,9 +185,13 @@ function buildPreviewHtml(item, { large = false } = {}) {
     return `<div class="frame-preview ${large ? 'frame-preview--lg ' : ''}${item.style_key}"></div>`;
   }
   if (!item.image_url) return '';
-  return large
-    ? `<img src="${item.image_url}" alt="${item.name}" style="width:100%;height:100%;object-fit:${item.item_type === 'sticker' ? 'contain' : 'cover'};">`
-    : `<img src="${item.image_url}" alt="${item.name}"${item.item_type === 'sticker' ? ' class="shop-sticker-img"' : ''}>`;
+  if (large) {
+    // 스티커 확대 미리보기는 .frame-preview--lg(60%)와 동일한 비율로 맞춰
+    // 프레임 대비 스티커만 커 보이지 않게 함. 소모품(티켓 등)은 기존 100% 유지.
+    const isSticker = item.item_type === 'sticker';
+    return `<img src="${item.image_url}" alt="${item.name}" style="width:${isSticker ? '60%' : '100%'};height:${isSticker ? '60%' : '100%'};object-fit:${isSticker ? 'contain' : 'cover'};">`;
+  }
+  return `<img src="${item.image_url}" alt="${item.name}"${item.item_type === 'sticker' ? ' class="shop-sticker-img"' : ''}>`;
 }
 
 // ── 가격 HTML 생성 (이중 통화 지원) ────────────────────────
