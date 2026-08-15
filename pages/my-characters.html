@@ -63,6 +63,30 @@
     .card-menu-item.danger       { color:#ef4444; }
     .card-menu-item.danger:hover { background:#fff5f5; }
 
+    /* 개체 카드 그리드 — 마지막 줄이 4열 미만이면 왼쪽 정렬(카드 크기는 고정, 늘어나지 않음) */
+    #charGrid {
+      display:flex; flex-wrap:wrap; gap:18px;
+    }
+    #charGrid > .character-card,
+    #charGrid > .add-char-placeholder {
+      flex:0 1 calc(25% - 13.5px);
+    }
+    @media (max-width:1023px) {
+      #charGrid { gap:14px; }
+      #charGrid > .character-card,
+      #charGrid > .add-char-placeholder { flex-basis:calc(33.333% - 9.333px); }
+    }
+    @media (max-width:767px) {
+      #charGrid { gap:12px; }
+      #charGrid > .character-card,
+      #charGrid > .add-char-placeholder { flex-basis:calc(50% - 6px); }
+    }
+    @media (max-width:400px) {
+      #charGrid { gap:8px; }
+      #charGrid > .character-card,
+      #charGrid > .add-char-placeholder { flex-basis:calc(50% - 4px); }
+    }
+
     /* 개체 추가 플레이스홀더 — 액션 카드 */
     .add-char-placeholder {
       position:relative;
@@ -277,7 +301,7 @@
     let touchDragSrcEl      = null;
     let isInitialLoad       = true;
     let currentSort         = 'species';
-    const pager = createPager(renderCards);
+    const pager = createPager(renderCards, 'paginationWrap', 'page', 32);
 
     // ── 초기화 ─────────────────────────────────────────
     async function initPage() {
