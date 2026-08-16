@@ -796,6 +796,7 @@
 
       const char = allChars.find(c => String(c.id) === String(transferCharId));
       await logTransfer({
+        character_id:   transferCharId,
         character_name: transferCharName,
         species_name:   char?.species_name || '',
         from_nickname:  transferFromOwner,

@@ -178,8 +178,9 @@ async function logAdminAction(actionType, targetType, targetId, targetName, deta
 }
 
 // 캐릭터 이전 로그 기록
-async function logTransfer({ character_name, species_name, from_nickname, from_user_id, to_nickname, to_user_id, method }) {
+async function logTransfer({ character_id, character_name, species_name, from_nickname, from_user_id, to_nickname, to_user_id, method }) {
   const { error } = await sb.from('character_transfers').insert({
+    character_id: character_id || null,
     character_name,
     species_name,
     from_nickname,
