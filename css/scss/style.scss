@@ -3364,6 +3364,58 @@ button.btn-more {
   font-variant-numeric: tabular-nums;
 }
 
+/* 서버비 후원 카드 — 서버 시간 바로 아래 */
+.sidebar-donate-card {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 9px 10px 9px 0;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--sky-pale);
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+.sidebar-donate-card:hover {
+  background: var(--sky-light);
+  border-color: var(--sky-dark);
+}
+.sidebar-donate-card-img {
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+.sidebar-donate-card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.sidebar-donate-card-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  white-space: normal;
+  word-break: keep-all;
+  line-height: 1.35;
+}
+.sidebar-donate-card-sub {
+  font-size: 10.5px;
+  color: var(--text-mute);
+  white-space: normal;
+  word-break: keep-all;
+  line-height: 1.35;
+}
+.sidebar-donate-card-arrow {
+  flex-shrink: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--sky-dark);
+}
+
 .notif-bell-wrap {
   position: relative;
   display: flex;

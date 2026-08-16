@@ -87,6 +87,16 @@ async function initSidebar() {
     <div class="sidebar-server-clock-wrap">
       <span class="server-clock server-clock--sidebar">서버시간 --:--:--</span>
     </div>
+
+    <!-- ── 서버비 후원 카드 ─────────────────────────── -->
+    <a href="https://ctee.kr/place/thespecieslab/donation" target="_blank" rel="noopener noreferrer" class="sidebar-donate-card">
+      <img src="../images/donate.png" alt="" class="sidebar-donate-card-img">
+      <span class="sidebar-donate-card-text">
+        <span class="sidebar-donate-card-title">서버비 후원이 열렸어요!</span>
+        <span class="sidebar-donate-card-sub">연구소 운영에 큰 힘이 됩니다</span>
+      </span>
+      <span class="sidebar-donate-card-arrow">›</span>
+    </a>
   `;
 
   // 현재 페이지에 해당하는 아코디언 자동 열기
