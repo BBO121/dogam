@@ -144,7 +144,11 @@
     .folder-select-item.active { background:var(--sky-pale); border-color:var(--sky-dark); color:var(--sky-deep); }
 
     /* 개체 추가 모달 */
-    .add-char-modal { max-width:600px; max-height:85vh; }
+    .add-char-modal {
+      max-width:600px;
+      max-height:85vh;
+      max-height:calc(100dvh - 40px);
+    }
     .add-char-search {
       width:100%; padding:9px 12px; border:1.5px solid var(--border); border-radius:9px;
       font-size:14px; font-family:inherit; outline:none; box-sizing:border-box; flex-shrink:0;
@@ -152,7 +156,10 @@
     .add-char-search:focus { border-color:var(--sky-dark); }
     .add-char-grid {
       display:grid; grid-template-columns:repeat(auto-fill, minmax(100px, 1fr));
-      gap:10px; overflow-y:auto; flex:1;
+      grid-auto-rows:min-content; align-content:start;
+      gap:10px; flex:1; min-height:0;
+      overflow-y:auto; overflow-x:hidden;
+      -webkit-overflow-scrolling:touch;
     }
     .add-char-card {
       border:2px solid var(--border); border-radius:10px; overflow:hidden;
