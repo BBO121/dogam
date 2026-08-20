@@ -114,6 +114,7 @@
 
         <div class="notice-detail-bottom">
           <a href="species-apply.html" class="btn-ghost">← 목록으로</a>
+          <a id="editBtn" href="#" class="btn-ghost" style="display:none;">수정</a>
           <button id="deleteBtn" class="btn-ghost" onclick="deleteApply()" style="display:none; color:#ef4444;">삭제</button>
         </div>
 
@@ -218,8 +219,26 @@
           document.getElementById('approveBtn').style.display = 'none';
           document.getElementById('rejectBtn').style.display  = 'none';
         }
-      } else if (data.user_id === user.id && !data.answer) {
-        document.getElementById('deleteBtn').style.display = 'inline-flex';
+
+        // 관리자가 이 신청 상세를 열람했다면 "확인함" 처리
+        // (신청자가 접수/검토중 상태에서 새로 수정한 뒤 다시 열람하는 경우도 포함)
+        const isUnread = !data.admin_checked_at ||
+          (data.applicant_updated_at && data.applicant_updated_at > data.admin_checked_at);
+        if (isUnread && (data.status === '접수됨' || data.status === '검토중')) {
+          sb.from('species_applications')
+            .update({ admin_checked_at: new Date().toISOString() })
+            .eq('id', currentId)
+            .then(({ error }) => { if (error) console.warn('[admin_checked_at 갱신 실패]', error.message); });
+        }
+      } else if (data.user_id === user.id) {
+        if (!data.answer) {
+          document.getElementById('deleteBtn').style.display = 'inline-flex';
+        }
+        if (data.status === '접수됨' || data.status === '검토중') {
+          const editBtn = document.getElementById('editBtn');
+          editBtn.href = `species-apply-write.html?id=${currentId}`;
+          editBtn.style.display = 'inline-flex';
+        }
       }
 
       document.getElementById('pageLoading').style.display = 'none';

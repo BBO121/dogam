@@ -507,11 +507,20 @@ async function loadAdminBadges() {
   const user = await getUser();
   if (!isAdminOrStaff(user?.user_metadata?.role)) return;
 
-  const [{ count: inquiryCount }, { count: bugCount }, { count: applyCount }] = await Promise.all([
+  const [{ count: inquiryCount }, { count: bugCount }, { data: applyRows }] = await Promise.all([
     sb.from('inquiries').select('*', { count: 'exact', head: true }).eq('status', '접수됨'),
     sb.from('bug_reports').select('*', { count: 'exact', head: true }).eq('status', '접수됨'),
-    sb.from('species_applications').select('*', { count: 'exact', head: true }).in('status', ['접수됨', '검토중']),
+    // 종족주 신청 뱃지는 "검토중 상태가 존재하는지"가 아니라
+    // "관리자가 아직 확인하지 않은 신청자 측 변화가 있는지"로 판단한다.
+    // (admin_checked_at이 없거나, 신청자가 admin_checked_at 이후에 다시 수정한 경우)
+    sb.from('species_applications')
+      .select('status, admin_checked_at, applicant_updated_at')
+      .in('status', ['접수됨', '검토중']),
   ]);
+  const applyCount = (applyRows || []).filter(row =>
+    !row.admin_checked_at ||
+    (row.applicant_updated_at && row.applicant_updated_at > row.admin_checked_at)
+  ).length;
 
   const iBadge = document.getElementById('sidebarInquiryBadge');
   const bBadge = document.getElementById('sidebarBugBadge');

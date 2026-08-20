@@ -40,10 +40,10 @@
           <span>/</span>
           <a href="species-apply.html">종족주 신청</a>
           <span>/</span>
-          <span>작성</span>
+          <span id="breadcrumbCurrent">작성</span>
         </div>
 
-        <h1 class="register-title">종족주 신청</h1>
+        <h1 class="register-title" id="pageTitle">종족주 신청</h1>
         <p style="font-size:13px; color:var(--text-mute); margin-bottom:24px;">작성한 신청은 나와 관리자에게만 보여요.</p>
 
         <form class="register-form" id="applyForm">
@@ -105,6 +105,11 @@
   <script src="../js/main.js"></script>
   <script src="../js/utils.js?v=2"></script>
   <script>
+    const EDITABLE_STATUSES = ['접수됨', '검토중'];
+    const editId = new URLSearchParams(window.location.search).get('id');
+    let editingApp = null;
+    let currentImageUrl = null;
+
     async function initPage() {
       const user = await getUser();
       if (!user) { window.location.href = 'login.html'; return; }
@@ -115,6 +120,39 @@
       const role = user.user_metadata?.role;
       if (role === 'species_owner' || isAdminOrStaff(role)) {
         if (!isGuideMode) window.location.href = 'species-apply.html';
+        return;
+      }
+
+      if (editId) {
+        // 수정 모드: 본인 신청이면서 아직 관리자가 최종 처리하지 않은 상태(접수됨/검토중)일 때만 허용
+        const { data: app, error } = await sb.from('species_applications')
+          .select('*').eq('id', editId).single();
+
+        if (error || !app || app.user_id !== user.id) {
+          alert('수정할 수 없는 신청이에요.');
+          window.location.href = 'species-apply.html';
+          return;
+        }
+        if (!EDITABLE_STATUSES.includes(app.status)) {
+          alert('이미 처리된 신청은 수정할 수 없어요.');
+          window.location.href = `species-apply-detail.html?id=${editId}`;
+          return;
+        }
+
+        editingApp = app;
+        currentImageUrl = app.image_url || null;
+
+        document.getElementById('breadcrumbCurrent').textContent = '수정';
+        document.getElementById('pageTitle').textContent = '종족주 신청 수정';
+        document.getElementById('speciesName').value = app.species_name || '';
+        document.getElementById('applyLink').value   = app.link || '';
+        if (currentImageUrl) {
+          document.getElementById('imagePreview').src = currentImageUrl;
+          document.getElementById('imagePreview').style.display = 'block';
+          document.getElementById('uploadPlaceholder').style.display = 'none';
+          document.getElementById('removeImageBtn').style.display = '';
+        }
+        document.getElementById('submitBtn').textContent = '수정하기';
         return;
       }
 
@@ -156,6 +194,7 @@
       document.getElementById('imagePreview').style.display = 'none';
       document.getElementById('uploadPlaceholder').style.display = '';
       document.getElementById('removeImageBtn').style.display = 'none';
+      currentImageUrl = null;
     }
 
     document.getElementById('applyForm').addEventListener('submit', async (e) => {
@@ -168,10 +207,10 @@
       const btn         = document.getElementById('submitBtn');
 
       errorEl.textContent = '';
-      if (!speciesName)       { errorEl.textContent = '보유한 종족명을 입력해주세요.'; return; }
-      if (!imgFile && !link)  { errorEl.textContent = '이미지 또는 링크 중 하나를 입력해주세요.'; return; }
+      if (!speciesName)                              { errorEl.textContent = '보유한 종족명을 입력해주세요.'; return; }
+      if (!imgFile && !currentImageUrl && !link)     { errorEl.textContent = '이미지 또는 링크 중 하나를 입력해주세요.'; return; }
 
-      btn.textContent = '제출 중...';
+      btn.textContent = editingApp ? '수정 중...' : '제출 중...';
       btn.disabled = true;
 
       try {
@@ -179,8 +218,8 @@
         if (!user) { window.location.href = 'login.html'; return; }
         const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname;
 
-        // 이미지 업로드
-        let image_url = null;
+        // 이미지 업로드 (새 파일을 선택했을 때만, 아니면 기존/제거된 상태 유지)
+        let image_url = currentImageUrl;
         if (imgFile) {
           const blob     = await compressImage(imgFile);
           const fileName = `apply_${Date.now()}.jpg`;
@@ -190,6 +229,20 @@
           if (uploadError) throw new Error(`이미지 업로드에 실패했어요. (${uploadError.message})`);
           const { data: urlData } = sb.storage.from('images').getPublicUrl(fileName);
           image_url = urlData.publicUrl;
+        }
+
+        if (editingApp) {
+          const { error } = await sb.from('species_applications').update({
+            title:        speciesName,
+            species_name: speciesName,
+            image_url,
+            link: link || null,
+          }).eq('id', editingApp.id);
+
+          if (error) throw new Error(`수정에 실패했어요. (${error.message})`);
+
+          window.location.href = `species-apply-detail.html?id=${editingApp.id}`;
+          return;
         }
 
         const { error } = await sb.from('species_applications').insert({
@@ -208,7 +261,7 @@
       } catch (err) {
         errorEl.textContent = err.message;
       } finally {
-        btn.textContent = '제출하기';
+        btn.textContent = editingApp ? '수정하기' : '제출하기';
         btn.disabled = false;
       }
     });

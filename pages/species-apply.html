@@ -46,6 +46,8 @@
           </div>
         </div>
 
+        <div class="shop-tab-row" id="statusTabRow" style="display:none;"></div>
+
         <div id="applyList"></div>
         <div id="paginationWrap"></div>
 
@@ -80,6 +82,48 @@
 
     let isAdminUser = false;
     let idToNick = {};
+    let allApplications = [];
+    let activeTab = '신청';
+
+    // 탭 key → 매핑되는 실제 status 값 (null이면 전체)
+    const STATUS_TABS = [
+      { key: '신청',     statuses: ['접수됨'] },
+      { key: '검토중',   statuses: ['검토중'] },
+      { key: '승인완료', statuses: ['승인됨'] },
+      { key: '반려됨',   statuses: ['반려됨'] },
+      { key: '전체',     statuses: null },
+    ];
+
+    function renderStatusTabs() {
+      const row = document.getElementById('statusTabRow');
+      if (!isAdminUser) { row.style.display = 'none'; return; }
+
+      row.style.display = 'flex';
+      row.innerHTML = STATUS_TABS.map(tab => {
+        const count = tab.statuses
+          ? allApplications.filter(a => tab.statuses.includes(a.status || '접수됨')).length
+          : allApplications.length;
+        return `<button type="button" class="shop-tab-btn${tab.key === activeTab ? ' active' : ''}" data-tab="${tab.key}">${tab.key} ${count}</button>`;
+      }).join('');
+    }
+
+    function applyActiveTab() {
+      const tab = STATUS_TABS.find(t => t.key === activeTab) || STATUS_TABS[0];
+      const filtered = tab.statuses
+        ? allApplications.filter(a => tab.statuses.includes(a.status || '접수됨'))
+        : allApplications;
+      document.getElementById('applyCount').textContent = `총 ${filtered.length}건`;
+      document.getElementById('emptyState').style.display = filtered.length === 0 ? 'flex' : 'none';
+      pager.load(filtered);
+    }
+
+    document.getElementById('statusTabRow').addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-tab]');
+      if (!btn) return;
+      activeTab = btn.dataset.tab;
+      renderStatusTabs();
+      applyActiveTab();
+    });
 
     async function initPage() {
       const isGuideMode = new URLSearchParams(window.location.search).has('guide');
@@ -122,6 +166,13 @@
 
       if (error || !data || data.length === 0) {
         document.getElementById('emptyState').style.display = 'flex';
+        return;
+      }
+
+      if (isAdminUser) {
+        allApplications = data;
+        renderStatusTabs();
+        applyActiveTab();
         return;
       }
 
