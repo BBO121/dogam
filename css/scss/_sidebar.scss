@@ -250,12 +250,57 @@
   margin-bottom: 8px;
 }
 
+/* 닉네임 1줄 + 권한 배지 1줄로 분리, 가운데 정렬 */
 .sidebar-user-row {
   display: flex;
+  flex-direction: column;
   align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.sidebar-user-badges {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 6px;
   flex-wrap: wrap;
-  margin-bottom: 10px;
+}
+
+/* 대표 캐릭터 (모바일 사이드바 상단) — 사이드바 폭(260px, 좌우 padding 16px)을
+   넘지 않으면서도 시각적 중심이 될 만큼 크게 표시 */
+.sidebar-rep-char {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.sidebar-rep-char-img {
+  width: min(170px, 100%);
+  aspect-ratio: 1 / 1;
+  max-width: 100%;
+  border-radius: 24px;
+  background-size: cover;
+  background-position: center;
+  background-color: var(--bg-sub, #f3f4f6);
+  border: 2px solid var(--border);
+}
+
+/* 대표 캐릭터 미설정 — placeholder */
+.sidebar-rep-char-img--empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: var(--text-mute);
+  border-style: dashed;
+}
+
+.sidebar-rep-char-caption {
+  font-size: 12px;
+  color: var(--text-mute);
+  text-align: center;
+  margin: 0 0 10px;
 }
 
 .sidebar-user-block .btn-login {

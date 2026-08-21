@@ -1068,7 +1068,10 @@
   .profile-name-row {
     justify-content: center;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 10px;
+    /* 배지 아래 여백을 조금 더 확보 — .profile-header-info의 gap:12px 위에 더해짐
+       (가입일/소개/스티커 등 나머지 형제 간 간격은 그 gap:12px 그대로 유지) */
+    margin-bottom: 10px;
   }
   /* 닉네임: 1줄 */
   .profile-name-row .profile-name {
@@ -1648,11 +1651,15 @@ button.btn-more {
   letter-spacing: -0.3px;
 }
 
-/* 사이드바 재화 (모바일용) */
+/* 사이드바 재화 (모바일용) — 위 닉네임/배지 블록이 가운데 정렬이라 이 줄도 함께 가운데 정렬 */
 .sidebar-currencies {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
   padding: 6px 0;
   margin-bottom: 10px;
 }

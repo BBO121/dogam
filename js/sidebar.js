@@ -328,14 +328,40 @@ async function updateSidebarLogin() {
       if (isSpeciesOwner)                               badges.push(`<span class="badge-role">종족주</span>`);
       if (!admin && !staff && !isTester && !isSpeciesOwner && !isStaffGen1) badges.push(`<span class="badge-user">일반유저</span>`);
 
-      const { data: wallet } = await getMyWallet(user.id).catch(() => ({ data: null }));
+      const [{ data: wallet }, { data: repProfile }] = await Promise.all([
+        getMyWallet(user.id).catch(() => ({ data: null })),
+        sb.from('user_profiles').select('representative_character_id').eq('user_id', user.id).maybeSingle(),
+      ]);
       const researchAmt = (wallet?.research_records ?? 0).toLocaleString();
       const keysAmt     = (wallet?.keys ?? 0).toLocaleString();
 
+      let repChar = null;
+      if (repProfile?.representative_character_id) {
+        const { data: c } = await sb.from('characters')
+          .select('id, name, species_name, image_url, thumbnail_url, default_image_index')
+          .eq('id', repProfile.representative_character_id)
+          .maybeSingle();
+        repChar = c || null;
+      }
+
+      // 대표 캐릭터는 미설정이어도 항상 존재하는 슬롯 — placeholder로 자리를 유지해 레이아웃이 움직이지 않게 함
+      const repCharHtml = repChar ? `
+        <a href="character.html?id=${repChar.id}" class="sidebar-rep-char">
+          <div class="sidebar-rep-char-img" style="background-image:url('${resolveCharacterImage(repChar)}')"></div>
+        </a>` : `
+        <a href="profile.html" class="sidebar-rep-char">
+          <div class="sidebar-rep-char-img sidebar-rep-char-img--empty">＋</div>
+        </a>`;
+      const repCharCaption = repChar
+        ? `<p class="sidebar-rep-char-caption">${repChar.name} · ${repChar.species_name || ''}</p>`
+        : `<p class="sidebar-rep-char-caption">대표 캐릭터 미설정</p>`;
+
       block.innerHTML = `
+        ${repCharHtml}
+        ${repCharCaption}
         <div class="sidebar-user-row">
           <a href="profile.html" class="btn-username">${nickname}</a>
-          ${badges.join('')}
+          ${badges.length ? `<div class="sidebar-user-badges">${badges.join('')}</div>` : ''}
         </div>
         <a href="my-wallet.html" class="sidebar-currencies">
           <span class="header-currency currency-record">
