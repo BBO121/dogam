@@ -252,7 +252,7 @@
                 <input type="text" id="bidAmount" class="form-input" placeholder="0" inputmode="numeric"
                   oninput="const r=this.value.replace(/[^0-9]/g,''); this.value=r?Number(r).toLocaleString('ko-KR'):'';"
                   style="flex:1;">
-                <span style="font-size:14px; color:var(--text-mute); white-space:nowrap;">원</span>
+                <span id="bidAmountUnit" style="font-size:14px; color:var(--text-mute); white-space:nowrap;">원</span>
               </div>
               <button onclick="submitBid()" class="btn-secondary">입찰하기</button>
             </div>
@@ -365,8 +365,10 @@
     let auctionDetails  = null;
     let idToNick        = {};
     let allNicknames    = [];
+    let auctionCurrencyUnit = '원';
     const activeMentions = new Map(); // taId → Set<nick>
 
+    const AUCTION_CURRENCY_LABEL = { krw: '원', research_records: '연구기록' };
     const TYPE_LABEL = { free: '무료', paid: '유료', auction: '경매', etc: '기타' };
     const TYPE_CLASS  = { free: 'adoption-type--free', paid: 'adoption-type--paid', auction: 'adoption-type--auction', etc: 'adoption-type--paid' };
 
@@ -1008,6 +1010,10 @@
 
     function renderAuctionInfo(details) {
       if (!details) return;
+      auctionCurrencyUnit = AUCTION_CURRENCY_LABEL[details.auction_currency] || '원';
+      const unitEl = document.getElementById('bidAmountUnit');
+      if (unitEl) unitEl.textContent = auctionCurrencyUnit;
+
       const closeLabel = details.close_method === 'date'
         ? (details.close_at
             ? `${new Date(details.close_at).toLocaleString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })} 마감`
@@ -1021,17 +1027,17 @@
         <div class="auction-info-grid">
           <div class="auction-info-item">
             <span class="auction-info-label">시작가</span>
-            <span class="auction-info-value">${Number(details.start_price).toLocaleString('ko-KR')}원</span>
+            <span class="auction-info-value">${Number(details.start_price).toLocaleString('ko-KR')}${auctionCurrencyUnit}</span>
           </div>
           ${details.instant_price ? `
           <div class="auction-info-item">
             <span class="auction-info-label">즉분가</span>
-            <span class="auction-info-value">${Number(details.instant_price).toLocaleString('ko-KR')}원</span>
+            <span class="auction-info-value">${Number(details.instant_price).toLocaleString('ko-KR')}${auctionCurrencyUnit}</span>
           </div>` : ''}
           ${details.bid_unit ? `
           <div class="auction-info-item">
             <span class="auction-info-label">입찰 단위</span>
-            <span class="auction-info-value">${Number(details.bid_unit).toLocaleString('ko-KR')}원</span>
+            <span class="auction-info-value">${Number(details.bid_unit).toLocaleString('ko-KR')}${auctionCurrencyUnit}</span>
           </div>` : ''}
           <div class="auction-info-item">
             <span class="auction-info-label">마감</span>
@@ -1122,7 +1128,7 @@
           <div class="adoption-bid-row">
             <div class="adoption-bid-info">
               <span class="adoption-bid-name">${currentBidderName}</span>
-              <span class="adoption-bid-amount">${Number(bid.bid_amount).toLocaleString('ko-KR')}원</span>
+              <span class="adoption-bid-amount">${Number(bid.bid_amount).toLocaleString('ko-KR')}${auctionCurrencyUnit}</span>
               ${isInstantWin ? `<span class="bid-instant-badge">✨즉분가 낙찰✨</span><span class="bid-instant-desc"> 분양자의 확인을 기다려주세요</span>` : ''}
               <span class="adoption-bid-time">${timeAgo(bid.created_at)}</span>
             </div>
@@ -1174,19 +1180,19 @@
 
       // 시작가 미만 체크
       if (bidNum < startNum) {
-        errorEl.textContent = `시작가(${startNum.toLocaleString('ko-KR')}원) 이상으로 입찰해주세요.`;
+        errorEl.textContent = `시작가(${startNum.toLocaleString('ko-KR')}${auctionCurrencyUnit}) 이상으로 입찰해주세요.`;
         return;
       }
 
       // 입찰 단위 체크
       if (unitNum && (bidNum - startNum) % unitNum !== 0) {
-        errorEl.textContent = `입찰 단위는 ${unitNum.toLocaleString('ko-KR')}원이에요. (시작가 기준으로 ${unitNum.toLocaleString('ko-KR')}원 단위로 입찰)`;
+        errorEl.textContent = `입찰 단위는 ${unitNum.toLocaleString('ko-KR')}${auctionCurrencyUnit}이에요. (시작가 기준으로 ${unitNum.toLocaleString('ko-KR')}${auctionCurrencyUnit} 단위로 입찰)`;
         return;
       }
 
       // 즉분가 초과 체크
       if (instNum !== null && bidNum > instNum) {
-        errorEl.textContent = `즉분가(${instNum.toLocaleString('ko-KR')}원) 이하로 입찰해주세요.`;
+        errorEl.textContent = `즉분가(${instNum.toLocaleString('ko-KR')}${auctionCurrencyUnit}) 이하로 입찰해주세요.`;
         return;
       }
 
@@ -1197,7 +1203,7 @@
         ? Math.max(...existingBids.map(b => Number(String(b.bid_amount).replace(/,/g, ''))))
         : 0;
       if (currentMax > 0 && bidNum <= currentMax) {
-        errorEl.textContent = `현재 최고 입찰가(${currentMax.toLocaleString('ko-KR')}원)보다 높은 금액으로 입찰해주세요.`;
+        errorEl.textContent = `현재 최고 입찰가(${currentMax.toLocaleString('ko-KR')}${auctionCurrencyUnit})보다 높은 금액으로 입찰해주세요.`;
         return;
       }
 
@@ -1225,7 +1231,7 @@
           status:         '확인 대기중',
           winner_name:    myNick || '익명',
           winner_user_id: currentUser.id,
-          winner_bid:     `${bidNum.toLocaleString('ko-KR')}원 (즉분가)`,
+          winner_bid:     `${bidNum.toLocaleString('ko-KR')}${auctionCurrencyUnit} (즉분가)`,
         }).eq('id', adoptionId).select('id');
 
         console.log('[즉분가 update 결과]', { instantUpdated, instantErr });
@@ -1245,7 +1251,7 @@
           {
             user_nickname: currentAdoption.author,
             type:          'auction_instant',
-            message:       `🏆 "${currentAdoption.character_name}" 경매에 즉분가(${bidNum.toLocaleString('ko-KR')}원) 입찰이 들어왔어요! 분양확정 버튼을 눌러 확정해주세요.`,
+            message:       `🏆 "${currentAdoption.character_name}" 경매에 즉분가(${bidNum.toLocaleString('ko-KR')}${auctionCurrencyUnit}) 입찰이 들어왔어요! 분양확정 버튼을 눌러 확정해주세요.`,
             link:          `adoption-detail.html?id=${adoptionId}`,
           },
           {
@@ -1264,7 +1270,7 @@
       await sb.from('notifications').insert({
         user_nickname: currentAdoption.author,
         type:          'auction_bid',
-        message:       `💰 "${currentAdoption.character_name}" 경매에 새 입찰이 들어왔어요. (${myNick}, ${Number(raw).toLocaleString('ko-KR')}원)`,
+        message:       `💰 "${currentAdoption.character_name}" 경매에 새 입찰이 들어왔어요. (${myNick}, ${Number(raw).toLocaleString('ko-KR')}${auctionCurrencyUnit})`,
         link:          `adoption-detail.html?id=${adoptionId}`,
       });
 
