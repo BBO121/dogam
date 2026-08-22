@@ -238,6 +238,7 @@
     let myCharacters        = [];
     let mySlots             = [];
     let speciesRulesMap     = {};
+    let mySpeciesIdSet      = new Set(); // 내가 종족주인 종족 id — 분양 규칙 예외 판정용
 
     function fmtNum(el) {
       const raw = el.value.replace(/[^0-9]/g, '');
@@ -353,6 +354,7 @@
       const { data: mySpecies } = await sb.from('species')
         .select('id').eq('owner_user_id', user.id);
       const mySpeciesIds = (mySpecies || []).map(s => s.id);
+      mySpeciesIdSet = new Set(mySpeciesIds);
 
       const slotsQuery = mySpeciesIds.length > 0
         ? sb.from('slots').select('id, name, slot_number, species_id, image_url, thumbnail_url, status')
@@ -459,14 +461,22 @@
 
       if (!isSlot) {
         const sp = speciesRulesMap[char?.species_name] || {};
-        if (selectedType === 'free' && !(char.allow_free_adoption ?? sp.allow_free_adoption ?? true)) {
-          errorEl.textContent = '무료분양 불가능 개체입니다!'; return;
-        }
-        if ((selectedType === 'paid' || selectedType === 'auction') && !(char.allow_paid_adoption ?? sp.allow_paid_adoption ?? true)) {
-          errorEl.textContent = '유료분양 불가능 개체입니다!'; return;
-        }
-        if (selectedType === 'etc' && !(char.allow_other_adoption ?? sp.allow_other_adoption ?? true)) {
-          errorEl.textContent = '기타분양 불가능 개체입니다!'; return;
+        // 해당 종족의 종족주 본인은 자기 종족 개체에 한해 분양 규칙 제한을 받지 않는다.
+        const isSpeciesOwner = !!(sp.id && mySpeciesIdSet.has(sp.id));
+
+        if (!isSpeciesOwner) {
+          if (!(char.allow_resale ?? sp.allow_resale ?? true)) {
+            errorEl.textContent = '재분양 불가능 개체입니다!'; return;
+          }
+          if (selectedType === 'free' && !(char.allow_free_adoption ?? sp.allow_free_adoption ?? true)) {
+            errorEl.textContent = '무료분양 불가능 개체입니다!'; return;
+          }
+          if ((selectedType === 'paid' || selectedType === 'auction') && !(char.allow_paid_adoption ?? sp.allow_paid_adoption ?? true)) {
+            errorEl.textContent = '유료분양 불가능 개체입니다!'; return;
+          }
+          if (selectedType === 'etc' && !(char.allow_other_adoption ?? sp.allow_other_adoption ?? true)) {
+            errorEl.textContent = '기타분양 불가능 개체입니다!'; return;
+          }
         }
       }
 
