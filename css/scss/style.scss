@@ -999,6 +999,14 @@
     border-radius: 0;
 }
 
+.profile-avatar-wrap.frame-sp-molling::after {
+    border: none;
+    inset: -13.0208%;
+    background-image: url('../images/shop/frame_sp_molling.png');
+    background-size: 100% 100%;
+    border-radius: 0;
+}
+
 .profile-avatar-wrap.frame-li-bbo::after {
     border: none;
     inset: -13.0208%;
@@ -7512,6 +7520,7 @@ button.btn-more {
 .frame-preview.frame-sp-bbogi        { border: none; background-image: url('../images/shop/frame_sp_bbogi.png');      background-size: cover; background-position: center; }
 .frame-preview.frame-sp-bexolotl     { border: none; background-image: url('../images/shop/frame_sp_Bexolotl.png');   background-size: cover; background-position: center; }
 .frame-preview.frame-sp-bubblere     { border: none; background-image: url('../images/shop/frame_sp_bubblere.png');  background-size: cover; background-position: center; }
+.frame-preview.frame-sp-molling      { border: none; background-image: url('../images/shop/frame_sp_molling.png');   background-size: cover; background-position: center; }
 .frame-preview.frame-li-bbo          { border: none; background-image: url('../images/shop/frame_li_bbo.png');      background-size: cover; background-position: center; }
 
 /* 상품 상세 모달 */
@@ -8022,6 +8031,9 @@ button.btn-more {
 .bag-ep-preview-wrap.frame-sp-bubblere           { overflow: visible; }
 .bag-ep-preview-wrap.frame-sp-bubblere .bag-ep-avatar { border-radius: 20px; overflow: hidden; }
 .bag-ep-preview-wrap.frame-sp-bubblere::after     { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_sp_bubblere.png');   background-size: 100% 100%; border-radius: 0; }
+.bag-ep-preview-wrap.frame-sp-molling            { overflow: visible; }
+.bag-ep-preview-wrap.frame-sp-molling .bag-ep-avatar { border-radius: 20px; overflow: hidden; }
+.bag-ep-preview-wrap.frame-sp-molling::after      { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_sp_molling.png');    background-size: 100% 100%; border-radius: 0; }
 .bag-ep-preview-wrap.frame-li-bbo                { overflow: visible; }
 .bag-ep-preview-wrap.frame-li-bbo .bag-ep-avatar  { border-radius: 20px; overflow: hidden; }
 .bag-ep-preview-wrap.frame-li-bbo::after          { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_li_bbo.png');      background-size: 100% 100%; border-radius: 0; }
@@ -8118,6 +8130,7 @@ button.btn-more {
 .bag-ep-frame-wrap.frame-sp-bbogi::after        { border: none; background-image: url('../images/shop/frame_sp_bbogi.png');      background-size: cover; background-position: center; }
 .bag-ep-frame-wrap.frame-sp-bexolotl::after     { border: none; background-image: url('../images/shop/frame_sp_Bexolotl.png');   background-size: cover; background-position: center; }
 .bag-ep-frame-wrap.frame-sp-bubblere::after     { border: none; background-image: url('../images/shop/frame_sp_bubblere.png');  background-size: cover; background-position: center; }
+.bag-ep-frame-wrap.frame-sp-molling::after      { border: none; background-image: url('../images/shop/frame_sp_molling.png');   background-size: cover; background-position: center; }
 .bag-ep-frame-wrap.frame-li-bbo::after          { border: none; background-image: url('../images/shop/frame_li_bbo.png');      background-size: cover; background-position: center; }
 
 .bag-ep-avatar {
@@ -8246,6 +8259,15 @@ button.btn-more {
   align-items: center;
   justify-content: center;
   overflow: hidden;
+}
+
+/* 가방 인벤토리 스티커 — 상점 .shop-thumb-img와 동일 비율(72%)로 맞춤.
+   .shop-thumb-img 스코프 규칙이 .bag-item-preview에는 적용되지 않아
+   스티커가 프레임(.frame-preview 72%)보다 커 보이던 문제 수정 */
+.bag-item-preview .shop-sticker-img {
+  width: 72%;
+  height: 72%;
+  object-fit: contain;
 }
 
 .bag-item-name {
@@ -8516,6 +8538,7 @@ button.btn-more {
 .deco-modal-frame-preview.frame-sp-bbogi        { border: none; background-image: url('../images/shop/frame_sp_bbogi.png');      background-size: cover; background-position: center; }
 .deco-modal-frame-preview.frame-sp-bexolotl     { border: none; background-image: url('../images/shop/frame_sp_Bexolotl.png');   background-size: cover; background-position: center; }
 .deco-modal-frame-preview.frame-sp-bubblere     { border: none; background-image: url('../images/shop/frame_sp_bubblere.png');  background-size: cover; background-position: center; }
+.deco-modal-frame-preview.frame-sp-molling      { border: none; background-image: url('../images/shop/frame_sp_molling.png');   background-size: cover; background-position: center; }
 .deco-modal-frame-preview.frame-li-bbo          { border: none; background-image: url('../images/shop/frame_li_bbo.png');      background-size: cover; background-position: center; }
 
 .deco-modal-sticker-img {
