@@ -813,12 +813,22 @@
       console.log('[runRaffle called]');
       if (!confirm('추첨을 진행할까요? 신청자 중 한 명이 랜덤으로 선택돼요.')) return;
 
-      const { data: apps, error } = await sb.from('adoption_applications')
-        .select('applicant_nickname, applicant_id').eq('adoption_id', adoptionId);
+      // 중복 클릭 방지 — 실제 안전장치는 서버 RPC의 FOR UPDATE 잠금이지만,
+      // 같은 탭에서 연타 시 confirm()이 여러 번 뜨는 걸 막기 위한 UX 가드
+      const btn = document.querySelector('#freeActionArea .apply-btn');
+      if (btn) { btn.disabled = true; btn.textContent = '추첨 중...'; }
 
-      if (error || !apps || apps.length === 0) {
-        alert('신청자가 없어요. 추첨을 진행할 수 없어요. 분양을 마감합니다.');
-        await sb.from('adoptions').update({ status: '완료' }).eq('id', adoptionId);
+      const { data, error } = await sb.rpc('draw_adoption_raffle', { p_adoption_id: adoptionId });
+
+      if (error || !data?.ok) {
+        console.error('[runRaffle] RPC 실패:', error || data?.error);
+        alert(data?.error || '추첨에 실패했어요. 다시 시도해주세요.');
+        if (btn) { btn.disabled = false; btn.textContent = '추첨하기'; }
+        return;
+      }
+
+      if (data.no_applicants) {
+        // 신청자 0명 — 기존 업적 카운터 로직 유지 (브라우저 전역 함수라 서버 이전 불가)
         try {
           if (!window.incrementAchCounter) throw new Error('incrementAchCounter 없음');
           const _ac = await window.incrementAchCounter('adoption_complete');
@@ -827,88 +837,12 @@
           if (_ac >= 20) window.awardAchievement?.('adoption_20', { pending: true });
           if (_ac >= 30) window.awardAchievement?.('adoption_30', { pending: true });
         } catch (e) { console.error('[업적] 분양 완료 카운트 오류', e); }
-        location.reload();
-        return;
+        alert('신청자가 없어요. 분양을 마감합니다.');
+      } else {
+        console.log('[runRaffle] 당첨자 →', data.winner_name);
+        alert('추첨 완료!');
       }
 
-      const winnerApp    = apps[Math.floor(Math.random() * apps.length)];
-      const winner       = winnerApp.applicant_nickname;
-      const winnerUserId = winnerApp.applicant_id || null;
-
-      const { error: updateErr } = await sb.from('adoptions').update({
-        winner_name:     winner,
-        winner_user_id:  winnerUserId,
-        winner_drawn_at: new Date().toISOString(),
-        status:          '확인 대기중',
-      }).eq('id', adoptionId);
-
-      if (updateErr) { alert('오류가 발생했어요.'); return; }
-
-      const raffleLink = `adoption-detail.html?id=${adoptionId}`;
-
-      // 당첨자 알림 — notify_user_by_id RPC (UUID 기반)
-      if (winnerApp.applicant_id) {
-        const { error: winErr } = await sb.rpc('notify_user_by_id', {
-          p_user_id: winnerApp.applicant_id,
-          p_type:    'raffle_win',
-          p_message: `🎲 "${currentAdoption.character_name}" 랜덤 추첨에 당첨됐어요! 분양자가 확정을 처리할 예정이에요.`,
-          p_link:    raffleLink,
-        });
-        if (winErr) console.error('[알림] raffle_win RPC 실패:', winErr);
-        else        console.log('[알림] raffle_win 성공 →', winnerApp.applicant_nickname);
-      }
-
-      // 분양자(작성자) 알림 — notify_user_by_id RPC (UUID 기반)
-      if (currentAdoption.user_id) {
-        const { error: doneErr } = await sb.rpc('notify_user_by_id', {
-          p_user_id: currentAdoption.user_id,
-          p_type:    'raffle_done',
-          p_message: `🎲 "${currentAdoption.character_name}" 추첨 결과: ${winner}님 당첨!`,
-          p_link:    raffleLink,
-        });
-        if (doneErr) console.error('[알림] raffle_done RPC 실패:', doneErr);
-        else         console.log('[알림] raffle_done 성공 → 분양자');
-      }
-
-      // 낙첨자 알림
-      const loserApps   = apps.filter(ap => ap.applicant_nickname !== winner && ap.applicant_nickname !== currentAdoption.author);
-      const loserById   = loserApps.filter(ap =>  ap.applicant_id);
-      const loserByNick = [...new Set(loserApps.filter(ap => !ap.applicant_id).map(ap => ap.applicant_nickname))];
-      console.log(`[알림] 낙첨자 ${loserApps.length}명 (UUID: ${loserById.length}, 닉네임 fallback: ${loserByNick.length})`);
-
-      // UUID 있는 낙첨자 → RPC (SECURITY DEFINER, RLS 우회)
-      const loserRpcResults = await Promise.allSettled(
-        loserById.map(ap =>
-          sb.rpc('notify_user_by_id', {
-            p_user_id: ap.applicant_id,
-            p_type:    'raffle_lose',
-            p_message: `🎲 참여한 "${currentAdoption.character_name}" 추첨이 완료됐어요. 이번엔 아쉽지만 다음 기회에!`,
-            p_link:    raffleLink,
-          })
-        )
-      );
-      loserRpcResults.forEach((r, i) => {
-        if (r.status === 'rejected' || r.value?.error)
-          console.error(`[알림] raffle_lose RPC 실패 (${loserById[i].applicant_nickname}):`, r.reason ?? r.value.error);
-        else
-          console.log(`[알림] raffle_lose RPC 성공 → ${loserById[i].applicant_nickname}`);
-      });
-
-      // UUID 없는 낙첨자 → 닉네임 직접 INSERT (구데이터 fallback)
-      if (loserByNick.length > 0) {
-        const { error: loserNickErr } = await sb.from('notifications').insert(
-          loserByNick.map(nick => ({
-            user_nickname: nick,
-            type:          'raffle_lose',
-            message:       `🎲 참여한 "${currentAdoption.character_name}" 추첨이 완료됐어요. 이번엔 아쉽지만 다음 기회에!`,
-            link:          raffleLink,
-          }))
-        );
-        if (loserNickErr) console.error('[알림] raffle_lose 닉네임 INSERT 실패:', loserNickErr);
-        else              console.log(`[알림] raffle_lose 닉네임 INSERT 성공 (${loserByNick.length}명)`);
-      }
-
-      alert('추첨 완료!');
       location.reload();
     }
 
