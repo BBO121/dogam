@@ -89,6 +89,10 @@
           placeholder="개체명, 종족명, 작성자로 검색...">
       </div>
 
+      <div id="adoptionEventBox" class="event-adoption-box" style="display:none;">
+        <p class="event-adoption-label">이벤트 분양</p>
+        <div id="adoptionEventGrid" class="adoption-grid"></div>
+      </div>
       <div id="adoptionGrid" class="adoption-grid"></div>
       <div id="paginationWrap"></div>
 
@@ -126,7 +130,7 @@
     function applyFilters() {
       const q = searchQuery.toLowerCase();
 
-      const filtered = rawData.filter(a => {
+      const matchesFilter = a => {
         const status = a.status || '분양중';
 
         if (activeStatus === 'open'   && !OPEN_STATUSES.includes(status)) return false;
@@ -141,20 +145,27 @@
         }
 
         return true;
-      });
+      };
+
+      const matched = rawData.filter(matchesFilter);
+      // 이벤트 경매는 항상 최상단 별도 영역에만 표시 — 일반 목록(pager)에는 절대 포함하지 않는다.
+      const eventMatched  = matched.filter(a => a.is_featured_event);
+      const filtered      = matched.filter(a => !a.is_featured_event);
+
+      renderEventItems(eventMatched);
 
       const emptyEl  = document.getElementById('emptyState');
       const emptyMsg = document.getElementById('emptyStateMsg');
       const hasFilter = activeStatus !== 'all' || activeType !== 'all' || q;
 
-      if (filtered.length === 0) {
+      if (matched.length === 0) {
         emptyMsg.textContent = hasFilter ? '조건에 맞는 분양 글이 없어요' : '등록된 분양 글이 없어요';
         emptyEl.style.display = 'flex';
       } else {
         emptyEl.style.display = 'none';
       }
 
-      document.getElementById('adoptionCount').textContent = `총 ${filtered.length}개`;
+      document.getElementById('adoptionCount').textContent = `총 ${matched.length}개`;
 
       if (_firstLoad) {
         _firstLoad = false;
@@ -186,40 +197,52 @@
       return `<div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span>${note ? '<span class="sensitive-overlay-note">' + note + '</span>' : ''}<span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div>`;
     }
 
-    function renderItems(list) {
-      document.getElementById('adoptionGrid').innerHTML = list.map(a => {
-        const isSensitive   = a.characters?.is_sensitive === true;
-        const sensitiveNote = a.characters?.sensitive_note || null;
-        const typeLabel = TYPE_LABEL[a.adoption_type] || '';
-        const typeClass = TYPE_CLASS[a.adoption_type] || '';
-        const closed    = a.status === '완료';
+    function buildAdoptionCard(a) {
+      const isSensitive   = a.characters?.is_sensitive === true;
+      const sensitiveNote = a.characters?.sensitive_note || null;
+      const typeLabel = TYPE_LABEL[a.adoption_type] || '';
+      const typeClass = TYPE_CLASS[a.adoption_type] || '';
+      const closed    = a.status === '완료';
 
-        // 카드 썸네일: thumbnail_url 우선, 없으면 image_url fallback
-        const cardThumb = a.thumbnail_url || a.image_url;
-        const stamp = closed ? `<img src="../images/adoption-complete.png" class="adoption-stamp" alt="분양완료">` : '';
-        let cardImgHtml;
-        if (isSensitive && cardThumb) {
-          cardImgHtml = `<div class="adoption-card-img"><div style="position:absolute;inset:0;background-image:url('${cardThumb}');background-size:cover;background-position:center;" class="blurred"></div>${buildSensitiveOverlay(sensitiveNote)}</div>`;
-        } else {
-          const imgStyle = cardThumb ? `background-image:url('${cardThumb}');background-size:cover;background-position:center;` : '';
-          cardImgHtml = `<div class="adoption-card-img" style="${imgStyle}"></div>`;
-        }
+      // 카드 썸네일: thumbnail_url 우선, 없으면 image_url fallback
+      const cardThumb = a.thumbnail_url || a.image_url;
+      const stamp = closed ? `<img src="../images/adoption-complete.png" class="adoption-stamp" alt="분양완료">` : '';
+      let cardImgHtml;
+      if (isSensitive && cardThumb) {
+        cardImgHtml = `<div class="adoption-card-img"><div style="position:absolute;inset:0;background-image:url('${cardThumb}');background-size:cover;background-position:center;" class="blurred"></div>${buildSensitiveOverlay(sensitiveNote)}</div>`;
+      } else {
+        const imgStyle = cardThumb ? `background-image:url('${cardThumb}');background-size:cover;background-position:center;` : '';
+        cardImgHtml = `<div class="adoption-card-img" style="${imgStyle}"></div>`;
+      }
 
-        return `
-          <a class="adoption-card${closed ? ' adoption-card--closed' : ''}" href="adoption-detail.html?id=${a.id}">
-            ${cardImgHtml}
-            ${stamp}
-            <div class="adoption-card-info">
-              <div class="adoption-card-badges">
-                <span class="adoption-type-badge ${typeClass}">${typeLabel}</span>
-                <span class="adoption-status ${closed ? 'adoption-status--closed' : ''}">${a.status || '분양중'}</span>
-              </div>
-              <p class="adoption-card-charname">${a.character_name || '—'}</p>
-              <p class="adoption-card-species">${a.species_name || '—'}</p>
+      return `
+        <a class="adoption-card${closed ? ' adoption-card--closed' : ''}" href="adoption-detail.html?id=${a.id}">
+          ${cardImgHtml}
+          ${stamp}
+          <div class="adoption-card-info">
+            <div class="adoption-card-badges">
+              <span class="adoption-type-badge ${typeClass}">${typeLabel}</span>
+              <span class="adoption-status ${closed ? 'adoption-status--closed' : ''}">${a.status || '분양중'}</span>
             </div>
-          </a>
-        `;
-      }).join('');
+            <p class="adoption-card-charname">${a.character_name || '—'}</p>
+            <p class="adoption-card-species">${a.species_name || '—'}</p>
+          </div>
+        </a>
+      `;
+    }
+
+    function renderItems(list) {
+      document.getElementById('adoptionGrid').innerHTML = list.map(buildAdoptionCard).join('');
+    }
+
+    // 이벤트 분양 — 카드 개별 강조가 아니라 이 영역(box) 전체가 이벤트 구역임을 표시.
+    // 이벤트가 하나도 없으면 박스 자체를 렌더링하지 않는다(빈 박스 노출 금지).
+    function renderEventItems(list) {
+      const box  = document.getElementById('adoptionEventBox');
+      const grid = document.getElementById('adoptionEventGrid');
+      if (!list.length) { box.style.display = 'none'; grid.innerHTML = ''; return; }
+      box.style.display = 'block';
+      grid.innerHTML = list.map(buildAdoptionCard).join('');
     }
 
     const pager = createPager(renderItems);

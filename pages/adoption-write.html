@@ -174,6 +174,22 @@
               </p>
             </div>
 
+            <!-- admin 전용: 입찰 시작 시각 -->
+            <div class="form-group" id="bidOpenAtField" style="display:none;">
+              <label class="form-label">입찰 시작 시각 <span style="font-size:11px; color:var(--text-mute); font-weight:400;">(admin 전용 · 선택)</span></label>
+              <input type="datetime-local" id="bidOpenAt" class="form-input">
+              <p class="form-hint">비워두면 게시 즉시 입찰 가능해요. 값을 넣으면 해당 시각 전에는 아무도 입찰할 수 없어요(서버에서도 차단돼요).</p>
+            </div>
+
+            <!-- admin 전용: 이벤트 경매 지정 -->
+            <div class="form-group" id="eventFeaturedField" style="display:none;">
+              <label class="form-label">이벤트 경매 <span style="font-size:11px; color:var(--text-mute); font-weight:400;">(admin 전용)</span></label>
+              <label style="display:flex; align-items:center; gap:8px; font-size:14px; cursor:pointer;">
+                <input type="checkbox" id="isFeaturedEvent" style="width:16px; height:16px; margin:0;">
+                이 경매를 분양 목록/메인 최상단에 고정되는 이벤트 경매로 지정
+              </label>
+            </div>
+
           </div>
 
           <!-- 기타: 조건 -->
@@ -238,6 +254,8 @@
     let myCharacters        = [];
     let mySlots             = [];
     let speciesRulesMap     = {};
+    let isAdminUser         = false; // 이벤트 경매 지정/입찰 시작 시각 필드 노출 여부 (admin 전용)
+    let isAdminLoginIdUser  = false; // login_id='admin' 계정 전용 — 유료분양/경매 allow_paid_adoption 검증 예외 (서버: is_admin_login_id_user RPC로 확인, 조작 불가)
     let mySpeciesIdSet      = new Set(); // 내가 종족주인 종족 id — 분양 규칙 예외 판정용
 
     function fmtNum(el) {
@@ -282,6 +300,7 @@
       document.getElementById('paidFields').style.display     = type === 'paid'    ? 'block' : 'none';
       document.getElementById('auctionFields').style.display  = type === 'auction' ? 'block' : 'none';
       document.getElementById('etcFields').style.display      = type === 'etc'     ? 'block' : 'none';
+      refreshAdminAuctionFields();
 
       // 무료가 아닐 때 추첨 날짜 필드 숨김
       if (type !== 'free') {
@@ -332,6 +351,14 @@
       document.getElementById('bidUnitUnit').textContent      = label;
     }
 
+    // admin에게만 이벤트 경매 지정 / 입찰 시작 시각 필드를 보여준다.
+    // (경매 타입일 때만 의미가 있으므로 auctionFields가 열려있을 때만 노출)
+    function refreshAdminAuctionFields() {
+      const show = isAdminUser && selectedType === 'auction';
+      document.getElementById('bidOpenAtField').style.display     = show ? 'block' : 'none';
+      document.getElementById('eventFeaturedField').style.display = show ? 'block' : 'none';
+    }
+
     function setCloseMethod(method) {
       selectedCloseMethod = method;
       document.getElementById('closeMethodDate').classList.toggle('active',    method === 'date');
@@ -346,6 +373,14 @@
         window.location.href = 'adoption.html';
         return;
       }
+      isAdminUser = user.user_metadata?.role === 'admin';
+      refreshAdminAuctionFields();
+
+      // login_id='admin' 계정 전용 유료분양/경매 예외 여부 — 서버 RPC로 확인
+      // (조작 가능한 user_metadata가 아니라 auth.uid() 기반 실제 login_id로 판정됨)
+      const { data: isAdminLoginId } = await sb.rpc('is_admin_login_id_user');
+      isAdminLoginIdUser = isAdminLoginId === true;
+
       await loadCharacters(user);
     }
 
@@ -444,6 +479,16 @@
         if (selectedCloseMethod === 'last_bid' && (!closeHours || Number(closeHours) <= 0)) {
           errorEl.textContent = '마지막 입찰 후 마감 시간을 입력해주세요.'; return;
         }
+
+        // admin 전용: 입찰 시작 시각은 마감 시각(날짜 지정)보다 빨라야 함
+        if (isAdminUser) {
+          const bidOpenAtRaw = document.getElementById('bidOpenAt').value;
+          const closeAtRaw   = document.getElementById('closeAt').value;
+          if (bidOpenAtRaw && selectedCloseMethod === 'date' && closeAtRaw &&
+              new Date(bidOpenAtRaw) >= new Date(closeAtRaw)) {
+            errorEl.textContent = '입찰 시작 시각은 마감 시각보다 빨라야 해요.'; return;
+          }
+        }
       }
 
       // 무료 추첨/선착순 날짜 필수 검증
@@ -471,7 +516,11 @@
           if (selectedType === 'free' && !(char.allow_free_adoption ?? sp.allow_free_adoption ?? true)) {
             errorEl.textContent = '무료분양 불가능 개체입니다!'; return;
           }
-          if ((selectedType === 'paid' || selectedType === 'auction') && !(char.allow_paid_adoption ?? sp.allow_paid_adoption ?? true)) {
+          // login_id='admin' 계정(공식 이벤트 경매 등록용)만 이 검증을 예외로 건너뛴다.
+          // isAdminLoginIdUser는 클라이언트 조작이 불가능한 is_admin_login_id_user RPC 결과이며,
+          // 실제 강제는 서버 RLS(adoptions INSERT WITH CHECK)가 담당한다.
+          if ((selectedType === 'paid' || selectedType === 'auction') && !isAdminLoginIdUser
+              && !(char.allow_paid_adoption ?? sp.allow_paid_adoption ?? true)) {
             errorEl.textContent = '유료분양 불가능 개체입니다!'; return;
           }
           if (selectedType === 'etc' && !(char.allow_other_adoption ?? sp.allow_other_adoption ?? true)) {
@@ -518,6 +567,7 @@
         status:         '분양중',
         author:         user?.user_metadata?.display_name || user?.user_metadata?.nickname || '익명',
         user_id:        user?.id,
+        is_featured_event: (isAdminUser && selectedType === 'auction' && document.getElementById('isFeaturedEvent').checked) || false,
       }).select().single();
 
       if (error) {
@@ -538,6 +588,9 @@
           close_method:  selectedCloseMethod,
           close_at:      selectedCloseMethod === 'date'     ? (document.getElementById('closeAt').value || null) : null,
           close_hours:   selectedCloseMethod === 'last_bid' ? (parseInt(document.getElementById('closeHours').value) || null) : null,
+          bid_open_at:   (isAdminUser && document.getElementById('bidOpenAt').value)
+                            ? new Date(document.getElementById('bidOpenAt').value).toISOString()
+                            : null,
         });
       }
 

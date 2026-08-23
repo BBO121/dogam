@@ -164,6 +164,7 @@
             <div style="display:flex; gap:8px; margin-bottom:12px;">
               <span id="typeBadge" class="adoption-type-badge"></span>
               <span id="statusBadge" class="adoption-status"></span>
+              <span id="eventBadge" class="adoption-event-badge adoption-event-badge--inline" style="display:none;">EVENT</span>
             </div>
 
             <div id="closedBanner" style="display:none; background:#f3f4f6; border:1.5px solid #d1d5db; border-radius:var(--radius); padding:12px 16px; margin-bottom:12px; text-align:center;">
@@ -245,6 +246,9 @@
 
             <!-- 입찰 목록 -->
             <div id="bidList" class="adoption-bid-list"></div>
+
+            <!-- 입찰 시작 전 안내 (bid_open_at 이전) -->
+            <p id="bidLockedNotice" class="first-come-countdown" style="display:none; margin-bottom:12px;"></p>
 
             <!-- 입찰 입력 -->
             <div id="bidInputWrap" class="adoption-bid-input-wrap" style="display:none;">
@@ -363,6 +367,7 @@
     let currentAdoption = null;
     let myNick          = null;
     let auctionDetails  = null;
+    let bidOpenAt        = null; // 경매 입찰 시작 시각 (auction_details.bid_open_at) — null이면 즉시 입찰 가능
     let idToNick        = {};
     let allNicknames    = [];
     let auctionCurrencyUnit = '원';
@@ -407,6 +412,7 @@
         ]);
 
         auctionDetails = details;
+        bidOpenAt = details?.bid_open_at ? new Date(details.bid_open_at) : null;
         renderAuctionInfo(details);
         renderBids(adoption, bids || []);
         loadComments();
@@ -477,6 +483,10 @@
       const tb = document.getElementById('typeBadge');
       tb.textContent = TYPE_LABEL[a.adoption_type] || '';
       tb.className   = `adoption-type-badge ${TYPE_CLASS[a.adoption_type] || ''}`;
+
+      if (a.is_featured_event) {
+        document.getElementById('eventBadge').style.display = 'inline-flex';
+      }
 
       const sb2 = document.getElementById('statusBadge');
       sb2.textContent = a.status || '분양중';
@@ -973,6 +983,11 @@
             <span class="auction-info-label">입찰 단위</span>
             <span class="auction-info-value">${Number(details.bid_unit).toLocaleString('ko-KR')}${auctionCurrencyUnit}</span>
           </div>` : ''}
+          ${details.bid_open_at ? `
+          <div class="auction-info-item">
+            <span class="auction-info-label">입찰 시작</span>
+            <span class="auction-info-value"${new Date(details.bid_open_at) > new Date() ? ' style="color:#B45309;font-weight:800;"' : ''}>${formatBidOpenAt(new Date(details.bid_open_at))}부터</span>
+          </div>` : ''}
           <div class="auction-info-item">
             <span class="auction-info-label">마감</span>
             <span class="auction-info-value">${closeLabel}</span>
@@ -1079,7 +1094,14 @@
 
       // 입찰 입력 (비작성자 + 로그인 + 분양중)
       if (!isAuthor && currentUser && isOpen) {
-        document.getElementById('bidInputWrap').style.display = 'flex';
+        if (bidOpenAt && Date.now() < bidOpenAt.getTime()) {
+          const notice = document.getElementById('bidLockedNotice');
+          notice.textContent = `🕐 ${formatBidOpenAt(bidOpenAt)}부터 제시할 수 있어요.`;
+          notice.style.display = 'block';
+          scheduleBidUnlock(bidOpenAt);
+        } else {
+          document.getElementById('bidInputWrap').style.display = 'flex';
+        }
       }
 
       // 마감 버튼 (작성자 + 분양중)
@@ -1090,6 +1112,24 @@
 
     function escAttr(str) {
       return String(str).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    // 경매 입찰 시작 시각 표시 — 기존 무료분양 추첨/선착순 날짜 표시와 동일한 포맷
+    function formatBidOpenAt(d) {
+      return d.toLocaleString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+    }
+
+    // bid_open_at 도달 시 자동으로 입찰 UI를 활성화 (기존 pollConfirm/pollInstant와 동일한
+    // "주기적으로 확인 후 새로고침" 패턴 — 과한 실시간 카운트다운 UI는 넣지 않는다)
+    let _bidUnlockTimer = null;
+    function scheduleBidUnlock(openAt) {
+      if (_bidUnlockTimer) return;
+      _bidUnlockTimer = setInterval(() => {
+        if (Date.now() >= openAt.getTime()) {
+          clearInterval(_bidUnlockTimer);
+          location.reload();
+        }
+      }, 15000);
     }
 
     function timeAgo(dateStr) {
@@ -1105,6 +1145,14 @@
       const raw     = document.getElementById('bidAmount').value.replace(/,/g, '').trim();
       const errorEl = document.getElementById('bidError');
       errorEl.textContent = '';
+
+      // 서버(auction_bids INSERT 트리거)에서도 동일하게 검증하지만, 화면에 명확한
+      // 메시지를 바로 보여주기 위한 선제 체크 — 실제 차단의 원천은 서버 트리거다.
+      if (bidOpenAt && Date.now() < bidOpenAt.getTime()) {
+        errorEl.textContent = '아직 입찰 시작 시간이 아닙니다.';
+        return;
+      }
+
       if (!raw) { errorEl.textContent = '입찰 금액을 입력해주세요.'; return; }
 
       const bidNum   = Number(raw);

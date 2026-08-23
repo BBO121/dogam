@@ -122,6 +122,10 @@
           <h2>분양</h2>
           <a href="adoption.html" class="btn-more">전체보기</a>
         </div>
+        <div id="adoptionEventBox" class="event-adoption-box" style="display:none;">
+          <p class="event-adoption-label">이벤트 분양</p>
+          <div class="adoption-grid" id="adoptionEventGrid"></div>
+        </div>
         <div class="adoption-grid" id="adoptionGrid">
           <p class="page-loading" id="adoptionLoading" style="padding:20px 0;">불러오는 중...</p>
         </div>
@@ -180,11 +184,14 @@
       const [
         { data: speciesList },
         { data: adoptionList },
+        { data: eventAdoptionList },
         { data: noticeList },
         { data: updateNoteList },
       ] = await Promise.all([
         sb.from('species').select('id, name, image_url, thumbnail_url, default_image_index, is_sensitive, sensitive_note, age_limit').order('created_at', { ascending: false }).limit(18),
-        sb.from('adoptions').select('id, character_name, species_name, adoption_type, status, image_url, thumbnail_url, characters(is_sensitive, sensitive_note)').or('status.is.null,status.neq.완료').order('created_at', { ascending: false }).limit(8),
+        sb.from('adoptions').select('id, character_name, species_name, adoption_type, status, image_url, thumbnail_url, characters(is_sensitive, sensitive_note)').eq('is_featured_event', false).or('status.is.null,status.neq.완료').order('created_at', { ascending: false }).limit(8),
+        // 이벤트 경매 — 일반 8개 제한과 무관하게 항상 최상단에 전부 표시 (일반 목록과 중복 없음)
+        sb.from('adoptions').select('id, character_name, species_name, adoption_type, status, image_url, thumbnail_url, characters(is_sensitive, sensitive_note)').eq('is_featured_event', true).or('status.is.null,status.neq.완료').order('created_at', { ascending: false }),
         sb.from('notices').select('id, title').eq('is_pinned', true).order('created_at', { ascending: false }),
         sb.from('update_notes').select('id, title').eq('is_pinned', true).order('created_at', { ascending: false }).limit(2),
       ]);
@@ -264,41 +271,52 @@
       // 분양 렌더
       document.getElementById('adoptionLoading').remove();
 
-      if (!adoptionList || adoptionList.length === 0) {
-        document.getElementById('adoptionEmpty').style.display = 'block';
-      } else {
-        document.getElementById('adoptionGrid').innerHTML = adoptionList.map(a => {
-          const isSensitive   = a.characters?.is_sensitive === true;
-          const sensitiveNote = a.characters?.sensitive_note || null;
-          const typeLabel = TYPE_LABEL[a.adoption_type] || '';
-          const typeClass = TYPE_CLASS[a.adoption_type] || '';
-          const closed    = a.status === '완료';
+      function buildAdoptionCard(a) {
+        const isSensitive   = a.characters?.is_sensitive === true;
+        const sensitiveNote = a.characters?.sensitive_note || null;
+        const typeLabel = TYPE_LABEL[a.adoption_type] || '';
+        const typeClass = TYPE_CLASS[a.adoption_type] || '';
+        const closed    = a.status === '완료';
 
-          const cardImg = a.thumbnail_url || a.image_url;
-          const stamp = closed ? `<img src="../images/adoption-complete.png" class="adoption-stamp" alt="분양완료">` : '';
-          let cardImgHtml;
-          if (isSensitive && cardImg) {
-            cardImgHtml = `<div class="adoption-card-img"><div style="position:absolute;inset:0;background-image:url('${cardImg}');background-size:cover;background-position:center;" class="blurred"></div>${buildSensitiveOverlay(sensitiveNote)}</div>`;
-          } else {
-            const imgStyle = cardImg ? `background-image:url('${cardImg}');background-size:cover;background-position:center;` : '';
-            cardImgHtml = `<div class="adoption-card-img" style="${imgStyle}"></div>`;
-          }
+        const cardImg = a.thumbnail_url || a.image_url;
+        const stamp = closed ? `<img src="../images/adoption-complete.png" class="adoption-stamp" alt="분양완료">` : '';
+        let cardImgHtml;
+        if (isSensitive && cardImg) {
+          cardImgHtml = `<div class="adoption-card-img"><div style="position:absolute;inset:0;background-image:url('${cardImg}');background-size:cover;background-position:center;" class="blurred"></div>${buildSensitiveOverlay(sensitiveNote)}</div>`;
+        } else {
+          const imgStyle = cardImg ? `background-image:url('${cardImg}');background-size:cover;background-position:center;` : '';
+          cardImgHtml = `<div class="adoption-card-img" style="${imgStyle}"></div>`;
+        }
 
-          return `
-            <a class="adoption-card${closed ? ' adoption-card--closed' : ''}" href="adoption-detail.html?id=${a.id}">
-              ${cardImgHtml}
-              ${stamp}
-              <div class="adoption-card-info">
-                <div class="adoption-card-badges">
-                  <span class="adoption-type-badge ${typeClass}">${typeLabel}</span>
-                  <span class="adoption-status ${closed ? 'adoption-status--closed' : ''}">${a.status || '분양중'}</span>
-                </div>
-                <p class="adoption-card-charname">${a.character_name || '—'}</p>
-                <p class="adoption-card-species">${a.species_name || '—'}</p>
+        return `
+          <a class="adoption-card${closed ? ' adoption-card--closed' : ''}" href="adoption-detail.html?id=${a.id}">
+            ${cardImgHtml}
+            ${stamp}
+            <div class="adoption-card-info">
+              <div class="adoption-card-badges">
+                <span class="adoption-type-badge ${typeClass}">${typeLabel}</span>
+                <span class="adoption-status ${closed ? 'adoption-status--closed' : ''}">${a.status || '분양중'}</span>
               </div>
-            </a>
-          `;
-        }).join('');
+              <p class="adoption-card-charname">${a.character_name || '—'}</p>
+              <p class="adoption-card-species">${a.species_name || '—'}</p>
+            </div>
+          </a>
+        `;
+      }
+
+      // 이벤트 경매 — 카드 개별 강조가 아니라 영역(box) 전체가 이벤트 구역임을 표시.
+      // 항상 최상단, 일반 목록과 중복 없음. 이벤트가 없으면 박스 자체를 렌더링하지 않는다.
+      const eventBox  = document.getElementById('adoptionEventBox');
+      const eventGrid = document.getElementById('adoptionEventGrid');
+      if (eventAdoptionList && eventAdoptionList.length > 0) {
+        eventBox.style.display = 'block';
+        eventGrid.innerHTML = eventAdoptionList.map(buildAdoptionCard).join('');
+      }
+
+      if ((!adoptionList || adoptionList.length === 0) && (!eventAdoptionList || eventAdoptionList.length === 0)) {
+        document.getElementById('adoptionEmpty').style.display = 'block';
+      } else if (adoptionList && adoptionList.length > 0) {
+        document.getElementById('adoptionGrid').innerHTML = adoptionList.map(buildAdoptionCard).join('');
       }
     }
 
