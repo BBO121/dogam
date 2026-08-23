@@ -209,7 +209,7 @@
 
     async function loadUsers() {
       const [{ data, error }, { data: spData }] = await Promise.all([
-        sb.rpc('get_all_users_full'),
+        sb.rpc('get_visible_users_full'),
         sb.from('species').select('owner_nickname'),
       ]);
       document.getElementById('loadingMsg').style.display = 'none';
