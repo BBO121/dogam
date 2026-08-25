@@ -99,10 +99,11 @@
         </div>
       </div>
 
-      <!-- 공지/업데이트 바 묶음 -->
+      <!-- 공지/업데이트/이벤트 바 묶음 -->
       <div style="display:flex; flex-direction:column; gap:3px; margin-bottom:16px;">
         <div id="noticeBar"></div>
         <div id="updateNoteBar"></div>
+        <div id="eventBar"></div>
       </div>
 
       <!-- 종족 섹션 -->
@@ -187,6 +188,7 @@
         { data: eventAdoptionList },
         { data: noticeList },
         { data: updateNoteList },
+        { data: eventList },
       ] = await Promise.all([
         sb.from('species').select('id, name, image_url, thumbnail_url, default_image_index, is_sensitive, sensitive_note, age_limit').order('created_at', { ascending: false }).limit(18),
         sb.from('adoptions').select('id, character_name, species_name, adoption_type, status, image_url, thumbnail_url, characters(is_sensitive, sensitive_note)').eq('is_featured_event', false).or('status.is.null,status.neq.완료').order('created_at', { ascending: false }).limit(8),
@@ -194,6 +196,8 @@
         sb.from('adoptions').select('id, character_name, species_name, adoption_type, status, image_url, thumbnail_url, characters(is_sensitive, sensitive_note)').eq('is_featured_event', true).or('status.is.null,status.neq.완료').order('created_at', { ascending: false }),
         sb.from('notices').select('id, title').eq('is_pinned', true).order('created_at', { ascending: false }),
         sb.from('update_notes').select('id, title').eq('is_pinned', true).order('created_at', { ascending: false }).limit(2),
+        // 진행 중인 이벤트 = 상단 고정(is_pinned)된 이벤트. 종료 시 관리자가 고정을 해제하면 메인에서 자동으로 사라짐
+        sb.from('events').select('id, title').eq('is_pinned', true).order('created_at', { ascending: false }).limit(1),
       ]);
 
       // 공지 바 렌더 — 고정된 공지가 여러 개면 전부 표시
@@ -214,6 +218,17 @@
             <span class="notice-bar-label">업데이트</span>
             <a class="notice-bar-title" href="update-note-detail.html?id=${n.id}">${n.title}</a>
             ${i === 0 ? `<a class="notice-bar-more" href="update-note.html">전체보기 ›</a>` : ''}
+          </div>
+        `).join('');
+      }
+
+      // 이벤트 바 렌더 — 진행 중(고정)인 이벤트가 없으면 행 자체를 숨김
+      if (eventList && eventList.length > 0) {
+        document.getElementById('eventBar').innerHTML = eventList.map(e => `
+          <div class="notice-bar" style="display:flex; margin-bottom:0;">
+            <span class="notice-bar-label notice-bar-label--event">이벤트</span>
+            <a class="notice-bar-title" href="event-detail.html?id=${e.id}">${e.title}</a>
+            <a class="notice-bar-more" href="events.html">전체보기 ›</a>
           </div>
         `).join('');
       }
