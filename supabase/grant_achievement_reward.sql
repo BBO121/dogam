@@ -1,6 +1,11 @@
 -- ============================================================
--- [STEP 2] grant_achievement_reward
--- 업적 신규 획득 시 연구기록 지급 + currency_logs + notifications
+-- [DEPRECATED 2026-08-23] grant_achievement_reward
+-- supabase/award_achievement.sql 로 대체됨 (단일 트랜잭션 RPC).
+-- js/achievements.js는 더 이상 이 함수를 호출하지 않음 (2026-08-23부터).
+-- 저장소 전체 검색 결과 다른 호출처 없음 — 당장 DROP하지 않고
+-- 한 배포 주기 관찰 후 정리 예정. 신규 코드에서 참조 금지.
+--
+-- [원본] 업적 신규 획득 시 연구기록 지급 + currency_logs + notifications
 -- 호출: sb.rpc('grant_achievement_reward', { p_achievement_code: code })
 -- ============================================================
 

@@ -1210,7 +1210,7 @@
       // 즉분가 입찰 → "즉분 대기중"으로 변경 (판매자 확정 대기)
       if (instNum !== null && bidNum === instNum) {
         const { data: instantUpdated, error: instantErr } = await sb.from('adoptions').update({
-          status:         '확인 대기중',
+          status:         '즉분 대기중',
           winner_name:    myNick || '익명',
           winner_user_id: currentUser.id,
           winner_bid:     `${bidNum.toLocaleString('ko-KR')}${auctionCurrencyUnit} (즉분가)`,

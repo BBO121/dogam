@@ -19,95 +19,48 @@ window.incrementAchCounter = async function(counterKey) {
 
 // pending: true  → redirect 직전 페이지, 다음 페이지에서 토스트 표시
 // pending: false → 현재 페이지에서 즉시 토스트 표시 (기본값)
+//
+// 서버 단일 RPC(award_achievement)가 달성 기록/보상 지급/알림 생성을
+// 하나의 트랜잭션으로 원자적으로 처리한다. 클라이언트는 결과를 받아
+// 토스트만 표시하며, 중간 단계가 실패해도 DB에는 반쪽짜리 상태가 남지
+// 않는다(award_achievement.sql 참고 — 실패 시 함수 전체 롤백).
 window.awardAchievement = async function(code, { pending = false } = {}) {
   try {
     console.log('[업적DBG] ▶ awardAchievement 진입 — code:', code, '/ pending:', pending);
 
     const { data: { session } } = await sb.auth.getSession();
-    const user = session?.user;
-    console.log('[업적DBG] session user:', user?.id ?? 'null(비로그인)');
-    if (!user) { console.warn('[업적DBG] user 없음 → return'); return; }
+    if (!session?.user) { console.warn('[업적DBG] user 없음 → return'); return; }
 
-    console.log('[업적DBG] upsert 시도 — user_id:', user.id, '/ achievement_code:', code);
-    // upsert + ignoreDuplicates: 이미 획득한 업적이면 충돌을 조용히 무시(DO NOTHING)하여 409 자체를 발생시키지 않음.
-    // 신규 지급 여부는 반환된 row 유무(select())로 판별 — 중복 시 row가 반환되지 않으므로 아래에서 토스트/보상 지급을 건너뜀.
-    const { data: inserted, error } = await sb.from('user_achievements')
-      .upsert(
-        { user_id: user.id, achievement_code: code },
-        { onConflict: 'user_id,achievement_code', ignoreDuplicates: true }
-      )
-      .select();
+    const { data: result, error } = await sb.rpc('award_achievement', { p_code: code });
+    console.log('[업적DBG] award_achievement — result:', result, '/ error:', error);
 
     if (error) {
-      // 23505는 fallback 안전망 — ignoreDuplicates 적용 후에는 정상적으로는 발생하지 않아야 함
-      if (error.code === '23505') {
-        console.log('[업적DBG] 23505 중복 — 이미 획득한 업적:', code);
-        return;
-      }
-      console.error('[업적DBG] upsert 실패 — code:', code, '/ error.code:', error.code, '/ message:', error.message, '/ details:', error.details);
+      console.error('[업적] award_achievement RPC 오류 — code:', code, '/ message:', error.message, '/ details:', error.details, '/ hint:', error.hint, '/ code:', error.code);
       return;
     }
 
-    if (!inserted || inserted.length === 0) {
-      console.log('[업적DBG] upsert 무시(이미 획득한 업적) — code:', code);
+    if (!result?.success) {
+      console.warn('[업적] award_achievement 실패:', code, result);
       return;
     }
-    console.log('[업적DBG] insert 성공 ✓ — code:', code);
 
-    // 업적 정보 조회
-    const { data: ach, error: achErr } = await sb.from('achievements')
-      .select('name, description, is_hidden')
-      .eq('code', code)
-      .single();
-    console.log('[업적DBG] achievements select — ach:', ach, '/ achErr:', achErr);
-
-    if (!ach) { console.warn('[업적DBG] achievements 조회 결과 null → toast 생략'); return; }
+    if (!result.newly_unlocked) {
+      console.log('[업적DBG] 이미 달성된 업적 — 신규 지급 없음:', code);
+      return;
+    }
 
     if (pending) {
       const p = JSON.parse(sessionStorage.getItem('_ach_pending') || '[]');
-      p.push({ name: ach.name, desc: ach.description || '' });
+      p.push({ name: result.name, desc: result.description || '' });
       sessionStorage.setItem('_ach_pending', JSON.stringify(p));
       console.log('[업적DBG] pending 저장 완료 — sessionStorage._ach_pending:', JSON.stringify(p));
     } else {
       console.log('[업적DBG] 즉시 토스트 표시');
-      _showAchievementToast(ach.name, ach.description || '');
+      _showAchievementToast(result.name, result.description || '');
     }
 
-    // 알림 테이블 기록 — 실패해도 업적 지급 결과에 영향 없음
-    try {
-      const nickname = user.user_metadata?.display_name || user.user_metadata?.nickname;
-      if (nickname) {
-        await sb.from('notifications').insert({
-          user_id:       user.id,
-          user_nickname: nickname,
-          type:          'achievement',
-          message:       `[${ach.name}] 업적을 달성했습니다.`,
-          link:          'achievements.html',
-        });
-      }
-    } catch (notifErr) {
-      console.warn('[업적] 알림 생성 실패:', code, notifErr);
-    }
-
-    // 재화 보상 지급 — 알림/로그는 RPC 내부에서 처리
-    try {
-      const { data: reward, error: rewardErr } = await sb.rpc('grant_achievement_reward', { p_achievement_code: code });
-      console.log('[업적DBG] grant_achievement_reward — reward:', reward, '/ error:', rewardErr);
-      if (rewardErr) {
-        console.error('[업적] RPC 오류', rewardErr);
-        console.error(rewardErr.message);
-        console.error(rewardErr.details);
-        console.error(rewardErr.hint);
-        console.error(rewardErr.code);
-      } else if (reward?.success) {
-        if (typeof updateHeaderCurrencyDisplay === 'function') {
-          updateHeaderCurrencyDisplay({ research_records: reward.new_balance });
-        }
-      } else {
-        console.warn('[업적] 재화 지급 실패 (success=false):', code, reward);
-      }
-    } catch (rewardErr) {
-      console.warn('[업적] 재화 지급 예외:', code, rewardErr);
+    if (typeof updateHeaderCurrencyDisplay === 'function') {
+      updateHeaderCurrencyDisplay({ research_records: result.new_balance });
     }
   } catch (e) {
     console.error('[업적DBG] 예외 발생 — code:', code, '/ e:', e);

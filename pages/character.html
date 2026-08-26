@@ -1144,10 +1144,12 @@
 
       if (charId === '30') {
         const _v = await window.incrementAchCounter?.('gong_o_visit') || 0;
-        if (_v >= 1)   window.awardAchievement?.('gong_o_visit_1');
-        if (_v >= 5)   window.awardAchievement?.('gong_o_visit_5');
-        if (_v >= 20)  window.awardAchievement?.('gong_o_visit_20');
-        if (_v >= 100) window.awardAchievement?.('gong_o_visit_100');
+        // award_achievement RPC가 멱등이라 동시 호출해도 안전하지만,
+        // 반복 방문 시 불필요한 동시 요청을 줄이기 위해 순차 실행한다.
+        if (_v >= 1)   await window.awardAchievement?.('gong_o_visit_1');
+        if (_v >= 5)   await window.awardAchievement?.('gong_o_visit_5');
+        if (_v >= 20)  await window.awardAchievement?.('gong_o_visit_20');
+        if (_v >= 100) await window.awardAchievement?.('gong_o_visit_100');
       } else {
         // 개체 상세 조회 업적 (고유 조회 기준)
         const _cv = await window.trackCharView?.(parseInt(charId)) || 0;

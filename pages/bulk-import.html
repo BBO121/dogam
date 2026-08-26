@@ -217,7 +217,7 @@
             <p class="form-label" style="margin-bottom:12px;">JSON 일괄 등록</p>
             <p class="form-hint" style="margin-bottom:14px;">
               정제된 개체 JSON 파일과 이미지 폴더를 선택하면, 기존 등록 파이프라인(원본 업로드 → 워터마크 합성 → 썸네일 생성)과 동일한 방식으로 개체를 등록해요.
-              이미지 파일명 끝의 숫자가 JSON의 char_number(예: <code>0028</code>)와 일치해야 자동으로 매칭돼요.
+              이미지 파일명 끝의 숫자가 JSON의 char_number와 자릿수까지 정확히 일치해야 자동으로 매칭돼요(예: <code>0028</code> 또는 <code>002</code>).
             </p>
 
             <div class="form-group">
@@ -926,12 +926,12 @@
       reader.readAsText(file, 'utf-8');
     }
 
-    // 파일명 끝의 숫자를 4자리로 맞춰 char_number 후보로 추출 (예: tails_0028.png -> "0028")
+    // 파일명 끝의 숫자를 char_number 후보로 추출 (자릿수는 파일명에 있는 그대로 사용 — 예: tails_0028.png -> "0028", water_002.png -> "002")
     function extractCharNumberFromFilename(filename) {
       const base = filename.replace(/\.[^.]+$/, '');
       const m = base.match(/(\d+)$/);
       if (!m) return null;
-      return m[1].padStart(4, '0');
+      return m[1];
     }
 
     function onJsonImagesSelected(input) {
@@ -1040,8 +1040,10 @@
         owner_nickname:       item.owner_nickname,
         owner_user_id:        item.owner_user_id ?? null,
         owner_is_offsite:     !!item.owner_is_offsite,
+        owner_contact:        item.owner_contact || null,
         designer_nickname:    item.designer_nickname,
         designer_user_ids:    item.designer_user_ids || [],
+        designer_contact:     item.designer_contact || null,
         description:          item.description || null,
         custom_field_values:  item.custom_field_values || null,
         image_url, thumbnail_url, original_image_url,
