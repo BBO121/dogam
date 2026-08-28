@@ -579,6 +579,9 @@
     let _repPickChars = null;
     // 현재 로그인한 사용자(뷰어)의 "민감한 요소 숨기기" 설정 — 내/타인 프로필 모두 이 값 하나로 판단한다.
     // initProfile()에서 한 번만 조회해 applyProfileFrame()에 전달한다(요청당 반복 조회 금지).
+    // 초기값 true는 "설정이 없는 사용자의 기본값"이 아니라, getUserSettings() 조회 자체가
+    // 실패했을 때(RLS/네트워크 오류 등)만 쓰이는 보수적인 안전장치다 — 정상 조회 시에는
+    // 항상 실제 값(신규/미설정 사용자는 false)으로 덮어써진다.
     let _hideSensitiveContent = true;
 
     // ── 업적 카테고리 상수 ────────────────────────
@@ -1028,13 +1031,14 @@
 
       // 뷰어(현재 로그인 사용자)의 민감요소 숨김 설정 — 내/타인 프로필 렌더링에 공통 사용.
       // 조회 실패(RLS/네트워크 오류 등) 시에도 프로필 페이지 전체가 멈추지 않도록 여기서만
-      // 안전한 기본값(숨김)으로 대체하고 나머지 로딩은 계속 진행한다 — getUserSettings() 자체는
-      // 실패를 기본값으로 위장하지 않고 그대로 throw한다.
+      // 보수적인 안전값(숨김)으로 대체하고 나머지 로딩은 계속 진행한다 — 이건 설정이 없는
+      // 사용자의 실제 기본값(false)과는 다른, 오류 상황 전용 안전장치다. getUserSettings()
+      // 자체는 실패를 기본값으로 위장하지 않고 그대로 throw한다.
       try {
         const settings = await getUserSettings(user.id);
         _hideSensitiveContent = settings.hide_sensitive_content;
       } catch (e) {
-        console.warn('[initProfile] user_settings 조회 실패, 기본값(숨김) 적용:', e);
+        console.warn('[initProfile] user_settings 조회 실패, 안전값(숨김) 적용:', e);
       }
 
       if (viewUserId) {

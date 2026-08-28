@@ -308,10 +308,10 @@ function autoCenterCropToBlob(file, aspectRatio = 3/4, maxSize = 600, quality = 
 // ============================================
 // 개인 환경설정 (user_settings) 공용 헬퍼
 // MY > 설정 페이지, 상점, 프로필 프레임 렌더링에서 공유해서 쓴다.
-// row가 없는 사용자(기존/신규 전부)는 hide_sensitive_content=true로 간주한다
-// (상점의 기존 기본 정책 — 민감요소 숨김 — 과 동일).
+// row가 없는 사용자(기존/신규 전부, 한 번도 설정을 바꾼 적 없는 사용자)는
+// hide_sensitive_content=false(민감요소 표시)로 간주한다. — 2026-08-28 기본 정책 변경.
 // ============================================
-const DEFAULT_USER_SETTINGS = { hide_sensitive_content: true };
+const DEFAULT_USER_SETTINGS = { hide_sensitive_content: false };
 
 // 현재 로그인 사용자의 설정 조회. row가 없는 경우(.maybeSingle()이 error 없이 data:null을
 // 반환하는 경우)에만 기본값을 반환한다. RLS/네트워크/DB 오류 등 실제 오류는 절대 기본값으로
