@@ -195,8 +195,8 @@
         const [{ data: details }, { data: profile }] = await Promise.all([
           sb.from('achievements').select('code, name, description').in('code', codes),
           sb.from('user_profiles').select('featured_achievements')
-            .eq('nickname', currentAchUser.user_metadata?.display_name || currentAchUser.user_metadata?.nickname)
-            .single(),
+            .eq('user_id', currentAchUser.id)
+            .maybeSingle(),
         ]);
 
         _modalEarned       = details || [];
@@ -255,14 +255,21 @@
       btn.disabled    = true;
 
       const nickname = currentAchUser.user_metadata?.display_name || currentAchUser.user_metadata?.nickname;
+
+      // 저장 측 검증: 실제 획득한 업적만, 선택 순서 유지, 최대 4개
+      const earnedCodes = new Set(_modalEarned.map(a => a.code));
+      const payloadCodes = _featuredSelected.filter(c => earnedCodes.has(c)).slice(0, 4);
+
       const { error } = await sb.from('user_profiles').upsert(
-        { nickname, featured_achievements: _featuredSelected },
-        { onConflict: 'nickname' }
+        { user_id: currentAchUser.id, nickname, featured_achievements: payloadCodes },
+        { onConflict: 'user_id' }
       );
 
       if (error) {
+        console.error('[대표 업적] 저장 실패:', error.code, '|', error.message, '|', error.details, '|', error.hint);
         errorEl.textContent = '저장에 실패했어요. 다시 시도해주세요.';
       } else {
+        _featuredSelected = payloadCodes;
         closeFeaturedModal();
       }
       btn.textContent = '저장';
