@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1578944209330245"
-     crossorigin="anonymous"></script>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-E8JG7D53T5"></script>
   <script>
@@ -52,6 +50,20 @@
   <script src="../js/utils.js"></script>
   <script src="../js/main.js"></script>
   <script>
+    // 정상 콘텐츠가 확인된 경우에만 AdSense Auto ads 스크립트를 로드한다.
+    // (잘못된 접근/없는 id/네트워크 실패 상태에서 광고만 남는 문제 방지)
+    function loadAdSense() {
+      if (document.querySelector('script[data-adsense-loader]')) return;
+
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1578944209330245';
+      script.crossOrigin = 'anonymous';
+      script.dataset.adsenseLoader = 'true';
+
+      document.head.appendChild(script);
+    }
+
     const slotId = new URLSearchParams(window.location.search).get('id');
     let afterDeleteHref        = 'species-list.html';
     let _showingOriginal       = false;
@@ -350,7 +362,10 @@
     if (!slotId) {
       document.getElementById('slotContent').innerHTML = '<p class="page-loading">잘못된 접근이에요.</p>';
     } else {
-      loadSlot();
+      loadSlot().catch(e => {
+        console.error('[slot.html] loadSlot 실패:', e);
+        document.getElementById('slotContent').innerHTML = '<p class="page-loading">정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.</p>';
+      });
     }
 
     async function loadSlot() {
@@ -368,6 +383,8 @@
         document.getElementById('slotContent').innerHTML = '<p class="page-loading">디자인권을 찾을 수 없어요.</p>';
         return;
       }
+
+      loadAdSense();
 
       const idToNick  = Object.fromEntries((siteUserData || []).filter(u => u.id && u.nickname).map(u => [u.id, u.nickname]));
       const nickToId  = Object.fromEntries((siteUserData || []).filter(u => u.nickname && u.id).map(u => [u.nickname, u.id]));

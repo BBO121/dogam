@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1578944209330245"
-     crossorigin="anonymous"></script>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-E8JG7D53T5"></script>
   <script>
@@ -361,6 +359,20 @@
   <script src="../js/utils.js"></script>
   <script src="../js/main.js"></script>
   <script>
+    // 정상 콘텐츠가 확인된 경우에만 AdSense Auto ads 스크립트를 로드한다.
+    // (잘못된 접근/없는 id/네트워크 실패 상태에서 광고만 남는 문제 방지)
+    function loadAdSense() {
+      if (document.querySelector('script[data-adsense-loader]')) return;
+
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1578944209330245';
+      script.crossOrigin = 'anonymous';
+      script.dataset.adsenseLoader = 'true';
+
+      document.head.appendChild(script);
+    }
+
     const params     = new URLSearchParams(window.location.search);
     const adoptionId = params.get('id');
     let currentUser     = null;
@@ -402,6 +414,7 @@
       if (count) document.getElementById('navCount').textContent = `분양 총 ${count}개`;
 
       renderMain(adoption);
+      loadAdSense();
 
       if (adoption.adoption_type === 'auction') {
         document.getElementById('auctionSection').style.display = 'block';
@@ -1922,7 +1935,11 @@
       if (!e.target.closest('.mention-dropdown')) hideMentionDropdown();
     });
 
-    initPage();
+    initPage().catch(e => {
+      console.error('[adoption-detail.html] initPage 실패:', e);
+      const loadingEl = document.getElementById('pageLoading');
+      if (loadingEl) loadingEl.textContent = '정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.';
+    });
   </script>
 </body>
 </html>

@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1578944209330245"
-     crossorigin="anonymous"></script>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-E8JG7D53T5"></script>
   <script>
@@ -150,6 +148,20 @@
   <script src="../js/utils.js"></script>
   <script src="../js/main.js"></script>
   <script>
+    // 정상 콘텐츠가 확인된 경우에만 AdSense Auto ads 스크립트를 로드한다.
+    // (잘못된 접근/없는 id/네트워크 실패 상태에서 광고만 남는 문제 방지)
+    function loadAdSense() {
+      if (document.querySelector('script[data-adsense-loader]')) return;
+
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1578944209330245';
+      script.crossOrigin = 'anonymous';
+      script.dataset.adsenseLoader = 'true';
+
+      document.head.appendChild(script);
+    }
+
     const speciesId = new URLSearchParams(window.location.search).get('id');
 
     // 이 계정만 종족 소유권과 무관하게 모든 종족의 개체 등록/일괄 등록/디자인권 등록/
@@ -189,7 +201,10 @@
     if (!speciesId) {
       document.getElementById('speciesDetail').innerHTML = '<p class="page-loading">잘못된 접근이에요.</p>';
     } else {
-      loadPage();
+      loadPage().catch(e => {
+        console.error('[species.html] loadPage 실패:', e);
+        document.getElementById('speciesDetail').innerHTML = '<p class="page-loading">정보를 불러오지 못했어요. 잠시 후 다시 시도해주세요.</p>';
+      });
     }
 
     async function loadPage() {
@@ -454,6 +469,9 @@
           if (_rc >= 10) window.awardAchievement?.('species_revisit_10');
         }
       }
+
+      // 정상 상세 콘텐츠 렌더링에 필요한 모든 비동기 로딩이 성공적으로 끝난 시점에만 광고를 로드한다.
+      loadAdSense();
     }
 
     function renderSlots(list) {
