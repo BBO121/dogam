@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /backup/
+Disallow: /register/
+Disallow: /scripts/
+Disallow: /supabase/
+Disallow: /references/
+Disallow: /.claude/
+
+Sitemap: https://thespecieslab.com/sitemap.xml
