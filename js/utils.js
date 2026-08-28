@@ -304,3 +304,35 @@ function autoCenterCropToBlob(file, aspectRatio = 3/4, maxSize = 600, quality = 
     img.src = objectUrl;
   });
 }
+
+// ============================================
+// 개인 환경설정 (user_settings) 공용 헬퍼
+// MY > 설정 페이지, 상점, 프로필 프레임 렌더링에서 공유해서 쓴다.
+// row가 없는 사용자(기존/신규 전부)는 hide_sensitive_content=true로 간주한다
+// (상점의 기존 기본 정책 — 민감요소 숨김 — 과 동일).
+// ============================================
+const DEFAULT_USER_SETTINGS = { hide_sensitive_content: true };
+
+// 현재 로그인 사용자의 설정 조회. row가 없는 경우(.maybeSingle()이 error 없이 data:null을
+// 반환하는 경우)에만 기본값을 반환한다. RLS/네트워크/DB 오류 등 실제 오류는 절대 기본값으로
+// 위장하지 않고 그대로 throw한다 — 호출부에서 페이지 관례에 맞게 오류 처리해야 한다.
+async function getUserSettings(userId) {
+  if (!userId) return { ...DEFAULT_USER_SETTINGS };
+  const { data, error } = await sb.from('user_settings')
+    .select('hide_sensitive_content')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  return data || { ...DEFAULT_USER_SETTINGS };
+}
+
+// 설정 변경 — row가 없으면 새로 생성(upsert)한다.
+async function updateUserSettings(userId, patch) {
+  if (!userId) return { data: null, error: new Error('NOT_AUTHENTICATED') };
+  const { data, error } = await sb.from('user_settings')
+    .upsert({ user_id: userId, ...patch, updated_at: new Date().toISOString() }, { onConflict: 'user_id' })
+    .select('hide_sensitive_content')
+    .single();
+  if (error) console.warn('[updateUserSettings] 오류:', error);
+  return { data, error };
+}

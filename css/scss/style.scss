@@ -1092,6 +1092,12 @@
     width: 100%;
     text-align: center;
   }
+  /* 민감요소 숨김 안내: 뱃지 다음 줄 — 항상 뱃지 뒤에 오도록 순서 고정 */
+  .profile-name-row #profileSensitiveNotice {
+    order: 3;
+    width: 100%;
+    text-align: center;
+  }
   /* 데스크탑 ⚙ 버튼은 모바일에서 숨김 */
   .profile-name-row .profile-gear-btn {
     display: none;
@@ -1112,7 +1118,25 @@
 .profile-name-row {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
+  row-gap: 2px;
   gap: 8px;
+}
+
+/* 민감한 요소 프레임 가리기 안내 — 닉네임/뱃지 옆 얇은 상태 뱃지.
+   닉네임/종족주 뱃지보다 우선순위가 높아 보이지 않도록 배경은 두지 않고 얇은 outline만 사용 */
+.profile-sensitive-notice {
+  display: inline-block;
+  padding: 2px 7px;
+  border: 1px solid rgba(185, 28, 28, 0.35);
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #b91c1c;
+}
+.profile-sensitive-notice-icon {
+  margin-right: 2px;
 }
 
 .profile-gear-btn {
@@ -6492,6 +6516,48 @@ button.btn-more {
   .tour-tooltip {
     width: 320px;
   }
+}
+
+/* ═══════════════════════════════════════
+   설정 (MY > 설정)
+═══════════════════════════════════════ */
+
+/* 설정 항목을 담는 카드 — 항목이 늘어나면 .settings-item을 안에 계속 추가 */
+.settings-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--white);
+  overflow: hidden;
+}
+
+/* 설정 항목 한 줄 (제목+설명 / 컨트롤) — 반복 가능한 최소 단위 */
+.settings-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+}
+
+/* 항목 사이 구분선 — 카드를 여러 개로 쪼개지 않고 얇은 border-top으로만 구분 */
+.settings-item + .settings-item {
+  border-top: 1px solid var(--border);
+}
+
+.settings-item-text {
+  min-width: 0;
+}
+
+.settings-item-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  margin: 0 0 4px;
+}
+
+/* 컨트롤(토글 등)은 텍스트가 줄바꿈돼도 찌그러지지 않게 고정 폭 유지 */
+.settings-item-control {
+  flex-shrink: 0;
 }
 
 /* ═══════════════════════════════════════

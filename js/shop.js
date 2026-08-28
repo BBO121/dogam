@@ -5,7 +5,9 @@ let _qtyByKey    = {};   // item_key → 보유 수량 (stackable 아이템 잔�
 let _pendingItem = null;
 let _allItems    = [];
 let _activeTab   = 'decorate'; // 'item' | 'decorate'
-let _showSensitive = localStorage.getItem('shopShowSensitive') === 'true';
+// 민감한 요소 표시 여부 — user_settings.hide_sensitive_content(DB)의 반대값.
+// MY > 설정 페이지와 동일한 DB 값을 공유한다(js/settings.js). loadData()에서 조회해 채운다.
+let _showSensitive = false;
 
 const TAB_ITEM_TYPES = {
   item:     ['consumable'],
@@ -75,9 +77,18 @@ async function initPage() {
 
     const sensitiveToggle = document.getElementById('shopSensitiveToggle');
     sensitiveToggle.checked = _showSensitive;
-    sensitiveToggle.addEventListener('change', () => {
-      _showSensitive = sensitiveToggle.checked;
-      localStorage.setItem('shopShowSensitive', String(_showSensitive));
+    sensitiveToggle.addEventListener('change', async () => {
+      const next = sensitiveToggle.checked;
+      sensitiveToggle.disabled = true;
+      // 토글 라벨은 "민감한 요소 보이기"(show) — DB는 hide_sensitive_content(hide)로 저장하므로 반전해서 저장
+      const { error } = await updateUserSettings(_user.id, { hide_sensitive_content: !next });
+      sensitiveToggle.disabled = false;
+      if (error) {
+        sensitiveToggle.checked = !next;
+        alert('설정 저장에 실패했어요. 다시 시도해주세요.');
+        return;
+      }
+      _showSensitive = next;
       renderCategories();
     });
 
@@ -90,7 +101,7 @@ async function initPage() {
 }
 
 async function loadData() {
-  const [itemsRes, walletRes, ownedRes] = await Promise.all([
+  const [itemsRes, walletRes, ownedRes, settings] = await Promise.all([
     sb.from('shop_items')
       .select('*')
       // status='hidden' 필터링은 하지 않음 — RLS가 일반 사용자에게는 이미 걸러주고,
@@ -102,11 +113,13 @@ async function loadData() {
     sb.from('user_items')
       .select('item_id, item_key, quantity')
       .eq('user_id', _user.id),
+    getUserSettings(_user.id),
   ]);
 
   _allItems = itemsRes.data  || [];
   _wallet   = walletRes.data;
   _ownedSet = new Set((ownedRes.data || []).map(r => r.item_id));
+  _showSensitive = !settings.hide_sensitive_content;
 
   _qtyByKey = {};
   (ownedRes.data || []).forEach(r => {

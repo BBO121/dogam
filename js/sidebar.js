@@ -61,6 +61,7 @@ async function initSidebar() {
         <a href="my-wallet.html"        class="sidebar-subitem ${path === 'my-wallet.html' ? 'active' : ''}">내 지갑</a>
         <a href="my-bag.html"           class="sidebar-subitem ${path === 'my-bag.html'    ? 'active' : ''}">내 가방</a>
         <div class="sidebar-divider" style="margin:8px 0;"></div>
+        <a href="settings.html"         class="sidebar-subitem ${path === 'settings.html' ? 'active' : ''}">설정</a>
         <a href="notifications.html"    class="sidebar-subitem ${path === 'notifications.html'    ? 'active' : ''}" style="display:flex;justify-content:space-between;align-items:center;">알림함<span class="sidebar-notif-badge" id="sidebarNotifBadge" style="display:none">0</span></a>
         <a href="transfer-history.html" class="sidebar-subitem ${path === 'transfer-history.html' ? 'active' : ''}">캐릭터 이전 내역</a>
       </div>
@@ -106,7 +107,8 @@ async function initSidebar() {
   const listPages    = ['species.html','species-list.html','character-list.html','character.html',
                         'adoption.html','adoption-detail.html','adoption-write.html','users.html'];
   const myPages      = ['my-species.html','my-characters.html','my-designs.html','my-slots.html',
-                        'my-adoptions.html','notifications.html','transfer-history.html','my-wallet.html','my-bag.html'];
+                        'my-adoptions.html','notifications.html','transfer-history.html','my-wallet.html','my-bag.html',
+                        'settings.html'];
   const supportPages = ['inquiry.html','inquiry-write.html','inquiry-detail.html',
                         'bug-report.html','bug-report-write.html','bug-report-detail.html',
                         'species-apply.html','species-apply-write.html','species-apply-detail.html'];

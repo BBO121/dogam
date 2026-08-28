@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1578944209330245"
-     crossorigin="anonymous"></script>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-E8JG7D53T5"></script>
   <script>
@@ -280,6 +278,7 @@
               <div class="profile-name-row">
                 <h1 class="profile-name" id="profileName">-</h1>
                 <span id="profileRoleBadge"></span>
+                <span id="profileSensitiveNotice" class="profile-sensitive-notice" style="display:none;"><span class="profile-sensitive-notice-icon">⚠</span>민감한 요소 프레임 가리기 적용중</span>
                 <button class="profile-gear-btn" id="gearBtn" onclick="toggleSettings()" title="설정">⚙</button>
               </div>
               <div class="profile-meta">
@@ -578,6 +577,9 @@
     let currentUser = null;
     let _repCurrentId = null;
     let _repPickChars = null;
+    // 현재 로그인한 사용자(뷰어)의 "민감한 요소 숨기기" 설정 — 내/타인 프로필 모두 이 값 하나로 판단한다.
+    // initProfile()에서 한 번만 조회해 applyProfileFrame()에 전달한다(요청당 반복 조회 금지).
+    let _hideSensitiveContent = true;
 
     // ── 업적 카테고리 상수 ────────────────────────
     const ACH_CATEGORY_MAP = {
@@ -1024,6 +1026,17 @@
       if (!user) { window.location.href = 'login.html'; return; }
       currentUser = user;
 
+      // 뷰어(현재 로그인 사용자)의 민감요소 숨김 설정 — 내/타인 프로필 렌더링에 공통 사용.
+      // 조회 실패(RLS/네트워크 오류 등) 시에도 프로필 페이지 전체가 멈추지 않도록 여기서만
+      // 안전한 기본값(숨김)으로 대체하고 나머지 로딩은 계속 진행한다 — getUserSettings() 자체는
+      // 실패를 기본값으로 위장하지 않고 그대로 throw한다.
+      try {
+        const settings = await getUserSettings(user.id);
+        _hideSensitiveContent = settings.hide_sensitive_content;
+      } catch (e) {
+        console.warn('[initProfile] user_settings 조회 실패, 기본값(숨김) 적용:', e);
+      }
+
       if (viewUserId) {
         await initOtherProfile(viewUserId);
       } else {
@@ -1118,6 +1131,9 @@
     async function applyProfileFrame(userId, prefetchedEquip = null) {
       const wrapEl    = document.getElementById('profileAvatarWrap');
       const stickerEl = document.getElementById('profileSticker');
+      const noticeEl  = document.getElementById('profileSensitiveNotice');
+      // 이전 사용자 프로필의 안내 문구가 남지 않도록 매 렌더링마다 기본은 숨김으로 리셋
+      if (noticeEl) noticeEl.style.display = 'none';
       if (!wrapEl || !userId) return;
 
       let equip = prefetchedEquip;
@@ -1131,27 +1147,36 @@
 
       if (!equip) return;
 
-      // 프레임·스티커 병렬 조회
+      // 프레임·스티커 병렬 조회 — is_sensitive도 함께 받아 민감요소 숨김 설정 판정에 사용
+      // (판정 기준은 shop_items.is_sensitive 하나만 사용, 프로필용 별도 컬럼을 두지 않는다)
       const [frameRes, stickerRes] = await Promise.all([
         equip.equipped_frame_id
-          ? sb.from('shop_items').select('style_key').eq('id', equip.equipped_frame_id).maybeSingle()
+          ? sb.from('shop_items').select('style_key, is_sensitive').eq('id', equip.equipped_frame_id).maybeSingle()
           : Promise.resolve({ data: null }),
         equip.equipped_sticker_id && stickerEl
-          ? sb.from('shop_items').select('image_url, name').eq('id', equip.equipped_sticker_id).maybeSingle()
+          ? sb.from('shop_items').select('image_url, name, is_sensitive').eq('id', equip.equipped_sticker_id).maybeSingle()
           : Promise.resolve({ data: null }),
       ]);
 
-      if (frameRes.data?.style_key) {
+      // 현재 로그인 사용자(뷰어)의 설정 기준 — 내/타인 프로필 구분 없이 동일하게 적용.
+      // 민감 프레임/스티커만 기본 상태로 대체하고, 닉네임·대표 캐릭터 등 나머지 프로필 정보는 항상 그대로 표시한다.
+      const frameHidden   = frameRes.data?.is_sensitive   && _hideSensitiveContent;
+      const stickerHidden = stickerRes.data?.is_sensitive && _hideSensitiveContent;
+
+      if (frameRes.data?.style_key && !frameHidden) {
         const frameCls = [...wrapEl.classList].filter(c => c.startsWith('frame-'));
         frameCls.forEach(c => wrapEl.classList.remove(c));
         wrapEl.classList.add(frameRes.data.style_key);
       }
 
-      if (stickerRes.data?.image_url && stickerEl) {
+      if (stickerRes.data?.image_url && stickerEl && !stickerHidden) {
         stickerEl.src = stickerRes.data.image_url;
         stickerEl.alt = stickerRes.data.name || '';
         stickerEl.style.display = 'block';
       }
+
+      // 안내 문구는 "민감 프레임이 실제로 숨겨졌을 때"만 표시 — 스티커만 숨겨진 경우는 표시하지 않음
+      if (frameHidden && noticeEl) noticeEl.style.display = '';
     }
 
     async function initMyProfile(user) {
