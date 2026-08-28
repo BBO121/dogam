@@ -71,7 +71,7 @@
   <script src="../js/main.js"></script>
   <script>
     let _noteData = null;
-    let isListMode = false;
+    let isListMode = new URLSearchParams(location.search).get('view') === 'list';
 
     async function initPage() {
       const user = await getUser();
@@ -92,6 +92,7 @@
 
       document.getElementById('noticeCount').textContent = `총 ${data.length}개`;
       document.getElementById('toggleBtn').style.display = 'inline';
+      document.getElementById('toggleBtn').textContent = isListMode ? '내용보기 ›' : '목록보기 ›';
       _noteData = data;
       pager.load(data);
       await window.awardAchievement?.('first_update_note');
