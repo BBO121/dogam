@@ -1692,23 +1692,72 @@
       );
     }
 
-    async function sendMentionNotifications(content, skipAuthorNick) {
-      const matches = [...content.matchAll(/@([^\s@]+)/g)].map(m => m[1]);
-      const unique  = [...new Set(matches)];
-      const toNotify = unique.filter(nick =>
-        nick !== myNick &&
-        allNicknames.includes(nick) &&
-        nick !== skipAuthorNick
-      );
-      if (!toNotify.length) return;
-      await sb.from('notifications').insert(
-        toNotify.map(nick => ({
+    // 본문에서 "@닉네임" 형태로 언급된 실제 유저 닉네임을 찾는다.
+    // 공백으로 구분된 토큰 단위로 자르기 때문에 닉네임 내부에 '@'가
+    // 포함돼 있어도(예: 유공_연락디코@iseonme) 깨지지 않고,
+    // 정확히 일치하는 닉네임이 없으면 allNicknames 중 해당 토큰의
+    // prefix가 되는 가장 긴 닉네임으로 폴백해 접두어 오탐을 줄인다.
+    function findMentionedNicknames(content) {
+      const sortedByLenDesc = [...allNicknames].sort((a, b) => b.length - a.length);
+      const seen  = new Set();
+      const found = [];
+      const tokenRe = /@(\S+)/g;
+      let m;
+      while ((m = tokenRe.exec(content))) {
+        const token = m[1];
+        const matched = allNicknames.includes(token)
+          ? token
+          : sortedByLenDesc.find(nick => token.startsWith(nick));
+        if (matched && !seen.has(matched)) {
+          seen.add(matched);
+          found.push(matched);
+        }
+      }
+      return found;
+    }
+
+    // 댓글/답글 등록 후 알림을 만든다.
+    // 같은 액션(답글 하나)으로 한 사람에게 알림이 중복 생성되지 않도록
+    // 우선순위(답글 대상 > 게시글 작성자 > 멘션 대상) 순으로 recipient를
+    // 소진해가며 rows를 쌓고 마지막에 한 번에 insert한다.
+    async function buildCommentNotifications({ content, parentAuthorNick }) {
+      const notified = new Set([myNick]);
+      const rows = [];
+      const characterName = currentAdoption?.character_name;
+
+      if (parentAuthorNick && !notified.has(parentAuthorNick)) {
+        rows.push({
+          user_nickname: parentAuthorNick,
+          type:          'adoption_reply',
+          message:       `💬 "${characterName}" 분양 댓글에 ${myNick}님이 답글을 남겼어요.`,
+          link:          `adoption-detail.html?id=${adoptionId}`,
+        });
+        notified.add(parentAuthorNick);
+      }
+
+      const postAuthor = currentAdoption?.author;
+      if (postAuthor && !notified.has(postAuthor)) {
+        rows.push({
+          user_nickname: postAuthor,
+          type:          'adoption_comment',
+          message:       `💬 "${characterName}" 분양 글에 댓글이 달렸어요.`,
+          link:          `adoption-detail.html?id=${adoptionId}`,
+        });
+        notified.add(postAuthor);
+      }
+
+      for (const nick of findMentionedNicknames(content)) {
+        if (!allNicknames.includes(nick) || notified.has(nick)) continue;
+        rows.push({
           user_nickname: nick,
           type:          'adoption_mention',
-          message:       `💬 "${currentAdoption.character_name}" 분양 댓글에서 ${myNick}님이 언급했어요.`,
+          message:       `💬 "${characterName}" 분양 댓글에서 ${myNick}님이 언급했어요.`,
           link:          `adoption-detail.html?id=${adoptionId}`,
-        }))
-      );
+        });
+        notified.add(nick);
+      }
+
+      if (rows.length) await sb.from('notifications').insert(rows);
     }
 
     // ── 멘션 자동완성 ──────────────────────────────────
@@ -1842,22 +1891,7 @@
       activeMentions.delete('commentTextarea');
       document.getElementById('commentMentionChips').innerHTML = '';
 
-      const notifyPromises = [];
-
-      // 분양자에게 댓글 알림 (본인 글 제외)
-      if (currentAdoption && myNick !== currentAdoption.author) {
-        notifyPromises.push(sb.from('notifications').insert({
-          user_nickname: currentAdoption.author,
-          type:          'adoption_comment',
-          message:       `💬 "${currentAdoption.character_name}" 분양 글에 댓글이 달렸어요.`,
-          link:          `adoption-detail.html?id=${adoptionId}`,
-        }));
-      }
-
-      // 멘션 알림 (분양자는 이미 adoption_comment 알림을 받으므로 제외)
-      notifyPromises.push(sendMentionNotifications(content, currentAdoption?.author));
-
-      await Promise.all(notifyPromises);
+      await buildCommentNotifications({ content, parentAuthorNick: null });
       loadComments();
     }
 
@@ -1878,22 +1912,16 @@
       const chipsEl = getChipsEl(ta);
       if (chipsEl) chipsEl.innerHTML = '';
 
-      const replyNotifyPromises = [];
+      // 부모 댓글 작성자 조회 (parent_id 기준) — @멘션 유무와 무관하게 답글 알림을 보내기 위함
+      let parentAuthorNick = null;
+      const { data: parentComment } = await sb
+        .from('adoption_comments')
+        .select('author_nickname')
+        .eq('id', parentId)
+        .maybeSingle();
+      if (parentComment) parentAuthorNick = parentComment.author_nickname;
 
-      // 분양자에게 댓글 알림 (본인 글 제외)
-      if (currentAdoption && myNick !== currentAdoption.author) {
-        replyNotifyPromises.push(sb.from('notifications').insert({
-          user_nickname: currentAdoption.author,
-          type:          'adoption_comment',
-          message:       `💬 "${currentAdoption.character_name}" 분양 글에 댓글이 달렸어요.`,
-          link:          `adoption-detail.html?id=${adoptionId}`,
-        }));
-      }
-
-      // 멘션 알림 (분양자 중복 제외)
-      replyNotifyPromises.push(sendMentionNotifications(content, currentAdoption?.author));
-
-      await Promise.all(replyNotifyPromises);
+      await buildCommentNotifications({ content, parentAuthorNick });
       loadComments();
     }
 
