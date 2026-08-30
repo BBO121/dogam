@@ -1307,49 +1307,49 @@
       updateProfileLinkAddBtn();
     }
 
-    // 행 드래그 순서 변경 — character-register.html의 섹션 카드 드래그와 동일 패턴.
+    // 행 순서 변경 — 마우스·터치 공통(Pointer Events). 손잡이(⠿)를 눌러 위아래로 끌면
+    // 포인터 위치에 따라 DOM 순서가 실시간으로 바뀐다. HTML5 drag&drop과 달리 모바일에서도 동작.
     // DOM 순서만 바꾸고, 저장 시 collectProfileLinks()가 DOM 순서대로 읽어 sort_order를 다시 매긴다.
-    let _profileLinkDragSrc = null;
+    let _plDrag = null;
     function _attachProfileLinkRowDrag(row) {
       const handle = row.querySelector('.profile-link-drag-handle');
       if (!handle) return;
-      const armDrag   = () => { row.draggable = true; };
-      const disarmDrag = () => { if (!_profileLinkDragSrc) row.draggable = false; };
-      handle.addEventListener('mousedown', armDrag);
-      handle.addEventListener('touchstart', armDrag, { passive: true });
-      handle.addEventListener('mouseup', disarmDrag);
-      handle.addEventListener('touchend', disarmDrag);
 
-      row.addEventListener('dragstart', e => {
-        _profileLinkDragSrc = row;
-        e.dataTransfer.effectAllowed = 'move';
-        try { e.dataTransfer.setData('text/plain', ''); } catch (_) {}
-        setTimeout(() => row.classList.add('dragging'), 0);
-      });
-      row.addEventListener('dragend', () => {
-        row.classList.remove('dragging');
-        row.draggable = false;
-        _profileLinkDragSrc = null;
-        document.querySelectorAll('#profileLinkEditList .profile-link-edit-row')
-          .forEach(r => r.classList.remove('drag-over'));
-      });
-      row.addEventListener('dragover', e => {
-        if (!_profileLinkDragSrc || _profileLinkDragSrc === row) return;
+      handle.addEventListener('pointerdown', e => {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
         e.preventDefault();
-        e.dataTransfer.dropEffect = 'move';
-        row.classList.add('drag-over');
+        const list = document.getElementById('profileLinkEditList');
+        _plDrag = { row, list };
+        try { handle.setPointerCapture(e.pointerId); } catch (_) {}
+        row.classList.add('dragging');
+        document.body.classList.add('pl-dragging');
       });
-      row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
-      row.addEventListener('drop', e => {
+
+      handle.addEventListener('pointermove', e => {
+        if (!_plDrag || _plDrag.row !== row) return;
         e.preventDefault();
-        row.classList.remove('drag-over');
-        const src = _profileLinkDragSrc;
-        if (src && src !== row) {
-          const list = document.getElementById('profileLinkEditList');
-          const all  = [...list.children];
-          list.insertBefore(src, all.indexOf(src) < all.indexOf(row) ? row.nextSibling : row);
+        const list = _plDrag.list;
+        const y = e.clientY;
+        // 드래그 중인 행을 제외하고, 포인터가 세로 중앙선을 넘긴 첫 행 앞에 삽입.
+        // 넘긴 행이 없으면 맨 끝으로.
+        let ref = null;
+        for (const r of list.querySelectorAll('.profile-link-edit-row')) {
+          if (r === row) continue;
+          const box = r.getBoundingClientRect();
+          if (y < box.top + box.height / 2) { ref = r; break; }
         }
+        if (row.nextElementSibling !== ref) list.insertBefore(row, ref);
       });
+
+      const end = e => {
+        if (!_plDrag || _plDrag.row !== row) return;
+        try { handle.releasePointerCapture(e.pointerId); } catch (_) {}
+        row.classList.remove('dragging');
+        document.body.classList.remove('pl-dragging');
+        _plDrag = null;
+      };
+      handle.addEventListener('pointerup', end);
+      handle.addEventListener('pointercancel', end);
     }
 
     // 편집 행 → 정규화된 링크 배열. 잘못된 입력이면 Error throw.

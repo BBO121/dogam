@@ -1273,13 +1273,19 @@ button.profile-link-chip {
   transition: box-shadow 0.15s, border-color 0.15s, opacity 0.15s;
 }
 
+/* 드래그(마우스·터치) 중인 행 — 실시간으로 자리가 바뀌므로 '들려 있는' 느낌만 준다 */
 .profile-link-edit-row.dragging {
-  opacity: 0.45;
+  border-color: var(--sky);
+  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.18);
+  position: relative;
+  z-index: 2;
 }
 
-.profile-link-edit-row.drag-over {
-  border-color: var(--sky);
-  box-shadow: 0 0 0 3px var(--sky-light);
+/* 드래그 중 페이지 전체 텍스트 선택/커서 처리 */
+body.pl-dragging {
+  cursor: grabbing;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 /* 행 왼쪽 드래그 손잡이 */
@@ -1291,8 +1297,10 @@ button.profile-link-chip {
   font-size: 15px;
   line-height: 1;
   cursor: grab;
-  touch-action: none;
+  touch-action: none;            /* 터치로 손잡이를 끌 때 페이지 스크롤 방지 */
   user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 .profile-link-drag-handle:active {
