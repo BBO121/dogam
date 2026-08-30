@@ -176,6 +176,7 @@
       shop_purchase:        '상점구매',
       achievement_reward:   '업적보상',
       achievement_backfill: '업적보상(필백)',
+      labber_exchange:      '수상한 연구실 교환',
     };
     const TYPE_CLASS = {
       signup_bonus:         'wallet-log-type--receive',
@@ -187,8 +188,16 @@
       shop_purchase:        'wallet-log-type--send',
       achievement_reward:   'wallet-log-type--receive',
       achievement_backfill: 'wallet-log-type--admin',
+      labber_exchange:      'wallet-log-type--labber',
     };
     const RECEIVE_TYPES = new Set(['signup_bonus', 'attendance_reward', 'transfer_receive', 'admin_grant', 'achievement_reward', 'achievement_backfill']);
+
+    // labber_exchange는 열쇠(차감)/연구기록(지급) 두 방향을 같은 type으로 공유하므로
+    // type만으로는 +/- 판정이 안 된다 — 이 타입만 currency로 방향을 추가 판정한다.
+    function isReceiveLog(log) {
+      if (log.type === 'labber_exchange') return log.currency === 'research_records';
+      return RECEIVE_TYPES.has(log.type);
+    }
 
     let myBalance         = 0;
     let myKeys            = 0;
@@ -306,7 +315,7 @@
       const CURRENCY_LABEL = { research_records: '연구기록', keys: '열쇠' };
 
       const rows = slice.map(log => {
-        const isPlus      = RECEIVE_TYPES.has(log.type);
+        const isPlus      = isReceiveLog(log);
         const curLabel    = CURRENCY_LABEL[log.currency] ?? log.currency;
         const iconFile    = log.currency === 'keys' ? 'currency-key' : 'currency-record';
         const curIconHtml = `<img src="../images/icons/${iconFile}.png" class="wlog-currency-icon-sm" alt="${curLabel}" title="${curLabel}">`;
@@ -369,8 +378,8 @@
       btn.classList.add('active');
 
       let filtered = allLogs;
-      if (filter === 'receive') filtered = allLogs.filter(l => RECEIVE_TYPES.has(l.type));
-      if (filter === 'send')    filtered = allLogs.filter(l => !RECEIVE_TYPES.has(l.type));
+      if (filter === 'receive') filtered = allLogs.filter(isReceiveLog);
+      if (filter === 'send')    filtered = allLogs.filter(l => !isReceiveLog(l));
 
       const empty = document.getElementById('logEmpty');
       if (filtered.length === 0) {

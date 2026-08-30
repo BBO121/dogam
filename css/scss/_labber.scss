@@ -1,0 +1,560 @@
+/* ═══════════════════════════════════════
+   LABBER 전용 다크 테마
+   — body.labber-theme 스코프에서만 적용됨.
+   기존 컴포넌트가 참조하는 CSS 변수(--white, --text, --border 등)를
+   이 스코프 안에서만 재정의해, 레이아웃 구조를 바꾸지 않고 색만 리스킨한다.
+   다른 페이지에는 이 클래스가 붙지 않으므로 전혀 영향이 없다.
+═══════════════════════════════════════ */
+body.labber-theme {
+  --labber-scene-max-width: 1150px; /* NPC+대화창 scene과 교환소 카드가 항상 같은 폭을 쓰도록 공유 */
+  --white:      #1B1E2C;
+  --bg-sub:     #232739;
+  --text:       #E7E9F5;
+  --text-sub:   #A8ADC7;
+  --text-mute:  #6E7390;
+  --border:     #333852;
+  --sky:        #7DD8C8;
+  --sky-dark:   #4FBFAE;
+  --sky-deep:   #35917F;
+  --sky-light:  #24303A;
+  --sky-pale:   #1C2530;
+  --shadow-sm:  0 1px 4px rgba(0, 0, 0, 0.35);
+  --shadow-md:  0 4px 16px rgba(0, 0, 0, 0.45);
+  --shadow-lg:  0 8px 32px rgba(0, 0, 0, 0.55);
+
+  background:
+    linear-gradient(rgba(10, 11, 18, 0.90), rgba(10, 11, 18, 0.94)),
+    url('../images/labber/labber_bg.png') center / cover fixed no-repeat;
+  min-height: 100vh;
+
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body.labber-theme .header,
+body.labber-theme .footer,
+body.labber-theme .sidebar {
+  transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+}
+
+/* ═══════════════════════════════════════
+   NPC 대화 전용 폰트 (noonnu 배포)
+   — labber-npc-name / labber-npc-line 에서만 사용. 사이트 기본 폰트(Paperlogy 등)는 그대로 유지.
+═══════════════════════════════════════ */
+@font-face {
+  font-family: 'DepartureMono';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2409-1@1.0/DepartureMono-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Mona10x12';
+  src: url('https://cdn.jsdelivr.net/gh/MonadABXY/mona-font/web/Mona10x12.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ═══════════════════════════════════════
+   LABBER 공통 표식 — 페이지 제목 옆 로고
+   앞으로 다른 LABBER 페이지(상점/탐험 등)에서도 이 두 클래스를 그대로 재사용한다.
+═══════════════════════════════════════ */
+.labber-page-title {
+  display: flex;
+  align-items: center;
+  gap: 6px; /* 6~10px 범위 하단 — PC/모바일 공용(별도 모바일 gap 오버라이드 없음) */
+}
+
+.labber-page-logo {
+  height: 20px; /* 제목 옆 작은 서브 마크 — 메인 제목을 압도하지 않게 축소, 크기 변경 없음 */
+  width: auto;
+  flex-shrink: 0;
+  opacity: 0.92;
+  /* 로고 PNG 자체에 붓터치 시작 전 왼쪽 투명 여백이 있어(약 7~8%), gap만 줄여도
+     그 여백만큼 여전히 벌어져 보인다 — 로고를 살짝 왼쪽으로 당겨 그 여백을 상쇄. */
+  margin-left: -4px;
+}
+
+/* ═══════════════════════════════════════
+   LABBER 공통 표식 — 사이드바 메뉴 로고
+   labber.html 외 다른 LABBER 페이지 링크가 추가되면 동일하게
+   sidebar-subitem에 labber-menu-link 클래스만 추가해 재사용한다.
+═══════════════════════════════════════ */
+.labber-menu-link {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* 오른쪽 끝 정렬 X — 로고를 텍스트 바로 옆에 붙임 */
+  gap: 6px; /* 제목 옆 표식과 동일하게 축소 */
+}
+
+.labber-menu-logo {
+  height: 15px; /* 14~17px 범위 — 메뉴 텍스트보다 강조되지 않게, 크기 변경 없음 */
+  width: auto;
+  flex-shrink: 0;
+  opacity: 0.85;
+  /* 로고 PNG 왼쪽 투명 여백 상쇄 — 제목 옆 로고와 같은 비율(-4px/20px)로 축소 적용 */
+  margin-left: -3px;
+}
+
+/* ═══════════════════════════════════════
+   페이지 소개 문구 (location / flavor text)
+═══════════════════════════════════════ */
+.labber-intro {
+  max-width: 560px;
+  margin-top: 24px; /* 제목/로고와 조금 더 여유 있게 */
+  font-size: 14px;
+  font-style: italic; /* 안내문이 아니라 세계관 서술처럼 보이게 */
+  line-height: 1.7;
+  color: var(--text-sub);
+}
+
+.labber-intro-accent {
+  color: var(--sky);
+  font-weight: 600;
+}
+
+/* ═══════════════════════════════════════
+   NPC 대화 씬 — 대화창(왼쪽) + NPC(오른쪽)가 나란한 하나의 장면.
+   이전에 시도했던 "NPC를 scene-wrap 기준 absolute로 완전 분리" 방향은 폐기하고,
+   가장 비율이 좋았던 flex 겹침 구조로 되돌렸다. 이번엔 margin-top(scene 전체 Y위치)만 조정.
+═══════════════════════════════════════ */
+.labber-dialogue-scene {
+  display: flex;
+  align-items: flex-end;
+  max-width: var(--labber-scene-max-width); /* 교환소 카드와 항상 같은 폭 공유 */
+  /* align-items:flex-end라 말풍선(~140px)이 NPC(440px) 높이짜리 행의 "바닥"에 붙어 있어서,
+     margin-top을 조금 줄여봤자 말풍선은 항상 (margin-top + 약 300px) 만큼 설명과 떨어져 있었다.
+     말풍선을 설명과 가깝게 붙이려면 이 300px 차이를 상쇄할 만큼 음수로 당겨야 한다.
+     이 값 때문에 NPC 머리가 제목/브레드크럼 쪽으로 겹쳐 올라갈 수 있음 — 확인 후 조정 예정. */
+  /* 헤더(패딩40 + 브레드크럼26 + 제목33 + 설명72 ≈ 171px) 높이만큼 위로 당긴 뒤,
+     NPC 상단(=실제 그림 시작점, PNG 최상단과 거의 동일)이 제목 높이(대략 헤더 상단에서
+     66~99px 지점)에 오도록 76px만큼 다시 내림 → -171+76 ≈ -95px */
+  margin-top: -95px;
+}
+
+.labber-speech-bubble {
+  position: relative;
+  flex: 0 0 78%; /* NPC 뒤편~scene 오른쪽 영역까지 이어지도록 대폭 확장 (75~85% 목표) */
+  min-width: 0;
+  z-index: 2; /* NPC(3)보다 아래 */
+  background: rgba(15, 22, 21, 0.80); /* 반투명 다크 청록 패널 — 텍스트 자체는 불투명 유지 */
+  border: 2px solid var(--sky);
+  border-radius: 6px;
+  padding: 34px 40px; /* content 기반 높이 — 이름+한 줄 대사 위주로 컴팩트 */
+  box-shadow: var(--shadow-md);
+}
+
+/* 하단 픽셀 탭 장식 — 민트 포인트 (과한 장식 없이 최소한만 유지) */
+.labber-speech-bubble::after {
+  content: '';
+  position: absolute;
+  right: 26px;
+  bottom: -8px;
+  width: 18px;
+  height: 8px;
+  background: var(--sky);
+}
+
+.labber-npc-image-wrap {
+  /* labber_a.png는 캔버스 왼쪽 약 28~30%가 완전히 투명(빈 여백)이고 그 뒤부터 그림이 시작된다.
+     margin-left가 그 여백보다 작으면 박스는 겹쳐도 겹치는 부분이 전부 투명 픽셀이라
+     화면엔 안 보인다 — 그래서 여백을 확실히 넘는 값을 쓴다.
+     세로는 overflow:hidden + 고정 height로 "무릎까지" 크롭한다. 이미지는 top:0으로
+     고정해 헤드/액체는 항상 100% 보이고, 잘리는 건 항상 무릎 아래쪽뿐이다. */
+  position: relative;
+  z-index: 3; /* 대화창(2)보다 위 — 겹치는 부분에서 NPC가 대화창 위에 그려짐 */
+  flex: 0 0 48%;
+  max-width: 500px;
+  height: 440px; /* 크롭 창 — 대략 무릎 높이까지만 노출 */
+  overflow: hidden;
+  /* NPC의 X축 위치만 오른쪽으로 이동 — 말풍선 크기/위치는 이 값과 무관하므로 그대로.
+     -499px(이전 고정 위치) → -359px로 약 140px 오른쪽 이동. */
+  margin-left: -359px;
+
+  /* 하단 fade — 크롭 창(overflow:hidden, 이 wrap 자체) 기준으로 마스크를 걸어야
+     "실제로 보이는 440px" 구간의 마지막 15~25%가 흐려진다. .labber-npc-image(원본 이미지)에
+     걸면 크롭돼서 안 보이는 하단부까지 포함한 훨씬 긴 높이 기준으로 계산되어 버려
+     fade 구간이 화면에 전혀 안 보이는 영역에 위치하게 된다 — 그래서 wrap에 건다.
+     위치/크기/z-index/overlap에는 전혀 영향 없는 순수 렌더링(마스크) 속성. */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 78%,
+    rgba(0, 0, 0, 0.8) 86%,
+    rgba(0, 0, 0, 0) 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 1) 0%,
+    rgba(0, 0, 0, 1) 78%,
+    rgba(0, 0, 0, 0.8) 86%,
+    rgba(0, 0, 0, 0) 100%
+  );
+}
+
+.labber-npc-image {
+  position: absolute;
+  top: 0; /* 헤드/액체가 항상 100% 보이도록 상단 고정 */
+  left: 0;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(var(--shadow-lg));
+}
+
+.labber-npc-name {
+  font-family: 'DepartureMono', 'Consolas', 'Courier New', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sky);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.labber-npc-line {
+  font-family: 'Mona10x12', 'Malgun Gothic', 'Dotum', sans-serif;
+  font-size: 16px;
+  color: #F3F5FA;
+  line-height: 1.75;
+  min-height: 1.75em;
+  letter-spacing: 0.2px;
+}
+
+/* 타이핑 중에만 표시되는 픽셀 커서 — JS가 .labber-typing 클래스를 타이핑 시작/종료 시 토글 */
+.labber-npc-line.labber-typing::after {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  margin-left: 3px;
+  background: var(--sky);
+  vertical-align: -2px;
+  animation: labberCursorBlink 0.9s steps(1) infinite;
+}
+
+@keyframes labberCursorBlink {
+  0%, 49%  { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .labber-npc-line.labber-typing::after {
+    animation: none;
+    opacity: 1;
+  }
+}
+
+/* ═══════════════════════════════════════
+   교환소 패널
+═══════════════════════════════════════ */
+.labber-exchange-panel {
+  margin-top: 20px;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+.labber-exchange-panel.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+.labber-exchange-card {
+  /* 실수 정정: 대화창(말풍선) 자체의 폭은 scene 전체(--labber-scene-max-width)가 아니라
+     그 안에서 flex: 0 0 78%인 .labber-speech-bubble의 78% 만큼이다.
+     scene 전체 폭으로 맞췄더니 말풍선보다 훨씬 넓어졌던 것 — 여기서도 동일하게 78%로 계산해야
+     좌우 경계가 말풍선과 정확히 일치한다. width(상대) + max-width(절대 상한) 둘 다 78%로 맞춰서
+     좁은 화면/넓은 화면 어느 쪽이든 말풍선과 같은 계산식을 따르게 한다. */
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 28px 32px;
+  width: 78%;
+  max-width: calc(var(--labber-scene-max-width) * 0.78);
+  box-shadow: var(--shadow-md);
+  display: flex;
+  flex-direction: column;
+  gap: 32px; /* 상단 정보 블록 ↔ 조작 영역 — 28~36px 리듬 */
+}
+
+/* 상단 정보 — 교환비(왼쪽) + 보유 열쇠(오른쪽), 같은 행. 하단 divider로 조작 영역과 구분 */
+.labber-exchange-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding-bottom: 22px; /* 20~24px */
+  border-bottom: 1px solid var(--border);
+}
+
+.labber-exchange-rate {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-sub);
+}
+
+.labber-exchange-rate strong {
+  color: var(--sky);
+  font-weight: 800;
+}
+
+.labber-exchange-balance {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--text-sub);
+}
+
+.labber-exchange-balance strong {
+  color: var(--text);
+}
+
+.labber-currency-icon {
+  width: 18px;
+  height: 18px;
+  object-fit: contain;
+}
+
+/* 조작 영역 — 좌:교환 수량 / 우:받을 연구기록 2컬럼 + 그 아래 교환 버튼 */
+.labber-exchange-interact {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px; /* 조작 영역 ↔ 버튼 — 28~36px 리듬 */
+}
+
+.labber-exchange-controls {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 56px;
+  flex-wrap: wrap;
+}
+
+.labber-exchange-qty,
+.labber-exchange-receive {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.labber-control-label {
+  font-size: 13px;
+  color: var(--text-sub);
+  font-weight: 600;
+}
+
+.labber-exchange-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+
+.labber-qty-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--sky-pale);
+  color: var(--text);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.labber-qty-btn:hover:not(:disabled) {
+  background: var(--sky-light);
+  border-color: var(--sky-dark);
+  color: var(--sky);
+}
+
+.labber-qty-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.labber-qty-value {
+  min-width: 40px;
+  text-align: center;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* .labber-exchange-receive 레이아웃은 위 .labber-exchange-qty와 공유(라벨 위 + 값 아래).
+   기존의 독립 박스(배경/보더/radius) 스타일은 제거 — 라벨+큰 숫자로 단순화 */
+.labber-receive-label {
+  font-size: 13px;
+  color: var(--text-sub);
+  font-weight: 600;
+}
+
+.labber-receive-value {
+  font-size: 28px; /* 더 크게 강조 */
+  font-weight: 800;
+  color: var(--sky);
+}
+
+.labber-exchange-btn {
+  /* .btn-submit 기본 width:100%를 무효화 — 넓어진 카드를 꽉 채우지 않고
+     콘텐츠 폭에 맞춘 적당한 크기로, .labber-exchange-interact가 가운데 정렬한다. */
+  width: auto;
+  min-width: 220px;
+  padding-left: 40px;
+  padding-right: 40px;
+  background: var(--sky-dark);
+}
+
+.labber-exchange-btn:hover:not(:disabled) {
+  background: var(--sky-deep);
+}
+
+.labber-exchange-btn:disabled {
+  background: var(--border);
+  color: var(--text-mute);
+  cursor: default;
+}
+
+.labber-empty-state {
+  font-size: 13px;
+  color: var(--text-mute);
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* ═══════════════════════════════════════
+   반응형 — 모바일
+═══════════════════════════════════════ */
+@media (max-width: 640px) {
+  /* PC 확정 디자인의 모바일 대응 — "다른 디자인"이 아니라 같은 구조를 축소 재배치.
+     NPC 폭 하나를 공유 변수로 두고, overlap/대화창/교환소 폭을 전부 그 값에서 비율로 계산해서
+     서로 어긋나지 않게 한다. 비율(퍼센트) 기반이라 화면 폭이 달라져도 항상 안전하게 맞는다. */
+  body.labber-theme {
+    /* 이전(150~240px)보다 약 1.4배 키움 — PC급 존재감 확보 */
+    --labber-mobile-npc-width: clamp(210px, 60vw, 340px);
+  }
+
+  /* 제목 옆 로고 — 좁은 화면에서도 한 줄 유지, 줄바꿈/가로 스크롤 방지 */
+  .labber-page-title {
+    flex-wrap: nowrap;
+  }
+
+  .labber-page-logo {
+    height: 20px;
+  }
+
+  /* NPC가 오른쪽 위에서 absolute로 떠 있으므로 설명 텍스트가 그 아래로 들어가지 않게 폭 제한.
+     labber_a_2.png는 캔버스 왼쪽 약 27%가 투명 여백이라, NPC "박스" 기준으로만 여유를 두면
+     실제 그림(불투명 픽셀)이 그 여백을 넘어 설명 쪽으로 들어와 버린다 — 그래서 68%는 부족했다.
+     가장 좁은 폰부터 가장 넓은 모바일 폭까지 실제 그림 시작점이 항상 설명 오른쪽보다
+     뒤에 오도록 역산한 안전한 값(52%)으로 줄임. */
+  .labber-intro {
+    font-size: 13px;
+    max-width: 52%;
+  }
+
+  /* NPC를 flex 흐름(행 높이 공유)에서 완전히 분리 — #pageContent를 기준으로 absolute 배치해서
+     브레드크럼 높이까지 독립적으로 뜨게 한다. #pageContent는 헤더(브레드크럼~설명)와
+     이 scene을 모두 감싸는 이 페이지의 최상위 콘텐츠 컨테이너라, 여기 기준 top이 곧
+     "페이지 상단 기준" top이 된다. PC에는 이 규칙이 전혀 적용되지 않는다(모바일 media query 안). */
+  body.labber-theme #pageContent {
+    position: relative;
+    /* NPC를 scale로 확대하면 오른쪽 끝이 뷰포트를 살짝 넘어갈 수 있어 안전장치로 추가.
+       세로(overflow-y)는 건드리지 않으므로 NPC가 위로 더 올라오는 건 그대로 허용된다. */
+    overflow-x: hidden;
+  }
+
+  /* NPC가 빠지면서 이 행에는 대화창 하나만 남는다 — 더는 NPC 높이를 고려해 margin-top을
+     역산할 필요가 없다. 설명 바로 아래 자연스러운 간격만 준다. */
+  .labber-dialogue-scene {
+    margin-top: 20px;
+  }
+
+  .labber-npc-image-wrap {
+    /* 브레드크럼(헤더 padding-top 40px 직후) ~ 제목 높이 사이에 오도록 top 고정.
+       X 위치(오른쪽 정렬)와 크기(clamp)는 이전과 거의 동일하게 유지 — 세로 위치만 바뀜. */
+    position: absolute;
+    top: 44px;
+    /* scale(1.12) 확대분까지 감안하면 오른손 끝이 화면 밖으로 살짝 넘어가서
+       -10px → 5px로 15px만큼 왼쪽으로 이동(크기/세로위치/overlap/fade는 그대로). */
+    right: 5px;
+    z-index: 3;
+    width: var(--labber-mobile-npc-width);
+    max-width: none; /* clamp()가 이미 상한을 포함 */
+    height: calc(var(--labber-mobile-npc-width) * 0.88); /* PC와 동일한 크롭 비율(440/500) */
+    margin-left: 0; /* flex 겹침용이었던 값 — absolute에서는 사용하지 않음 */
+    /* 소폭 확대(약 12%) — top/right(-10px)는 절대 안 건드림. transform-origin을
+       left bottom으로 잡아서 왼쪽 경계와 아래쪽(대화창과의 overlap 기준선)은 그대로 고정한 채
+       위쪽·오른쪽으로만 커지게 한다. overflow:hidden(크롭 창)과 mask-image(하단 fade)는
+       이 요소 자체에 걸려 있어서 확대돼도 비율 그대로 함께 커진다 — 재크롭 불필요. */
+    transform: scale(1.12);
+    transform-origin: left bottom;
+  }
+
+  .labber-speech-bubble {
+    /* PC 규칙의 flex: 0 0 78%가 그대로 남아있으면 width:100%를 줘도 flex-basis(78%)가
+       우선 적용돼 실제로는 78% 폭으로 렌더링된다 — 그게 교환창보다 좁아 보였던 원인.
+       flex 자체를 재정의해서 폭을 100%로 완전히 덮어쓴다.
+       NPC가 더는 같은 행의 flex 형제가 아니므로 대화창이 행 전체(거의 뷰포트 폭)를 차지한다.
+       NPC(z-index 3)가 그 위에 absolute로 겹쳐 보이는 건 그대로 유지(대화창 z-index 2, 그대로). */
+    flex: 1 1 100%;
+    width: 100%;
+    padding: 18px 20px;
+  }
+
+  .labber-npc-line {
+    font-size: 14px;
+  }
+
+  /* 대화창이 이제 100% 폭이므로 교환소도 단순히 100%로 맞추면 좌우 경계가 일치한다. */
+  .labber-exchange-card {
+    width: 100%;
+    max-width: none;
+    padding: 26px; /* PC(28px 32px)보다 축소, 24~28px 목표 */
+    gap: 20px; /* 상단 정보 ↔ 조작 영역 — 18~22px 리듬 */
+  }
+
+  /* 상단 정보도 PC처럼 한 행에 억지로 두지 않고 세로로: 교환비 → 보유 열쇠 */
+  .labber-exchange-top {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding-bottom: 14px; /* 12~16px 리듬 */
+  }
+
+  /* PC의 가로형 조작 패널을 억지로 유지하지 않고 세로 구조로: 교환 수량 → 받을 연구기록 → 버튼 */
+  .labber-exchange-interact {
+    gap: 22px; /* 조작 영역 ↔ 버튼 — 20~24px 리듬 */
+  }
+
+  .labber-exchange-controls {
+    /* PC 규칙(align-items:flex-start)이 그대로 상속되면 column 방향에서는 왼쪽 정렬이 되어
+       버튼/상단 정보와 중앙축이 어긋나 보인다 — 그게 "요소별로 살짝씩 어긋나 보이는" 원인.
+       center로 명시해서 교환 수량/받을 연구기록 블록이 카드 중앙축에 맞춰지게 한다. */
+    flex-direction: column;
+    align-items: center;
+    gap: 20px; /* 수량 블록 ↔ 결과 블록 — 18~22px 리듬 */
+  }
+
+  /* 받을 연구기록 라벨↔숫자만 더 좁게(6~8px) — 교환 수량 쪽(라벨↔스테퍼)은 8~12px 그대로 유지 */
+  .labber-exchange-receive {
+    gap: 6px;
+  }
+
+  .labber-exchange-btn {
+    width: 100%;
+    min-width: 0;
+    min-height: 44px; /* 터치 영역 확보 */
+    padding-left: 0;
+    padding-right: 0;
+  }
+}

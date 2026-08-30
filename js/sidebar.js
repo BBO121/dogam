@@ -67,8 +67,19 @@ async function initSidebar() {
       </div>
     </div>
 
-    <!-- ── 상점 단일 메뉴 ─────────────────────────── -->
-    <a href="shop.html" class="sidebar-top-link ${path === 'shop.html' ? 'active' : ''}">상점</a>
+    <!-- ── 상점 아코디언 ─────────────────────────── -->
+    <div class="sidebar-accordion" id="accShop">
+      <button class="sidebar-accordion-btn" onclick="toggleAccordion('accShop')">
+        상점<svg class="sidebar-accordion-arrow" id="arrShop" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="sidebar-accordion-body" id="bodyShop">
+        <a href="shop.html"   class="sidebar-subitem ${path === 'shop.html'   ? 'active' : ''}">연구소 상점</a>
+        <a href="labber.html" class="sidebar-subitem labber-menu-link ${path === 'labber.html' ? 'active' : ''}">
+          <span>수상한 연구실</span>
+          <img src="../images/labber/labber_logo.png" alt="LABBER" class="labber-menu-logo">
+        </a>
+      </div>
+    </div>
 
     <!-- ── 지원 아코디언 ─────────────────────────────── -->
     <div class="sidebar-accordion" id="accSupport">
@@ -112,6 +123,7 @@ async function initSidebar() {
   const supportPages = ['inquiry.html','inquiry-write.html','inquiry-detail.html',
                         'bug-report.html','bug-report-write.html','bug-report-detail.html',
                         'species-apply.html','species-apply-write.html','species-apply-detail.html'];
+  const shopPages     = ['shop.html','labber.html'];
 
   const isUserProfile = path === 'profile.html' && new URLSearchParams(window.location.search).get('user');
   const isMyProfile   = path === 'profile.html' && !new URLSearchParams(window.location.search).get('user');
@@ -127,6 +139,7 @@ async function initSidebar() {
   if (listPages.includes(path) || isUserProfile) openAccordion('List');
   if (myPages.includes(path)   || isMyProfile)   openAccordion('My');
   if (supportPages.includes(path))           openAccordion('Support');
+  if (shopPages.includes(path))              openAccordion('Shop');
 
   // 종족 관련 페이지: 종족 버튼 active 표시
   if (path === 'species.html' || path === 'species-list.html') {

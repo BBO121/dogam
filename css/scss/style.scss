@@ -6,6 +6,7 @@
 @import "_common";
 @import "_sidebar";
 @import "_login";
+@import "_labber";
 
 /* ═══════════════════════════════════════
    종족 플라이아웃 (PC 전용)
@@ -6817,6 +6818,12 @@ button.btn-more {
 .wallet-log-type--admin {
   background: #FEF3C7;
   color: #92400E;
+}
+
+/* 수상한 연구실(LABBER) 교환 — 다른 파스텔 뱃지와 구분되는 다크 네이비+민트 톤 */
+.wallet-log-type--labber {
+  background: #1B1E2C;
+  color: #7DD8C8;
 }
 
 /* 재화 전송 확인 모달 */
