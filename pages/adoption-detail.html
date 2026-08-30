@@ -325,6 +325,9 @@
       <div class="form-group" style="margin-bottom:4px;">
         <input type="text" class="form-input" id="recipientInput" placeholder="받는 유저 닉네임">
       </div>
+      <p id="completeCurrencyNotice" style="display:none; margin-top:4px; font-size:13px; color:#92400e; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:8px 12px;">
+        ⚠ 분양 완료 처리 전에 구매자와 직접 재화 거래를 완료한 후, 분양 확정을 눌러주세요!
+      </p>
       <p class="auth-error" id="completeError"></p>
       <div class="modal-actions" style="margin-top:20px;">
         <button class="btn-ghost" onclick="closeCompleteModal()">취소</button>
@@ -386,8 +389,9 @@
     const activeMentions = new Map(); // taId → Set<nick>
 
     const AUCTION_CURRENCY_LABEL = { krw: '원', research_records: '연구기록' };
-    const TYPE_LABEL = { free: '무료', paid: '유료', auction: '경매', etc: '기타' };
-    const TYPE_CLASS  = { free: 'adoption-type--free', paid: 'adoption-type--paid', auction: 'adoption-type--auction', etc: 'adoption-type--paid' };
+    const TYPE_LABEL = { free: '무료', paid: '유료', currency: '재화거래', auction: '경매', etc: '기타' };
+    const TYPE_CLASS  = { free: 'adoption-type--free', paid: 'adoption-type--paid', currency: 'adoption-type--currency', auction: 'adoption-type--auction', etc: 'adoption-type--paid' };
+    const CURRENCY_LABEL = { research_records: '연구기록', keys: '열쇠' };
 
     function normalizeNick(s) { return (s || '').trim().toLowerCase(); }
 
@@ -565,6 +569,11 @@
       } else if ((a.adoption_type === 'paid' || a.adoption_type === 'etc') && a.price) {
         infoBox.innerHTML = `<span style="font-size:20px; font-weight:800; color:var(--sky-deep);">${a.price}${a.adoption_type === 'paid' ? '원' : ''}</span>`;
         infoBox.style.display = 'block';
+      } else if (a.adoption_type === 'currency' && a.currency_amount) {
+        const curLabel  = CURRENCY_LABEL[a.currency_type] || a.currency_type || '';
+        const iconFile  = a.currency_type === 'keys' ? 'currency-key' : 'currency-record';
+        infoBox.innerHTML = `<span style="display:inline-flex; align-items:center; gap:6px; font-size:20px; font-weight:800; color:var(--sky-deep);"><img src="../images/icons/${iconFile}.png" alt="${curLabel}" style="width:22px; height:22px;">${curLabel} ${a.currency_amount}개</span>`;
+        infoBox.style.display = 'block';
       }
 
       // 설명
@@ -652,7 +661,7 @@
       }
 
       // 댓글 섹션 안내문
-      const isCommentConfirmable = a.adoption_type === 'paid' || a.adoption_type === 'etc' ||
+      const isCommentConfirmable = a.adoption_type === 'paid' || a.adoption_type === 'etc' || a.adoption_type === 'currency' ||
         (a.adoption_type === 'free' && (!a.free_type || a.free_type === 'normal'));
       if (isCommentConfirmable) {
         const notice = document.getElementById('commentNotice');
@@ -1484,6 +1493,7 @@
       desc.innerHTML = prefilledNick
         ? `<strong>${prefilledNick}</strong>님에게 캐릭터 소유권이 이전돼요. 확인해주세요.`
         : '분양받은 유저의 닉네임을 입력해주세요.<br>해당 유저에게 캐릭터 소유권이 이전돼요.';
+      document.getElementById('completeCurrencyNotice').style.display = currentAdoption?.adoption_type === 'currency' ? 'block' : 'none';
       document.getElementById('completeError').textContent = '';
       document.getElementById('completeModal').style.display = 'flex';
       if (!prefilledNick) input.focus();
@@ -1507,9 +1517,10 @@
       errorEl.textContent = '';
 
       const a      = currentAdoption;
-      const method = a.adoption_type === 'free' ? '무료분양'
-                   : a.adoption_type === 'paid' ? '유료분양'
-                   : a.adoption_type === 'etc'  ? '기타분양'
+      const method = a.adoption_type === 'free'     ? '무료분양'
+                   : a.adoption_type === 'paid'     ? '유료분양'
+                   : a.adoption_type === 'currency' ? '재화거래분양'
+                   : a.adoption_type === 'etc'      ? '기타분양'
                    : '경매';
 
       // recipient uid 조회
@@ -1605,6 +1616,7 @@
       const canConfirm = isAuthor && isOpen && (
         currentAdoption?.adoption_type === 'paid' ||
         currentAdoption?.adoption_type === 'etc'  ||
+        currentAdoption?.adoption_type === 'currency' ||
         (currentAdoption?.adoption_type === 'free' && (!currentAdoption?.free_type || currentAdoption?.free_type === 'normal'))
       );
 

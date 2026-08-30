@@ -60,10 +60,11 @@
           <div class="form-group">
             <label class="form-label">분양 형식 <span class="required">*</span></label>
             <div class="owner-type-tabs">
-              <button type="button" class="owner-tab active" id="type-free"    onclick="setType('free')">무료</button>
-              <button type="button" class="owner-tab"        id="type-paid"    onclick="setType('paid')">유료</button>
-              <button type="button" class="owner-tab"        id="type-auction" onclick="setType('auction')">경매</button>
-              <button type="button" class="owner-tab"        id="type-etc"     onclick="setType('etc')">기타</button>
+              <button type="button" class="owner-tab active" id="type-free"     onclick="setType('free')">무료</button>
+              <button type="button" class="owner-tab"        id="type-paid"     onclick="setType('paid')">유료</button>
+              <button type="button" class="owner-tab"        id="type-currency" onclick="setType('currency')">재화거래</button>
+              <button type="button" class="owner-tab"        id="type-auction"  onclick="setType('auction')">경매</button>
+              <button type="button" class="owner-tab"        id="type-etc"      onclick="setType('etc')">기타</button>
             </div>
           </div>
 
@@ -105,6 +106,24 @@
                 placeholder="금액 입력" style="flex:1;">
               <span style="font-size:14px; color:var(--text-sub); white-space:nowrap;">원</span>
             </div>
+          </div>
+
+          <!-- 재화거래: 사용 재화 / 거래 금액 -->
+          <div class="form-group" id="currencyFields" style="display:none;">
+            <label class="form-label">사용 재화 <span class="required">*</span></label>
+            <select id="currencyType" class="form-input" style="margin-bottom:14px;">
+              <option value="research_records">연구기록</option>
+              <option value="keys">열쇠</option>
+            </select>
+
+            <label class="form-label">거래 금액 <span class="required">*</span></label>
+            <input type="text" id="currencyAmount" class="form-input" inputmode="numeric"
+              oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+              placeholder="금액 입력">
+
+            <p style="margin-top:10px; font-size:13px; color:#92400e; background:#fffbeb; border:1px solid #fde68a; border-radius:8px; padding:8px 12px;">
+              ⚠ 분양 완료 처리 전에 구매자와 직접 재화 거래를 완료한 후, 분양 확정을 눌러주세요!
+            </p>
           </div>
 
           <!-- 경매 필드 -->
@@ -290,14 +309,15 @@
 
     function setType(type) {
       selectedType = type;
-      ['free', 'paid', 'auction', 'etc'].forEach(t =>
+      ['free', 'paid', 'currency', 'auction', 'etc'].forEach(t =>
         document.getElementById(`type-${t}`).classList.toggle('active', t === type)
       );
 
-      document.getElementById('freeSubOptions').style.display = type === 'free'    ? 'block' : 'none';
-      document.getElementById('paidFields').style.display     = type === 'paid'    ? 'block' : 'none';
-      document.getElementById('auctionFields').style.display  = type === 'auction' ? 'block' : 'none';
-      document.getElementById('etcFields').style.display      = type === 'etc'     ? 'block' : 'none';
+      document.getElementById('freeSubOptions').style.display = type === 'free'     ? 'block' : 'none';
+      document.getElementById('paidFields').style.display     = type === 'paid'     ? 'block' : 'none';
+      document.getElementById('currencyFields').style.display = type === 'currency' ? 'block' : 'none';
+      document.getElementById('auctionFields').style.display  = type === 'auction'  ? 'block' : 'none';
+      document.getElementById('etcFields').style.display      = type === 'etc'      ? 'block' : 'none';
       refreshAdminAuctionFields();
 
       // 무료가 아닐 때 추첨 날짜 필드 숨김
@@ -468,6 +488,12 @@
         errorEl.textContent = '가격을 입력해주세요.'; return;
       }
 
+      // 재화거래 필수 검증
+      if (selectedType === 'currency') {
+        const amount = document.getElementById('currencyAmount').value.trim();
+        if (!amount || Number(amount) <= 0) { errorEl.textContent = '거래 금액을 1 이상의 숫자로 입력해주세요.'; return; }
+      }
+
       // 경매 필수 검증
       if (selectedType === 'auction') {
         if (!document.getElementById('startPrice').value.trim())   { errorEl.textContent = '시작가를 입력해주세요.'; return; }
@@ -517,9 +543,9 @@
           if (selectedType === 'free' && !(char.allow_free_adoption ?? sp.allow_free_adoption ?? true)) {
             errorEl.textContent = '무료분양 불가능 개체입니다!'; return;
           }
-          if ((selectedType === 'paid' || selectedType === 'auction') && !isAdminLoginIdUser
+          if ((selectedType === 'paid' || selectedType === 'auction' || selectedType === 'currency') && !isAdminLoginIdUser
               && !(char.allow_paid_adoption ?? sp.allow_paid_adoption ?? true)) {
-            errorEl.textContent = '유료분양 불가능 개체입니다!'; return;
+            errorEl.textContent = selectedType === 'currency' ? '재화거래 분양 불가능 개체입니다!' : '유료분양 불가능 개체입니다!'; return;
           }
           if (selectedType === 'etc' && !(char.allow_other_adoption ?? sp.allow_other_adoption ?? true)) {
             errorEl.textContent = '기타분양 불가능 개체입니다!'; return;
@@ -548,6 +574,9 @@
       const raffleAtRaw = freeType ? (document.getElementById('raffleAt').value || null) : null;
       const raffleAt = raffleAtRaw ? new Date(raffleAtRaw).toISOString() : null;
 
+      const currencyType   = selectedType === 'currency' ? document.getElementById('currencyType').value : null;
+      const currencyAmount = selectedType === 'currency' ? (parseInt(getRawNum('currencyAmount'), 10) || null) : null;
+
       const { data: adoption, error } = await sb.from('adoptions').insert({
         character_id:   isSlot ? null        : item.id,
         slot_id:        isSlot ? item.id     : null,
@@ -559,6 +588,8 @@
         free_type:      freeType,
         raffle_at:      raffleAt,
         price:          priceValue,
+        currency_type:   currencyType,
+        currency_amount: currencyAmount,
         extra_images:   extraImages.length ? extraImages : null,
         description:    document.getElementById('description').value.trim() || null,
         contact:        document.getElementById('contact').value.trim() || null,

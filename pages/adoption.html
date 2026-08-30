@@ -76,6 +76,7 @@
           <span class="filter-label">유형</span>
           <div class="filter-row" id="typeFilterRow">
             <button class="filter-btn active" data-type="all">전체</button>
+            <button class="filter-btn" data-type="currency">재화거래</button>
             <button class="filter-btn" data-type="paid">유료</button>
             <button class="filter-btn" data-type="free">무료</button>
             <button class="filter-btn" data-type="auction">경매</button>
@@ -117,8 +118,8 @@
   <script src="../js/utils.js"></script>
   <script src="../js/main.js?v=20260617"></script>
   <script>
-    const TYPE_LABEL = { free: '무료', paid: '유료', auction: '경매', etc: '기타' };
-    const TYPE_CLASS  = { free: 'adoption-type--free', paid: 'adoption-type--paid', auction: 'adoption-type--auction', etc: 'adoption-type--paid' };
+    const TYPE_LABEL = { free: '무료', paid: '유료', currency: '재화거래', auction: '경매', etc: '기타' };
+    const TYPE_CLASS  = { free: 'adoption-type--free', paid: 'adoption-type--paid', currency: 'adoption-type--currency', auction: 'adoption-type--auction', etc: 'adoption-type--paid' };
     const OPEN_STATUSES = ['분양중', '확인 대기중', '즉분 대기중'];
 
     let rawData     = [];
