@@ -2424,6 +2424,31 @@ button.btn-more {
   flex: 1;
 }
 
+/* 모바일: 입찰행(입력칸/단위/버튼)이 한 줄을 유지하도록 축소 규칙 보강 */
+@media (max-width: 767px) {
+  .adoption-bid-input-wrap {
+    flex-wrap: nowrap;
+  }
+
+  .adoption-bid-input-wrap > div {
+    min-width: 0;
+  }
+
+  .adoption-bid-input-wrap .form-input {
+    min-width: 0;
+  }
+
+  #bidAmountUnit {
+    flex-shrink: 0;
+  }
+
+  .adoption-bid-input-wrap .btn-secondary {
+    flex-shrink: 0;
+    white-space: nowrap;
+    min-width: 84px;
+  }
+}
+
 /* ═══════════════════════════════════════
    페이지 로딩
 ═══════════════════════════════════════ */
