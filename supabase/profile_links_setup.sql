@@ -16,10 +16,13 @@
 --
 -- 저장 형식:
 --   - platform : 'twitter' | 'toyhouse' | 'youtube'
---              | 'naver_blog' | 'naver_cafe' | 'band' | 'other'
+--              | 'naver_blog' | 'naver_cafe' | 'band'
+--              | 'discord' | 'kakaotalk' | 'crepe' | 'other'
 --   - label    : 화면에 표시할 이름 (X/Toyhouse 는 계정명, 기타는 사용자가 정한 표시명)
 --   - url      : 최종 이동 가능한 URL. 반드시 http:// 또는 https:// 로 시작.
 --                javascript:, data: 등 위험 스킴은 CHECK 제약으로 차단.
+--                단 Discord(platform='discord')는 공개 프로필 URL이 없어 url = NULL 로 저장한다
+--                (칩 클릭 시 사용자명 복사, 링크 이동 없음). 그 외 플랫폼은 url NOT NULL.
 --   프론트(pages/profile.html)는 X/Toyhouse 에 대해 계정명만 입력받은 경우
 --   저장 직전에 https://x.com/{handle} · https://toyhou.se/{handle} 형태로 정규화한 뒤 저장한다.
 --
@@ -33,7 +36,7 @@ CREATE TABLE IF NOT EXISTS public.profile_links (
   user_id     uuid        NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   platform    text        NOT NULL,
   label       text        NOT NULL,
-  url         text        NOT NULL,
+  url         text,        -- Discord 는 NULL. 그 외 플랫폼은 아래 CHECK 로 NOT NULL 강제.
   sort_order  integer     NOT NULL DEFAULT 0,
   created_at  timestamptz NOT NULL DEFAULT now(),
   updated_at  timestamptz NOT NULL DEFAULT now()
@@ -42,27 +45,43 @@ CREATE TABLE IF NOT EXISTS public.profile_links (
 COMMENT ON TABLE public.profile_links IS
 '프로필에 표시되는 외부 계정/링크 (X, Toyhouse, 기타). user_id 당 여러 행 허용. SELECT 공개, 쓰기는 본인만.';
 
+-- 기존 테이블(url NOT NULL 로 생성됨)에 대해 NULL 허용으로 완화 — Discord 지원.
+-- 이미 NULL 허용 상태면 아무 일도 하지 않는다(재실행 안전).
+ALTER TABLE public.profile_links
+  ALTER COLUMN url DROP NOT NULL;
+
 -- platform 값 제한
 ALTER TABLE public.profile_links
   DROP CONSTRAINT IF EXISTS profile_links_platform_check;
 ALTER TABLE public.profile_links
   ADD CONSTRAINT profile_links_platform_check
-  CHECK (platform IN ('twitter', 'toyhouse', 'youtube', 'naver_blog', 'naver_cafe', 'band', 'other'));
+  CHECK (platform IN ('twitter', 'toyhouse', 'youtube', 'naver_blog', 'naver_cafe', 'band', 'discord', 'kakaotalk', 'crepe', 'other'));
 
 -- URL 스킴 제한 — http/https 만. javascript:, data:, vbscript: 등 차단.
 -- 선행 공백/제어문자 우회를 막기 위해 문자열이 정확히 http:// 또는 https:// 로 시작해야 한다.
+-- url IS NULL 은 허용 (Discord).
 ALTER TABLE public.profile_links
   DROP CONSTRAINT IF EXISTS profile_links_url_scheme_check;
 ALTER TABLE public.profile_links
   ADD CONSTRAINT profile_links_url_scheme_check
-  CHECK (url ~ '^https?://[^[:space:]]+$');
+  CHECK (url IS NULL OR url ~ '^https?://[^[:space:]]+$');
 
--- label/url 길이 방어 (과도한 입력 차단)
+-- Discord 외 플랫폼은 url 필수. (Discord 는 공개 프로필 URL이 없어 NULL)
+ALTER TABLE public.profile_links
+  DROP CONSTRAINT IF EXISTS profile_links_url_required_check;
+ALTER TABLE public.profile_links
+  ADD CONSTRAINT profile_links_url_required_check
+  CHECK (platform = 'discord' OR url IS NOT NULL);
+
+-- label/url 길이 방어 (과도한 입력 차단). url IS NULL 은 허용.
 ALTER TABLE public.profile_links
   DROP CONSTRAINT IF EXISTS profile_links_len_check;
 ALTER TABLE public.profile_links
   ADD CONSTRAINT profile_links_len_check
-  CHECK (char_length(label) BETWEEN 1 AND 100 AND char_length(url) BETWEEN 1 AND 500);
+  CHECK (
+    char_length(label) BETWEEN 1 AND 100
+    AND (url IS NULL OR char_length(url) BETWEEN 1 AND 500)
+  );
 
 -- 조회 인덱스 — 프로필 1명분을 sort_order 순으로 가져오는 패턴
 CREATE INDEX IF NOT EXISTS profile_links_user_id_sort_idx

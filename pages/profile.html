@@ -466,7 +466,7 @@
               </div>
               <div class="form-group">
                 <label class="form-label">연결된 계정</label>
-                <p class="form-hint" style="margin-top:0; margin-bottom:10px; font-size:12px; color:var(--text-mute);">X·Toyhouse·YouTube·네이버는 표시 이름에 계정명(아이디)만 입력하면 URL이 자동으로 채워져요. 밴드·기타 링크는 URL을 직접 입력해주세요. 최대 10개까지 등록할 수 있어요.</p>
+                <p class="form-hint" style="margin-top:0; margin-bottom:10px; font-size:12px; color:var(--text-mute);">X·Toyhouse·YouTube·네이버는 표시 이름에 계정명(아이디)만 입력하면 URL이 자동으로 채워져요. 그 외 플랫폼은 URL을 직접 입력해주세요. 왼쪽 손잡이(⠿)를 끌어 순서를 바꿀 수 있고, 최대 10개까지 등록할 수 있어요.</p>
                 <div class="profile-link-edit-list" id="profileLinkEditList"></div>
                 <button type="button" class="btn-field-add" id="profileLinkAddBtn" onclick="addProfileLinkRow()">+ 계정 추가</button>
               </div>
@@ -1083,6 +1083,31 @@
         urlPlaceholder: 'URL (band.us/…)',
         icon: '<img src="../images/icons/band.png" alt="" width="16" height="16">',
       },
+      discord: {
+        name: '디스코드',
+        base: '',
+        // Discord 개인 계정은 공개 프로필 URL이 없어 URL을 받지 않는다.
+        // 표시 칩은 <a>가 아니라 <button>이고, 클릭 시 사용자명을 클립보드에 복사한다.
+        copyOnly: true,
+        labelPlaceholder: 'Discord 사용자명 (예: bbori)',
+        urlPlaceholder: '클릭 시 사용자명 복사',
+        help: 'Discord는 연결 가능한 공개 프로필 URL이 없어 클릭 시 사용자명이 복사됩니다.',
+        icon: '<img src="../images/icons/discord.png" alt="" width="16" height="16">',
+      },
+      kakaotalk: {
+        name: '카카오톡 오픈채팅',
+        base: '',
+        labelPlaceholder: '표시 이름 (예: 오픈채팅)',
+        urlPlaceholder: 'URL (open.kakao.com/…)',
+        icon: '<img src="../images/icons/kakaotalk.png" alt="" width="16" height="16">',
+      },
+      crepe: {
+        name: '크레페',
+        base: '',
+        labelPlaceholder: '표시 이름 (예: 크레페)',
+        urlPlaceholder: 'URL (crepe.cm/…)',
+        icon: '<img src="../images/icons/crepe.png" alt="" width="16" height="16">',
+      },
       other: {
         name: '기타 링크',
         base: '',
@@ -1121,34 +1146,92 @@
       }
     }
 
+    // 칩 표시명 — twitter·youtube·discord는 @ prefix (저장값엔 @ 없음, 여기서만 부여)
+    function _profileLinkChipText(l) {
+      const withAt = l.platform === 'twitter' || l.platform === 'youtube' || l.platform === 'discord';
+      return withAt ? '@' + String(l.label).replace(/^@+/, '') : String(l.label);
+    }
+
     // 표시: 사용자 입력을 innerHTML로 넣지 않고 DOM API로만 구성 (아이콘 SVG는 고정 문자열)
     function renderProfileLinksDisplay(links) {
       const box = document.getElementById('profileLinksDisplay');
       if (!box) return;
       box.textContent = '';
-      const safe = (links || []).filter(l => isSafeHttpUrl(l.url));
-      if (!safe.length) { box.style.display = 'none'; return; }
-      safe.forEach(l => {
+      const items = (links || []).filter(l => {
+        const meta = PROFILE_LINK_PLATFORMS[l.platform];
+        if (meta && meta.copyOnly) return !!l.label;   // Discord: URL 없이 사용자명만
+        return isSafeHttpUrl(l.url);
+      });
+      if (!items.length) { box.style.display = 'none'; return; }
+      items.forEach(l => {
         const meta = PROFILE_LINK_PLATFORMS[l.platform] || PROFILE_LINK_PLATFORMS.other;
-        const a = document.createElement('a');
-        a.className = 'profile-link-chip';
-        a.href = l.url;
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
+        const text = _profileLinkChipText(l);
+
+        let el;
+        if (meta.copyOnly) {
+          // <a>가 아니라 <button> — 클릭 시 사용자명 복사, 링크 이동 없음. 키보드 접근 가능.
+          el = document.createElement('button');
+          el.type = 'button';
+          el.className = 'profile-link-chip';
+          el.addEventListener('click', () => copyDiscordUsername(l.label));
+          el.title = `${text} — 클릭하면 Discord 사용자명이 복사돼요`;
+        } else {
+          el = document.createElement('a');
+          el.className = 'profile-link-chip';
+          el.href = l.url;
+          el.target = '_blank';
+          el.rel = 'noopener noreferrer';
+          el.title = text;
+        }
         const icon = document.createElement('span');
         icon.className = 'profile-link-chip-icon';
         icon.innerHTML = meta.icon;
         const label = document.createElement('span');
         label.className = 'profile-link-chip-label';
-        const text = (l.platform === 'twitter' || l.platform === 'youtube')
-          ? '@' + String(l.label).replace(/^@+/, '')
-          : String(l.label);
         label.textContent = text;
-        a.title = text;
-        a.append(icon, label);
-        box.appendChild(a);
+        el.append(icon, label);
+        box.appendChild(el);
       });
       box.style.display = 'flex';
+    }
+
+    async function copyDiscordUsername(username) {
+      const name = String(username).replace(/^@+/, '');
+      const ok = () => showProfileToast('Discord 사용자명을 복사했어요.');
+      try {
+        await navigator.clipboard.writeText(name);
+        ok();
+      } catch {
+        try {
+          const ta = document.createElement('textarea');
+          ta.value = name;
+          ta.style.position = 'fixed';
+          ta.style.opacity = '0';
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand('copy');
+          ta.remove();
+          ok();
+        } catch {
+          showProfileToast('복사에 실패했어요. 사용자명: ' + name);
+        }
+      }
+    }
+
+    let _profileToastTimer = null;
+    function showProfileToast(msg) {
+      let t = document.getElementById('profileToast');
+      if (!t) {
+        t = document.createElement('div');
+        t.id = 'profileToast';
+        t.className = 'profile-toast';
+        t.setAttribute('role', 'status');
+        document.body.appendChild(t);
+      }
+      t.textContent = msg;
+      requestAnimationFrame(() => t.classList.add('show'));
+      clearTimeout(_profileToastTimer);
+      _profileToastTimer = setTimeout(() => t.classList.remove('show'), 2200);
     }
 
     // ── 편집 행 ──
@@ -1181,29 +1264,92 @@
       const options = Object.entries(PROFILE_LINK_PLATFORMS)
         .map(([k, v]) => `<option value="${k}">${v.name}</option>`).join('');
       row.innerHTML = `
+        <span class="profile-link-drag-handle" title="드래그해서 순서 변경" aria-hidden="true">⠿</span>
         <select class="form-input profile-link-platform">${options}</select>
         <input type="text" class="form-input profile-link-label" maxlength="100" autocomplete="off">
         <input type="text" class="form-input profile-link-url" maxlength="500" autocomplete="off" inputmode="url">
-        <button type="button" class="profile-link-edit-remove">삭제</button>`;
+        <button type="button" class="profile-link-edit-remove">삭제</button>
+        <p class="profile-link-row-help" hidden></p>`;
       const sel        = row.querySelector('.profile-link-platform');
       const labelInput = row.querySelector('.profile-link-label');
       const urlInput   = row.querySelector('.profile-link-url');
+      const help       = row.querySelector('.profile-link-row-help');
       sel.value        = PROFILE_LINK_PLATFORMS[data?.platform] ? data.platform : 'twitter';
       labelInput.value = data?.label || '';
       urlInput.value   = data?.url || '';
-      const syncPlaceholders = () => {
+      const syncPlatformUI = () => {
         const meta = PROFILE_LINK_PLATFORMS[sel.value] || PROFILE_LINK_PLATFORMS.other;
         labelInput.placeholder = meta.labelPlaceholder;
-        urlInput.placeholder   = meta.urlPlaceholder;
+        if (meta.copyOnly) {
+          // Discord: URL 입력 비활성화 + 안내 문구
+          urlInput.value = '';
+          urlInput.placeholder = meta.urlPlaceholder;
+          urlInput.disabled = true;
+          urlInput.classList.add('form-input--disabled');
+          help.textContent = meta.help || '';
+          help.hidden = !meta.help;
+        } else {
+          urlInput.disabled = false;
+          urlInput.classList.remove('form-input--disabled');
+          urlInput.placeholder = meta.urlPlaceholder;
+          help.textContent = '';
+          help.hidden = true;
+        }
       };
-      sel.addEventListener('change', syncPlaceholders);
-      syncPlaceholders();
+      sel.addEventListener('change', syncPlatformUI);
+      syncPlatformUI();
       row.querySelector('.profile-link-edit-remove').addEventListener('click', () => {
         row.remove();
         updateProfileLinkAddBtn();
       });
+      _attachProfileLinkRowDrag(row);
       list.appendChild(row);
       updateProfileLinkAddBtn();
+    }
+
+    // 행 드래그 순서 변경 — character-register.html의 섹션 카드 드래그와 동일 패턴.
+    // DOM 순서만 바꾸고, 저장 시 collectProfileLinks()가 DOM 순서대로 읽어 sort_order를 다시 매긴다.
+    let _profileLinkDragSrc = null;
+    function _attachProfileLinkRowDrag(row) {
+      const handle = row.querySelector('.profile-link-drag-handle');
+      if (!handle) return;
+      const armDrag   = () => { row.draggable = true; };
+      const disarmDrag = () => { if (!_profileLinkDragSrc) row.draggable = false; };
+      handle.addEventListener('mousedown', armDrag);
+      handle.addEventListener('touchstart', armDrag, { passive: true });
+      handle.addEventListener('mouseup', disarmDrag);
+      handle.addEventListener('touchend', disarmDrag);
+
+      row.addEventListener('dragstart', e => {
+        _profileLinkDragSrc = row;
+        e.dataTransfer.effectAllowed = 'move';
+        try { e.dataTransfer.setData('text/plain', ''); } catch (_) {}
+        setTimeout(() => row.classList.add('dragging'), 0);
+      });
+      row.addEventListener('dragend', () => {
+        row.classList.remove('dragging');
+        row.draggable = false;
+        _profileLinkDragSrc = null;
+        document.querySelectorAll('#profileLinkEditList .profile-link-edit-row')
+          .forEach(r => r.classList.remove('drag-over'));
+      });
+      row.addEventListener('dragover', e => {
+        if (!_profileLinkDragSrc || _profileLinkDragSrc === row) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        row.classList.add('drag-over');
+      });
+      row.addEventListener('dragleave', () => row.classList.remove('drag-over'));
+      row.addEventListener('drop', e => {
+        e.preventDefault();
+        row.classList.remove('drag-over');
+        const src = _profileLinkDragSrc;
+        if (src && src !== row) {
+          const list = document.getElementById('profileLinkEditList');
+          const all  = [...list.children];
+          list.insertBefore(src, all.indexOf(src) < all.indexOf(row) ? row.nextSibling : row);
+        }
+      });
     }
 
     // 편집 행 → 정규화된 링크 배열. 잘못된 입력이면 Error throw.
@@ -1219,6 +1365,16 @@
         if (!label && !url) return; // 빈 행은 조용히 무시
 
         const meta = PROFILE_LINK_PLATFORMS[platform] || PROFILE_LINK_PLATFORMS.other;
+
+        if (meta.copyOnly) {
+          // Discord: URL 없이 사용자명만 저장. @는 저장값에서 제거(표시 시 부여) — 핸들 플랫폼과 동일 규칙.
+          label = label.replace(/^@+/, '').trim();
+          if (!label) throw new Error(`${n}번째 계정: Discord 사용자명을 입력해주세요.`);
+          if (label.length > 100) throw new Error(`${n}번째 항목: 표시 이름이 너무 길어요. (최대 100자)`);
+          out.push({ platform, label, url: null });
+          return;
+        }
+
         if (meta.base) {
           // 계정명(핸들) 기반 플랫폼: X · Toyhouse · YouTube · 네이버 블로그/카페
           label = label.replace(/^@+/, '').trim();
@@ -1231,7 +1387,7 @@
             url = meta.base + label;
           }
         } else {
-          // 자유 링크 플랫폼: 밴드 · 기타
+          // 자유 링크 플랫폼: 밴드 · 카카오톡 · 크레페 · 기타
           if (!label) throw new Error(`${n}번째 링크: 표시 이름을 입력해주세요.`);
           if (!url)   throw new Error(`${n}번째 링크: URL을 입력해주세요.`);
         }
