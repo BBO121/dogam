@@ -289,6 +289,8 @@
               </div>
               <p class="profile-bio" id="profileBio"></p>
 
+              <!-- 외부 계정/링크 — 소개글 바로 아래, 뱃지/스티커 영역보다 위 -->
+              <div class="profile-links" id="profileLinksDisplay" style="display:none;"></div>
               <!-- 뱃지 전시대 -->
               <div id="sectionBadges" style="display:none;">
                 <div class="badge-showcase" id="profileBadgeList"></div>
@@ -461,6 +463,12 @@
                 <label class="form-label">소개글</label>
                 <div class="quill-wrap"><div id="quill_editBio"></div></div>
                 <p id="bioCharCount" style="font-size:12px; color:var(--text-mute); text-align:right; margin-top:4px;">0 / 300</p>
+              </div>
+              <div class="form-group">
+                <label class="form-label">연결된 계정</label>
+                <p class="form-hint" style="margin-top:0; margin-bottom:10px; font-size:12px; color:var(--text-mute);">X·Toyhouse·YouTube·네이버는 표시 이름에 계정명(아이디)만 입력하면 URL이 자동으로 채워져요. 밴드·기타 링크는 URL을 직접 입력해주세요. 최대 10개까지 등록할 수 있어요.</p>
+                <div class="profile-link-edit-list" id="profileLinkEditList"></div>
+                <button type="button" class="btn-field-add" id="profileLinkAddBtn" onclick="addProfileLinkRow()">+ 계정 추가</button>
               </div>
               <div class="form-group">
                 <label class="form-label">개인공지 (TOS)</label>
@@ -1024,6 +1032,240 @@
       btn.disabled = false;
     }
 
+    // ── 프로필 외부 계정/링크 ──────────────────────────────
+    // 저장 테이블: profile_links (supabase/profile_links_setup.sql)
+    // 표시: 소개글 아래 · 개인공지 위 (#profileLinksDisplay). 뱃지/스티커 영역과는 별개.
+    // 편집: 설정 탭 "연결된 계정" (#profileLinkEditList). 저장은 saveProfile()에 통합.
+    const PROFILE_LINK_MAX = 10;
+    // 내 프로필 링크 로딩이 끝나야 편집 목록이 신뢰 가능한 상태가 된다.
+    // 로딩 전에 저장을 누르면 링크는 건드리지 않는다(빈 목록으로 덮어써 유실되는 것 방지).
+    let _profileLinksReady = false;
+    const PROFILE_LINK_PLATFORMS = {
+      twitter: {
+        name: 'X (Twitter)',
+        base: 'https://x.com/',
+        labelPlaceholder: '계정명 (예: @thespecieslab)',
+        urlPlaceholder: 'URL 자동 입력 (직접 입력도 가능)',
+        icon: '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
+      },
+      toyhouse: {
+        name: 'Toyhouse',
+        base: 'https://toyhou.se/',
+        labelPlaceholder: '계정명 (예: thespecieslab)',
+        urlPlaceholder: 'URL 자동 입력 (직접 입력도 가능)',
+        icon: '<img src="../images/icons/toyhouse.png" alt="" width="16" height="16">',
+      },
+      youtube: {
+        name: 'YouTube',
+        base: 'https://www.youtube.com/@',
+        labelPlaceholder: '채널 핸들 (예: @thespecieslab)',
+        urlPlaceholder: 'URL 자동 입력 (채널 주소 직접 입력도 가능)',
+        icon: '<img src="../images/icons/youtube.png" alt="" width="16" height="16">',
+      },
+      naver_blog: {
+        name: '네이버 블로그',
+        base: 'https://blog.naver.com/',
+        labelPlaceholder: '블로그 아이디 (예: thespecieslab)',
+        urlPlaceholder: 'URL 자동 입력 (글 주소 직접 입력도 가능)',
+        icon: '<img src="../images/icons/naver-blog.png" alt="" width="16" height="16">',
+      },
+      naver_cafe: {
+        name: '네이버 카페',
+        base: 'https://cafe.naver.com/',
+        labelPlaceholder: '카페 주소 (예: thespecieslab)',
+        urlPlaceholder: 'URL 자동 입력 (게시글 주소 직접 입력도 가능)',
+        icon: '<img src="../images/icons/naver-cafe.png" alt="" width="16" height="16">',
+      },
+      band: {
+        name: '네이버 밴드',
+        base: '',
+        labelPlaceholder: '표시 이름 (예: 밴드)',
+        urlPlaceholder: 'URL (band.us/…)',
+        icon: '<img src="../images/icons/band.png" alt="" width="16" height="16">',
+      },
+      other: {
+        name: '기타 링크',
+        base: '',
+        labelPlaceholder: '표시 이름 (예: Portfolio)',
+        urlPlaceholder: 'URL (https://...)',
+        icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l3-3A5 5 0 0 0 12.93 3l-1.5 1.5"/><path d="M14 11a5 5 0 0 0-7.07 0l-3 3A5 5 0 0 0 11.07 21l1.5-1.5"/></svg>',
+      },
+    };
+
+    function isSafeHttpUrl(u) {
+      if (typeof u !== 'string' || !/^https?:\/\/[^\s]+$/i.test(u)) return false;
+      try {
+        const p = new URL(u);
+        return p.protocol === 'http:' || p.protocol === 'https:';
+      } catch { return false; }
+    }
+
+    async function loadProfileLinks(userId, isOwnProfile) {
+      if (!userId) return;
+      let links = [];
+      try {
+        const { data, error } = await sb.from('profile_links')
+          .select('platform, label, url, sort_order')
+          .eq('user_id', userId)
+          .order('sort_order', { ascending: true })
+          .order('created_at', { ascending: true });
+        if (error) throw error;
+        links = data || [];
+      } catch (e) {
+        console.warn('[profile_links] 조회 실패:', e);
+      }
+      renderProfileLinksDisplay(links);
+      if (isOwnProfile) {
+        renderProfileLinkEditRows(links);
+        _profileLinksReady = true;
+      }
+    }
+
+    // 표시: 사용자 입력을 innerHTML로 넣지 않고 DOM API로만 구성 (아이콘 SVG는 고정 문자열)
+    function renderProfileLinksDisplay(links) {
+      const box = document.getElementById('profileLinksDisplay');
+      if (!box) return;
+      box.textContent = '';
+      const safe = (links || []).filter(l => isSafeHttpUrl(l.url));
+      if (!safe.length) { box.style.display = 'none'; return; }
+      safe.forEach(l => {
+        const meta = PROFILE_LINK_PLATFORMS[l.platform] || PROFILE_LINK_PLATFORMS.other;
+        const a = document.createElement('a');
+        a.className = 'profile-link-chip';
+        a.href = l.url;
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        const icon = document.createElement('span');
+        icon.className = 'profile-link-chip-icon';
+        icon.innerHTML = meta.icon;
+        const label = document.createElement('span');
+        label.className = 'profile-link-chip-label';
+        const text = (l.platform === 'twitter' || l.platform === 'youtube')
+          ? '@' + String(l.label).replace(/^@+/, '')
+          : String(l.label);
+        label.textContent = text;
+        a.title = text;
+        a.append(icon, label);
+        box.appendChild(a);
+      });
+      box.style.display = 'flex';
+    }
+
+    // ── 편집 행 ──
+    function renderProfileLinkEditRows(links) {
+      const list = document.getElementById('profileLinkEditList');
+      if (!list) return;
+      list.textContent = '';
+      (links || []).forEach(l => addProfileLinkRow(l));
+      updateProfileLinkAddBtn();
+    }
+
+    function updateProfileLinkAddBtn() {
+      const list = document.getElementById('profileLinkEditList');
+      const btn  = document.getElementById('profileLinkAddBtn');
+      if (!list || !btn) return;
+      const count = list.querySelectorAll('.profile-link-edit-row').length;
+      btn.disabled = count >= PROFILE_LINK_MAX;
+      btn.textContent = count >= PROFILE_LINK_MAX ? `계정은 최대 ${PROFILE_LINK_MAX}개까지 등록할 수 있어요` : '+ 계정 추가';
+    }
+
+    function addProfileLinkRow(data = null) {
+      const list = document.getElementById('profileLinkEditList');
+      if (!list) return;
+      if (list.querySelectorAll('.profile-link-edit-row').length >= PROFILE_LINK_MAX) {
+        updateProfileLinkAddBtn();
+        return;
+      }
+      const row = document.createElement('div');
+      row.className = 'profile-link-edit-row';
+      const options = Object.entries(PROFILE_LINK_PLATFORMS)
+        .map(([k, v]) => `<option value="${k}">${v.name}</option>`).join('');
+      row.innerHTML = `
+        <select class="form-input profile-link-platform">${options}</select>
+        <input type="text" class="form-input profile-link-label" maxlength="100" autocomplete="off">
+        <input type="text" class="form-input profile-link-url" maxlength="500" autocomplete="off" inputmode="url">
+        <button type="button" class="profile-link-edit-remove">삭제</button>`;
+      const sel        = row.querySelector('.profile-link-platform');
+      const labelInput = row.querySelector('.profile-link-label');
+      const urlInput   = row.querySelector('.profile-link-url');
+      sel.value        = PROFILE_LINK_PLATFORMS[data?.platform] ? data.platform : 'twitter';
+      labelInput.value = data?.label || '';
+      urlInput.value   = data?.url || '';
+      const syncPlaceholders = () => {
+        const meta = PROFILE_LINK_PLATFORMS[sel.value] || PROFILE_LINK_PLATFORMS.other;
+        labelInput.placeholder = meta.labelPlaceholder;
+        urlInput.placeholder   = meta.urlPlaceholder;
+      };
+      sel.addEventListener('change', syncPlaceholders);
+      syncPlaceholders();
+      row.querySelector('.profile-link-edit-remove').addEventListener('click', () => {
+        row.remove();
+        updateProfileLinkAddBtn();
+      });
+      list.appendChild(row);
+      updateProfileLinkAddBtn();
+    }
+
+    // 편집 행 → 정규화된 링크 배열. 잘못된 입력이면 Error throw.
+    function collectProfileLinks() {
+      const rows = [...document.querySelectorAll('#profileLinkEditList .profile-link-edit-row')];
+      if (rows.length > PROFILE_LINK_MAX) throw new Error(`연결된 계정은 최대 ${PROFILE_LINK_MAX}개까지 등록할 수 있어요.`);
+      const out = [];
+      rows.forEach((row, idx) => {
+        const n        = idx + 1;
+        const platform = row.querySelector('.profile-link-platform').value;
+        let label      = row.querySelector('.profile-link-label').value.trim().normalize('NFC');
+        let url        = row.querySelector('.profile-link-url').value.trim();
+        if (!label && !url) return; // 빈 행은 조용히 무시
+
+        const meta = PROFILE_LINK_PLATFORMS[platform] || PROFILE_LINK_PLATFORMS.other;
+        if (meta.base) {
+          // 계정명(핸들) 기반 플랫폼: X · Toyhouse · YouTube · 네이버 블로그/카페
+          label = label.replace(/^@+/, '').trim();
+          if (!label) throw new Error(`${n}번째 계정: 계정명을 입력해주세요.`);
+          if (!url) {
+            // URL을 비워두면 계정명으로 자동 생성 → 계정명이 URL에 쓸 수 있는 형태여야 함
+            if (!/^[A-Za-z0-9_.-]+$/.test(label)) {
+              throw new Error(`${n}번째 계정: 계정명에는 영문·숫자·_·.·- 만 쓸 수 있어요. 링크 주소는 URL 칸에 입력해주세요.`);
+            }
+            url = meta.base + label;
+          }
+        } else {
+          // 자유 링크 플랫폼: 밴드 · 기타
+          if (!label) throw new Error(`${n}번째 링크: 표시 이름을 입력해주세요.`);
+          if (!url)   throw new Error(`${n}번째 링크: URL을 입력해주세요.`);
+        }
+
+        if (!isSafeHttpUrl(url)) throw new Error(`${n}번째 항목: URL은 http:// 또는 https:// 로 시작하는 주소만 등록할 수 있어요.`);
+        if (label.length > 100)  throw new Error(`${n}번째 항목: 표시 이름이 너무 길어요. (최대 100자)`);
+        if (url.length > 500)    throw new Error(`${n}번째 항목: URL이 너무 길어요. (최대 500자)`);
+        out.push({ platform, label, url });
+      });
+      return out;
+    }
+
+    // 저장: 기존 행을 지우고 현재 목록으로 교체. insert 실패 시 기존 행을 남긴다(부분 유실 방지).
+    async function saveProfileLinks(links) {
+      const uid = currentUser.id;
+      const { data: existing, error: selErr } = await sb.from('profile_links').select('id').eq('user_id', uid);
+      if (selErr) return { error: selErr };
+      const oldIds = (existing || []).map(r => r.id);
+
+      if (links.length) {
+        const rows = links.map((l, i) => ({
+          user_id: uid, platform: l.platform, label: l.label, url: l.url,
+          sort_order: i, updated_at: new Date().toISOString(),
+        }));
+        const { error: insErr } = await sb.from('profile_links').insert(rows);
+        if (insErr) return { error: insErr };
+      }
+      if (oldIds.length) {
+        const { error: delErr } = await sb.from('profile_links').delete().in('id', oldIds);
+        if (delErr) return { error: delErr };
+      }
+      return { error: null };
+    }
+
     async function initProfile() {
       const user = await getUser();
       if (!user) { window.location.href = 'login.html'; return; }
@@ -1130,6 +1372,7 @@
       loadMyCharacters(userId, displayName);
       loadAchievements(userId, displayName);
       renderRepCharCard(profile?.representative_character_id, false);
+      loadProfileLinks(userId, false);
     }
 
     async function applyProfileFrame(userId, prefetchedEquip = null) {
@@ -1279,6 +1522,7 @@
       loadAchievements(user.id, null);
       _repCurrentId = myProfile?.representative_character_id || null;
       renderRepCharCard(_repCurrentId, true);
+      loadProfileLinks(user.id, true);
     }
 
     async function loadMySpecies(userId, nickname) {
@@ -1786,6 +2030,16 @@
         return;
       }
 
+      let profileLinks = null;
+      if (_profileLinksReady) {
+        try {
+          profileLinks = collectProfileLinks();
+        } catch (e) {
+          errorEl.textContent = e.message;
+          return;
+        }
+      }
+
       btn.textContent = '저장 중...';
       btn.disabled = true;
 
@@ -1846,6 +2100,19 @@
         const _profileUpsert = { nickname: newDisplayName, user_id: currentUser.id, bio, tos, joined_at: currentUser.created_at };
         if (currentUser.user_metadata?.avatar_url) _profileUpsert.avatar_url = currentUser.user_metadata.avatar_url;
         await sb.from('user_profiles').upsert(_profileUpsert, { onConflict: 'user_id' });
+
+        if (profileLinks !== null) {
+          const { error: linksErr } = await saveProfileLinks(profileLinks);
+          if (linksErr) {
+            console.error('[profile_links] 저장 실패:', linksErr);
+            errorEl.textContent = '연결된 계정 저장에 실패했어요. 다시 시도해주세요.';
+            btn.textContent = '저장';
+            btn.disabled = false;
+            return;
+          }
+          renderProfileLinksDisplay(profileLinks);
+        }
+
         successEl.textContent = '저장됐어요!';
         window.awardAchievement?.('profile_setup');
         document.getElementById('profileBio').innerHTML = DOMPurify.sanitize(bio);

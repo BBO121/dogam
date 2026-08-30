@@ -1170,6 +1170,119 @@
   line-height: 1.6;
 }
 
+/* ── 프로필 외부 계정/링크 (소개글 아래 · 뱃지/스티커 위) ──
+   장식 스티커/뱃지 영역과는 별개. 모바일에서 자연스럽게 줄바꿈.
+   margin은 .profile-header-info의 flex gap(12px) 위에 더해진다:
+   소개글↔링크 ≈ 12+10 = 22px, 링크↔뱃지 ≈ 12+4+14(.badge-showcase margin-top) = 30px.
+   링크가 여러 줄로 wrap돼도 뱃지와 분리돼 보이도록 아래 여백을 둔다. */
+.profile-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  margin-bottom: 4px;
+}
+
+/* 모바일: 프로필 정보·뱃지가 중앙 정렬이므로 외부 링크도 가운데로 맞춤
+   (데스크탑은 기본 좌측 정렬 유지). wrap된 각 줄도 가운데 기준 배치. */
+@media (max-width: 640px) {
+  .profile-links {
+    justify-content: center;
+  }
+}
+
+.profile-link-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 5px 11px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--white);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text-sub);
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.profile-link-chip:hover {
+  border-color: var(--sky-dark);
+  color: var(--sky-deep);
+  background: var(--sky-pale);
+}
+
+.profile-link-chip-icon {
+  display: inline-flex;
+  line-height: 0;
+  flex-shrink: 0;
+}
+
+.profile-link-chip svg {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+/* 래스터 아이콘(토이하우스 파비콘)은 SVG보다 여백이 커 보여 살짝 크게 */
+.profile-link-chip img {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.profile-link-chip-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── 프로필 편집: 연결된 계정 행 ── */
+.profile-link-edit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.profile-link-edit-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--sky-pale);
+}
+
+.profile-link-edit-row select.form-input,
+.profile-link-edit-row input.form-input {
+  margin: 0;
+  padding: 8px 10px;
+  flex: 1 1 140px;
+  min-width: 120px;
+}
+
+.profile-link-edit-row select.profile-link-platform {
+  flex: 0 0 130px;
+  min-width: 110px;
+}
+
+.profile-link-edit-remove {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border: 1px solid #fca5a5;
+  border-radius: 6px;
+  background: var(--white);
+  color: #ef4444;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
 .profile-tos-inner {
   overflow: hidden;
   transition: max-height 0.3s ease;
