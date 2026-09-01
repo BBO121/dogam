@@ -122,12 +122,12 @@
     const TESTERS = ['Moulow', 'moulow', 'Sawol'];
     const STAFF_GEN1 = ['아요', '사월', '사월巳月'];
     let allUsers = [];
-    let speciesOwnerNicks = new Set();
+    let speciesOwnerIds = new Set();
     const pager = createPager(renderList);
 
     function getBadgesHtml(u) {
       const badges = [];
-      const isSpeciesOwner = u.role === 'species_owner' || speciesOwnerNicks.has(u.nickname);
+      const isSpeciesOwner = u.role === 'species_owner' || speciesOwnerIds.has(u.id);
 
       const isStaffGen1 = STAFF_GEN1.includes(u.nickname);
 
@@ -175,7 +175,7 @@
       if (u.role === 'staff')           return 2;
       if (STAFF_GEN1.includes(u.nickname)) return 3;
       if (TESTERS.includes(u.nickname)) return 4;
-      if (u.role === 'species_owner' || speciesOwnerNicks.has(u.nickname)) return 5;
+      if (u.role === 'species_owner' || speciesOwnerIds.has(u.id)) return 5;
       return 6;
     }
 
@@ -210,7 +210,7 @@
     async function loadUsers() {
       const [{ data, error }, { data: spData }] = await Promise.all([
         sb.rpc('get_visible_users_full'),
-        sb.from('species').select('owner_nickname'),
+        sb.from('species').select('owner_user_id'),
       ]);
       document.getElementById('loadingMsg').style.display = 'none';
 
@@ -219,7 +219,7 @@
         return;
       }
 
-      (spData || []).forEach(s => { if (s.owner_nickname) speciesOwnerNicks.add(s.owner_nickname); });
+      (spData || []).forEach(s => { if (s.owner_user_id) speciesOwnerIds.add(s.owner_user_id); });
 
       allUsers = sortUsers(data);
       document.getElementById('usersCount').textContent = `총 ${allUsers.length}명`;
