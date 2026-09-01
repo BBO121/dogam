@@ -28,6 +28,13 @@
     .inquiry-textarea { width:100%; border:1px solid var(--border); border-radius:8px; padding:10px 12px; font-size:14px; resize:vertical; outline:none; font-family:inherit; box-sizing:border-box; }
     .inquiry-textarea:focus { border-color:var(--sky); }
     .mention { color:var(--sky-deep); font-weight:600; }
+    /* 운영진(admin/staff) 전용 회신 수정/삭제 버튼 */
+    .thread-actions { margin-left:auto; display:flex; gap:2px; flex-shrink:0; }
+    .thread-action-btn { background:none; border:none; font-size:12px; color:var(--text-mute); cursor:pointer; padding:2px 6px; border-radius:4px; line-height:1.6; font-family:inherit; }
+    .thread-action-btn:hover { color:var(--text); background:var(--border); }
+    .thread-action-btn--delete:hover { color:#ef4444; background:#fee2e2; }
+    .thread-edit-area { margin-top:6px; display:flex; flex-direction:column; gap:6px; }
+    .thread-edit-btns { display:flex; justify-content:flex-end; gap:6px; }
   </style>
 </head>
 <body>
@@ -132,8 +139,9 @@
     let reportNickname = null;
     let currentData = null;
     let currentUser = null;
-    let isAdminUser = false;   // 조회 권한 범위(admin+staff) — app_metadata.role 기준
-    let isRealAdmin = false;   // 실제 쓰기 권한(admin만) — RLS/RPC와 동일 기준
+    // 운영진 = app_metadata.role 이 admin 또는 staff. 조회/댓글작성/상태변경/회신 수정·삭제/
+    // 문의 삭제 전부 이 하나의 기준으로 통일. (user_metadata.role 은 본인이 조작 가능하므로 사용 금지)
+    let isOperator = false;
     let pageAuthorNick = null;
     let allUserList = [];
     let allNicknames = [];
@@ -186,14 +194,23 @@
       }
 
       document.getElementById('commentList').innerHTML = allComments.map(c => {
-        // 댓글 수정/삭제 기능은 운영 기록 보존을 위해 제거됨(2026-08-17) — 신규 댓글은 append-only.
-        // updated_at은 그 이전에 수정된 과거 데이터에만 남아있을 수 있어 표시만 유지.
+        // 일반 유저는 append-only 정책 그대로 — 본인 댓글이어도 수정/삭제 불가.
+        // 운영진(admin/staff)만 모든 회신을 수정/삭제할 수 있고, 서버 처리는 전용 RPC로만 한다.
+        // 합성 레거시 항목(answer/user_reply 로 만든 것 — id 없음)은 대상에서 제외.
         const editedMark = c.updated_at ? ' <span style="font-size:11px;color:var(--text-mute);font-weight:400;">(수정됨)</span>' : '';
+        const canOperate = isOperator && !!c.id;
+        const actionsBtns = canOperate
+          ? `<div class="thread-actions">
+               <button class="thread-action-btn" onclick="editComment('${c.id}')">수정</button>
+               <button class="thread-action-btn thread-action-btn--delete" onclick="deleteComment('${c.id}')">삭제</button>
+             </div>`
+          : '';
         return `
-        <div class="thread-item${c.is_admin ? ' thread-item--admin' : ''}">
+        <div class="thread-item${c.is_admin ? ' thread-item--admin' : ''}" data-comment-id="${c.id || ''}">
           <div class="thread-header">
             <span class="thread-author">${escHtml(c.author)}${roleBadge(c)}</span>
             <span class="thread-date">${fmtDate(c.created_at)}${editedMark}</span>
+            ${actionsBtns}
           </div>
           <p class="thread-content">${escHtml(c.content)}</p>
         </div>`;
@@ -210,8 +227,9 @@
       currentUser = user;
       // app_metadata는 서버(관리자 API)만 설정 가능 — RLS/RPC 판정 기준과 동일하게 맞춰서
       // "버튼은 보이는데 API는 거부되는" 불일치를 없앤다. (user_metadata는 본인이 임의 수정 가능)
-      isAdminUser = isAdminOrStaff(user.app_metadata?.role);
-      isRealAdmin = user.app_metadata?.role === 'admin';
+      // admin/staff 모두 동일하게 운영진으로 취급 — RLS("문의 조회"/"문의 삭제")와
+      // RPC(add/update/delete_inquiry_comment)가 전부 app_metadata.role IN (admin,staff) 기준.
+      isOperator = isAdminOrStaff(user.app_metadata?.role);
 
       const [{ data, error }, { data: userList }] = await Promise.all([
         sb.from('inquiries').select('*').eq('id', currentId).single(),
@@ -224,7 +242,7 @@
       if (error || !data) { window.location.href = 'inquiry.html'; return; }
 
       const isOwner = data.user_id != null ? data.user_id === user.id : false;
-      if (!isAdminUser && !isOwner) { window.location.href = 'inquiry.html'; return; }
+      if (!isOperator && !isOwner) { window.location.href = 'inquiry.html'; return; }
 
       currentData = data;
       reportNickname = data.nickname;
@@ -245,12 +263,13 @@
 
       renderComments(data, authorNick);
 
-      // 댓글/회신 작성은 실제 쓰기 권한(RLS/RPC 기준: admin 또는 글 작성자 본인)이 있을 때만 노출.
-      // staff는 조회 권한(isAdminUser)은 있지만 "문의 수정" 권한은 없어(admin 전용, 기존 정책 유지)
-      // 폼을 보여주면 제출 시 API 에러만 나므로 노출하지 않는다.
-      if (isRealAdmin || isOwner) {
+      // 댓글/회신 작성은 운영진(admin/staff) 또는 글 작성자 본인만.
+      // 서버는 add_inquiry_comment() RPC(운영진=admin|staff, 또는 본인)로만 반영한다.
+      if (isOperator || isOwner) {
         document.getElementById('commentForm').style.display = 'block';
-        if (isRealAdmin) {
+        if (isOperator) {
+          // 상태 변경은 admin/staff 모두 가능 (add_inquiry_comment RPC가 app_metadata.role
+          // IN (admin,staff) 일 때 status/answer 를 갱신).
           document.getElementById('adminStatusWrap').style.display = 'block';
           document.getElementById('statusSelect').value = data.status || '접수됨';
           // 글 작성자가 본인이 아닐 때 @닉네임 자동 프리필
@@ -262,10 +281,11 @@
         }
       }
 
-      // DB의 "문의 삭제" RLS와 동일한 조건: 답변/댓글이 하나라도 있거나 상태가 "접수됨"이 아니면
-      // (=운영진이 처리를 시작했으면) 본인이라도 삭제 불가. admin은 예외 없이 항상 삭제 가능.
+      // 문의 삭제 버튼:
+      //  - 운영진(admin/staff): 답변/댓글/상태와 무관하게 항상 표시 ("문의 삭제" RLS 가 허용).
+      //  - 일반 작성자 본인: 답변/댓글이 하나도 없고 상태가 "접수됨"일 때만 (기존 제한 그대로, 완화 안 함).
       const hasContent = !!data.answer || !!(data.comments?.length) || (data.status && data.status !== '접수됨');
-      if (isRealAdmin) {
+      if (isOperator) {
         document.getElementById('deleteBtn').style.display = 'inline-flex';
       } else if (isOwner && !hasContent) {
         document.getElementById('deleteBtn').style.display = 'inline-flex';
@@ -289,10 +309,10 @@
 
       const nickname = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname;
       const prevStatus = currentData.status;
-      const newStatus = isRealAdmin ? document.getElementById('statusSelect').value : null;
+      const newStatus = isOperator ? document.getElementById('statusSelect').value : null;
 
       // 댓글/답변/상태 변경은 전부 add_inquiry_comment() RPC를 통해서만 이뤄진다.
-      // RPC는 append-only로 comments 배열에 새 항목 1개만 추가하고, 관리자일 때만
+      // RPC는 append-only로 comments 배열에 새 항목 1개만 추가하고, 운영진(admin/staff)일 때만
       // status/answer/answered_by/answered_at을 갱신한다 — 기존 댓글이나 다른 필드는
       // 클라이언트가 무엇을 보내든 절대 건드릴 수 없다(RLS로는 배열 요소 단위 보호가
       // 불가능해 RPC/SECURITY DEFINER 방식으로 강제).
@@ -312,7 +332,7 @@
       // 서버가 반환한 최신 행으로 로컬 상태 동기화
       currentData = data;
 
-      if (isRealAdmin) {
+      if (isOperator) {
         const logDetails = { inquiry_id: currentId, target_author: pageAuthorNick };
         if (newStatus && newStatus !== prevStatus) {
           logDetails.status_from = prevStatus;
@@ -336,8 +356,8 @@
 
       const alreadyNotifiedIds = new Set();
 
-      if (isRealAdmin) {
-        // 관리자 → 글 작성자 자동 알림 (본인 글 제외)
+      if (isOperator) {
+        // 운영진 → 글 작성자 자동 알림 (본인 글 제외)
         if (pageAuthorNick && pageAuthorNick !== nickname) {
           const autoTarget = allUserList.find(u => (u.display_name || u.nickname) === pageAuthorNick);
           console.log('auto-notify targetUser', autoTarget);
@@ -397,9 +417,87 @@
       }
     }
 
-    // 회신 수정/삭제 기능은 운영 기록(답변/댓글) 보존을 위해 제거됨(2026-08-17).
-    // 새 회신은 add_inquiry_comment() RPC로 append만 가능하고, 기존 항목은 DB 레벨에서도
-    // 변경/삭제할 수 있는 경로가 없다.
+    // ── 회신(댓글) 수정/삭제 ────────────────────────────────────────────────
+    // 일반 유저는 append-only 정책 그대로(수정/삭제 불가). 운영진(admin/staff)만 가능하며,
+    // 서버 처리는 update_inquiry_comment / delete_inquiry_comment RPC(SECURITY DEFINER,
+    // 내부에서 app_metadata.role IN (admin,staff) 재검증)로만 이뤄진다. 클라이언트에서
+    // comments 배열 전체를 UPDATE하는 예전 방식은 쓰지 않는다(그 경로는 RLS로도 막혀 있음).
+
+    function editComment(commentId) {
+      const item = document.querySelector(`.thread-item[data-comment-id="${commentId}"]`);
+      if (!item) return;
+      const comment = (currentData.comments || []).find(c => c.id === commentId);
+      if (!comment) return;
+
+      const contentEl = item.querySelector('.thread-content');
+      const editArea = document.createElement('div');
+      editArea.className = 'thread-edit-area';
+      editArea.innerHTML = `
+        <textarea class="inquiry-textarea" rows="3" id="editTextarea_${commentId}"></textarea>
+        <div class="thread-edit-btns">
+          <button class="btn-ghost" style="font-size:13px;padding:4px 12px;" onclick="cancelEditComment()">취소</button>
+          <button class="btn-secondary" style="font-size:13px;padding:4px 12px;" onclick="saveEditComment('${commentId}')">저장</button>
+        </div>`;
+      contentEl.replaceWith(editArea);
+
+      const ta = document.getElementById(`editTextarea_${commentId}`);
+      ta.value = comment.content || '';           // value로 넣어 HTML 이스케이프 이슈 회피
+      const actionsEl = item.querySelector('.thread-actions');
+      if (actionsEl) actionsEl.style.display = 'none';
+      ta.focus();
+    }
+
+    function cancelEditComment() {
+      renderComments(currentData, pageAuthorNick);
+    }
+
+    async function saveEditComment(commentId) {
+      const ta = document.getElementById(`editTextarea_${commentId}`);
+      if (!ta) return;
+      const newContent = ta.value.trim();
+      if (!newContent) { alert('내용을 입력해주세요.'); return; }
+
+      const saveBtn = ta.parentElement.querySelector('.btn-secondary');
+      if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = '저장 중...'; }
+
+      const { data, error } = await sb.rpc('update_inquiry_comment', {
+        p_inquiry_id: currentId,
+        p_comment_id: commentId,
+        p_content:    newContent,
+      });
+
+      if (error || !data) {
+        alert(`수정에 실패했어요.${error ? ` (${error.message})` : ''}`);
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = '저장'; }
+        return;
+      }
+
+      currentData = data;
+      logAdminAction('inquiry_comment_edit', 'inquiry', currentId, pageAuthorNick,
+        { inquiry_id: currentId, target_author: pageAuthorNick, comment_id: commentId }).catch(() => {});
+      renderComments(currentData, pageAuthorNick);
+    }
+
+    async function deleteComment(commentId) {
+      if (!confirm('이 회신을 삭제할까요?')) return;
+
+      const { data, error } = await sb.rpc('delete_inquiry_comment', {
+        p_inquiry_id: currentId,
+        p_comment_id: commentId,
+      });
+
+      if (error || !data) {
+        alert(`삭제에 실패했어요.${error ? ` (${error.message})` : ''}`);
+        return;
+      }
+
+      currentData = data;
+      logAdminAction('inquiry_comment_delete', 'inquiry', currentId, pageAuthorNick,
+        { inquiry_id: currentId, target_author: pageAuthorNick, comment_id: commentId }).catch(() => {});
+
+      // 답변 삭제로 상태 배지가 바뀌진 않지만, 서버가 돌려준 최신 행 기준으로 다시 그린다.
+      renderComments(currentData, pageAuthorNick);
+    }
 
     async function deleteInquiry() {
       if (!confirm('정말 삭제할까요?')) return;
@@ -408,8 +506,12 @@
       // 삭제 건수를 확인해야 "조용히 실패"를 놓치지 않는다.
       const { error, count } = await sb.from('inquiries').delete({ count: 'exact' }).eq('id', currentId);
       if (error || !count) {
-        // 이미 답변/댓글이 달렸거나 상태가 바뀐 문의는 RLS가 삭제를 거부한다(본인 문의라도).
-        alert(`삭제할 수 없어요. 이미 운영진이 답변/처리를 시작한 문의는 삭제할 수 없습니다.${error ? ` (${error.message})` : ''}`);
+        // 운영진(admin/staff)은 "문의 삭제" RLS가 항상 허용하므로 여기 도달하면 세션 role이
+        // 회수됐거나 네트워크 문제. 일반 작성자는 이미 답변/댓글/처리가 시작된 문의라 거부된 것.
+        const msg = isOperator
+          ? `삭제하지 못했어요. 잠시 후 다시 시도해주세요.${error ? ` (${error.message})` : ''}`
+          : `삭제할 수 없어요. 이미 운영진이 답변/처리를 시작한 문의는 삭제할 수 없습니다.${error ? ` (${error.message})` : ''}`;
+        alert(msg);
         return;
       }
       window.location.href = 'inquiry.html';
