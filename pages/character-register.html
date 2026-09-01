@@ -52,6 +52,15 @@
     .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="24px"]::before { content: '더 크게'; }
     .ql-snow .ql-picker.ql-size .ql-picker-label[data-value="28px"]::before,
     .ql-snow .ql-picker.ql-size .ql-picker-item[data-value="28px"]::before { content: '제목 크기'; }
+
+    /* 제작자(디자이너·아티스트) / 소유주 공통 입력유형 탭 */
+    .io-tabs { display:flex; gap:8px; }
+    .io-tab {
+      flex:1; padding:8px; border-radius:8px;
+      border:2px solid var(--border); background:#fff; color:var(--text-sub);
+      font-size:13px; cursor:pointer; font-family:inherit;
+    }
+    .io-tab.is-active { border-color:var(--sky); background:var(--sky); color:#fff; }
   </style>
 </head>
 <body>
@@ -139,25 +148,68 @@
             <input type="text" id="charName" class="form-input" placeholder="개체 이름을 입력하세요">
           </div>
 
-          <!-- 디자이너 -->
-          <div class="form-group" id="designerSection">
-            <label class="form-label">디자이너 <span class="required">*</span></label>
-            <p class="form-hint">여러 명 추가 가능 · 순서대로 표시됩니다</p>
-            <div id="designerList" style="display:flex; flex-direction:column; gap:6px; margin-bottom:12px;"></div>
-            <div style="margin-bottom:10px;">
-              <p style="font-size:12px; font-weight:600; color:var(--text-sub); margin:0 0 5px;">연구소 유저</p>
-              <div style="position:relative;">
+          <!-- 제작자 (디자이너 + 아티스트) -->
+          <div class="form-group" id="creatorSection" style="gap:0; border:1px solid var(--border); border-radius:var(--radius); padding:16px;">
+            <label class="form-label" style="font-size:14px; margin:0 0 14px;">제작자</label>
+
+            <!-- 디자이너 -->
+            <div id="designerSection" style="display:flex; flex-direction:column; gap:8px;">
+              <label class="form-label" style="margin:0;">디자이너 <span class="required">*</span></label>
+              <p class="form-hint">여러 명 추가 가능 · 순서대로 표시됩니다</p>
+
+              <div class="io-tabs">
+                <button type="button" id="designerTabSite" class="io-tab is-active" onclick="setDesignerTab('site')">사이트 유저</button>
+                <button type="button" id="designerTabExternal" class="io-tab" onclick="setDesignerTab('external')">사이트 밖 유저</button>
+              </div>
+
+              <!-- 사이트 유저 입력 -->
+              <div id="designerSiteInput" style="position:relative;">
                 <input type="text" id="designerSearch" class="form-input" placeholder="닉네임 또는 아이디로 검색..." oninput="filterDesigners(this.value)" autocomplete="off">
                 <div id="designerDropdown" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:100; background:#fff; border:1px solid var(--border); border-radius:10px; max-height:180px; overflow-y:auto; margin-top:2px; box-shadow:0 4px 12px rgba(0,0,0,0.08);"></div>
               </div>
-            </div>
-            <div>
-              <p style="font-size:12px; font-weight:600; color:var(--text-sub); margin:0 0 5px;">사이트 밖 유저</p>
-              <div style="display:flex; gap:8px; margin-bottom:6px;">
-                <input type="text" id="designerExternalName" class="form-input" placeholder="이름 입력" style="flex:1;">
-                <button type="button" id="designerAddExternalBtn" onclick="addExternalDesigner()" style="padding:0 14px; height:40px; border-radius:8px; border:1.5px solid var(--border); background:#fff; color:var(--text); font-size:13px; cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0;">추가</button>
+
+              <!-- 사이트 밖 유저 입력 -->
+              <div id="designerExternalInput" style="display:none;">
+                <div style="display:flex; gap:8px; margin-bottom:6px;">
+                  <input type="text" id="designerExternalName" class="form-input" placeholder="이름 입력" style="flex:1;">
+                  <button type="button" id="designerAddExternalBtn" onclick="addExternalDesigner()" style="padding:0 14px; height:40px; border-radius:8px; border:1.5px solid var(--border); background:#fff; color:var(--text); font-size:13px; cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0;">추가</button>
+                </div>
+                <input type="text" id="designerExternalContact" class="form-input" placeholder="연락처 (트위터, 디스코드 등) — 선택사항">
               </div>
-              <input type="text" id="designerExternalContact" class="form-input" placeholder="연락처 (트위터, 디스코드 등) — 선택사항">
+
+              <!-- 현재 등록된 디자이너 목록 -->
+              <div id="designerList" style="display:flex; flex-direction:column; gap:6px; margin-top:6px;"></div>
+            </div>
+
+            <!-- 디자이너 / 아티스트 구분선 -->
+            <div style="height:1px; background:var(--border); margin:18px 0;"></div>
+
+            <!-- 아티스트 (선택) -->
+            <div id="artistSection" style="display:flex; flex-direction:column; gap:8px;">
+              <label class="form-label" style="margin:0;">아티스트 <span class="form-hint" style="display:inline; font-weight:400; margin:0 0 0 6px;">선택사항</span></label>
+              <p class="form-hint">개체 일러스트를 그린 사람 크레딧 · 여러 명 추가 가능</p>
+
+              <div class="io-tabs">
+                <button type="button" id="artistTabSite" class="io-tab is-active" onclick="setArtistTab('site')">사이트 유저</button>
+                <button type="button" id="artistTabExternal" class="io-tab" onclick="setArtistTab('external')">사이트 밖 유저</button>
+              </div>
+
+              <!-- 사이트 유저 입력 -->
+              <div id="artistSiteInput" style="position:relative;">
+                <input type="text" id="artistSearch" class="form-input" placeholder="닉네임 또는 아이디로 검색..." oninput="filterArtists(this.value)" autocomplete="off">
+                <div id="artistDropdown" style="display:none; position:absolute; top:100%; left:0; right:0; z-index:100; background:#fff; border:1px solid var(--border); border-radius:10px; max-height:180px; overflow-y:auto; margin-top:2px; box-shadow:0 4px 12px rgba(0,0,0,0.08);"></div>
+              </div>
+
+              <!-- 사이트 밖 유저 입력 (연락처 없음) -->
+              <div id="artistExternalInput" style="display:none;">
+                <div style="display:flex; gap:8px;">
+                  <input type="text" id="artistExternalName" class="form-input" placeholder="이름 입력" style="flex:1;">
+                  <button type="button" id="artistAddExternalBtn" onclick="addExternalArtist()" style="padding:0 14px; height:40px; border-radius:8px; border:1.5px solid var(--border); background:#fff; color:var(--text); font-size:13px; cursor:pointer; font-family:inherit; white-space:nowrap; flex-shrink:0;">추가</button>
+                </div>
+              </div>
+
+              <!-- 현재 등록된 아티스트 목록 -->
+              <div id="artistList" style="display:flex; flex-direction:column; gap:6px; margin-top:6px;"></div>
             </div>
           </div>
 
@@ -166,15 +218,9 @@
             <label class="form-label">소유주</label>
 
             <!-- 타입 토글 -->
-            <div style="display:flex; gap:8px; margin-bottom:12px;">
-              <button type="button" id="btnSiteUser" onclick="setOwnerType('site')"
-                style="flex:1; padding:8px; border-radius:8px; border:2px solid var(--sky); background:var(--sky); color:#fff; font-size:13px; cursor:pointer;">
-                사이트 유저
-              </button>
-              <button type="button" id="btnExternal" onclick="setOwnerType('external')"
-                style="flex:1; padding:8px; border-radius:8px; border:2px solid var(--border); background:#fff; color:var(--text-sub); font-size:13px; cursor:pointer;">
-                사이트 밖 유저
-              </button>
+            <div class="io-tabs" style="margin-bottom:12px;">
+              <button type="button" id="btnSiteUser" class="io-tab is-active" onclick="setOwnerType('site')">사이트 유저</button>
+              <button type="button" id="btnExternal" class="io-tab" onclick="setOwnerType('external')">사이트 밖 유저</button>
             </div>
 
             <!-- 사이트 유저 섹션 -->
@@ -335,6 +381,7 @@
     let selectedNick  = null;
     let selectedNickId = null;
     let designers     = []; // { type:'site', userId, nickname } | { type:'external', name, contact }
+    let artists       = []; // { type:'site', userId, nickname } | { type:'external', name } — 선택사항, 여러 명(연락처 없음)
     let allSpecies           = [];
     let addedCategories      = [];
     let selectedMainFile     = null;
@@ -1064,19 +1111,110 @@
         const dd = document.getElementById('designerDropdown');
         if (dd) dd.style.display = 'none';
       }
+      if (!e.target.closest('#artistSearch') && !e.target.closest('#artistDropdown')) {
+        const ad = document.getElementById('artistDropdown');
+        if (ad) ad.style.display = 'none';
+      }
     });
+
+    // ── 아티스트(선택·여러 명·회원/외부 겸용) ──
+    // 디자이너 입력 로직을 그대로 축소 재사용: 연락처만 없다.
+    function renderArtistItems() {
+      const el = document.getElementById('artistList');
+      if (!artists.length) { el.innerHTML = ''; return; }
+      el.innerHTML = artists.map((a, idx) => `
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:7px 12px; background:var(--bg-sub); border-radius:8px; border:1px solid var(--border);">
+          <span style="font-size:13px; color:var(--text);">
+            <span style="font-size:11px; color:var(--text-mute); background:#e2e8f0; padding:1px 6px; border-radius:4px; margin-right:6px;">${a.type === 'site' ? '연구소' : '외부'}</span>
+            ${a.type === 'site' ? a.nickname : a.name}
+          </span>
+          <button type="button" onclick="removeArtist(${idx})" style="background:none;border:none;cursor:pointer;color:var(--text-mute);font-size:16px;padding:2px 6px;border-radius:4px;line-height:1;font-family:inherit;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='var(--text-mute)'">✕</button>
+        </div>
+      `).join('');
+    }
+
+    const filterArtistsDebounced = debounce(async (q) => {
+      const dropdown = document.getElementById('artistDropdown');
+      const { data } = await searchUsers(q, { limit: 15 });
+      const results = (data || [])
+        .filter(u => !artists.some(a => a.type === 'site' && a.userId === u.id));
+      if (!results.length) {
+        dropdown.innerHTML = '<p style="padding:10px 14px; font-size:13px; color:var(--text-mute);">일치하는 유저가 없어요</p>';
+        dropdown.style.display = '';
+        return;
+      }
+      dropdown.innerHTML = results.map(u => `
+        <div onclick="addSiteArtist('${u.id}','${u.nickname.replace(/'/g,"\\'")}')"
+          style="padding:10px 14px; cursor:pointer; font-size:13px; border-bottom:1px solid var(--border); transition:background 0.1s;"
+          onmouseover="this.style.background='var(--sky-pale)'" onmouseout="this.style.background=''">
+          ${u.nickname}
+        </div>
+      `).join('');
+      dropdown.style.display = '';
+    }, 250);
+
+    function filterArtists(q) {
+      const dropdown = document.getElementById('artistDropdown');
+      const qTrim = q.trim();
+      if (!qTrim) { dropdown.style.display = 'none'; return; }
+      filterArtistsDebounced(qTrim);
+    }
+
+    function addSiteArtist(userId, nickname) {
+      if (artists.some(a => a.type === 'site' && a.userId === userId)) return;
+      artists.push({ type: 'site', userId, nickname });
+      renderArtistItems();
+      document.getElementById('artistSearch').value = '';
+      document.getElementById('artistDropdown').style.display = 'none';
+    }
+
+    function addExternalArtist() {
+      const name = document.getElementById('artistExternalName').value.trim();
+      const errorEl = document.getElementById('registerError');
+      if (!name) { errorEl.textContent = '아티스트 이름을 입력해주세요.'; return; }
+      if (artists.some(a => a.type === 'external' && a.name === name)) {
+        errorEl.textContent = '이미 추가된 외부 아티스트예요.'; return;
+      }
+      errorEl.textContent = '';
+      artists.push({ type: 'external', name });
+      renderArtistItems();
+      document.getElementById('artistExternalName').value = '';
+    }
+
+    function removeArtist(idx) {
+      artists.splice(idx, 1);
+      renderArtistItems();
+    }
 
     function setOwnerType(type) {
       ownerType = type;
       const isSite = type === 'site';
       document.getElementById('ownerSiteSection').style.display    = isSite ? '' : 'none';
       document.getElementById('ownerExternalSection').style.display = isSite ? 'none' : '';
-      document.getElementById('btnSiteUser').style.background  = isSite ? 'var(--sky)' : '#fff';
-      document.getElementById('btnSiteUser').style.color       = isSite ? '#fff' : 'var(--text-sub)';
-      document.getElementById('btnSiteUser').style.borderColor = isSite ? 'var(--sky)' : 'var(--border)';
-      document.getElementById('btnExternal').style.background  = isSite ? '#fff' : 'var(--sky)';
-      document.getElementById('btnExternal').style.color       = isSite ? 'var(--text-sub)' : '#fff';
-      document.getElementById('btnExternal').style.borderColor = isSite ? 'var(--border)' : 'var(--sky)';
+      document.getElementById('btnSiteUser').classList.toggle('is-active', isSite);
+      document.getElementById('btnExternal').classList.toggle('is-active', !isSite);
+    }
+
+    // 디자이너 입력유형 탭: "지금 추가할 디자이너 종류"만 전환한다.
+    // designers 배열(이미 추가된 항목)은 건드리지 않으므로 두 유형이 함께 유지된다.
+    function setDesignerTab(kind) {
+      const isSite = kind === 'site';
+      document.getElementById('designerSiteInput').style.display     = isSite ? '' : 'none';
+      document.getElementById('designerExternalInput').style.display = isSite ? 'none' : '';
+      document.getElementById('designerTabSite').classList.toggle('is-active', isSite);
+      document.getElementById('designerTabExternal').classList.toggle('is-active', !isSite);
+      document.getElementById('designerDropdown').style.display = 'none';
+    }
+
+    // 아티스트 입력유형 탭: "지금 추가할 아티스트 종류"만 전환한다(디자이너와 동일).
+    // artists 배열(이미 추가된 항목)은 건드리지 않으므로 두 유형이 함께 유지된다.
+    function setArtistTab(kind) {
+      const isSite = kind === 'site';
+      document.getElementById('artistSiteInput').style.display     = isSite ? '' : 'none';
+      document.getElementById('artistExternalInput').style.display = isSite ? 'none' : '';
+      document.getElementById('artistTabSite').classList.toggle('is-active', isSite);
+      document.getElementById('artistTabExternal').classList.toggle('is-active', !isSite);
+      document.getElementById('artistDropdown').style.display = 'none';
     }
 
     // 추가 이미지 파일 목록
@@ -1260,6 +1398,11 @@
       const designer_external = designers.filter(d => d.type === 'external').map(d => ({ name: d.name, contact: d.contact || '' }));
       const designer_nickname = designers.map(d => d.type === 'site' ? d.nickname : d.name).join(' / ');
       const designer_contact  = designer_external[0]?.contact || null;
+
+      // 아티스트(선택·여러 명): 디자이너와 동일 구조, 연락처만 없음. 미입력 시 전부 NULL.
+      const artist_user_ids = artists.filter(a => a.type === 'site').map(a => a.userId);
+      const artist_external = artists.filter(a => a.type === 'external').map(a => ({ name: a.name }));
+      const artist_nickname = artists.length ? artists.map(a => a.type === 'site' ? a.nickname : a.name).join(' / ') : null;
 
       btn.textContent = '등록 중...';
       btn.disabled = true;
@@ -1472,6 +1615,9 @@
           designer_user_ids:   designer_user_ids,
           designer_external:   designer_external,
           designer_contact:    designer_contact,
+          artist_user_ids:     artist_user_ids.length ? artist_user_ids : null,
+          artist_external:     artist_external.length ? artist_external : null,
+          artist_nickname:     artist_nickname,
           owner_nickname:      owner,
           owner_user_id:       ownerType === 'site' ? (selectedNickId || null) : null,
           owner_is_offsite:    ownerType !== 'site',
