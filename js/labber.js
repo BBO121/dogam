@@ -1,7 +1,7 @@
 // ── 수상한 연구실: 열쇠 → 연구기록 교환 ──────────────────
 const LABBER_RATE = 25;
 const LABBER_LINE_DEFAULT = '열쇠는 가져왔습니까?';
-const LABBER_LINE_SUCCESS = '좋아. 여기 있다.';
+const LABBER_LINE_SUCCESS = '여기있습니다.';
 
 const LABBER_ERROR_MSG = {
   NOT_AUTHENTICATED: '로그인이 필요합니다.',
