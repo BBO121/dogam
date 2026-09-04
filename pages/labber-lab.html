@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-E8JG7D53T5"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-E8JG7D53T5');
+  </script>
+  <link rel="icon" href="../images/favicon.png" type="image/png">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LABBER 관리소 — 종족연구소</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="labber-theme">
+
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">종족연구소</a>
+      <nav class="header-nav">
+        <a href="login.html" class="btn-login">로그인</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="layout">
+    <aside class="sidebar" id="sidebar"></aside>
+
+    <main class="main">
+
+      <div id="pageLoading" class="page-loading">불러오는 중...</div>
+
+      <div id="pageContent" style="display:none;">
+
+        <!-- ── 상단 hero: 제목/소개문 + 대화창 + B NPC ─────────────
+             수상한 연구실의 A 배치처럼 B(.labberlab-npc-wrap)를 hero 기준 absolute로
+             올려 제목 라인 근처부터 등장시키고 대화창 위로 걸치게 한다.
+             기존 .labber-* / _labber.scss CSS는 건드리지 않음. -->
+        <div class="labberlab-hero">
+          <div class="list-page-header" style="margin-bottom:0;">
+            <div>
+              <div class="breadcrumb" style="margin-bottom:8px;">
+                <a href="index.html">홈</a>
+                <span>/</span>
+                <span>LABBER 관리소</span>
+              </div>
+              <div class="labber-page-title">
+                <h1 class="list-page-title">LABBER 관리소</h1>
+                <img src="../images/labber/labber_logo.png" alt="LABBER" class="labber-page-logo">
+              </div>
+              <p class="labberlab-intro">
+                종족연구소 소속 연구원, LABBER의 등록과 관리를 담당하는 관리소.<br>
+                이곳의 연구원은 항상 야근을 하고 있는 듯하다. 본인 말로는 <span class="labberlab-intro-accent">LABBER 관리 업무</span> 때문이라고 한다.
+              </p>
+            </div>
+          </div>
+
+          <section class="labberlab-npc-scene">
+            <div class="labberlab-speech-bubble">
+              <p class="labberlab-npc-name">B</p>
+              <p class="labberlab-npc-line" id="managerLine" aria-live="polite"></p>
+            </div>
+            <div class="labberlab-npc-wrap">
+              <img class="labberlab-npc-img" src="../images/labber/labber_b.png" alt="B">
+            </div>
+          </section>
+        </div>
+
+        <!-- ── 탭 ─────────────────────────────────────────────── -->
+        <div class="shop-tab-row labberlab-tab-row" id="tabRow">
+          <button type="button" class="shop-tab-btn active" data-tab="about">ABOUT LABBER</button>
+          <button type="button" class="shop-tab-btn" data-tab="traits">특성</button>
+          <button type="button" class="shop-tab-btn" data-tab="approval">디자인 승인</button>
+        </div>
+
+        <!-- ═══ ABOUT LABBER (세계관/설정 기록) ═════════════════ -->
+        <section class="labberlab-panel" id="tab-about">
+
+          <article class="labberlab-record">
+            <!-- "LABBER :" 는 DepartureMono(픽셀·영문), "래버" 는 한글 글리프가 없어
+                 시스템 monospace 로 fallback 되므로 한글용 span 으로 분리 -->
+            <h2 class="labberlab-record-title"><span class="labberlab-record-title-en">LABBER :</span> <span class="labberlab-record-title-ko">래버</span></h2>
+            <p class="labberlab-record-sub">SPECIES RESEARCH ARCHIVE / INTERNAL RECORD</p>
+
+            <dl class="labberlab-record-head">
+              <div><dt>CLASSIFICATION</dt><dd>RESEARCHER SPECIES</dd></div>
+              <div><dt>AFFILIATION</dt><dd>THE SPECIES LAB</dd></div>
+              <div><dt>STATUS</dt><dd>ACTIVE</dd></div>
+            </dl>
+
+            <section class="labberlab-record-block">
+              <h3>#01 / CLASSIFICATION</h3>
+              <p class="labberlab-record-lead">연구하는 종족</p>
+              <p>종족연구소에 소속되어 타 종족의 생태를 연구하고 기록하는 연구원 종족.<br>
+                 모든 래버는 하나 이상의 연구 대상을 담당하며, 관찰 · 사육 · 관리 · 기록을 반복한다.<br>
+                 연구는 래버에게 주어진 업무인 동시에 생태적 본능에 가깝다.</p>
+            </section>
+
+            <section class="labberlab-record-block">
+              <h3>#02 / LIQUID BODY</h3>
+              <p class="labberlab-record-lead">비정형 액상 본체</p>
+              <p>래버의 생물학적 본체는 일정한 형태를 가지지 않는 액체로 이루어져 있다.<br>
+                 일반적으로 관찰되는 인간형 신체와 두부 구조는 래버의 본체 그 자체로 분류되지 않는다.<br>
+                 개체를 식별하는 가장 원초적인 특징은 내부 액체의 색상이다.</p>
+            </section>
+
+            <section class="labberlab-record-block">
+              <h3>#03 / POD</h3>
+              <p class="labberlab-record-lead">본체 수용 장치</p>
+              <p>래버는 액상형 본체를 안정적으로 유지하기 위한 POD를 두부에 장착한다.<br>
+                 POD의 구조와 형태는 개체마다 상이하며 반드시 머리 전체를 수용할 필요는 없다.<br>
+                 단, 본체를 수용할 수 있는 폐쇄 공간의 확보는 필수적이다.</p>
+            </section>
+
+            <section class="labberlab-record-block">
+              <h3>#04 / SUBJECT</h3>
+              <p class="labberlab-record-lead">연구표본</p>
+              <p>POD 내부에는 해당 래버가 연구하는 종족을 상징하는 표본, SUBJECT가 존재한다.<br>
+                 SUBJECT는 각 개체의 전담 연구 분야를 식별하는 가장 명확한 지표이며, 단순한 장식물로 분류하지 않는다.<br>
+                 래버의 연구 대상이 변경될 경우 SUBJECT 역시 변경될 수 있다.</p>
+            </section>
+
+            <section class="labberlab-record-block">
+              <h3>#05 / LABORATORY</h3>
+              <p class="labberlab-record-lead">개별 연구실</p>
+              <p>모든 래버에게는 독립된 연구 공간이 배정된다.<br>
+                 각 연구실에서는 담당 종족의 사육과 개체 관리, 생태 관찰, 특성 분석 및 연구기록 작성이 이루어진다.<br>
+                 연구실의 환경은 담당 종족의 생태에 따라 크게 달라질 수 있다.</p>
+            </section>
+
+            <section class="labberlab-record-block">
+              <h3>#06 / DRESS CODE</h3>
+              <p class="labberlab-record-lead">연구복 착용 규정</p>
+              <p>종족연구소에서 활동하는 모든 래버는 연구복을 착용한다.<br>
+                 연구복의 세부적인 형태와 착용 방식에는 제한을 두지 않으나,<br>
+                 흰색 연구 가운을 기반으로 할 것.</p>
+              <p>이는 종족연구소 소속 연구원임을 나타내는 가장 기본적인 식별 규정이다.</p>
+            </section>
+
+            <p class="labberlab-record-foot">THE SPECIES LAB // LABBER ARCHIVE<br>— END OF RECORD —</p>
+          </article>
+        </section>
+
+        <!-- ═══ 특성 (POD / CARTRIDGE / SUBJECT) — DB·신규 시스템 없음, JS 정적 데이터 ═══
+             카드 마크업은 js/labber-lab.js 의 TRAIT_DATA 로 관리 (아래 컨테이너 참고).
+             아트워크는 미준비 상태라 TRAIT_DATA의 각 artwork 필드는 항상 주석 처리된
+             <img src="../images/labber/traits/*.png" alt="..."> 로 렌더링됨.
+             (이미지 파일을 올리면 renderTraitCard()의 artworkImgComment 부분만 실제
+             <img> 태그로 바꾸면 됨 — .labber-trait-artwork-ph span 은 :has(img) 로 자동 숨김). -->
+        <section class="labberlab-panel" id="tab-traits" hidden>
+          <p class="labberlab-traits-title">LABBER TRAITS</p>
+
+          <!-- 하위 탭 (상위 탭과 구분되는 작은 pill 스타일) -->
+          <div class="labber-trait-subtabs" id="traitSubtabs">
+            <button type="button" class="labber-trait-subtab active" data-trait="pod">포드</button>
+            <button type="button" class="labber-trait-subtab" data-trait="cartridge">카트리지</button>
+            <button type="button" class="labber-trait-subtab" data-trait="subject">서브젝트</button>
+          </div>
+
+          <!-- ── 포드 / 카트리지 / 서브젝트 ────────────────────
+               카드 콘텐츠는 js/labber-lab.js 의 TRAIT_DATA + renderTraits() 가
+               채운다 (획득처 · DESIGN BY 크레딧을 포함한 카드 반복 마크업을
+               HTML에 직접 박지 않기 위함). 아래 컨테이너는 initPage() 실행 전까지
+               비어 있으며, .labber-trait-cat 라벨도 함께 렌더링된다. -->
+          <div class="labber-trait-list" id="trait-pod"></div>
+          <div class="labber-trait-list" id="trait-cartridge" hidden></div>
+          <div class="labber-trait-list" id="trait-subject" hidden></div>
+        </section>
+
+        <!-- ═══ 디자인 승인 (신청 폼 + 내 신청 내역 + admin 관리) ═══ -->
+        <section class="labberlab-panel" id="tab-approval" hidden>
+
+          <!-- 일반 유저: 신청 폼 -->
+          <div id="approvalUserView">
+            <p class="labberlab-panel-desc">
+              LABBER 디자인 승인을 신청합니다. 제출한 신청은 나와 관리자에게만 보여요.
+            </p>
+
+            <form class="register-form labberlab-form" id="designForm">
+              <input type="hidden" id="editingId" value="">
+
+              <div class="form-group">
+                <label class="form-label">디자인 이미지 <span class="required">*</span></label>
+                <input type="file" id="imageFile" accept="image/png,image/jpeg,image/webp,image/gif" style="display:none;" onchange="onImagePick(this)">
+                <div id="uploadBox" class="img-upload-box" style="height:220px;" onclick="document.getElementById('imageFile').click()">
+                  <img id="imagePreview" style="display:none; width:100%; height:100%; object-fit:contain; border-radius:var(--radius);">
+                  <div id="uploadPlaceholder">
+                    <p class="img-upload-text">클릭하여 이미지 업로드</p>
+                  </div>
+                </div>
+                <p class="img-upload-meta">PNG · JPG · WebP · GIF &nbsp;·&nbsp; 최대 2MB · 2000×2000px 이하</p>
+                <button type="button" id="removeImageBtn" class="btn-ghost" style="display:none; margin-top:8px; font-size:12px;" onclick="clearImage()">이미지 삭제</button>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">POD 설명 <span class="required">*</span></label>
+                <textarea id="podInput" class="form-textarea" rows="3" placeholder="POD의 구조 · 형태 · 재질 등"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">INK 색상 / 명칭 <span class="required">*</span></label>
+                <input type="text" id="inkInput" class="form-input" placeholder="예: 청록빛 잉크 / #2FB6A0">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">SUBJECT 설명 <span class="required">*</span></label>
+                <textarea id="subjectDescInput" class="form-textarea" rows="3" placeholder="SUBJECT(연구표본)의 형태와 의미"></textarea>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">SUBJECT 종족</label>
+                <select id="subjectSpeciesSelect" class="form-input">
+                  <option value="">선택 안 함 / 목록에 없음</option>
+                </select>
+                <input type="text" id="subjectSpeciesNameInput" class="form-input" style="margin-top:8px;" placeholder="목록에 없는 종족이면 직접 입력 (선택)">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">디자이너 <span class="required">*</span></label>
+                <input type="text" id="designerInput" class="form-input" placeholder="디자이너 이름 / 핸들">
+              </div>
+
+              <div class="form-group">
+                <label class="form-label">추가 설명 / 비고</label>
+                <textarea id="noteInput" class="form-textarea" rows="2" placeholder="그 외 전달할 내용 (선택)"></textarea>
+              </div>
+
+              <p class="auth-error" id="formError"></p>
+
+              <div class="register-actions">
+                <button type="button" class="btn-ghost" id="cancelEditBtn" style="display:none;" onclick="cancelEdit()">수정 취소</button>
+                <button type="submit" class="btn-secondary" id="submitBtn">제출하기</button>
+              </div>
+            </form>
+          </div>
+
+          <!-- 관리자: 승인 관리 -->
+          <div id="approvalAdminView" hidden>
+            <p class="labberlab-panel-desc">LABBER 디자인 승인 신청 관리 — 상태 변경과 코멘트는 신청자에게 알림으로 전달됩니다.</p>
+            <div class="shop-tab-row labberlab-status-row" id="adminStatusRow"></div>
+            <div id="adminAppList" class="labberlab-app-list"></div>
+            <div id="adminEmpty" class="empty-state-wrap" style="display:none;">
+              <div class="empty-state-icon">🗂️</div>
+              <p class="empty-state-title">해당 상태의 신청이 없어요</p>
+            </div>
+          </div>
+
+          <!-- 내 신청 내역 (독립 MY APPLICATIONS 탭 제거 → 이 탭 안으로 통합).
+               본인의 신청/상태/관리자 코멘트 확인 및 수정 기능은 그대로 유지된다. -->
+          <div class="labberlab-my-section" id="mySection">
+            <h3 class="labberlab-my-heading">내 디자인 승인 신청</h3>
+            <p class="labberlab-panel-desc" id="myGuestDesc" style="display:none;">
+              로그인하면 내 LABBER 디자인 승인 신청 내역과 상태를 볼 수 있어요.
+            </p>
+            <div id="myAppList" class="labberlab-app-list"></div>
+            <div id="myEmpty" class="empty-state-wrap" style="display:none;">
+              <div class="empty-state-icon">📋</div>
+              <p class="empty-state-title">신청 내역이 없어요</p>
+              <p class="empty-state-desc">위 신청 폼에서 LABBER 디자인 승인을 신청할 수 있어요.</p>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </main>
+  </div>
+
+  <footer class="footer">
+    <p class="footer-links"><span>© 2026 종족연구소</span><a href="terms.html">이용약관</a><a href="privacy.html">개인정보처리방침</a><a href="credits.html">운영진</a><a href="mailto:contact@thespecieslab.com">문의</a><a href="https://x.com/thespecieslab" target="_blank" rel="noopener">X</a><span>ver.2.1</span></p>
+  </footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/sidebar.js"></script>
+  <script src="../js/notifications.js"></script>
+  <script src="../js/chat.js"></script>
+  <script src="../js/utils.js"></script>
+  <script src="../js/main.js"></script>
+  <script src="../js/labber-lab.js"></script>
+</body>
+</html>

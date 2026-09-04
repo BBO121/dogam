@@ -96,6 +96,14 @@ body.labber-theme .sidebar {
   margin-left: -3px;
 }
 
+/* LABBER 아코디언 헤더 — "LABBER" 텍스트 없이 로고만 라벨로 사용.
+   텍스트가 빠져 헤더가 짧아지므로 세로 여백으로 다른 아코디언 헤더와 높이를 맞춘다.
+   (직접 자식 셀렉터라 상점 하위메뉴의 .labber-menu-logo 에는 영향 없음) */
+#accLabber > .sidebar-accordion-btn > .labber-menu-logo {
+  height: 16px;
+  margin-block: 3px;
+}
+
 /* ═══════════════════════════════════════
    페이지 소개 문구 (location / flavor text)
 ═══════════════════════════════════════ */

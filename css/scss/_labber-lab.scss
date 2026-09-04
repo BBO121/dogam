@@ -1,0 +1,820 @@
+/* ═══════════════════════════════════════════════════════════
+   LABBER 관리소 (pages/labber-lab.html)
+   — body.labber-theme 다크 리스킨 위에서 동작. 변수(--white/--text/--border/--sky…)는
+     _labber.scss 가 이미 재정의해 둔 값을 그대로 쓴다.
+   — 여기서는 "관리 단말기 / 연구 기록" 느낌의 신규 컴포넌트만 추가한다.
+     기존 .labber-* (수상한 연구실) 클래스와 겹치지 않도록 .labberlab- prefix 사용.
+═══════════════════════════════════════════════════════════ */
+
+$ll-mono: 'DepartureMono', 'Consolas', 'Courier New', monospace;
+
+/* ── 관리소 장소 설명 ────────────────────────────────────────
+   수상한 연구실 .labber-intro 와 같은 톤(italic flavor text). 단 _labber.scss의
+   모바일 규칙(.labber-intro { max-width: 52% })은 이 페이지 레이아웃과 안 맞으므로
+   재사용하지 않고 별도 클래스로 둔다.
+   제목→설명문 간격은 수상한 연구실 .labber-intro 실측값(margin-top: 24px)에 맞춤. */
+.labberlab-intro {
+  max-width: 560px;          /* 수상한 연구실 .labber-intro max-width 와 동일 (읽기 좋은 폭) */
+  margin: 24px 0 0;           /* 수상한 연구실 .labber-intro margin-top: 24px 와 동일 */
+  font-size: 13.5px;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--text-sub);
+  /* 한글 줄바꿈: 어절(공백) 단위로만 끊고, 아주 긴 단어만 강제 분리 */
+  white-space: normal;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+/* 'LABBER 관리 업무' 강조 — 수상한 연구실 .labber-intro-accent 와 동일 스타일 */
+.labberlab-intro-accent {
+  color: var(--sky);          /* labber-theme 민트 (#7DD8C8) */
+  font-weight: 600;
+}
+
+/* ── 상단 hero: 제목 + 소개문 + [대화창 + B] 한 세트 ──────────────
+   수상한 연구실 A(_labber.scss)의 실제 렌더 배치를 그대로 복제.
+
+   A 실측(1280px, .main 985px):
+     .labber-dialogue-scene : display:flex; align-items:flex-end;
+                              max-width:1150px; margin-top:-95px; height 440(=NPC높이)
+     .labber-speech-bubble  : flex:0 0 78%; position:relative; z-index:2  (width 768)
+     .labber-npc-image-wrap : position:relative; z-index:3; flex:0 0 48%;
+                              max-width:500px; height:440px; overflow:hidden;
+                              margin-left:-359px  (width 473, 이미지의 상단 74.5% 노출)
+     → NPC-wrap 하단 == 대화창 하단 (align-items:flex-end 로 정확히 일치)
+       우측 여백 103px, transform/bottom 미사용
+
+   핵심: align-items:flex-end 로 B 하단과 대화창 하단이 자동 정렬 → "한 덩어리".
+   대화창은 이 flex 흐름 안에서 NPC 높이만큼 아래에 온다(= A와 동일하게 소개문과
+   대화창 사이를 B가 채우는 구성). hero 는 relative 래퍼일 뿐(min-height/overflow 없음). */
+.labberlab-hero {
+  position: relative;   /* 래퍼 — 레이아웃은 아래 flex scene 이 담당 (min-height·overflow 없음) */
+}
+
+.labberlab-npc-scene {
+  display: flex;
+  align-items: flex-end;      /* A와 동일 — B 하단 == 대화창 하단 */
+  max-width: 1150px;          /* A와 동일 */
+  /* A(-95px)와 거의 동일하게 위로 당겨 B 상단이 "LABBER 관리소" 제목 높이까지 올라오게 함.
+     (scene 전체가 위로 이동 → B·대화창이 한 세트로 함께 올라감, 둘의 관계는 그대로) */
+  margin: -90px 0 0;
+}
+
+.labberlab-speech-bubble {
+  position: relative;
+  flex: 0 0 78%;             /* A와 동일 */
+  min-width: 0;
+  z-index: 2;                /* A와 동일 (NPC 3 아래) */
+  padding: 30px 36px;        /* A: 34px 40px */
+  background: rgba(15, 22, 21, 0.82);
+  border: 2px solid var(--sky);   /* LABBER 관리소 민트 포인트 */
+  border-radius: 6px;
+  box-shadow: var(--shadow-md);
+}
+
+/* 하단 픽셀 탭 장식 — 민트 포인트 (수상한 연구실과 동일 아이디어) */
+.labberlab-speech-bubble::after {
+  content: '';
+  position: absolute;
+  right: 24px;
+  bottom: -8px;
+  width: 18px;
+  height: 8px;
+  background: var(--sky);
+}
+
+.labberlab-npc-name {
+  font-family: $ll-mono;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--sky);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.labberlab-npc-line {
+  font-size: 15px;
+  color: #F3F5FA;
+  line-height: 1.75;
+  min-height: 1.75em;
+  max-width: 56%;             /* 대사가 우측 B 일러스트에 가리지 않도록 폭 제한 */
+}
+
+.labberlab-typing::after {
+  content: '';
+  display: inline-block;
+  width: 8px;
+  height: 14px;
+  margin-left: 3px;
+  vertical-align: -2px;
+  background: var(--sky);
+  animation: labberlab-cursor 0.9s steps(1) infinite;
+}
+@keyframes labberlab-cursor { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) {
+  .labberlab-typing::after { animation: none; opacity: 1; }
+}
+
+/* B 일러스트 — 수상한 연구실 .labber-npc-image-wrap 복제 (flex 겹침, position:relative) */
+.labberlab-npc-wrap {
+  position: relative;         /* A와 동일 — absolute 아님 */
+  z-index: 3;                 /* A와 동일 */
+  flex: 0 0 48%;              /* A와 동일 */
+  max-width: 500px;           /* A와 동일 */
+  height: 440px;              /* A와 동일 — 이미지 상단 ~74% 노출(머리~정강이), 하단 mask 페이드 */
+  overflow: hidden;
+  margin-left: -359px;        /* A와 동일 — 대화창 위로 겹침 */
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 78%, rgba(0,0,0,0.8) 86%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 78%, rgba(0,0,0,0.8) 86%, transparent 100%);
+}
+
+.labberlab-npc-img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: auto;
+  filter: drop-shadow(var(--shadow-lg));
+}
+
+/* ── 탭 / 패널 ───────────────────────────────────────────── */
+/* 탭 라벨이 영문(ABOUT LABBER / DESIGN APPROVAL / MY APPLICATIONS)이라 좁은 화면에서
+   길다 — 줄바꿈 대신 가로 스크롤로 처리(페이지 전체가 넘치지 않도록). */
+.labberlab-tab-row,
+.labberlab-status-row {
+  margin-top: 20px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar { display: none; }
+
+  .shop-tab-btn { flex-shrink: 0; white-space: nowrap; }
+}
+.labberlab-status-row { margin-top: 0; }
+
+.labberlab-panel { margin-top: 20px; min-width: 0; }
+.labberlab-panel * { overflow-wrap: break-word; }
+
+.labberlab-panel-desc {
+  font-size: 13px;
+  color: var(--text-sub);
+  line-height: 1.6;
+  margin-bottom: 18px;
+  padding: 10px 14px;
+  background: var(--sky-pale);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.labberlab-status-row { margin-bottom: 18px; }
+
+/* ── ABOUT LABBER : 연구 기록 ────────────────────────────── */
+.labberlab-record {
+  padding: 24px 26px;
+  background: rgba(15, 22, 21, 0.55);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  line-height: 1.8;
+
+  p { color: var(--text-sub); font-size: 14px; margin-bottom: 10px; }
+}
+
+.labberlab-record-title {
+  font-family: $ll-mono;          /* DepartureMono(픽셀·영문). "LABBER :" span 에 적용 */
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+/* "래버" — DepartureMono 는 한글 glyph 가 없어 시스템 monospace(GulimChe 등)로
+   fallback 되어 본문 폰트처럼 보였다. 사이트 기본 한글 폰트(Paperlogy)를 명시하고
+   픽셀 영문과 시각 높이/베이스라인이 자연스럽게 맞도록 크기·자간만 소폭 조정. */
+.labberlab-record-title-ko {
+  font-family: 'Paperlogy', 'Pretendard', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  font-size: 0.9em;
+  font-weight: 700;
+  letter-spacing: 0;
+  margin-left: 2px;
+}
+
+.labberlab-record-sub {
+  font-family: $ll-mono;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--text-mute) !important;
+  text-transform: uppercase;
+  margin-bottom: 18px !important;
+}
+
+.labberlab-record-head {
+  font-family: $ll-mono;
+  font-size: 11px;
+  letter-spacing: 0.5px;
+  padding: 14px 0;
+  margin-bottom: 8px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+
+  > div { display: flex; gap: 8px; padding: 2px 0; }
+  dt { color: var(--text-mute); min-width: 130px; text-transform: uppercase; }
+  dd { color: var(--text-sub); }
+}
+
+.labberlab-record-block {
+  padding: 18px 0;
+  border-bottom: 1px dashed var(--border);
+
+  &:last-of-type { border-bottom: none; }
+
+  h3 {
+    font-family: $ll-mono;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--sky);
+    margin-bottom: 6px;
+  }
+}
+
+.labberlab-record-lead {
+  color: var(--text) !important;
+  font-weight: 600;
+  font-size: 14px !important;
+  margin-bottom: 8px !important;
+}
+
+.labberlab-record-foot {
+  font-family: $ll-mono;
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--text-mute) !important;
+  text-align: center;
+  text-transform: uppercase;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── 특성 탭 (POD / CARTRIDGE / SUBJECT) ─────────────────────
+   전부 .labber-trait- prefix — 다른 페이지·공통 CSS 와 겹치지 않음.
+   색/폰트/톤은 LABBER 관리소(body.labber-theme) 변수 그대로 사용. */
+.labberlab-traits-title {
+  font-family: $ll-mono;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: var(--sky);
+  margin-bottom: 14px;
+}
+
+/* 하위 탭 — 상위 탭(.shop-tab-btn, 폴더형)과 확실히 구분되는 작은 pill */
+.labber-trait-subtabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 22px;
+}
+
+.labber-trait-subtab {
+  padding: 6px 16px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-sub);
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.labber-trait-subtab:hover { color: var(--sky); border-color: var(--sky); }
+.labber-trait-subtab.active {
+  color: #0b1512;
+  background: var(--sky);
+  border-color: var(--sky);
+}
+
+/* 목록 — POD / CARTRIDGE / SUBJECT 가 공유하는 grid 규칙 (데스크톱 2열) */
+.labber-trait-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+/* .labber-trait-list 의 display 값이 브라우저 기본 [hidden]{display:none} 를
+   덮어써서 하위 탭 전환이 화면에 반영되지 않던 문제 — LABBER 전용으로 명시 복구.
+   (상위 .labberlab-panel 은 display 규칙이 없어 [hidden] 이 그대로 동작) */
+.labber-trait-list[hidden] { display: none !important; }
+
+/* 카테고리 라벨(POD / CARTRIDGE / SUBJECT) — 2열 전체 폭 차지 */
+.labber-trait-cat {
+  grid-column: 1 / -1;
+  font-family: $ll-mono;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--text-mute);
+  text-transform: uppercase;
+  margin-bottom: 2px;
+}
+
+/* 서브젝트 내부 분류 헤더(어류 / 조류 / 파충류 / 특이) — 2열 전체 폭 차지 */
+.labber-trait-group {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--sky);
+
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+  &:first-of-type { margin-top: 2px; }
+}
+
+/* 특성 항목 — 데스크톱: 아트워크(왼쪽) + 정보(오른쪽).
+   2열 grid 안에서 같은 줄 카드끼리 높이가 맞도록 stretch(grid 기본) 유지. */
+.labber-trait-item {
+  display: flex;
+  gap: 16px;
+  padding: 18px;
+  background: rgba(15, 22, 21, 0.55);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  /* #trait-* 딥링크로 scrollIntoView 될 때 sticky 헤더(60px)에 안 가리도록 여유 */
+  scroll-margin-top: 76px;
+}
+
+/* 아트워크 영역 — 시각적 박스(배경/보더/모서리)는 없애고 레이아웃 공간만 유지.
+   크기(120px 정사각) 고정 → 이미지 유무·삭제와 무관하게 텍스트 영역이 당겨지지 않음.
+   그림은 이 투명 컨테이너 안에서 중앙 정렬되고, 투명 PNG면 카드 배경 위에 그대로 떠 보인다. */
+.labber-trait-artwork {
+  flex: 0 0 120px;
+  width: 120px;
+  aspect-ratio: 1 / 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* overflow:hidden 제거 — 시각적 박스가 없으므로 img 를 1.2배 확대해도 잘리지 않게 한다.
+     (레이아웃 박스는 여전히 120px 고정 → 카드 높이·2열·텍스트 위치 불변) */
+}
+
+.labber-trait-artwork img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;   /* 잘림 없이 비율 유지 */
+  display: block;
+  /* 표시 크기만 1.2배(약 20%) 확대. transform 이라 레이아웃 박스(120px)는 그대로 —
+     4종 포드 공통 규칙(개별 조정 없음). gap:16px 안쪽으로만 넘쳐 텍스트와 안 겹침. */
+  transform: scale(1.2);
+  transform-origin: center;
+}
+
+/* 이미지 없을 때만 보이는 아주 희미한 placeholder — img 추가 시 자동 숨김(삭제해도 됨) */
+.labber-trait-artwork-ph {
+  font-family: $ll-mono;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text-mute);
+  opacity: 0.3;
+  pointer-events: none;
+  user-select: none;
+}
+.labber-trait-artwork:has(img) .labber-trait-artwork-ph { display: none; }
+
+/* ── 서브젝트 준비중 placeholder ──────────────────────────────
+   아트워크 자리(.labber-trait-artwork, 120px 정사각·모바일 최대 200px)를 채우는 박스.
+   .labber-trait-ph-pending 스코프 전용 — 포드 실제 이미지 / 카트리지 faint "ARTWORK" 표시엔 영향 없음. */
+.labber-trait-ph-pending {
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px;
+  border: 1px dashed rgba(125, 216, 200, 0.34);   /* 얇은 민트 dashed */
+  border-radius: 8px;
+  /* 어두운 반투명 + 약한 내부 그라데이션 + 아주 옅은 scan-line */
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      rgba(125, 216, 200, 0.045) 0 1px,
+      transparent 1px 5px
+    ),
+    linear-gradient(155deg, rgba(24, 32, 36, 0.55), rgba(15, 22, 21, 0.32));
+  user-select: none;
+}
+
+.labber-trait-ph-pending-main {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--sky);                 /* LABBER 민트 */
+  line-height: 1.2;
+}
+
+.labber-trait-ph-pending-sub {
+  font-family: $ll-mono;             /* DepartureMono — 영문 픽셀, 연구소 UI 톤 */
+  font-size: 8px;
+  letter-spacing: 2px;
+  line-height: 1.5;
+  text-align: center;
+  text-transform: uppercase;
+  color: var(--text-mute);
+  max-width: 100%;
+}
+
+/* ── 디자인 승인 탭 준비중 (런칭 임시 비공개) ──────────────────
+   서브젝트 준비중(.labber-trait-ph-pending)과 디자인 언어 공유 — dashed 민트 테두리 +
+   어두운 반투명 + 옅은 scan-line. 탭 전체가 준비중이라 더 큰 empty-state 형태. */
+.labberlab-approval-pending {
+  margin: 8px 0;
+  padding: 56px 28px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  border: 1px dashed rgba(125, 216, 200, 0.34);
+  border-radius: 12px;
+  background:
+    repeating-linear-gradient(to bottom, rgba(125, 216, 200, 0.045) 0 1px, transparent 1px 6px),
+    linear-gradient(155deg, rgba(24, 32, 36, 0.55), rgba(15, 22, 21, 0.30));
+}
+.labberlab-approval-pending-eyebrow {
+  font-family: $ll-mono;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
+.labberlab-approval-pending-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: var(--sky);
+}
+.labberlab-approval-pending-desc {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--text-sub);
+}
+@media (max-width: 640px) {
+  .labberlab-approval-pending { padding: 40px 18px; }
+  .labberlab-approval-pending-title { font-size: 19px; }
+}
+
+.labber-trait-body { flex: 1; min-width: 0; }
+
+.labber-trait-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.labber-trait-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  word-break: keep-all;      /* '크레스티드 게코' 등 긴 이름을 어절 단위로 줄바꿈 */
+  overflow-wrap: anywhere;
+}
+
+.labber-trait-grade {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+
+  &.is-standard   { background: #24303a; color: #7dd8c8; }  /* 표준 — 민트 */
+  &.is-special    { background: #3a3316; color: #e8c96b; }  /* 특이 — 앰버 */
+  &.is-restricted { background: #3a1c1c; color: #f0a0a0; }  /* 제한 — 레드 */
+}
+
+.labber-trait-desc {
+  font-size: 13.5px;
+  color: var(--text-sub);
+  line-height: 1.75;
+}
+
+/* 획득처 — 보조 정보. 값이 정해지지 않은 동안은 label과 동일하게 무존재감있게,
+   값이 생기면(텍스트/링크) 살짝 더 또렷하게. 인접 마진은 위 요소와 collapse되어
+   desc 유무와 무관하게 카드 세로 간격이 일정하게 유지됨. */
+.labber-trait-acquisition {
+  margin-top: 8px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-mute);
+}
+.labber-trait-acquisition-label { color: var(--text-mute); }
+.labber-trait-acquisition-null { color: var(--text-mute); }        /* 미정 — label과 동일 톤 */
+.labber-trait-acquisition-plain { color: var(--text-sub); }        /* 값은 있으나 링크 없음 */
+.labber-trait-acquisition-link {
+  color: var(--sky);
+  text-decoration: none;
+  transition: color 0.15s;
+}
+.labber-trait-acquisition-link:hover,
+.labber-trait-acquisition-link:focus-visible {
+  text-decoration: underline;
+}
+/* 공개 전 — href 없는 <a>. 클릭 불가, 주변 텍스트와 어울리는 톤(값 있음/링크 없음 = plain 과 동일). */
+.labber-trait-acquisition-link.is-disabled {
+  color: var(--text-sub);
+  cursor: default;
+}
+.labber-trait-acquisition-link.is-disabled:hover,
+.labber-trait-acquisition-link.is-disabled:focus-visible {
+  text-decoration: none;
+}
+
+/* 제작자 크레딧 — 카드에서 시각 우선순위가 가장 낮은 정보. 작은 글씨, 큰 구분선/badge 없음 */
+.labber-trait-credit {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--text-mute);
+}
+.labber-trait-credit-name {
+  color: var(--text-sub);
+  font-weight: 600;
+}
+
+/* 태블릿 — 2열은 유지하되 카드 폭이 좁아지므로 아트워크·이름만 축소 */
+@media (max-width: 1023px) and (min-width: 768px) {
+  .labber-trait-item { gap: 14px; padding: 16px; }
+  .labber-trait-artwork {
+    flex: 0 0 96px;
+    width: 96px;
+  }
+  .labber-trait-name { font-size: 15px; }
+}
+
+/* 모바일 — 1열 + 아트워크(위) + 정보(아래) */
+@media (max-width: 767px) {
+  .labber-trait-list {
+    grid-template-columns: 1fr;
+  }
+  .labber-trait-item {
+    flex-direction: column;
+    gap: 14px;
+    padding: 16px;
+  }
+  .labber-trait-artwork {
+    flex: 0 0 auto;
+    width: 100%;
+    max-width: 200px;
+    margin: 0 auto;
+  }
+  .labber-trait-group { margin-top: 8px; }
+}
+
+/* ── 신청 폼 ─────────────────────────────────────────────── */
+.labberlab-form { margin-top: 4px; }
+
+/* ── 내 디자인 승인 신청 (디자인 승인 탭 내부, 구 MY APPLICATIONS) ── */
+.labberlab-my-section {
+  margin-top: 32px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.labberlab-my-heading {
+  font-family: $ll-mono;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--sky);
+  margin-bottom: 14px;
+}
+
+/* ── 신청 카드 목록 (MY / admin 공용) ────────────────────── */
+.labberlab-app-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.labberlab-app-card {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background: rgba(15, 22, 21, 0.55);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &.is-focused {
+    border-color: var(--sky);
+    box-shadow: 0 0 0 2px var(--sky-light);
+  }
+}
+
+.labberlab-app-thumb {
+  flex: 0 0 120px;
+  height: 120px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--bg-sub);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; }
+  span { font-size: 11px; color: var(--text-mute); }
+}
+
+.labberlab-app-main { min-width: 0; flex: 1; }
+
+.labberlab-app-top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.labberlab-app-status {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+
+  &.is-pending  { background: #24303a; color: #7dd8c8; }
+  &.is-approved { background: #14351f; color: #6ee7a8; }
+  &.is-revision { background: #3a3316; color: #e8c96b; }
+  &.is-rejected { background: #3a1c1c; color: #f0a0a0; }
+}
+
+.labberlab-app-no {
+  font-family: $ll-mono;
+  font-size: 11px;
+  color: var(--text-mute);
+  letter-spacing: 0.5px;
+}
+
+.labberlab-app-date { font-size: 12px; color: var(--text-mute); }
+
+.labberlab-app-applicant {
+  font-size: 12px;
+  color: var(--sky);
+  margin-left: auto;
+}
+
+.labberlab-app-fields {
+  font-size: 13px;
+  line-height: 1.65;
+
+  > div { display: flex; gap: 10px; padding: 3px 0; }
+  dt {
+    flex: 0 0 88px;
+    color: var(--text-mute);
+    font-family: $ll-mono;
+    font-size: 11px;
+    padding-top: 2px;
+    text-transform: uppercase;
+  }
+  dd { color: var(--text-sub); min-width: 0; white-space: pre-wrap; word-break: break-word; }
+}
+
+.labberlab-app-comment {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border-radius: 6px;
+  background: var(--sky-pale);
+  border: 1px solid var(--border);
+
+  &.is-strong { border-color: #e8c96b; background: rgba(58, 51, 22, 0.35); }
+
+  p { font-size: 13px; color: var(--text); line-height: 1.6; }
+}
+
+.labberlab-app-comment-label {
+  display: block;
+  font-family: $ll-mono;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--text-mute);
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.labberlab-app-actions {
+  margin-top: 14px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ── 관리자 컨트롤 ───────────────────────────────────────── */
+.labberlab-admin-controls {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px dashed var(--border);
+
+  .form-label { display: block; margin: 8px 0 4px; }
+  .form-input, .form-textarea { width: 100%; }
+  .labberlab-admin-status { width: 160px; }
+  .btn-secondary { margin-top: 10px; }
+}
+
+.labberlab-admin-err { margin: 6px 0 0; }
+
+/* ── 모바일 ──────────────────────────────────────────────── */
+@media (max-width: 767px) {
+  /* 모바일 설명문 — 수상한 연구실 .labber-intro 모바일과 같은 원리:
+     오른쪽에 B가 크게 걸치므로, 텍스트 폭 자체를 좁혀 그 공간을 비워둔다.
+     (수상한 연구실 52%보다는 살짝 넉넉하게 — 제목 줄은 그대로 전체 폭 사용,
+     설명문만 왼쪽 컬럼으로 좁힘. 어절 단위 줄바꿈은 .labberlab-intro 기본 규칙이 이미 처리) */
+  .labberlab-intro {
+    font-size: 13px;
+    max-width: 58%;
+    line-height: 1.7;          /* 수상한 연구실 모바일 line-height 와 동일 */
+  }
+
+  /* B(.labberlab-npc-wrap)의 absolute 기준점 — A의 #pageContent 역할을 여기서는
+     hero가 담당(라벨러 관리소는 hero로 헤더+scene을 이미 감싸고 있어 #pageContent를
+     건드릴 필요가 없다 → 수상한 연구실에는 전혀 영향 없음).
+     overflow-x만 숨겨 가로 오버플로만 막고, overflow-y는 그대로 둬 B가 위로
+     자유롭게 겹쳐 보이게 한다(A의 #pageContent overflow-x:hidden과 동일 안전장치). */
+  .labberlab-hero {
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* 모바일: 수상한 연구실의 NPC A와 동일한 원리 — B(.labberlab-npc-wrap)를
+     scene이 아니라 hero(.labberlab-hero) 기준 absolute로 띄운다.
+     scene은 더 이상 positioned 컨테이너가 아니므로(position 미지정 = static),
+     absolute인 B는 자동으로 가장 가까운 positioned 조상인 hero를 기준으로 배치되어
+     제목/설명문 위까지 자유롭게 올라올 수 있다 — A가 #pageContent 기준으로
+     제목 높이까지 올라오는 것과 동일한 구조. scene에는 대화창만 남는다. */
+  .labberlab-npc-scene {
+    display: block;
+    max-width: none;
+    margin: 20px 0 6px;       /* A의 .labber-dialogue-scene 모바일 margin-top:20px 와 동일 */
+  }
+
+  .labberlab-speech-bubble {
+    flex: none;              /* 데스크톱 flex:0 0 78% 무효화 */
+    width: 100%;
+    padding: 16px 18px;
+    min-height: 116px;
+  }
+
+  .labberlab-npc-line {
+    max-width: 56%;          /* 대사가 우측 B에 가리지 않게 (길면 자연 줄바꿈) */
+    font-size: 13.5px;
+  }
+
+  .labberlab-npc-wrap {
+    position: absolute;      /* hero(.labberlab-hero) 기준 — A의 #pageContent 기준 absolute와 동일 원리 */
+    flex: none;
+    top: 44px;                /* A(_labber.scss)의 top:44px 와 동일값 — 두 페이지 헤더 구조(breadcrumb+title)가
+                                  동일해서 "제목 높이까지 올라오는" 지점이 같다 */
+    margin-left: 0;          /* 데스크톱 flex용 margin-left(-359px) 무효화 */
+    max-width: none;
+    /* 기존(160~240px)보다 크게 — PC/A급 존재감. 높이는 항상 width*0.88 비율 유지
+       (PC의 440/500 크롭 비율과 동일 — 머리~무릎 크롭 지점이 달라지지 않는다) */
+    --llb-npc-w: clamp(235px, 66vw, 340px);
+    width: var(--llb-npc-w);
+    height: calc(var(--llb-npc-w) * 0.88);
+    /* labber_b.png 실측: 캔버스(PNG) 오른쪽 19.8%가 완전 투명이고 실제 그림(불투명 픽셀)은
+       그 앞(왼쪽 80.2% 지점)에서 끝난다. right를 PNG 캔버스 기준(예: 0)으로 두면 그림은
+       여전히 캔버스 폭의 19.8%만큼 왼쪽에 떠 있게 된다 — "그림 기준"으로 오른쪽에 붙이려면
+       그 투명 여백만큼 박스를 오른쪽으로 더 밀어야 한다(hero의 overflow-x:hidden이 캔버스의
+       나머지 투명 영역이 화면 밖으로 나가는 걸 안전하게 잘라줌 → 그림 자체는 잘리지 않음).
+       -width*0.198 은 폭이 달라져도(clamp) 항상 같은 비율로 정확히 맞도록 계산식으로 둠. */
+    right: calc(var(--llb-npc-w) * -0.198);
+  }
+
+  .labberlab-record-head dt { min-width: 104px; }
+
+  .labberlab-app-card { flex-direction: column; gap: 12px; }
+  .labberlab-app-thumb { flex-basis: auto; width: 100%; height: 200px; }
+  .labberlab-app-thumb img { object-fit: contain; }
+
+  .labberlab-app-fields > div { flex-direction: column; gap: 2px; }
+  .labberlab-app-fields dt { flex-basis: auto; }
+
+  .labberlab-app-applicant { margin-left: 0; }
+
+  .labberlab-admin-controls .labberlab-admin-status { width: 100%; }
+}

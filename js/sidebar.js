@@ -67,6 +67,17 @@ async function initSidebar() {
       </div>
     </div>
 
+    <!-- ── LABBER 아코디언 (MY 바로 아래) ──────────── -->
+    <div class="sidebar-accordion" id="accLabber">
+      <button class="sidebar-accordion-btn" onclick="toggleAccordion('accLabber')">
+        <img src="../images/labber/labber_logo.png" alt="LABBER" class="labber-menu-logo">
+        <svg class="sidebar-accordion-arrow" id="arrLabber" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <div class="sidebar-accordion-body" id="bodyLabber">
+        <a href="labber-lab.html" class="sidebar-subitem ${path === 'labber-lab.html' ? 'active' : ''}">관리소</a>
+      </div>
+    </div>
+
     <!-- ── 상점 아코디언 ─────────────────────────── -->
     <div class="sidebar-accordion" id="accShop">
       <button class="sidebar-accordion-btn" onclick="toggleAccordion('accShop')">
@@ -124,6 +135,7 @@ async function initSidebar() {
                         'bug-report.html','bug-report-write.html','bug-report-detail.html',
                         'species-apply.html','species-apply-write.html','species-apply-detail.html'];
   const shopPages     = ['shop.html','labber.html'];
+  const labberPages   = ['labber-lab.html'];
 
   const isUserProfile = path === 'profile.html' && new URLSearchParams(window.location.search).get('user');
   const isMyProfile   = path === 'profile.html' && !new URLSearchParams(window.location.search).get('user');
@@ -140,6 +152,7 @@ async function initSidebar() {
   if (myPages.includes(path)   || isMyProfile)   openAccordion('My');
   if (supportPages.includes(path))           openAccordion('Support');
   if (shopPages.includes(path))              openAccordion('Shop');
+  if (labberPages.includes(path))            openAccordion('Labber');
 
   // 종족 관련 페이지: 종족 버튼 active 표시
   if (path === 'species.html' || path === 'species-list.html') {
