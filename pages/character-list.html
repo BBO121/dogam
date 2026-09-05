@@ -97,7 +97,7 @@
     async function loadCharacters() {
       const [{ data: userList }, { data: speciesRows, error: speciesErr }] = await Promise.all([
         sb.rpc('get_all_users'),
-        sb.from('species').select('name').order('name'),
+        sb.from('species').select('name').neq('id', LABBER_SPECIES_ID).order('name'), // LABBER 제외 (개체기록실 전용)
       ]);
 
       if (userList) userList.forEach(u => { if (u.id && u.nickname) idToNick[u.id] = u.nickname; });

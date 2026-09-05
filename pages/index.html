@@ -191,7 +191,7 @@
         { data: updateNoteList },
         { data: eventList },
       ] = await Promise.all([
-        sb.from('species').select('id, name, image_url, thumbnail_url, default_image_index, is_sensitive, sensitive_note, age_limit').order('created_at', { ascending: false }).limit(18),
+        sb.from('species').select('id, name, image_url, thumbnail_url, default_image_index, is_sensitive, sensitive_note, age_limit').neq('id', LABBER_SPECIES_ID).order('created_at', { ascending: false }).limit(18),
         sb.from('adoptions').select('id, character_name, species_name, adoption_type, status, image_url, thumbnail_url, characters(is_sensitive, sensitive_note)').eq('is_featured_event', false).or('status.is.null,status.neq.완료').order('created_at', { ascending: false }).limit(8),
         // 이벤트 경매 — 일반 8개 제한과 무관하게 항상 최상단에 전부 표시 (일반 목록과 중복 없음)
         sb.from('adoptions').select('id, character_name, species_name, adoption_type, status, image_url, thumbnail_url, characters(is_sensitive, sensitive_note)').eq('is_featured_event', true).or('status.is.null,status.neq.완료').order('created_at', { ascending: false }),

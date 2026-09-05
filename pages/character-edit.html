@@ -419,6 +419,7 @@
   <script src="../js/utils.js?v=2"></script>
   <script src="../js/search.js"></script>
   <script src="../js/step-priority.js"></script>
+  <script src="../js/labber-traits.js"></script>
   <script>
     const charId = new URLSearchParams(window.location.search).get('id');
 
@@ -1339,10 +1340,54 @@
 
     async function loadCustomFields(speciesName, existingValues) {
       if (!speciesName) return;
-      const { data: sp } = await sb.from('species').select('custom_fields').eq('name', speciesName).single();
+      const { data: sp } = await sb.from('species').select('id, custom_fields').eq('name', speciesName).single();
       if (!sp?.custom_fields?.length) return;
       document.getElementById('customFieldsSection').style.display = '';
-      document.getElementById('customFieldInputs').innerHTML = sp.custom_fields.map(field => `
+
+      // LABBER 개체 전용: POD / CARTRIDGE / SUBJECT 는 자유입력 대신 관리소 특성(js/labber-traits.js) 선택형.
+      //  - CARTRIDGE : 복수 선택(체크박스) — add-on 특성
+      //  - POD / SUBJECT : 단일 선택(라디오) — labber_design_applications(pod_description/subject_description) 구조와 동일
+      //  - INK 등 그 외 필드 : 기존 자유입력 유지
+      const isLabber = (typeof LABBER_SPECIES_ID !== 'undefined') && sp.id === LABBER_SPECIES_ID;
+      const labberPickerCfg = (field) => {
+        if (!isLabber || typeof labberTraitGroups !== 'function') return null;
+        const key = String(field).trim().toLowerCase();
+        return (key in LABBER_TRAIT_TYPES) ? { type: key, multi: LABBER_TRAIT_TYPES[key].multi } : null;
+      };
+
+      document.getElementById('customFieldInputs').innerHTML = sp.custom_fields.map(field => {
+        const cfg = labberPickerCfg(field);
+        if (cfg) {
+          const selected = new Set(labberTraitCodesFromValue(cfg.type, existingValues?.[field]));
+          const inputType = cfg.multi ? 'checkbox' : 'radio';
+          const nameAttr  = cfg.multi ? '' : ` name="labberpick_${field}"`;
+          let rowsHtml = '';
+          if (!cfg.multi) {
+            rowsHtml += `
+            <label class="labber-trait-pick">
+              <input type="radio"${nameAttr} value=""${selected.size ? '' : ' checked'}>
+              <span class="labber-trait-pick-name labber-trait-pick-none">— 선택 안 함 —</span>
+            </label>`;
+          }
+          labberTraitGroups(cfg.type).forEach(g => {
+            if (g.group) rowsHtml += `<p class="labber-trait-pick-group">${g.group}</p>`;
+            rowsHtml += g.items.map(t => `
+            <label class="labber-trait-pick">
+              <input type="${inputType}"${nameAttr} value="${t.code}"${selected.has(t.code) ? ' checked' : ''}>
+              <span class="labber-trait-pick-name">${t.name}</span>
+              <span class="labber-trait-grade ${t.gradeClass}">${t.gradeLabel}</span>
+            </label>`).join('');
+          });
+          return `
+            <div class="form-group" style="margin-bottom:12px;">
+              <label class="form-label" style="font-size:13px; font-weight:500;">${field}</label>
+              <div class="labber-trait-picker" data-field="${field}" data-trait-type="${cfg.type}">
+                ${rowsHtml}
+              </div>
+              <p style="margin:6px 0 0; font-size:12px; color:var(--text-mute);">LABBER 관리소 특성 기준 · 등급은 자동 적용돼요.${cfg.multi ? '' : ' (하나만 선택)'}</p>
+            </div>`;
+        }
+        return `
         <div class="form-group" style="margin-bottom:12px;">
           <label class="form-label" style="font-size:13px; font-weight:500;">${field}</label>
           <div style="display:flex; gap:8px; align-items:center;">
@@ -1355,8 +1400,8 @@
               삭제
             </button>
           </div>
-        </div>
-      `).join('');
+        </div>`;
+      }).join('');
     }
 
     async function loadExistingCategories(speciesName) {
@@ -2119,6 +2164,13 @@
         document.querySelectorAll('.custom-field-input').forEach(input => {
           const val = input.value.trim();
           if (val) customFieldValues[input.dataset.field] = val;
+        });
+        // LABBER 특성 선택형 필드 (POD/CARTRIDGE/SUBJECT) — 선택된 trait code 배열로 저장.
+        // 체크박스(복수)·라디오(단일) 공통. "— 선택 안 함 —"(value="") 은 filter(Boolean) 로 제외.
+        // 중복은 input 그룹 특성상 자동 방지.
+        document.querySelectorAll('.labber-trait-picker').forEach(picker => {
+          const codes = [...picker.querySelectorAll('input:checked')].map(el => el.value).filter(Boolean);
+          if (codes.length) customFieldValues[picker.dataset.field] = codes;
         });
 
         const isSensitive   = document.getElementById('isSensitive').checked;

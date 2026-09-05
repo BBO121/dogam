@@ -160,7 +160,8 @@
         </section>
 
         <!-- ═══ 특성 (POD / CARTRIDGE / SUBJECT) — DB·신규 시스템 없음, JS 정적 데이터 ═══
-             카드 마크업은 js/labber-lab.js 의 TRAIT_DATA 로 관리 (아래 컨테이너 참고).
+             특성 데이터는 js/labber-traits.js 의 TRAIT_DATA (공통 모듈 — 관리소·개체 수정창·개체 상세 공유).
+             카드 마크업은 js/labber-lab.js 의 renderTraits() 로 관리 (아래 컨테이너 참고).
              아트워크는 미준비 상태라 TRAIT_DATA의 각 artwork 필드는 항상 주석 처리된
              <img src="../images/labber/traits/*.png" alt="..."> 로 렌더링됨.
              (이미지 파일을 올리면 renderTraitCard()의 artworkImgComment 부분만 실제
@@ -176,7 +177,7 @@
           </div>
 
           <!-- ── 포드 / 카트리지 / 서브젝트 ────────────────────
-               카드 콘텐츠는 js/labber-lab.js 의 TRAIT_DATA + renderTraits() 가
+               카드 콘텐츠는 js/labber-traits.js 의 TRAIT_DATA + js/labber-lab.js 의 renderTraits() 가
                채운다 (획득처 · DESIGN BY 크레딧을 포함한 카드 반복 마크업을
                HTML에 직접 박지 않기 위함). 아래 컨테이너는 initPage() 실행 전까지
                비어 있으며, .labber-trait-cat 라벨도 함께 렌더링된다. -->
@@ -294,6 +295,7 @@
   <script src="../js/chat.js"></script>
   <script src="../js/utils.js"></script>
   <script src="../js/main.js"></script>
+  <script src="../js/labber-traits.js"></script>
   <script src="../js/labber-lab.js"></script>
 </body>
 </html>

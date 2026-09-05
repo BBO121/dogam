@@ -1,0 +1,22 @@
+/* ═══════════════════════════════════════
+   LABBER 개체기록실 (labber-records.html)
+   — species.html?id=204 "소속 개체" 영역을 그대로 재사용.
+   목록/카드/필터 마크업·클래스(.section / .character-grid / .character-card /
+   .list-sort / .list-search / .count-badge 등)는 전부 CSS 변수 기반이고
+   body.labber-theme(_labber.scss)가 그 변수를 다크·민트로 리스킨하므로
+   색 오버라이드 없이 "종족 상세의 다크 버전"으로 렌더된다.
+   여기엔 컨테이너 여백 + 라이트 테마 고정값(#F8FAFC) 다크화만 둔다.
+═══════════════════════════════════════ */
+.labber-records-page .labber-records-panel {
+  margin-top: 4px;
+}
+
+/* .character-img 의 라이트 고정 배경(#F8FAFC)을 다크 톤으로 — 이미지 로딩 전/여백 노출 대비 */
+.labber-records-page .character-img {
+  background-color: var(--sky-pale);
+}
+
+/* 관리 모드 체크박스가 얹히는 카드 상단 좌측 여백감만 유지(기존 species.html 과 동일 위치) */
+.labber-records-page .char-checkbox {
+  accent-color: var(--sky);
+}

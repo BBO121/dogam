@@ -1,0 +1,28 @@
+/* ═══════════════════════════════════════
+   LABBER 개체 상세 (character.html — species_id=204 개체)
+   — 새 테마가 아니다. character.html <body> 에 .labber-theme 를 추가하면
+   _labber.scss 의 CSS 변수 리스킨(white / text / border / sky 계열 / 그림자)이
+   그대로 적용되어 "수상한 연구실 / LABBER 관리소" 와 동일한 다크·민트 톤이 된다.
+   여기서는 개체 상세 마크업에 남아 있는 '라이트 고정값(#fff/#F8FAFC/#fafbfc)' 만
+   .labber-individual-detail 스코프에서 다크로 덮는다. 일반 종족 개체 상세
+   (.labber-individual-detail 없음)에는 전혀 영향이 없다.
+═══════════════════════════════════════ */
+.labber-individual-detail {
+
+  /* 메인 이미지 영역 배경 (style.scss .char-img-area 의 #F8FAFC) */
+  .char-img-area { background: var(--sky-pale); }
+
+  /* char_sections / 제작자 TOS 탭 — style.scss 의 라이트 고정값 */
+  .guide-tab-nav      { background: var(--sky-pale); }
+  .guide-tab-btn.active { background: var(--white); }
+  .guide-tab-panel    { background: var(--white); }
+
+  /* 성장 Step 버튼 (character.html 인라인 <style> 의 background:#fff) */
+  .step-btn { background: var(--white); }
+
+  /* 갤러리 타일 placeholder (character.html 인라인 <style> 의 background:#F8FAFC) */
+  .gallery-tile { background: var(--sky-pale); }
+
+  /* 관계 아바타 placeholder 배경 (style.scss .relation-avatar 의 #e2e8f0) */
+  .relation-avatar { background: var(--sky-light); }
+}

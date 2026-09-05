@@ -145,12 +145,15 @@ async function getMyCharacters(userId, nickname) {
 }
 
 // 내 종족 조회 — owner_user_id 기준
+// LABBER 종족은 제외한다 (개체기록실 전용 — utils.js LABBER_SPECIES_ID 참고).
 async function getMySpecies(userId) {
   if (!userId) return { data: [], error: null };
-  const { data, error } = await sb
+  let builder = sb
     .from('species').select('*')
     .eq('owner_user_id', userId)
     .order('created_at', { ascending: false });
+  if (typeof LABBER_SPECIES_ID !== 'undefined') builder = builder.neq('id', LABBER_SPECIES_ID);
+  const { data, error } = await builder;
   return { data: data ?? [], error };
 }
 

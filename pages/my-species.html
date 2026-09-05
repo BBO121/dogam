@@ -124,9 +124,16 @@
         }
       }
 
-      const { data, error } = await sb
+      // LABBER는 개체기록실 전용이라 일반 종족 목록에서 숨기지만,
+      // 종족주 본인이 자기 "내 종족"을 볼 때는 노출한다 (LABBER 개체 등록 진입점).
+      // 타인의 종족 목록(?owner / ?owner_id)에서는 계속 숨긴다.
+      const isOwnList = !ownerParam && !ownerIdParam;
+      let speciesQuery = sb
         .from('species').select('id, name, image_url, thumbnail_url, default_image_index, is_sensitive, sensitive_note, age_limit')
-        .eq('owner_user_id', targetUserId).order('name');
+        .eq('owner_user_id', targetUserId)
+        .order('name');
+      if (!isOwnList) speciesQuery = speciesQuery.neq('id', LABBER_SPECIES_ID);
+      const { data, error } = await speciesQuery;
 
       document.getElementById('pageLoading').style.display = 'none';
       document.getElementById('pageContent').style.display = 'block';

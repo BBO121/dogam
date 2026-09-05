@@ -1,0 +1,80 @@
+/* ═══════════════════════════════════════
+   LABBER 특성 선택/표시 UI (js/labber-traits.js 연동)
+   - .labber-trait-picker : 개체 수정창(character-edit.html)의 POD/CARTRIDGE/SUBJECT 선택 목록
+     (CARTRIDGE=체크박스 복수, POD/SUBJECT=라디오 단일). 일반(라이트) 페이지에서도 쓰이므로
+     자체 색으로 완결. 등급 badge(.labber-trait-grade)는 _labber-lab.scss 의 전역 규칙 재사용.
+   - .labber-trait-line(s) : 개체 상세(character.html)의 LABBER 개체 — POD/CARTRIDGE/SUBJECT
+     특성 한 줄(특성명 + 등급 badge) 표시. .labber-individual-detail 스코프 안에서만
+     (다른 종족 개체 상세엔 영향 없음).
+═══════════════════════════════════════ */
+
+/* ── 수정창 선택 목록 ── */
+.labber-trait-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: var(--white);
+}
+
+.labber-trait-pick {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.labber-trait-pick input[type="checkbox"],
+.labber-trait-pick input[type="radio"] {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+  cursor: pointer;
+  accent-color: #4fbfae; /* labber 민트 (--sky-dark 다크팔레트 값) — 라이트 페이지에서도 동일 톤 */
+}
+
+.labber-trait-pick-name { flex: 1; min-width: 0; }
+.labber-trait-pick-none { color: var(--text-mute); }
+
+/* 그룹 소제목 (SUBJECT: 어류/조류/파충류/특이) */
+.labber-trait-pick-group {
+  margin: 6px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-mute);
+  letter-spacing: 0.3px;
+}
+
+/* ── 개체 상세 표시 ── */
+.labber-individual-detail {
+  /* 값 영역: 다른 커스텀 필드(INK 등)와 동일하게 오른쪽 정렬. 여러 줄이어도 각 줄 전체가 오른쪽. */
+  .labber-trait-lines {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    text-align: right;
+  }
+
+  .labber-trait-line {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* 특성명: 흰색(테마 기본 텍스트). 클릭 가능하지만 링크 티는 안 냄 — hover 시에만 민트 포인트. */
+  .labber-trait-line-name {
+    color: var(--text);
+    font-weight: 600;
+    text-decoration: none;
+  }
+  .labber-trait-line-name:hover { color: var(--sky); }
+
+  /* CARTRIDGE 는 복수로 나열되므로 특성명만 한 단계 가볍게(medium) — 정보 위계.
+     대표값인 POD/SUBJECT(+ INK 등 일반 커스텀필드)는 bold 유지. */
+  .labber-trait-lines--cartridge .labber-trait-line-name { font-weight: 500; }
+}

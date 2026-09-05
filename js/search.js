@@ -111,6 +111,9 @@ async function searchSpecies(query, options = {}) {
       { count: 'exact' }
     );
 
+    // LABBER 종족은 일반 종족 목록/통합검색에 노출하지 않는다 (개체기록실 전용). utils.js 참고.
+    if (typeof LABBER_SPECIES_ID !== 'undefined') builder = builder.neq('id', LABBER_SPECIES_ID);
+
     if (q.length >= minLength) builder = builder.ilike('name', `%${escapeIlike(q)}%`);
     if (openType === 'open')   builder = builder.eq('open_type', 'open');
     if (openType === 'closed') builder = builder.eq('open_type', 'closed');

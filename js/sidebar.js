@@ -75,6 +75,7 @@ async function initSidebar() {
       </button>
       <div class="sidebar-accordion-body" id="bodyLabber">
         <a href="labber-lab.html" class="sidebar-subitem ${path === 'labber-lab.html' ? 'active' : ''}">관리소</a>
+        <a href="labber-records.html"     class="sidebar-subitem ${path === 'labber-records.html'     ? 'active' : ''}">개체기록실</a>
       </div>
     </div>
 
@@ -135,7 +136,7 @@ async function initSidebar() {
                         'bug-report.html','bug-report-write.html','bug-report-detail.html',
                         'species-apply.html','species-apply-write.html','species-apply-detail.html'];
   const shopPages     = ['shop.html','labber.html'];
-  const labberPages   = ['labber-lab.html'];
+  const labberPages   = ['labber-lab.html','labber-records.html'];
 
   const isUserProfile = path === 'profile.html' && new URLSearchParams(window.location.search).get('user');
   const isMyProfile   = path === 'profile.html' && !new URLSearchParams(window.location.search).get('user');
@@ -264,7 +265,10 @@ async function loadSpeciesSidebar() {
   const sheetPanel = document.getElementById('speciesSheetPanel');
   if (!body) return;
 
-  const { data, error } = await sb.from('species').select('id, name').order('name');
+  // LABBER 종족은 일반 종족 목록/플라이아웃에 노출하지 않는다 (개체기록실 전용 — utils.js LABBER_SPECIES_ID).
+  let speciesQuery = sb.from('species').select('id, name').order('name');
+  if (typeof LABBER_SPECIES_ID !== 'undefined') speciesQuery = speciesQuery.neq('id', LABBER_SPECIES_ID);
+  const { data, error } = await speciesQuery;
 
   const q    = new URLSearchParams(window.location.search);
   const curr = q.get('id');
