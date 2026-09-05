@@ -180,7 +180,7 @@ $ll-mono: 'DepartureMono', 'Consolas', 'Courier New', monospace;
   border-radius: 8px;
   line-height: 1.8;
 
-  p { color: var(--text-sub); font-size: 14px; margin-bottom: 10px; }
+  p { color: var(--text-sub); font-size: 14px; margin-bottom: 8px; }
 }
 
 .labberlab-record-title {
@@ -240,6 +240,25 @@ $ll-mono: 'DepartureMono', 'Consolas', 'Courier New', monospace;
     color: var(--sky);
     margin-bottom: 6px;
   }
+
+  /* 문단(의미 단위) 사이 간격 — 섹션 간 간격(padding 18px)보다 확실히 좁게,
+     마지막 문단은 블록 하단 여백과 겹치지 않도록 0으로 */
+  p { margin-bottom: 8px; }
+  p:last-child { margin-bottom: 0; }
+
+  /* 설정상 반드시 기억해야 할 결론만 골라 strong 처리 — 민트는 섹션 헤더(h3) 전용으로
+     남겨두고, 본문 강조는 색을 튀우지 않도록 제목(--text)과 같은 밝은 흰색 + 굵기만으로 구분 */
+  p strong {
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  /* 인용/관찰·평가 톤의 문장에 제한적으로만 사용 — 본문(--text-sub)보다 한 단계
+     낮은 --text-mute 로 "기록자의 방백"처럼 살짝 가라앉혀 강조와 구분 */
+  p em {
+    color: var(--text-mute);
+    font-style: italic;
+  }
 }
 
 .labberlab-record-lead {
@@ -247,6 +266,17 @@ $ll-mono: 'DepartureMono', 'Consolas', 'Courier New', monospace;
   font-weight: 600;
   font-size: 14px !important;
   margin-bottom: 8px !important;
+}
+
+/* 섹션의 핵심 결론 문단(#04·#05 마지막 문장) — 새 박스 디자인이 아니라
+   기존 민트 포인트(--sky)와 다크 톤(--sky-pale)만으로 절제된 강조를 준다 */
+.labber-lore-conclusion {
+  margin-top: 2px !important;
+  padding: 10px 14px;
+  border-left: 2px solid var(--sky);
+  background: var(--sky-pale);
+  border-radius: 0 4px 4px 0;
+  color: var(--text) !important;
 }
 
 .labberlab-record-foot {
