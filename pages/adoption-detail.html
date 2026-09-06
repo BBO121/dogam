@@ -1002,7 +1002,7 @@
       if (auctionEndAt) {
         remainInner = `<span id="auctionRemainLabel">${formatAuctionRemainingTime(auctionEndAt)}</span>`;
       } else if (details.close_method === 'last_bid' && details.close_hours) {
-        remainInner = `<span id="auctionRemainLabel">첫 입찰 후 ${details.close_hours}시간 뒤 마감</span>`;
+        remainInner = `<span id="auctionRemainLabel">마지막 입찰 후 ${details.close_hours}시간 뒤 마감</span>`;
       } else if (details.close_method === 'date') {
         remainInner = '마감일 미설정';
       } else {
