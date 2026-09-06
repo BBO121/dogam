@@ -237,6 +237,9 @@
             <!-- 낙찰 결과 -->
             <div id="winnerBox" class="adoption-winner-box" style="display:none;"></div>
 
+            <!-- 경매 마감(종료시각 도달) 패널 — 최고 입찰자 / 유찰 / 분양확정 CTA -->
+            <div id="auctionClosedPanel" style="display:none;"></div>
+
             <!-- 작성자 전용: 즉분가 확정 버튼 (즉분 대기중 상태) -->
             <div id="instantConfirmWrap" style="display:none; margin-bottom:12px;">
               <button onclick="confirmInstantBid()" class="btn-secondary" style="width:100%;">분양확정</button>
@@ -383,6 +386,10 @@
     let myNick          = null;
     let auctionDetails  = null;
     let bidOpenAt        = null; // 경매 입찰 시작 시각 (auction_details.bid_open_at) — null이면 즉시 입찰 가능
+    let auctionEndAt        = null;  // 경매 실제 종료시각(effective close) Date — null이면 종료 제한 없음
+    let auctionClosed       = false; // 서버시간 기준 종료 경과 여부 (UI 표시용 — 최종 판정은 서버 트리거)
+    let serverClockOffsetMs = 0;     // 서버 now() - 클라 now() (클라 PC 시계 오차 보정)
+    let _auctionCountdownTimer = null;
     let idToNick        = {};
     let allNicknames    = [];
     let auctionCurrencyUnit = '원';
@@ -423,6 +430,13 @@
       if (adoption.adoption_type === 'auction') {
         document.getElementById('auctionSection').style.display = 'block';
 
+        // 서버 시계 동기화 — 남은시간/마감 판정에 클라이언트 PC 시계 오차가 끼지 않도록.
+        // (최종 입찰 가능 여부는 서버 트리거가 판정하고, 이건 표시/선제안내용)
+        try {
+          const { data: st } = await sb.rpc('get_server_time');
+          if (st) serverClockOffsetMs = new Date(st).getTime() - Date.now();
+        } catch (e) { console.warn('[경매] 서버 시계 동기화 실패, 클라 시계 사용', e); }
+
         const [{ data: details }, { data: bids }] = await Promise.all([
           sb.from('auction_details').select('*').eq('adoption_id', adoptionId).single(),
           sb.from('auction_bids').select('*').eq('adoption_id', adoptionId).order('created_at', { ascending: false }),
@@ -430,8 +444,11 @@
 
         auctionDetails = details;
         bidOpenAt = details?.bid_open_at ? new Date(details.bid_open_at) : null;
+        auctionEndAt = computeAuctionEndAt(details, bids || []);
+        auctionClosed = !!(auctionEndAt && serverNow() >= auctionEndAt.getTime());
         renderAuctionInfo(details);
         renderBids(adoption, bids || []);
+        startAuctionCountdown();
         loadComments();
       } else if (adoption.adoption_type === 'free') {
         if (adoption.free_type === 'random') {
@@ -980,13 +997,25 @@
       const unitEl = document.getElementById('bidAmountUnit');
       if (unitEl) unitEl.textContent = auctionCurrencyUnit;
 
-      const closeLabel = details.close_method === 'date'
-        ? (details.close_at
-            ? `${new Date(details.close_at).toLocaleString('ko-KR', { month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' })} 마감`
-            : '날짜 미정')
-        : (details.close_hours
-            ? `마지막 입찰 후 ${details.close_hours}시간 마감`
-            : '마지막 입찰 후 마감 (시간 미설정)');
+      // 남은시간 — 공통 formatter. 종료시각이 아직 없으면(첫 입찰 전 last_bid 등) 안내 문구.
+      let remainInner;
+      if (auctionEndAt) {
+        remainInner = `<span id="auctionRemainLabel">${formatAuctionRemainingTime(auctionEndAt)}</span>`;
+      } else if (details.close_method === 'last_bid' && details.close_hours) {
+        remainInner = `<span id="auctionRemainLabel">첫 입찰 후 ${details.close_hours}시간 뒤 마감</span>`;
+      } else if (details.close_method === 'date') {
+        remainInner = '마감일 미설정';
+      } else {
+        remainInner = '마지막 입찰 후 마감 (시간 미설정)';
+      }
+
+      // date 방식은 절대 마감시각(KST)도 함께 표시
+      const closeAtItem = (details.close_method === 'date' && details.close_at)
+        ? `<div class="auction-info-item">
+             <span class="auction-info-label">마감 시각</span>
+             <span class="auction-info-value">${formatAuctionCloseKST(new Date(details.close_at))} KST</span>
+           </div>`
+        : '';
 
       const infoBox = document.getElementById('adoptionInfoBox');
       infoBox.innerHTML = `
@@ -1010,9 +1039,10 @@
             <span class="auction-info-label">입찰 시작</span>
             <span class="auction-info-value"${new Date(details.bid_open_at) > new Date() ? ' style="color:#B45309;font-weight:800;"' : ''}>${formatBidOpenAt(new Date(details.bid_open_at))}부터</span>
           </div>` : ''}
+          ${closeAtItem}
           <div class="auction-info-item">
             <span class="auction-info-label">마감</span>
-            <span class="auction-info-value">${closeLabel}</span>
+            <span class="auction-info-value">${remainInner}</span>
           </div>
         </div>
       `;
@@ -1021,7 +1051,8 @@
 
     function renderBids(adoption, bids) {
       const isAuthor = currentUser && (currentUser.id === adoption.user_id || myNick === adoption.author);
-      const isOpen   = adoption.status === '분양중';
+      // 종료시각이 지났으면(auctionClosed) 입찰·분양확정(임의지정)·안내문 등 진행중 UI는 모두 닫는다.
+      const isOpen   = adoption.status === '분양중' && !auctionClosed;
 
       document.getElementById('bidCount').textContent = `${bids.length}건`;
 
@@ -1130,6 +1161,17 @@
       if (isAuthor && isOpen) {
         document.getElementById('closeWrap').style.display = 'block';
       }
+
+      // 종료시각 경과 → 진행중 UI를 명시적으로 닫고(재렌더 대비) 마감 패널을 띄운다.
+      if (auctionClosed) {
+        ['bidLockedNotice', 'bidInputWrap', 'auctionConfirmWrap', 'closeWrap', 'bidNotice'].forEach(id => {
+          const el = document.getElementById(id);
+          if (el) el.style.display = 'none';
+        });
+        const bidAmt = document.getElementById('bidAmount');
+        if (bidAmt) bidAmt.disabled = true;
+      }
+      renderAuctionClosedPanel(adoption, bids);
     }
 
     function escAttr(str) {
@@ -1163,6 +1205,149 @@
       return `${Math.floor(h / 24)}일 전`;
     }
 
+    /* ── 경매 남은시간 / 자동 마감 ─────────────────────────────
+       endAt 은 DB 종료시각에서 계산한 절대시각(Date)이며, 감소 카운터를
+       저장/사용하지 않는다. 최종 마감 판정의 원천은 서버(auction_bids
+       INSERT 트리거 + auction_effective_close_at)다. */
+    function serverNow() {
+      return Date.now() + serverClockOffsetMs;
+    }
+
+    // auction_details + 입찰목록 → 실제 종료시각(Date) 또는 null
+    // (서버 public.auction_effective_close_at() 와 동일 규칙)
+    function computeAuctionEndAt(details, bids) {
+      if (!details) return null;
+      if (details.close_method === 'date') {
+        return details.close_at ? new Date(details.close_at) : null;
+      }
+      if (details.close_method === 'last_bid') {
+        const hrs = Number(details.close_hours);
+        if (!hrs || hrs <= 0) return null;
+        if (!bids || bids.length === 0) return null;           // 첫 입찰 전 → 종료시각 없음
+        const lastMs = Math.max(...bids.map(b => new Date(b.created_at).getTime()));
+        return new Date(lastMs + hrs * 3600000);
+      }
+      return null;
+    }
+
+    // 공통 포맷터 — 남은시간을 분 단위까지. 종료시각 없으면 null(호출부가 문구 처리).
+    function formatAuctionRemainingTime(endAt) {
+      if (!endAt) return null;
+      const ms = endAt.getTime() - serverNow();
+      if (ms <= 0) return '마감';
+      const totalMin = Math.floor(ms / 60000);
+      if (totalMin < 1)  return '1분 미만';
+      if (totalMin < 60) return `${totalMin}분`;
+      const h = Math.floor(totalMin / 60);
+      const m = totalMin % 60;
+      if (h < 24) return `${h}시간 ${String(m).padStart(2, '0')}분`;
+      const d  = Math.floor(h / 24);
+      const hh = h % 24;
+      return `${d}일 ${String(hh).padStart(2, '0')}시간 ${String(m).padStart(2, '0')}분`;
+    }
+
+    // close_at(timestamptz, 절대시각)을 KST 벽시계 문자열로
+    function formatAuctionCloseKST(d) {
+      return d.toLocaleString('ko-KR', {
+        timeZone: 'Asia/Seoul',
+        month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit',
+      });
+    }
+
+    // 최고 입찰(낙찰 예정) — 최고가, 동일가면 먼저 도달한 입찰
+    function pickTopBid(bids) {
+      if (!bids || bids.length === 0) return null;
+      return [...bids].sort((a, b) => {
+        const av = Number(String(a.bid_amount).replace(/,/g, ''));
+        const bv = Number(String(b.bid_amount).replace(/,/g, ''));
+        if (bv !== av) return bv - av;
+        return new Date(a.created_at) - new Date(b.created_at);
+      })[0];
+    }
+
+    // 상세 페이지를 열어둔 채 종료시각이 지나면 새로고침 없이 마감 상태로 전환.
+    // 분 단위 표시라 15초 주기면 충분(1초 카운트다운은 불필요).
+    function startAuctionCountdown() {
+      if (_auctionCountdownTimer) { clearInterval(_auctionCountdownTimer); _auctionCountdownTimer = null; }
+      if (auctionClosed || !auctionDetails) return;
+      // date: 고정 종료시각 필요 / last_bid: 입찰이 없으면 아직 카운트다운 없음(입찰 들어오면 reload됨)
+      if (!auctionEndAt) return;
+
+      const tick = async () => {
+        // last_bid 방식은 다른 사람의 새 입찰로 종료시각이 연장될 수 있어 매 틱 재계산
+        if (auctionDetails.close_method === 'last_bid') {
+          const { data: freshBids } = await sb.from('auction_bids')
+            .select('created_at').eq('adoption_id', adoptionId);
+          auctionEndAt = computeAuctionEndAt(auctionDetails, freshBids || []);
+          if (!auctionEndAt) return;
+        }
+
+        const label = formatAuctionRemainingTime(auctionEndAt);
+        const el = document.getElementById('auctionRemainLabel');
+        if (el && label) el.textContent = label;
+
+        if (serverNow() >= auctionEndAt.getTime() && !auctionClosed) {
+          if (_auctionCountdownTimer) { clearInterval(_auctionCountdownTimer); _auctionCountdownTimer = null; }
+          auctionClosed = true;
+          await refreshAuctionClosedState();   // 마감 상태로 재렌더 (새로고침 없이)
+        }
+      };
+      tick();
+      _auctionCountdownTimer = setInterval(tick, 15000);
+    }
+
+    // 최신 입찰 목록을 다시 받아 마감 상태로 renderBids 재실행
+    async function refreshAuctionClosedState() {
+      const { data: finalBids } = await sb.from('auction_bids')
+        .select('*').eq('adoption_id', adoptionId).order('created_at', { ascending: false });
+      renderBids(currentAdoption, finalBids || []);
+    }
+
+    // 경매 마감(종료시각 도달) 패널 — 최고 입찰자 / 유찰 / 분양확정 CTA.
+    // 낙찰 확정(확인 대기중) 이후에는 기존 winnerBox·확인하기 UI가 담당 → 패널 숨김.
+    function renderAuctionClosedPanel(adoption, bids) {
+      const panel = document.getElementById('auctionClosedPanel');
+      if (!panel) return;
+
+      if (!auctionClosed || adoption.status !== '분양중') { panel.style.display = 'none'; return; }
+
+      const isAuthor = !!(currentUser?.id && adoption.user_id && currentUser.id === adoption.user_id);
+      const top = pickTopBid(bids);
+
+      if (!top) {
+        // 유찰 — date 방식에서 입찰자 0명으로 종료 (last_bid는 입찰 0건이면 종료시각 자체가 NULL)
+        panel.innerHTML = `
+          <div class="adoption-winner-box" style="display:block; background:#f3f4f6; border-color:#d1d5db;">
+            <p style="font-size:15px; font-weight:800; color:#374151; margin:0 0 4px;">🔨 경매 마감 — 유찰</p>
+            <p style="font-size:13px; color:#6b7280; margin:0;">마감 시각까지 입찰이 없어 낙찰자가 없어요.</p>
+          </div>
+          ${isAuthor ? `<button class="btn-ghost" style="margin-top:10px;" onclick="closeAuction()">경매 마감 처리</button>` : ''}
+        `;
+      } else {
+        const winnerName = (top.bidder_id && idToNick[top.bidder_id]) || top.bidder_name;
+        const amountNum  = Number(String(top.bid_amount).replace(/,/g, ''));
+        panel.innerHTML = `
+          <div class="adoption-winner-box" style="display:block;">
+            <div class="adoption-winner-inner">
+              <span class="adoption-winner-trophy">🔨</span>
+              <div>
+                <p class="adoption-winner-label">경매 마감 — 최고 입찰자</p>
+                <p class="adoption-winner-name">${winnerName}</p>
+                <p class="adoption-winner-bid">최종 낙찰가 ${amountNum.toLocaleString('ko-KR')}${auctionCurrencyUnit}</p>
+              </div>
+            </div>
+          </div>
+          <p style="font-size:13px; color:var(--text-sub); margin:10px 0 0; line-height:1.6;">
+            추가 입찰은 마감됐어요. 재화 거래는 <strong>낙찰자와 직접</strong> 진행한 뒤,
+            거래가 끝나면 아래 <strong>분양확정</strong>을 눌러주세요.
+            (분양확정을 눌러도 소유권은 아직 이전되지 않고, 낙찰자의 <strong>이전확인</strong> 시점에 이전돼요.)
+          </p>
+          ${isAuthor ? `<button class="btn-secondary" style="width:100%; margin-top:12px;" onclick="awardTopBidder()">낙찰자에게 분양확정</button>` : ''}
+        `;
+      }
+      panel.style.display = 'block';
+    }
+
     async function submitBid() {
       const raw     = document.getElementById('bidAmount').value.replace(/,/g, '').trim();
       const errorEl = document.getElementById('bidError');
@@ -1172,6 +1357,11 @@
       // 메시지를 바로 보여주기 위한 선제 체크 — 실제 차단의 원천은 서버 트리거다.
       if (bidOpenAt && Date.now() < bidOpenAt.getTime()) {
         errorEl.textContent = '아직 입찰 시작 시간이 아닙니다.';
+        return;
+      }
+      if (auctionEndAt && serverNow() >= auctionEndAt.getTime()) {
+        errorEl.textContent = '이미 마감된 경매입니다.';
+        if (!auctionClosed) { auctionClosed = true; refreshAuctionClosedState(); }
         return;
       }
 
@@ -1226,7 +1416,16 @@
         bid_amount:   raw,
       });
 
-      if (error) { errorEl.textContent = `입찰에 실패했어요. (${error.message})`; return; }
+      if (error) {
+        // 서버 트리거가 마감으로 거부한 경우 → UI도 마감 상태로 동기화
+        if ((error.message || '').includes('이미 마감된 경매')) {
+          errorEl.textContent = '이미 마감된 경매입니다.';
+          if (!auctionClosed) { auctionClosed = true; refreshAuctionClosedState(); }
+        } else {
+          errorEl.textContent = `입찰에 실패했어요. (${error.message})`;
+        }
+        return;
+      }
       document.getElementById('bidAmount').value = '';
 
       // 즉분가 입찰 → "즉분 대기중"으로 변경 (판매자 확정 대기)
@@ -1291,11 +1490,34 @@
       location.reload();
     }
 
+    // 진행 중 경매에서 작성자가 특정 입찰 행을 낙찰 처리 (기존 동작)
     async function awardBid(btn) {
-      const name     = btn.dataset.name;
-      const amount   = btn.dataset.amount;
-      const bidderId = btn.dataset.id || null;
-      if (!confirm(`${name}님을 낙찰자로 확정할까요?`)) return;
+      await awardWinner({
+        name:     btn.dataset.name,
+        amount:   btn.dataset.amount,
+        bidderId: btn.dataset.id || null,
+      });
+    }
+
+    // 마감된 경매에서 "최고 입찰자"에게 분양확정 — 낙찰자 고정(임의 지정 불가).
+    // DB에서 다시 최신 입찰을 읽어 최고가를 재확정한 뒤 처리한다.
+    async function awardTopBidder() {
+      const { data: bids } = await sb.from('auction_bids')
+        .select('*').eq('adoption_id', adoptionId).order('created_at', { ascending: false });
+      const top = pickTopBid(bids || []);
+      if (!top) { alert('입찰자가 없어요. (유찰)'); return; }
+      const name   = (top.bidder_id && idToNick[top.bidder_id]) || top.bidder_name;
+      const amtNum = Number(String(top.bid_amount).replace(/,/g, ''));
+      await awardWinner({
+        name,
+        amount:     String(top.bid_amount),
+        bidderId:   top.bidder_id || null,
+        confirmMsg: `최고 입찰자 ${name}님(${amtNum.toLocaleString('ko-KR')}${auctionCurrencyUnit})을 낙찰자로 확정할까요?\n확정 후 낙찰자에게 이전확인 요청이 전송돼요. (소유권은 낙찰자의 이전확인 시점에 이전)`,
+      });
+    }
+
+    async function awardWinner({ name, amount, bidderId, confirmMsg }) {
+      if (!confirm(confirmMsg || `${name}님을 낙찰자로 확정할까요?`)) return;
 
       const { error } = await sb.from('adoptions').update({
         status:         '확인 대기중',
