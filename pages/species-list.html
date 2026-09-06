@@ -206,11 +206,9 @@
       }
       const displaySrc = resolveSpeciesImage(s);
       if (s.age_limit > 0) {
-        // 실제 이미지는 계속 숨기지만, 연구소썸네일(기본 이미지)/자동 fallback을 쓰는 경우는
-        // 실제 콘텐츠가 아니므로 이미지를 보여주고 연령 배지만 위에 겹쳐 표시한다.
-        if (speciesHasVisibleRealImage(s)) {
-          return `<div class="species-img species-img--restricted"><span class="species-age-badge">${s.age_limit}세 이상</span></div>`;
-        }
+        // 연령 제한은 썸네일을 가리는 조건이 아니다 — 썸네일은 정상 노출하고
+        // 좌측 상단에 연령 배지만 오버레이한다.
+        // (민감 요소로 인한 가림은 위 s.is_sensitive 분기에서 이미 별도로 처리됨)
         return `<div class="species-img" style="position:relative; background-image:url('${displaySrc}'); background-size:cover; background-position:center;"><span class="species-age-badge species-age-badge--overlay">${s.age_limit}세 이상</span></div>`;
       }
       return `<div class="species-img" style="background-image:url('${displaySrc}'); background-size:cover; background-position:center;"></div>`;

@@ -37,7 +37,7 @@
 
   <link rel="stylesheet" href="../css/style.css">
 </head>
-<body>
+<body class="page-index">
 
   <!-- 헤더 -->
   <header class="header">
@@ -259,7 +259,7 @@
         }
 
         function buildSensitiveOverlay(note, ageBadge) {
-          return `<div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div style="display:flex;flex-direction:column;align-items:center;gap:5px;"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span style="color:#b91c1c;font-size:16px;font-weight:700;">민감한 요소</span>${ageBadge || ''}${note ? '<span class="sensitive-overlay-note">' + note + '</span>' : ''}<span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div>`;
+          return `<div class="sensitive-overlay" onclick="revealSensitive(this,event)"><div class="sensitive-overlay-inner"><svg width="28" height="26" viewBox="0 0 28 26" fill="none"><path d="M14 2L26 24H2L14 2Z" stroke="#b91c1c" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/><line x1="14" y1="9" x2="14" y2="16" stroke="#b91c1c" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="20" r="1.2" fill="#b91c1c"/></svg><span class="sensitive-overlay-title">민감한 요소</span>${ageBadge || ''}${note ? '<span class="sensitive-overlay-note">' + note + '</span>' : ''}<span class="sensitive-overlay-hint">누르면 이미지가 보여요</span></div></div>`;
         }
 
         function speciesImgHtml(s) {
@@ -274,9 +274,9 @@
           }
           const displaySrc = resolveSpeciesImage(s);
           if (s.age_limit > 0) {
-            if (speciesHasVisibleRealImage(s)) {
-              return `<div class="species-img species-img--restricted"><span class="species-age-badge">${s.age_limit}세 이상</span></div>`;
-            }
+            // 연령 제한은 썸네일을 가리는 조건이 아니다 — 썸네일은 정상 노출하고
+            // 좌측 상단에 연령 배지만 오버레이한다.
+            // (민감 요소로 인한 가림은 위 s.is_sensitive 분기에서 이미 별도로 처리됨)
             return `<div class="species-img" style="position:relative; background-image:url('${displaySrc}');background-size:cover;background-position:center;"><span class="species-age-badge species-age-badge--overlay">${s.age_limit}세 이상</span></div>`;
           }
           return `<div class="species-img" style="background-image:url('${displaySrc}');background-size:cover;background-position:center;"></div>`;

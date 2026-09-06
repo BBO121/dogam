@@ -1714,9 +1714,9 @@
       }
       const displaySrc = resolveSpeciesImage(s);
       if (s.age_limit > 0) {
-        if (speciesHasVisibleRealImage(s, { thumb: false })) {
-          return `<div class="species-img species-img--restricted"><span class="species-age-badge">${s.age_limit}세 이상</span></div>`;
-        }
+        // 연령 제한은 썸네일을 가리는 조건이 아니다 — 썸네일은 정상 노출하고
+        // 좌측 상단에 연령 배지만 오버레이한다.
+        // (민감 요소로 인한 가림은 위 s.is_sensitive 분기에서 이미 별도로 처리됨)
         return `<div class="species-img" style="position:relative; background-image:url('${displaySrc}');background-size:cover;background-position:center;"><span class="species-age-badge species-age-badge--overlay">${s.age_limit}세 이상</span></div>`;
       }
       return `<div class="species-img" style="background-image:url('${displaySrc}');background-size:cover;background-position:center;"></div>`;

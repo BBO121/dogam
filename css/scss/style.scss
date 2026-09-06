@@ -232,6 +232,15 @@
   white-space: nowrap;
 }
 
+/* 썸네일 위 좌측 상단에 겹쳐 표시하는 연령 배지 (부모에 position 필요) */
+.species-age-badge--overlay {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 2;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
+}
+
 .species-info {
   padding: 10px 12px;
 }
@@ -5167,6 +5176,82 @@ button.btn-more {
   margin-top: 4px;
   pointer-events: none;
   text-align: center;
+}
+
+/* 오버레이 내부 세로 배치 래퍼 / 제목 — 인라인 스타일을 클래스로 옮긴 것.
+   값·외형은 최초와 동일(공통 디자인 그대로). 현재 index.html 카드에서만 사용하며
+   species-list·my-species·profile 등은 기존 인라인 스타일을 그대로 쓴다. */
+.sensitive-overlay-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.sensitive-overlay-title {
+  color: #b91c1c;
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* ── index.html 메인 종족 카드 전용 (body.page-index) ──────────────────
+   index의 종족 그리드(.species-grid, 6/4/3/2열)는 카드가 좁아 민감 오버레이가
+   세로로 넘쳐 내부 스크롤이 생긴다. 이 스코프에서만 오버레이 내용을 카드
+   높이에 맞춰 압축한다. 공통 스타일(.sensitive-overlay 등)은 건드리지 않으며
+   species-list·my-species·profile 등 다른 페이지 카드에는 전혀 영향이 없다. */
+body.page-index .species-card .sensitive-overlay {
+  overflow: hidden;
+  padding: 6px;
+}
+body.page-index .species-card .sensitive-overlay-inner { gap: 6px; }
+body.page-index .species-card .sensitive-overlay svg {
+  width: 22px;
+  height: 21px;
+  /* 경고 아이콘만 살짝 아래로(레이아웃/다른 요소 위치는 그대로 — relative 오프셋). */
+  position: relative;
+  top: 4px;
+}
+body.page-index .species-card .sensitive-overlay-title { font-size: 13px; }
+body.page-index .species-card .sensitive-overlay .species-age-badge {
+  font-size: 10px;
+  padding: 2px 8px;
+  margin-top: 2px;   /* 제목 ↔ 연령 배지 ≈ 8px */
+}
+body.page-index .species-card .sensitive-overlay-note {
+  font-size: 10px;
+  padding: 2px 8px;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+body.page-index .species-card .sensitive-overlay-hint {
+  font-size: 9.5px;
+  margin-top: 2px;   /* 민감요소 배지 ↔ 안내문 ≈ 8px */
+}
+
+/* 3~6열에서 카드가 ≈ 110~150px까지 좁아지는 뷰포트 구간 — 한 단계 더 축소.
+   (≤400px 모바일 2열, ≥1240px 넓은 6열은 위 기본값이 카드 높이에 들어옴) */
+@media (min-width: 401px) and (max-width: 1239px) {
+  body.page-index .species-card .sensitive-overlay { padding: 4px; }
+  body.page-index .species-card .sensitive-overlay-inner { gap: 3px; }
+  body.page-index .species-card .sensitive-overlay svg { width: 18px; height: 17px; }
+  body.page-index .species-card .sensitive-overlay-title { font-size: 10.5px; }
+  body.page-index .species-card .sensitive-overlay .species-age-badge {
+    font-size: 8.5px;
+    padding: 1px 6px;
+    margin-top: 1px;
+  }
+  body.page-index .species-card .sensitive-overlay-note {
+    font-size: 8.5px;
+    padding: 1px 6px;
+    line-height: 1.2;
+  }
+  body.page-index .species-card .sensitive-overlay-hint {
+    font-size: 8px;
+    margin-top: 1px;
+  }
 }
 
 /* ═══════════════════════════════════════
