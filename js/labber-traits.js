@@ -62,6 +62,31 @@ const TRAIT_DATA = {
       desc: '포드의 일부가 가늘고 긴 선형으로 연장되어<br>자유롭게 휘어진 형태를 이룰 수 있습니다.',
       acquisition: LL_ACQ_CRAFT, designer: LL_TRAIT_DESIGNER },
   ],
+  // INK 계열 "특성명" — LABBER 포드 내부 액체의 색상 특성. 복수 선택(한 디자인에 여러 색 사용 가능).
+  //  · 표시명 표기 고정: 'Ink-<색상>' (I 만 대문자 · nk 소문자 · 색상명 전체 대문자). 다른 표기 금지.
+  //  · 등급: RED~PINK = 표준(standard) / NEUTRAL = 특이(special).
+  //  · HEX 자동 판정 · 잉크 아이템 소비 로직은 아직 미구현 — 등록/선택/등급 표시까지만.
+  //  · 아트워크 미준비 → imagePending. 획득처/DESIGN BY 는 설정 미확정이라 현재 미표시(null).
+  ink: [
+    { code: 'labber_ink_red',     name: 'Ink-RED',     grade: 'standard', artwork: 'ink-red',     anchor: 'trait-ink-red',
+      imagePending: true, acquisition: { label: null, url: null } },
+    { code: 'labber_ink_orange',  name: 'Ink-ORANGE',  grade: 'standard', artwork: 'ink-orange',  anchor: 'trait-ink-orange',
+      imagePending: true, acquisition: { label: null, url: null } },
+    { code: 'labber_ink_yellow',  name: 'Ink-YELLOW',  grade: 'standard', artwork: 'ink-yellow',  anchor: 'trait-ink-yellow',
+      imagePending: true, acquisition: { label: null, url: null } },
+    { code: 'labber_ink_green',   name: 'Ink-GREEN',   grade: 'standard', artwork: 'ink-green',   anchor: 'trait-ink-green',
+      imagePending: true, acquisition: { label: null, url: null } },
+    { code: 'labber_ink_cyan',    name: 'Ink-CYAN',    grade: 'standard', artwork: 'ink-cyan',    anchor: 'trait-ink-cyan',
+      imagePending: true, acquisition: { label: null, url: null } },
+    { code: 'labber_ink_blue',    name: 'Ink-BLUE',    grade: 'standard', artwork: 'ink-blue',    anchor: 'trait-ink-blue',
+      imagePending: true, acquisition: { label: null, url: null } },
+    { code: 'labber_ink_purple',  name: 'Ink-PURPLE',  grade: 'standard', artwork: 'ink-purple',  anchor: 'trait-ink-purple',
+      imagePending: true, acquisition: { label: null, url: null } },
+    { code: 'labber_ink_pink',    name: 'Ink-PINK',    grade: 'standard', artwork: 'ink-pink',    anchor: 'trait-ink-pink',
+      imagePending: true, acquisition: { label: null, url: null } },
+    { code: 'labber_ink_neutral', name: 'Ink-NEUTRAL', grade: 'special',  artwork: 'ink-neutral', anchor: 'trait-ink-neutral',
+      imagePending: true, acquisition: { label: null, url: null } },
+  ],
   // 서브젝트는 그룹(어류/조류/파충류/특이)으로 묶어 렌더링. 관리소 카드는 준비중 상태지만
   // code/anchor 는 부여해 개체 상세·수정창 딥링크가 동작하도록 한다.
   subject: [
@@ -106,13 +131,16 @@ const LL_TRAIT_GRADE_CLASS = { standard: 'is-standard', special: 'is-special', r
 // 관리소 특성 탭 딥링크 base. 뒤에 anchor 를 붙이면 특성 탭 + 해당 하위 탭이 자동 활성화되고 스크롤된다.
 const LABBER_TRAIT_DEEPLINK_BASE = 'labber-lab.html?tab=traits#';
 
-// 개체에 붙일 수 있는 특성 타입 (POD/CARTRIDGE/SUBJECT). 소문자 키.
-//   multi: 개체가 여러 개 가질 수 있는지 (CARTRIDGE 만 복수 — 설계상 add-on 특성).
+// 개체에 붙일 수 있는 특성 타입 (POD/CARTRIDGE/INK/SUBJECT). 소문자 키.
+//   multi: 개체가 여러 개 가질 수 있는지.
+//     - CARTRIDGE : 복수 (설계상 add-on 특성)
+//     - INK       : 복수 (한 디자인에 여러 색상의 액체가 쓰일 수 있음)
 //   POD/SUBJECT 는 LABBER 디자인 승인(labber_design_applications: pod_description/subject_description)
 //   구조와 동일하게 단일 선택.
 const LABBER_TRAIT_TYPES = {
   pod:       { multi: false },
   cartridge: { multi: true  },
+  ink:       { multi: true  },
   subject:   { multi: false },
 };
 

@@ -219,12 +219,13 @@ function renderTraitSection(containerId, catLabel, groups, opts = {}) {
 function renderTraits() {
   renderTraitSection('trait-pod', 'POD', [{ group: null, items: TRAIT_DATA.pod }]);
   renderTraitSection('trait-cartridge', 'CARTRIDGE', [{ group: null, items: TRAIT_DATA.cartridge }]);
+  renderTraitSection('trait-ink', 'INK', [{ group: null, items: TRAIT_DATA.ink }]);
   // 서브젝트: 준비중 — 아트워크 placeholder("준비중") + DESIGN BY/상세 숨김
   renderTraitSection('trait-subject', 'SUBJECT', TRAIT_DATA.subject, { pending: true });
 }
 
 // 특성 탭 내부 하위 탭 (포드 / 카트리지 / 서브젝트). 상위 탭과 독립, 정적 콘텐츠만 토글.
-const LL_TRAIT_SUBTAB_KEYS = ['pod', 'cartridge', 'subject'];
+const LL_TRAIT_SUBTAB_KEYS = ['pod', 'cartridge', 'ink', 'subject'];
 
 function activateTraitSubtab(key) {
   if (!LL_TRAIT_SUBTAB_KEYS.includes(key)) return;
@@ -254,6 +255,7 @@ function setupTraitSubtabs() {
 function traitSubtabOfAnchor(anchor) {
   if (TRAIT_DATA.pod.some(t => t.anchor === anchor)) return 'pod';
   if (TRAIT_DATA.cartridge.some(t => t.anchor === anchor)) return 'cartridge';
+  if ((TRAIT_DATA.ink || []).some(t => t.anchor === anchor)) return 'ink';
   const inSubject = (TRAIT_DATA.subject || []).some(g => (g.items || []).some(t => t.anchor === anchor));
   return inSubject ? 'subject' : null;
 }

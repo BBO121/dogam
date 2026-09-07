@@ -159,7 +159,7 @@
           </article>
         </section>
 
-        <!-- ═══ 특성 (POD / CARTRIDGE / SUBJECT) — DB·신규 시스템 없음, JS 정적 데이터 ═══
+        <!-- ═══ 특성 (POD / CARTRIDGE / INK / SUBJECT) — DB·신규 시스템 없음, JS 정적 데이터 ═══
              특성 데이터는 js/labber-traits.js 의 TRAIT_DATA (공통 모듈 — 관리소·개체 수정창·개체 상세 공유).
              카드 마크업은 js/labber-lab.js 의 renderTraits() 로 관리 (아래 컨테이너 참고).
              아트워크는 미준비 상태라 TRAIT_DATA의 각 artwork 필드는 항상 주석 처리된
@@ -173,6 +173,7 @@
           <div class="labber-trait-subtabs" id="traitSubtabs">
             <button type="button" class="labber-trait-subtab active" data-trait="pod">포드</button>
             <button type="button" class="labber-trait-subtab" data-trait="cartridge">카트리지</button>
+            <button type="button" class="labber-trait-subtab" data-trait="ink">잉크</button>
             <button type="button" class="labber-trait-subtab" data-trait="subject">서브젝트</button>
           </div>
 
@@ -183,6 +184,7 @@
                비어 있으며, .labber-trait-cat 라벨도 함께 렌더링된다. -->
           <div class="labber-trait-list" id="trait-pod"></div>
           <div class="labber-trait-list" id="trait-cartridge" hidden></div>
+          <div class="labber-trait-list" id="trait-ink" hidden></div>
           <div class="labber-trait-list" id="trait-subject" hidden></div>
         </section>
 

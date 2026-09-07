@@ -1154,10 +1154,11 @@
                 : Object.keys(c.custom_field_values);
               const hasVal = (v) => Array.isArray(v) ? v.length > 0 : !!v;
 
-              // LABBER 개체: POD / CARTRIDGE / SUBJECT 는 trait code 배열(또는 레거시 문자열)
+              // LABBER 개체: POD / CARTRIDGE / INK / SUBJECT 는 trait code 배열(또는 레거시 문자열)
               //  → 특성별 한 줄(특성명 + 등급 badge), 값 영역 오른쪽 정렬, 특성명은 관리소 딥링크.
-              // INK 등 그 외 커스텀 필드는 기존대로 값 문자열 그대로 표시(오른쪽 정렬은 .char-info-value 기본).
-              const LABBER_TRAIT_FIELD_TYPE = { pod: 'pod', cartridge: 'cartridge', subject: 'subject' };
+              //  (INK 는 복수 — 여러 색상이 한 줄씩 쌓인다. 레거시 자유입력 문자열은 매칭 실패 시 원문 노출)
+              // 그 외 커스텀 필드는 기존대로 값 문자열 그대로 표시(오른쪽 정렬은 .char-info-value 기본).
+              const LABBER_TRAIT_FIELD_TYPE = { pod: 'pod', cartridge: 'cartridge', ink: 'ink', subject: 'subject' };
               const labberTraitType = (k) => {
                 if (!isLabberChar || typeof labberTraitsByType !== 'function') return null;
                 return LABBER_TRAIT_FIELD_TYPE[String(k).trim().toLowerCase()] || null;
