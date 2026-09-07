@@ -66,26 +66,27 @@ const TRAIT_DATA = {
   //  · 표시명 표기 고정: 'Ink-<색상>' (I 만 대문자 · nk 소문자 · 색상명 전체 대문자). 다른 표기 금지.
   //  · 등급: RED~PINK = 표준(standard) / NEUTRAL = 특이(special).
   //  · HEX 자동 판정 · 잉크 아이템 소비 로직은 아직 미구현 — 등록/선택/등급 표시까지만.
-  //  · 아트워크 미준비 → imagePending. 획득처/DESIGN BY 는 설정 미확정이라 현재 미표시(null).
+  //  · 아트워크 미준비 → imagePending. DESIGN BY 는 설정 미확정이라 미표시.
+  //  · 획득처: RED~PINK = LABBER 상점 / NEUTRAL = 조합소 (LL_ACQ_* 는 정식 공개 전까지 enabled:false).
   ink: [
     { code: 'labber_ink_red',     name: 'Ink-RED',     grade: 'standard', artwork: 'ink-red',     anchor: 'trait-ink-red',
-      imagePending: true, acquisition: { label: null, url: null } },
+      imagePending: true, acquisition: LL_ACQ_SHOP },
     { code: 'labber_ink_orange',  name: 'Ink-ORANGE',  grade: 'standard', artwork: 'ink-orange',  anchor: 'trait-ink-orange',
-      imagePending: true, acquisition: { label: null, url: null } },
+      imagePending: true, acquisition: LL_ACQ_SHOP },
     { code: 'labber_ink_yellow',  name: 'Ink-YELLOW',  grade: 'standard', artwork: 'ink-yellow',  anchor: 'trait-ink-yellow',
-      imagePending: true, acquisition: { label: null, url: null } },
+      imagePending: true, acquisition: LL_ACQ_SHOP },
     { code: 'labber_ink_green',   name: 'Ink-GREEN',   grade: 'standard', artwork: 'ink-green',   anchor: 'trait-ink-green',
-      imagePending: true, acquisition: { label: null, url: null } },
+      imagePending: true, acquisition: LL_ACQ_SHOP },
     { code: 'labber_ink_cyan',    name: 'Ink-CYAN',    grade: 'standard', artwork: 'ink-cyan',    anchor: 'trait-ink-cyan',
-      imagePending: true, acquisition: { label: null, url: null } },
+      imagePending: true, acquisition: LL_ACQ_SHOP },
     { code: 'labber_ink_blue',    name: 'Ink-BLUE',    grade: 'standard', artwork: 'ink-blue',    anchor: 'trait-ink-blue',
-      imagePending: true, acquisition: { label: null, url: null } },
+      imagePending: true, acquisition: LL_ACQ_SHOP },
     { code: 'labber_ink_purple',  name: 'Ink-PURPLE',  grade: 'standard', artwork: 'ink-purple',  anchor: 'trait-ink-purple',
-      imagePending: true, acquisition: { label: null, url: null } },
+      imagePending: true, acquisition: LL_ACQ_SHOP },
     { code: 'labber_ink_pink',    name: 'Ink-PINK',    grade: 'standard', artwork: 'ink-pink',    anchor: 'trait-ink-pink',
-      imagePending: true, acquisition: { label: null, url: null } },
+      imagePending: true, acquisition: LL_ACQ_SHOP },
     { code: 'labber_ink_neutral', name: 'Ink-NEUTRAL', grade: 'special',  artwork: 'ink-neutral', anchor: 'trait-ink-neutral',
-      imagePending: true, acquisition: { label: null, url: null } },
+      imagePending: true, acquisition: LL_ACQ_CRAFT },
   ],
   // 서브젝트는 그룹(어류/조류/파충류/특이)으로 묶어 렌더링. 관리소 카드는 준비중 상태지만
   // code/anchor 는 부여해 개체 상세·수정창 딥링크가 동작하도록 한다.
