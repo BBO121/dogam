@@ -66,27 +66,48 @@ const TRAIT_DATA = {
   //  · 표시명 표기 고정: 'Ink-<색상>' (I 만 대문자 · nk 소문자 · 색상명 전체 대문자). 다른 표기 금지.
   //  · 등급: RED~PINK = 표준(standard) / NEUTRAL = 특이(special).
   //  · HEX 자동 판정 · 잉크 아이템 소비 로직은 아직 미구현 — 등록/선택/등급 표시까지만.
-  //  · 아트워크 미준비 → imagePending. DESIGN BY 는 설정 미확정이라 미표시.
+  //  · 아트워크: trait_ink_*.png 연결 완료(2026-09-08). 9번째 항목의 이미지 파일명만 예외로
+  //    trait_ink_natural.png (코드/표시명은 NEUTRAL 유지 — 파일명만 natural).
+  //  · DESIGN BY: trait_ink_* 아트워크 디자이너 = LL_TRAIT_DESIGNER(이상어).
+  //  · desc: 디자인 규정/설명문 형식(아이템 도감의 관찰 기록체와 다름).
   //  · 획득처: RED~PINK = LABBER 상점 / NEUTRAL = 조합소 (LL_ACQ_* 는 정식 공개 전까지 enabled:false).
   ink: [
     { code: 'labber_ink_red',     name: 'Ink-RED',     grade: 'standard', artwork: 'ink-red',     anchor: 'trait-ink-red',
-      imagePending: true, acquisition: LL_ACQ_SHOP },
+      image: '../images/labber/trait_ink_red.png',
+      desc: '붉은색을 중심으로 구성된 잉크입니다.<br>레드 계열의 색상 범위 내에서 자유롭게 표현할 수 있습니다.',
+      acquisition: LL_ACQ_SHOP, designer: LL_TRAIT_DESIGNER },
     { code: 'labber_ink_orange',  name: 'Ink-ORANGE',  grade: 'standard', artwork: 'ink-orange',  anchor: 'trait-ink-orange',
-      imagePending: true, acquisition: LL_ACQ_SHOP },
+      image: '../images/labber/trait_ink_orange.png',
+      desc: '주황색을 중심으로 구성된 잉크입니다.<br>오렌지 계열의 색상 범위 내에서 자유롭게 표현할 수 있습니다.',
+      acquisition: LL_ACQ_SHOP, designer: LL_TRAIT_DESIGNER },
     { code: 'labber_ink_yellow',  name: 'Ink-YELLOW',  grade: 'standard', artwork: 'ink-yellow',  anchor: 'trait-ink-yellow',
-      imagePending: true, acquisition: LL_ACQ_SHOP },
+      image: '../images/labber/trait_ink_yellow.png',
+      desc: '노란색을 중심으로 구성된 잉크입니다.<br>옐로우 계열의 색상 범위 내에서 자유롭게 표현할 수 있습니다.',
+      acquisition: LL_ACQ_SHOP, designer: LL_TRAIT_DESIGNER },
     { code: 'labber_ink_green',   name: 'Ink-GREEN',   grade: 'standard', artwork: 'ink-green',   anchor: 'trait-ink-green',
-      imagePending: true, acquisition: LL_ACQ_SHOP },
+      image: '../images/labber/trait_ink_green.png',
+      desc: '초록색을 중심으로 구성된 잉크입니다.<br>그린 계열의 색상 범위 내에서 자유롭게 표현할 수 있습니다.',
+      acquisition: LL_ACQ_SHOP, designer: LL_TRAIT_DESIGNER },
     { code: 'labber_ink_cyan',    name: 'Ink-CYAN',    grade: 'standard', artwork: 'ink-cyan',    anchor: 'trait-ink-cyan',
-      imagePending: true, acquisition: LL_ACQ_SHOP },
+      image: '../images/labber/trait_ink_cyan.png',
+      desc: '청록색을 중심으로 구성된 잉크입니다.<br>시안 계열의 색상 범위 내에서 자유롭게 표현할 수 있습니다.',
+      acquisition: LL_ACQ_SHOP, designer: LL_TRAIT_DESIGNER },
     { code: 'labber_ink_blue',    name: 'Ink-BLUE',    grade: 'standard', artwork: 'ink-blue',    anchor: 'trait-ink-blue',
-      imagePending: true, acquisition: LL_ACQ_SHOP },
+      image: '../images/labber/trait_ink_blue.png',
+      desc: '푸른색을 중심으로 구성된 잉크입니다.<br>블루 계열의 색상 범위 내에서 자유롭게 표현할 수 있습니다.',
+      acquisition: LL_ACQ_SHOP, designer: LL_TRAIT_DESIGNER },
     { code: 'labber_ink_purple',  name: 'Ink-PURPLE',  grade: 'standard', artwork: 'ink-purple',  anchor: 'trait-ink-purple',
-      imagePending: true, acquisition: LL_ACQ_SHOP },
+      image: '../images/labber/trait_ink_purple.png',
+      desc: '보라색을 중심으로 구성된 잉크입니다.<br>퍼플 계열의 색상 범위 내에서 자유롭게 표현할 수 있습니다.',
+      acquisition: LL_ACQ_SHOP, designer: LL_TRAIT_DESIGNER },
     { code: 'labber_ink_pink',    name: 'Ink-PINK',    grade: 'standard', artwork: 'ink-pink',    anchor: 'trait-ink-pink',
-      imagePending: true, acquisition: LL_ACQ_SHOP },
+      image: '../images/labber/trait_ink_pink.png',
+      desc: '분홍색을 중심으로 구성된 잉크입니다.<br>핑크 계열의 색상 범위 내에서 자유롭게 표현할 수 있습니다.',
+      acquisition: LL_ACQ_SHOP, designer: LL_TRAIT_DESIGNER },
     { code: 'labber_ink_neutral', name: 'Ink-NEUTRAL', grade: 'special',  artwork: 'ink-neutral', anchor: 'trait-ink-neutral',
-      imagePending: true, acquisition: LL_ACQ_CRAFT },
+      image: '../images/labber/trait_ink_natural.png',
+      desc: '흰색, 회색, 검정 등 무채색으로 구성된 잉크입니다.<br>무채색 범위 내에서 자유롭게 표현할 수 있습니다.',
+      acquisition: LL_ACQ_CRAFT, designer: LL_TRAIT_DESIGNER },
   ],
   // 서브젝트는 그룹(어류/조류/파충류/특이)으로 묶어 렌더링. 관리소 카드는 준비중 상태지만
   // code/anchor 는 부여해 개체 상세·수정창 딥링크가 동작하도록 한다.
