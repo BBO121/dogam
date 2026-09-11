@@ -369,8 +369,8 @@ async function updateSidebarLogin() {
 
       let repChar = null;
       if (repProfile?.representative_character_id) {
-        const { data: c } = await sb.from('characters')
-          .select('id, name, species_name, image_url, thumbnail_url, default_image_index')
+        const { data: c } = await sb.from('characters_public')
+          .select('id, name, owner_custom_name, species_name, image_url, thumbnail_url, default_image_index')
           .eq('id', repProfile.representative_character_id)
           .maybeSingle();
         repChar = c || null;
@@ -385,7 +385,7 @@ async function updateSidebarLogin() {
           <div class="sidebar-rep-char-img sidebar-rep-char-img--empty">＋</div>
         </a>`;
       const repCharCaption = repChar
-        ? `<p class="sidebar-rep-char-caption">${repChar.name} · ${repChar.species_name || ''}</p>`
+        ? `<p class="sidebar-rep-char-caption">${representativeCharacterName(repChar)} · ${repChar.species_name || ''}</p>`
         : `<p class="sidebar-rep-char-caption">대표 캐릭터 미설정</p>`;
 
       block.innerHTML = `

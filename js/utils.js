@@ -270,6 +270,13 @@ function resolveCharacterImage(c, { thumb = true } = {}) {
   return characterDefaultImageUrl(autoDefaultImageIndex(c.id));
 }
 
+// 대표 캐릭터 이름 — 개인 설정(user_settings.character_name_display_mode)과 무관하게
+// 항상 owner_custom_name(소유주 설정 개체명) 우선, 없거나 공백뿐이면 등록명(name)으로 폴백.
+function representativeCharacterName(c) {
+  if (!c) return '';
+  return c.owner_custom_name?.trim() || c.name || '';
+}
+
 // 지금 화면에 "실제 이미지"가 쓰이고 있는지 (연구소 기본 이미지를 지정했다면 false).
 // 블러/나이제한 숨김처럼 실제 콘텐츠에만 적용해야 하는 처리의 조건으로 사용한다.
 function speciesHasVisibleRealImage(sp, { thumb = true } = {}) {

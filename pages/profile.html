@@ -1806,8 +1806,8 @@
         return;
       }
 
-      const { data: c } = await sb.from('characters')
-        .select('id, name, species_name, image_url, thumbnail_url, default_image_index')
+      const { data: c } = await sb.from('characters_public')
+        .select('id, name, owner_custom_name, species_name, image_url, thumbnail_url, default_image_index')
         .eq('id', charId)
         .maybeSingle();
 
@@ -1822,9 +1822,11 @@
 
       const imgUrl = resolveCharacterImage(c);
 
+      const repName = representativeCharacterName(c);
+
       filledEl.href = `character.html?id=${c.id}`;
       document.getElementById('repCharCardImg').style.backgroundImage = `url('${imgUrl}')`;
-      document.getElementById('repCharCardName').textContent    = c.name;
+      document.getElementById('repCharCardName').textContent    = repName;
       document.getElementById('repCharCardSpecies').textContent = c.species_name || '';
       if (editBtn) editBtn.style.display = isOwnProfile ? '' : 'none';
       filledEl.style.display = 'flex';
@@ -1833,7 +1835,7 @@
 
       mFilledEl.href = `character.html?id=${c.id}`;
       document.getElementById('repCharMobileTabImg').style.backgroundImage = `url('${imgUrl}')`;
-      document.getElementById('repCharMobileTabInfo').textContent = `${c.name} · ${c.species_name || ''}`;
+      document.getElementById('repCharMobileTabInfo').textContent = `${repName} · ${c.species_name || ''}`;
       if (mEditBtn) mEditBtn.style.display = isOwnProfile ? '' : 'none';
       mFilledEl.style.display = 'flex';
       mEmptyEl.style.display  = 'none';
