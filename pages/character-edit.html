@@ -98,10 +98,20 @@
 
         <form class="register-form" id="editForm">
 
-          <!-- 개체명 (공통) -->
+          <!-- 개체명 (공통) — 종족주가 등록하는 이름. characters.name. 소유주는 확인만 가능(수정 불가). -->
           <div class="form-group">
-            <label class="form-label">이름 <span class="required">*</span></label>
+            <label class="form-label">개체명 <span class="required">*</span></label>
             <input type="text" id="charName" class="form-input" placeholder="개체 이름을 입력하세요">
+            <p class="form-hint">종족주가 등록한 개체명으로, 소유주는 변경할 수 없습니다.</p>
+          </div>
+
+          <!-- 소유주 설정 개체명 — characters.owner_custom_name.
+               현재 소유주 / 종족주 / admin·staff가 수정 가능(characters_name_edit_guard 트리거와 동일 정책,
+               2026-09-12: 종족주도 개체 관리자로서 수정 가능하도록 확장). 제3자는 볼 수 없음(owner 분기는 제외 — 그쪽은 charName 입력란을 재사용). -->
+          <div class="form-group" id="ownerCustomNameGroup" style="display:none;">
+            <label class="form-label">소유주 설정 개체명</label>
+            <input type="text" id="charOwnerCustomName" class="form-input" placeholder="소유주가 개인적으로 설정한 이름 (없으면 비워두세요)">
+            <p class="form-hint">소유주가 개인적으로 설정할 수 있는 개체명입니다.</p>
           </div>
 
           <!-- 종족주 영역 구분선 -->
@@ -721,7 +731,10 @@
         modules: { toolbar: QUILL_TOOLBAR },
       });
       attachSectionImageSupport(quill);
-      if (content) quill.root.innerHTML = content;
+      // quill.root.innerHTML을 직접 대입하면 Quill 내부 상태(Delta/빈 상태 판정)가 갱신되지 않아
+      // ql-blank 클래스가 그대로 남는다 — placeholder(::before, position:absolute)가 실제 내용 위에
+      // 겹쳐 보이는 원인. dangerouslyPasteHTML로 넣어야 Quill이 내부 상태까지 정상 갱신한다.
+      if (content) quill.clipboard.dangerouslyPasteHTML(content);
       quillInstances.set(id, quill);
     }
 
@@ -737,6 +750,11 @@
                  : type === 'relation' ? makeRelationCard()
                  : makeCustomCard();
       card.dataset.authorRole = authorRole;
+      // settings/relation 카드는 makeSettingsCard/makeRelationCard가 dataset.id를 'settings'/'relation'로
+      // 고정 부여한다 — 종족주 섹션과 소유주 섹션에 같은 타입이 동시에 있으면 id가 충돌해 quillInstances
+      // Map에서 서로 덮어써진다(권한 잠금이 엉뚱한 에디터에 걸리고, 저장 시 내용도 뒤섞일 수 있음).
+      // zone을 id에 포함시켜 종족주/소유주 섹션이 항상 구분되도록 한다.
+      if (type === 'settings' || type === 'relation') card.dataset.id = `${zone}_${type}`;
       document.getElementById(listId).appendChild(card);
       initCardQuill(card);
       if (zone === 'owner') updateOwnerSectionAddButtons();
@@ -784,7 +802,8 @@
         modules: { toolbar: QUILL_TOOLBAR_NO_IMAGE },
       });
       attachSectionImageSupport(relDescQ, { allowUpload: false });
-      if (data?.description) relDescQ.root.innerHTML = data.description;
+      // initCardQuill과 동일한 이유로 dangerouslyPasteHTML 사용 — ql-blank 잔존으로 인한 placeholder 겹침 방지
+      if (data?.description) relDescQ.clipboard.dangerouslyPasteHTML(data.description);
     }
 
     async function loadRelChars(speciesSelect, charSelectId) {
@@ -861,7 +880,14 @@
     }
 
     function applyFieldPermissions(role) {
-      if (role === 'admin') return;
+      if (role === 'admin') {
+        // admin(진짜 admin/staff, 또는 종족주=소유주 본인 겸직)은 등록명(characters.name)에 더해
+        // 소유주 설정 이름(owner_custom_name)도 직접 수정할 수 있어야 한다.
+        const group = document.getElementById('ownerCustomNameGroup');
+        // .form-group는 display:flex(세로 스택) 클래스라 'block'으로 덮어쓰면 레이아웃이 깨진다 — 반드시 'flex'로 복원
+        if (group) group.style.display = 'flex';
+        return;
+      }
 
       const mute = el => {
         if (!el) return;
@@ -877,10 +903,19 @@
 
       // 역할 안내 배너
       const notice = document.createElement('p');
-      notice.style.cssText = 'font-size:13px; color:var(--sky-deep); background:var(--sky-pale); border:1px solid #BAE6FD; border-radius:8px; padding:10px 14px; margin-top:8px; line-height:1.5;';
+      // margin-bottom: 안내 박스 하단 ↔ 첫 폼 라벨(개체명) 간격을 여기 한 곳에서 관리.
+      // <p> 기본 margin-block-end가 0으로 리셋돼 있고 .register-form 자체엔 위쪽 여백이 없어,
+      // 이 값이 곧 실제 간격이 된다(폼 내부 form-group간 gap:32px보다 살짝 좁게 맞춤).
+      notice.style.cssText = 'font-size:13px; color:var(--sky-deep); background:var(--sky-pale); border:1px solid #BAE6FD; border-radius:8px; padding:10px 14px; margin-top:8px; margin-bottom:24px; line-height:1.5;';
       document.getElementById('editSubtitle').insertAdjacentElement('afterend', notice);
 
       if (role === 'species_owner') {
+        // 종족주도 개체 관리자로서 소유주 설정 이름(owner_custom_name)을 수정할 수 있다
+        // (characters_name_edit_guard 트리거가 종족주까지 허용하도록 확장됨, 2026-09-12).
+        // 소유주 영역(owner_description 등)과 달리 owner_custom_name은 오프사이트 여부와 무관하게 항상 노출.
+        const ownerCustomNameGroupSO = document.getElementById('ownerCustomNameGroup');
+        if (ownerCustomNameGroupSO) ownerCustomNameGroupSO.style.display = 'flex';
+
         if (isOffsite) {
           notice.textContent = '종족주 권한으로 수정 중입니다. 오프사이트 개체로, 소유주 영역도 수정할 수 있어요.';
           // 오프사이트: 모든 제한 없음
@@ -906,7 +941,15 @@
         }
 
       } else if (role === 'owner') {
-        notice.textContent = '소유주 권한으로 수정 중입니다. 개체명과 소유주 영역만 수정할 수 있어요.';
+        notice.textContent = '소유주 권한으로 수정 중입니다. 소유주 설정 개체명과 소유주 영역만 수정할 수 있어요.';
+
+        // 개체명(characters.name)은 종족주 전용 — 소유주는 확인만 가능하도록 잠그고,
+        // 대신 소유주 설정 개체명(owner_custom_name) 입력란을 노출한다.
+        muteById('charName');
+        const ownerCustomNameGroup = document.getElementById('ownerCustomNameGroup');
+        // .form-group는 display:flex(세로 스택) 클래스라 'block'으로 덮어쓰면 레이아웃이 깨진다 — 반드시 'flex'로 복원
+        if (ownerCustomNameGroup) ownerCustomNameGroup.style.display = 'flex';
+
         // 종족주 영역 전체 잠금
         muteById('charDesc');
         const uploadBox = document.getElementById('uploadBox');
@@ -971,10 +1014,14 @@
       sectionsData.forEach(s => {
         const authorRole = s.author_role || 'species_owner';
         const target     = authorRole === 'owner' ? ownerList : speciesList;
+        const zone       = authorRole === 'owner' ? 'owner' : 'species';
         const card = s.type === 'settings' ? makeSettingsCard(s)
                    : s.type === 'relation' ? makeRelationCard(s)
                    : makeCustomCard(s);
         card.dataset.authorRole = authorRole;
+        // addSection()과 동일한 이유로 settings/relation은 zone을 id에 포함시켜 충돌을 막는다.
+        // 저장된 JSON의 s.id 값(과거 'settings'/'relation' 고정값)은 무시하고 항상 새로 계산 — 하위 호환 안전.
+        if (s.type === 'settings' || s.type === 'relation') card.dataset.id = `${zone}_${s.type}`;
         target.appendChild(card);
         initCardQuill(card, s.content || '');
       });
@@ -1031,7 +1078,10 @@
       }
 
       // 기존 데이터 채우기
-      document.getElementById('charName').value   = c.name;
+      // 개체명(charName)은 역할과 무관하게 항상 등록명(characters.name)을 보여준다 — 편집 가부만 역할별로 갈린다(applyFieldPermissions)
+      document.getElementById('charName').value = c.name;
+      // 소유주 설정 개체명 입력란 — 숨겨져 있어도 값은 채워둔다(applyFieldPermissions가 노출 여부만 결정)
+      document.getElementById('charOwnerCustomName').value = c.owner_custom_name || '';
       document.getElementById('charNumber').value = c.char_number || '';
       document.getElementById('charDesc').value   = c.description || '';
       document.getElementById('ownerDesc').value  = c.owner_description || '';
@@ -1901,8 +1951,9 @@
 
       // 소유주 전용 저장 (개체명·소유주 영역만)
       if (editRole === 'owner') {
-        const ownerName = document.getElementById('charName').value.trim();
-        if (!ownerName) { errorEl.textContent = '이름을 입력해주세요.'; return; }
+        // 소유주는 개체명(characters.name)이 아닌 소유주 설정 개체명(owner_custom_name)만 편집한다.
+        // 비워두면 NULL로 저장되어 상세 페이지의 등록명/소유주명 전환 탭이 다시 숨겨진다(선택 항목).
+        const ownerCustomName = document.getElementById('charOwnerCustomName').value.trim().normalize('NFC') || null;
 
         btn.textContent = '저장 중...';
         btn.disabled = true;
@@ -1914,14 +1965,14 @@
           const mergedSections  = [...speciesSections, ...ownerSections];
 
           const { error } = await sb.from('characters').update({
-            name:              ownerName,
+            owner_custom_name: ownerCustomName,
             owner_description: document.getElementById('ownerDesc').value.trim() || null,
             char_sections:     mergedSections.length ? mergedSections : null,
           }).eq('id', charId);
 
           if (error) throw new Error(`저장에 실패했어요: ${error.message}`);
 
-          await sb.from('adoptions').update({ character_name: ownerName }).eq('character_id', charId);
+          // 등록명(characters.name)은 이 분기에서 변경되지 않으므로 adoptions.character_name 동기화 불필요
 
           // 소유주 업적 체크
           try {
@@ -2216,6 +2267,8 @@
           owner_contact:       externalContact || null,
           description:         desc || null,
           ...((editRole !== 'species_owner' || isOffsiteChar) && { owner_description: ownerDesc || null }),
+          // 소유주 설정 이름(owner_custom_name) — admin과 종족주 둘 다 수정 가능(트리거 정책과 동일, 2026-09-12 확장)
+          ...((editRole === 'admin' || editRole === 'species_owner') && { owner_custom_name: document.getElementById('charOwnerCustomName').value.trim().normalize('NFC') || null }),
           image_url,
           thumbnail_url,
           default_image_index: selectedDefaultImageIndex,

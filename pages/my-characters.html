@@ -33,6 +33,26 @@
     }
     .folder-chip-manage:hover { background:var(--sky-pale); }
 
+    /* 이름 표시 설정 — 검색/필터 행과 별개로, 검색바 바로 위에서 목록 표시 옵션으로 독립된 행 */
+    .name-mode-row { display:flex; justify-content:flex-end; flex-wrap:wrap; margin-bottom:12px; }
+    .name-mode-toggle { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+    .name-mode-toggle-label { font-size:13px; font-weight:600; color:var(--text-sub); white-space:nowrap; }
+    .name-mode-btn {
+      padding:6px 12px; border:1.5px solid var(--border); border-radius:9px;
+      background:#fff; font-size:13px; font-weight:600; color:var(--text-sub);
+      cursor:pointer; font-family:inherit; transition:all 0.15s; white-space:nowrap;
+    }
+    .name-mode-btn:hover  { border-color:var(--sky-dark); color:var(--sky-dark); }
+    .name-mode-btn.active { background:var(--sky-dark); border-color:var(--sky-dark); color:#fff; }
+    @media (max-width:767px) {
+      /* PC와 동일하게 우측 정렬 유지 — 검색바 오른쪽 끝과 같은 기준선에 맞춘다 */
+      .name-mode-row { justify-content:flex-end; }
+      /* 전체 종족 / 종족순 필터 — 한 줄 유지 + 전체 종족을 더 넓게.
+         select의 기본 min-width:auto가 내용에 따라 줄바꿈을 유발할 수 있어 min-width:0으로 항상 shrink 가능하게 한다. */
+      .list-controls #speciesFilter { flex: 1.4; min-width: 0; }
+      .list-controls #sortSelect    { flex: 1;   min-width: 0; }
+    }
+
     /* 카드 이름 행 (이름 + ⋮ 메뉴) */
     .card-name-row { display:flex; align-items:flex-start; gap:4px; }
     .card-name-row .character-name { flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
@@ -213,6 +233,15 @@
 
         <div class="folder-chips" id="folderChips"></div>
 
+        <!-- 이름 표시 설정 — 검색/필터와 성격이 달라 별도 행(검색바 바로 위, 우측 정렬)으로 분리 -->
+        <div class="name-mode-row">
+          <div class="name-mode-toggle" role="group" aria-label="이름 표시 설정">
+            <span class="name-mode-toggle-label">이름 표시</span>
+            <button type="button" class="name-mode-btn active" id="nameModeBtn_registered" onclick="setNameDisplayMode('registered')">등록명</button>
+            <button type="button" class="name-mode-btn" id="nameModeBtn_owner" onclick="setNameDisplayMode('owner')">소유주명</button>
+          </div>
+        </div>
+
         <div class="list-controls">
           <input type="text" id="filterInput" class="list-search" placeholder="이름으로 검색..." oninput="filterCards()">
           <select class="list-sort" id="speciesFilter" onchange="filterCards()">
@@ -306,7 +335,35 @@
     let touchDragSrcEl      = null;
     let isInitialLoad       = true;
     let currentSort         = 'species';
+    let nameDisplayMode     = 'registered'; // 'registered'(등록명) | 'owner'(소유주 설정 개체명) — 계정 설정(user_settings)에 저장
     const pager = createPager(renderCards, 'paginationWrap', 'page', 32);
+
+    // 카드에 표시할 이름 계산 — owner 모드인데 owner_custom_name이 없으면 등록명으로 폴백(빈칸 방지)
+    function displayCharName(c) {
+      return (nameDisplayMode === 'owner' && c.owner_custom_name) ? c.owner_custom_name : c.name;
+    }
+
+    function updateNameModeButtons() {
+      document.getElementById('nameModeBtn_registered').classList.toggle('active', nameDisplayMode === 'registered');
+      document.getElementById('nameModeBtn_owner').classList.toggle('active', nameDisplayMode === 'owner');
+    }
+
+    // 이름 표시 설정 변경 — 화면에 즉시 반영 후 계정 설정(user_settings)에 저장. 실패 시 되돌림.
+    async function setNameDisplayMode(mode) {
+      if (mode === nameDisplayMode) return;
+      const prev = nameDisplayMode;
+      nameDisplayMode = mode;
+      updateNameModeButtons();
+      filterCards();
+
+      const { error } = await updateUserSettings(currentUser.id, { character_name_display_mode: mode });
+      if (error) {
+        nameDisplayMode = prev;
+        updateNameModeButtons();
+        filterCards();
+        alert('이름 표시 설정 저장에 실패했어요. 다시 시도해주세요.');
+      }
+    }
 
     // ── 초기화 ─────────────────────────────────────────
     async function initPage() {
@@ -314,10 +371,17 @@
       if (!currentUser) { window.location.href = 'login.html'; return; }
 
       const nickname = currentUser.user_metadata?.display_name || currentUser.user_metadata?.nickname || '유저';
-      const [{ data: chars, error }, { data: folders }] = await Promise.all([
+      const [{ data: chars, error }, { data: folders }, settings] = await Promise.all([
         getMyCharacters(currentUser.id, nickname),
         sb.from('character_folders').select('*').eq('user_id', currentUser.id).order('created_at'),
+        getUserSettings(currentUser.id).catch(e => {
+          console.warn('[my-characters] 이름 표시 설정 조회 실패, 기본값(등록명) 사용:', e);
+          return { ...DEFAULT_USER_SETTINGS };
+        }),
       ]);
+
+      nameDisplayMode = settings.character_name_display_mode === 'owner' ? 'owner' : 'registered';
+      updateNameModeButtons();
 
       document.getElementById('pageLoading').style.display = 'none';
       document.getElementById('pageContent').style.display  = 'block';
@@ -421,7 +485,7 @@
             ${imgHtml}
             <div class="character-info">
               <div class="card-name-row">
-                <p class="character-name">${c.name}</p>
+                <p class="character-name">${displayCharName(c)}</p>
                 <div class="card-menu-wrap">
                   <button class="card-menu-btn" title="메뉴"
                     onclick="event.preventDefault(); event.stopPropagation(); toggleCardMenu(${c.id})">⋮</button>

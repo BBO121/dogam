@@ -137,7 +137,7 @@ async function getMyCharacters(userId, nickname) {
   if (!userId) return { data: [], error: null };
   const { data, error } = await sb
     .from('characters')
-    .select('id, created_at, name, species_name, owner_nickname, description, number, image_url, custom_fields, additional_images, custom_field_values, designer_nickname, is_sensitive, sensitive_note, category_id, category_label, category_color, char_categories, pending_transfer, char_sections, owner_user_id, owner_is_offsite, char_number, allow_free_adoption, allow_resale, allow_paid_adoption, allow_other_adoption, thumbnail_url, folder_id, owner_description, original_image_url, watermark_type, original_additional_images, designer_user_ids, representative_step_id, default_image_index')
+    .select('id, created_at, name, owner_custom_name, species_name, owner_nickname, description, number, image_url, custom_fields, additional_images, custom_field_values, designer_nickname, is_sensitive, sensitive_note, category_id, category_label, category_color, char_categories, pending_transfer, char_sections, owner_user_id, owner_is_offsite, char_number, allow_free_adoption, allow_resale, allow_paid_adoption, allow_other_adoption, thumbnail_url, folder_id, owner_description, original_image_url, watermark_type, original_additional_images, designer_user_ids, representative_step_id, default_image_index')
     .eq('owner_user_id', userId)
     .neq('owner_is_offsite', true)
     .order('created_at', { ascending: false });

@@ -79,6 +79,27 @@
     }
     .tos-person-name:hover { text-decoration: underline; }
     .tos-empty { color: var(--text-mute); font-size: 13px; margin: 0; }
+
+    /* 개체 상세 — 등록명/소유주명 전환 탭. 클릭 영역은 넉넉히, 이름(28px/800)보다는 확실히 작게 유지 */
+    /* 탭↔개체명 간격은 h1.char-page-name 자체의 margin-top(8px, style.scss)에게만 맡긴다 — 중복 방지 */
+    .char-name-tabs { display: flex; gap: 8px; margin-top: 14px; }
+    .char-name-tab {
+      padding: 6px 16px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: var(--text-mute);
+      font-size: 12px;
+      font-weight: 600;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background .15s, border-color .15s, color .15s;
+    }
+    .char-name-tab.active {
+      background: var(--sky-pale);
+      border-color: var(--sky-deep);
+      color: var(--sky-deep);
+    }
   </style>
 </head>
 <body>
@@ -253,6 +274,19 @@
     let _origAdditionalUrls     = null;  // original_additional_images (on-demand 로드)
 
     // 성장 Step 버튼 클릭 — 이미지 있는 Step만 버튼으로 존재하므로 항상 안전하게 전환 가능
+    // 캐릭터 상세 메인 이름 영역 전환 (등록명 ↔ 소유주 설정 이름). owner_custom_name이 있을 때만 탭이 노출된다.
+    function setCharNameMode(mode) {
+      if (!_charData || (mode === 'owner' && !_charData.owner_custom_name)) return;
+      _nameDisplayMode = mode;
+
+      const nameEl = document.getElementById('charPageName');
+      if (nameEl) nameEl.textContent = mode === 'owner' ? _charData.owner_custom_name : _charData.name;
+
+      document.querySelectorAll('.char-name-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.mode === mode);
+      });
+    }
+
     function selectCharStep(order) {
       _currentStep     = order;
       _showingOriginal = false;
@@ -369,6 +403,7 @@
     let _nickToId       = {};
     let _idToNick       = {};
     let _charData       = null;
+    let _nameDisplayMode = 'registered'; // 'registered'(등록명) | 'owner'(소유주명) — 캐릭터 상세 메인 이름 탭
     let _transferToNick = null;
     let _profileTosMap  = {}; // user_id -> user_profiles.tos (제작자 개인공지/TOS 재사용)
 
@@ -878,12 +913,19 @@
       // original_image_url 제외 — 권한자가 토글 시 on-demand 조회
       // owner_contact/designer_contact는 연락처라 공개 뷰(characters_public)에 없음 —
       // 본인/관리자가 연락처를 포함해 봐야 하는 편집 화면은 get_character_for_edit() RPC를 쓴다.
-      const CHAR_SELECT = 'id,name,species_name,image_url,thumbnail_url,default_image_index,additional_images,owner_nickname,owner_user_id,owner_is_offsite,designer_nickname,designer_user_ids,designer_external,char_number,description,owner_description,is_sensitive,sensitive_note,char_sections,custom_field_values,char_categories,allow_free_adoption,allow_resale,allow_paid_adoption,allow_other_adoption,pending_transfer,created_at,representative_step_id,special_badge,artist_user_ids,artist_external,artist_nickname';
+      const CHAR_SELECT = 'id,name,owner_custom_name,species_name,image_url,thumbnail_url,default_image_index,additional_images,owner_nickname,owner_user_id,owner_is_offsite,designer_nickname,designer_user_ids,designer_external,char_number,description,owner_description,is_sensitive,sensitive_note,char_sections,custom_field_values,char_categories,allow_free_adoption,allow_resale,allow_paid_adoption,allow_other_adoption,pending_transfer,created_at,representative_step_id,special_badge,artist_user_ids,artist_external,artist_nickname';
       const GALLERY_SELECT = 'id,character_id,uploaded_by,designer_user_ids,designer_external,designer_nickname,category,description,image_url,thumbnail_url,created_at';
-      const [{ data: c, error }, { data: siteUserData }, { data: galleryRows }] = await Promise.all([
+      // user_settings.character_name_display_mode — MY 캐릭터 설정과 같은 공용 헬퍼(js/utils.js)로 조회.
+      // 상세 페이지 "초기" 표시 이름을 정하는 용도로만 쓰고, 여기서 탭을 눌러도 이 설정 자체는 저장하지 않는다.
+      // 나머지 3개 쿼리와 병렬로 한 번만 조회해 중복 조회/깜빡임을 방지한다.
+      const [{ data: c, error }, { data: siteUserData }, { data: galleryRows }, nameSettings] = await Promise.all([
         sb.from('characters_public').select(CHAR_SELECT).eq('id', charId).single(),
         sb.rpc('get_all_users'),
         sb.from('character_gallery_public').select(GALLERY_SELECT).eq('character_id', charId).order('created_at', { ascending: false }),
+        getUserSettings(user?.id).catch(e => {
+          console.warn('[character.html] 이름 표시 설정 조회 실패, 기본값(등록명) 사용:', e);
+          return { ...DEFAULT_USER_SETTINGS };
+        }),
       ]);
 
       if (error || !c) {
@@ -898,6 +940,9 @@
       _idToNick = Object.fromEntries((siteUserData || []).filter(u => u.id && u.nickname).map(u => [u.id, u.nickname]));
       _siteNicks = siteNicks;
       _charData  = c;
+      // 초기 활성 탭: 설정이 'owner'이고 owner_custom_name이 실제로 있을 때만 소유주명으로 시작, 그 외에는 전부 등록명
+      const _hasOwnerName = !!(c.owner_custom_name && c.owner_custom_name.trim());
+      _nameDisplayMode = (nameSettings?.character_name_display_mode === 'owner' && _hasOwnerName) ? 'owner' : 'registered';
       _siteUserData = siteUserData || [];
       _currentUser  = user;
       _galleryItems = galleryRows || [];
@@ -1055,13 +1100,22 @@
       const ownerDisplayNick = (!c.owner_is_offsite && c.owner_user_id && _idToNick[c.owner_user_id])
         ? _idToNick[c.owner_user_id] : c.owner_nickname;
 
+      const hasOwnerCustomName = !!(c.owner_custom_name && c.owner_custom_name.trim());
+      if (!hasOwnerCustomName) _nameDisplayMode = 'registered';
+      const displayedCharName = (hasOwnerCustomName && _nameDisplayMode === 'owner') ? c.owner_custom_name : c.name;
+
       document.getElementById('charContent').innerHTML = `
         <div class="char-page-header">
           <div class="breadcrumb">
             ${(c.species_name && c.species_name !== '(알 수 없음)') ? `<a href="${speciesHref}">${speciesCrumbLabel}</a><span>/</span>` : ''}
             <span>${c.name}</span>
           </div>
-          <h1 class="char-page-name">${c.name}</h1>
+          ${hasOwnerCustomName ? `
+          <div class="char-name-tabs" role="tablist" aria-label="이름 전환">
+            <button type="button" class="char-name-tab ${_nameDisplayMode === 'registered' ? 'active' : ''}" data-mode="registered" onclick="setCharNameMode('registered')">등록명</button>
+            <button type="button" class="char-name-tab ${_nameDisplayMode === 'owner' ? 'active' : ''}" data-mode="owner" onclick="setCharNameMode('owner')">소유주명</button>
+          </div>` : ''}
+          <h1 class="char-page-name" id="charPageName">${displayedCharName}</h1>
         </div>
 
         <div class="char-body">
