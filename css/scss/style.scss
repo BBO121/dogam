@@ -393,6 +393,32 @@
   background: var(--white);
 }
 
+/* 정렬 방향(오름차순/내림차순) 토글 버튼 — .list-sort 와 높이를 맞춘 아이콘 버튼 */
+.sort-dir-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  background: var(--white);
+  color: var(--text-sub);
+  cursor: pointer;
+  line-height: 0;
+}
+
+.sort-dir-btn svg {
+  transition: transform 0.15s;
+}
+
+.sort-dir-btn[data-dir="asc"] svg {
+  transform: rotate(180deg);
+}
+
 /* ═══════════════════════════════════════
    등록 폼
 ═══════════════════════════════════════ */

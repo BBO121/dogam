@@ -7,6 +7,7 @@
 //   #charactersSection  섹션 래퍼 (초기 display:none → mount 시 노출)
 //   #charCount          섹션 제목 옆 개수 뱃지
 //   #charSort           정렬 select (recent | name | charNumber)
+//   #charSortDirBtn     정렬 방향 토글 버튼 (data-dir=asc|desc, 기준별로 방향을 기억)
 //   #manageBtn          관리 토글 버튼 (canManage 일 때만 노출)
 //   #manageBar          관리 모드 액션 바
 //   #selectedCount #deleteSelectedBtn
@@ -24,13 +25,17 @@
   // species.html 과 동일 — 이 계정만 종족 소유권과 무관하게 관리 기능 접근 가능.
   const SUPER_ADMIN_USER_ID = '78ad7670-847e-4347-b50c-8d8cb2131861';
 
-  const SORT_KEY = 'speciesCharSort';
+  const SORT_KEY     = 'speciesCharSort';
+  const SORT_DIR_KEY = 'speciesCharSortDir';
+  // 정렬 기준별 기본 방향 — 방향 토글 도입 전부터의 기존 동작(최근순=내림차순, 이름순/개체번호순=오름차순)을 그대로 유지.
+  const DEFAULT_SORT_DIR = { recent: 'desc', name: 'asc', charNumber: 'asc' };
 
   let cfg = null;            // { speciesName, canManage, idToNick, onCount }
   let allChars       = [];
   let manageMode     = false;
   let activeCategory = null;
   let sortWired      = false;
+  let sortDirections = Object.assign({}, DEFAULT_SORT_DIR); // 기준(sortBy)별 현재 방향
 
   const $ = (id) => document.getElementById(id);
 
@@ -69,14 +74,23 @@
       $('charSort').value = saved;
     }
 
+    try {
+      const savedDir = JSON.parse(localStorage.getItem(SORT_DIR_KEY) || '{}');
+      sortDirections = Object.assign({}, DEFAULT_SORT_DIR, savedDir);
+    } catch (e) {
+      sortDirections = Object.assign({}, DEFAULT_SORT_DIR);
+    }
+
     if (!sortWired && $('charSort')) {
       $('charSort').addEventListener('change', () => {
         localStorage.setItem(SORT_KEY, $('charSort').value);
+        updateSortDirButton();
         renderChars();
       });
       sortWired = true;
     }
 
+    updateSortDirButton();
     renderChars();
     if (typeof cfg.onCount === 'function') cfg.onCount(allChars.length);
 
@@ -197,10 +211,39 @@
     });
   }
 
+  // ── 정렬 방향 토글 ─────────────────────────────────────
+  function currentSortBy() {
+    const el = $('charSort');
+    return el ? el.value : 'recent';
+  }
+
+  function currentSortDir() {
+    return sortDirections[currentSortBy()] || 'asc';
+  }
+
+  function updateSortDirButton() {
+    const btn = $('charSortDirBtn');
+    if (!btn) return;
+    const dir = currentSortDir();
+    const label = dir === 'desc' ? '내림차순' : '오름차순';
+    const nextLabel = dir === 'desc' ? '오름차순' : '내림차순';
+    btn.dataset.dir = dir;
+    btn.title = `정렬 방향: ${label}`;
+    btn.setAttribute('aria-label', `정렬 방향: ${label} (누르면 ${nextLabel}으로 전환)`);
+  }
+
+  function toggleSortDir() {
+    const sortBy = currentSortBy();
+    sortDirections[sortBy] = (sortDirections[sortBy] || 'asc') === 'asc' ? 'desc' : 'asc';
+    localStorage.setItem(SORT_DIR_KEY, JSON.stringify(sortDirections));
+    updateSortDirButton();
+    renderChars();
+  }
+
   // ── 카드 목록 렌더 ─────────────────────────────────────
   function renderChars() {
-    const sortEl = $('charSort');
-    const sort = sortEl ? sortEl.value : 'recent';
+    const sort = currentSortBy();
+    const dir = currentSortDir() === 'desc' ? -1 : 1;
     const idToNick = (cfg && cfg.idToNick) || {};
     let list = [...allChars];
 
@@ -208,8 +251,10 @@
       list = list.filter(c => (c.char_categories || []).some(cat => cat.label === activeCategory));
     }
 
-    if (sort === 'name') {
-      list.sort((a, b) => a.name.localeCompare(b.name, 'ko'));
+    if (sort === 'recent') {
+      list.sort((a, b) => dir * (new Date(a.created_at) - new Date(b.created_at)));
+    } else if (sort === 'name') {
+      list.sort((a, b) => dir * a.name.localeCompare(b.name, 'ko'));
     } else if (sort === 'charNumber') {
       const getGroup = str => {
         if (!str) return 4;
@@ -224,13 +269,14 @@
         const bStr = b.char_number || '';
         const aG = getGroup(aStr);
         const bG = getGroup(bStr);
+        // 그룹 우선순위(숫자>영문>한글>기타>빈값)는 방향과 무관하게 항상 유지 — 빈값이 내림차순에서 위로 튀어오르지 않도록.
         if (aG !== bG) return aG - bG;
         if (aG === 0) {
           const diff = firstNum(aStr) - firstNum(bStr);
-          return diff !== 0 ? diff : aStr.localeCompare(bStr, 'ko');
+          return dir * (diff !== 0 ? diff : aStr.localeCompare(bStr, 'ko'));
         }
         if (aG === 4) return 0;
-        return aStr.localeCompare(bStr, 'ko');
+        return dir * aStr.localeCompare(bStr, 'ko');
       });
     }
 
@@ -338,6 +384,7 @@
   // ── 전역 노출 ──────────────────────────────────────────
   // 정적 HTML / 카드 템플릿의 인라인 onclick 이 참조하는 이름들 (species.html 과 동일).
   window.renderChars          = renderChars;
+  window.toggleSortDir        = toggleSortDir;
   window.toggleManage         = toggleManage;
   window.toggleCheck          = toggleCheck;
   window.onCheckChange        = onCheckChange;

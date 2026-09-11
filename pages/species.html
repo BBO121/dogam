@@ -58,6 +58,9 @@
               <option value="name">이름순</option>
               <option value="charNumber">개체번호순</option>
             </select>
+            <button type="button" id="charSortDirBtn" class="sort-dir-btn" data-dir="desc" onclick="toggleSortDir()" title="정렬 방향: 내림차순" aria-label="정렬 방향: 내림차순 (누르면 오름차순으로 전환)">
+              <svg width="12" height="12" viewBox="0 0 12 12"><path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </button>
             <button id="manageBtn" style="display:none; padding:6px 14px; border:1px solid var(--border); border-radius:8px; background:#fff; font-size:13px; cursor:pointer; color:var(--text-sub);" onclick="toggleManage()">관리</button>
           </div>
         </div>
