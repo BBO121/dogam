@@ -81,6 +81,10 @@
     <main class="main">
       <div class="register-wrap">
 
+        <div id="pageLoading" class="page-loading">불러오는 중...</div>
+
+        <div id="pageContent" style="display:none;">
+
         <div class="breadcrumb" style="margin-bottom: 24px;">
           <a href="index.html">홈</a>
           <span>/</span>
@@ -408,6 +412,8 @@
           </div>
 
         </form>
+
+        </div><!-- /pageContent -->
       </div>
     </main>
   </div>
@@ -733,8 +739,10 @@
       attachSectionImageSupport(quill);
       // quill.root.innerHTML을 직접 대입하면 Quill 내부 상태(Delta/빈 상태 판정)가 갱신되지 않아
       // ql-blank 클래스가 그대로 남는다 — placeholder(::before, position:absolute)가 실제 내용 위에
-      // 겹쳐 보이는 원인. dangerouslyPasteHTML로 넣어야 Quill이 내부 상태까지 정상 갱신한다.
-      if (content) quill.clipboard.dangerouslyPasteHTML(content);
+      // 겹쳐 보이는 원인이었다. dangerouslyPasteHTML도 내부 상태는 정상 갱신하지만 부작용으로
+      // 에디터에 focus를 줘서 페이지가 그 위치로 스크롤되는 문제가 있어(실측 확인),
+      // 동일하게 Delta 기반이면서 focus를 유발하지 않는 setContents(..., 'silent')로 대체한다.
+      if (content) quill.setContents(quill.clipboard.convert(content), 'silent');
       quillInstances.set(id, quill);
     }
 
@@ -802,8 +810,8 @@
         modules: { toolbar: QUILL_TOOLBAR_NO_IMAGE },
       });
       attachSectionImageSupport(relDescQ, { allowUpload: false });
-      // initCardQuill과 동일한 이유로 dangerouslyPasteHTML 사용 — ql-blank 잔존으로 인한 placeholder 겹침 방지
-      if (data?.description) relDescQ.clipboard.dangerouslyPasteHTML(data.description);
+      // initCardQuill과 동일한 이유로 setContents(..., 'silent') 사용 — ql-blank 겹침 방지 + focus/스크롤 부작용 없음
+      if (data?.description) relDescQ.setContents(relDescQ.clipboard.convert(data.description), 'silent');
     }
 
     async function loadRelChars(speciesSelect, charSelectId) {
@@ -877,6 +885,25 @@
         }
       });
       return sections;
+    }
+
+    // 이름 영역(개체명 / 소유주 설정 개체명)만 담당하는 가벼운 권한 적용 — 값 세팅 직후 바로 호출된다.
+    // 여기 조건은 applyFieldPermissions()의 admin/species_owner/owner 분기와 항상 동일하게 유지해야 한다.
+    function applyNameFieldPermissions(role) {
+      if (role === 'owner') {
+        const nameInput = document.getElementById('charName');
+        if (nameInput) {
+          nameInput.disabled = true;
+          nameInput.readOnly = true;
+          nameInput.style.background = '#f8fafc';
+          nameInput.style.color      = 'var(--text-mute)';
+        }
+      }
+      if (role === 'owner' || role === 'species_owner' || role === 'admin') {
+        const group = document.getElementById('ownerCustomNameGroup');
+        // .form-group는 display:flex(세로 스택) 클래스라 'block'으로 덮어쓰면 레이아웃이 깨진다 — 반드시 'flex'로 복원
+        if (group) group.style.display = 'flex';
+      }
     }
 
     function applyFieldPermissions(role) {
@@ -1086,6 +1113,13 @@
       document.getElementById('charDesc').value   = c.description || '';
       document.getElementById('ownerDesc').value  = c.owner_description || '';
 
+      // 이름 영역(개체명/소유주 설정 개체명)만 값 세팅 직후 곧바로 노출·잠금 상태를 확정한다.
+      // applyFieldPermissions()는 디자이너/아티스트 목록(loadUsers) 등 아직 도착하지 않은 데이터에
+      // 의존하는 로직까지 함께 처리해서 뒤에서(Promise.all 이후) 호출할 수밖에 없는데, 그때까지
+      // ownerCustomNameGroup이 display:none으로 남아있어 "소유주 설정 개체명"만 뒤늦게 나타나 보이는
+      // 원인이었다. 여기서 먼저 확정해두면 나머지는 applyFieldPermissions()가 그대로(멱등하게) 이어받는다.
+      applyNameFieldPermissions(editRole);
+
 
       selectedDefaultImageIndex = c.default_image_index || null;
       renderDefaultImgGrid();
@@ -1143,6 +1177,16 @@
 
       renderExistingSections(c.char_sections || []);
       applyFieldPermissions(editRole);
+
+      // 데이터/에디터 렌더가 모두 끝난 뒤에야 폼을 보여준다 — 빈 폼이 먼저 보였다가 값이
+      // 채워지는 깜빡임을 없앤다(my-characters.html 등 기존 페이지의 pageLoading/pageContent 패턴 재사용).
+      document.getElementById('pageLoading').style.display = 'none';
+      document.getElementById('pageContent').style.display  = 'block';
+
+      // Quill 에디터 여러 개를 순차 생성하면 브라우저가 마지막 에디터로 focus+스크롤하는 부작용이
+      // 있었다(초기화 로직 자체는 아래에서 원인 제거함) — 혹시 남은 경우를 대비한 최종 안전망.
+      if (document.activeElement && document.activeElement !== document.body) document.activeElement.blur();
+      window.scrollTo(0, 0);
     }
 
     // species_steps 조회 요청이 겹칠 때 늦게 도착한 응답이 최신 요청 결과를 덮어쓰지 않도록 막는 토큰.
