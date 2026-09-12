@@ -26,7 +26,8 @@ function formatShopNameThumb(name) {
     .replace(/^(옥토몬스터)\(Octomonster\)$/, '$1<br>(Octomonster)')
     .replace(/^(쁘띠아라크네)\(Petit Arachne\)$/, '$1<br>(Petit Arachne)')
     .replace(/^(몰링)\(Molling\)$/, '$1<br>(Molling)')
-    .replace(/^(뾰둥이)\(PPYO\)$/, '$1<br>(PPYO)');
+    .replace(/^(뾰둥이)\(PPYO\)$/, '$1<br>(PPYO)')
+    .replace(/^(드라카우\d?)\(Dracow\)$/, '$1<br>(Dracow)');
 }
 
 const TICKET_BUMP_CONDITION_HTML =
