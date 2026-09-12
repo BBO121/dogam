@@ -33,6 +33,23 @@ function debounce(fn, wait = 300) {
   };
 }
 
+// LABBER 종족명 캐시 — characters 테이블은 species_id가 아니라 species_name(텍스트)으로
+// 종족과 연결되므로, 개체 목록에서 LABBER를 제외하려면 이름이 필요하다. ID(utils.js
+// LABBER_SPECIES_ID)만 하드코딩하고 이름은 species 테이블에서 조회해 캐싱한다.
+let _labberSpeciesNamePromise = null;
+async function getLabberSpeciesName() {
+  if (typeof LABBER_SPECIES_ID === 'undefined') return null;
+  if (!_labberSpeciesNamePromise) {
+    _labberSpeciesNamePromise = sb
+      .from('species')
+      .select('name')
+      .eq('id', LABBER_SPECIES_ID)
+      .maybeSingle()
+      .then(({ data }) => data?.name || null);
+  }
+  return _labberSpeciesNamePromise;
+}
+
 /**
  * 개체 검색
  * @param {string} query
@@ -58,6 +75,13 @@ async function searchCharacters(query, options = {}) {
       'id, name, species_name, owner_nickname, owner_user_id, image_url, thumbnail_url, default_image_index, created_at, is_sensitive, sensitive_note',
       { count: 'exact' }
     );
+
+    // LABBER 종족 개체는 일반 개체 목록/통합검색에 노출하지 않는다 (개체기록실 전용).
+    // speciesName으로 LABBER를 직접 지정해서 조회하는 경우(개체기록실 등)는 예외로 둔다.
+    const labberName = await getLabberSpeciesName();
+    if (labberName && speciesName !== labberName) {
+      builder = builder.neq('species_name', labberName);
+    }
 
     if (q.length >= minLength) {
       const pattern = escapeOrValue(`%${escapeIlike(q)}%`);
