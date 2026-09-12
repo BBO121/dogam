@@ -284,6 +284,21 @@
   }
 }
 
+/* 데스크탑/태블릿(768px~)에서도 카트리지 계열(빈 카트리지 포함) PNG의 투명
+   여백 때문에 아트웍이 위로 떠 보이는 문제는 화면 크기와 무관하므로, 모바일과
+   동일하게 5px 아래로 이동한다. 10% 확대(scale)는 데스크탑에서는 요청되지
+   않았으므로 적용하지 않는다 — 데스크탑은 기본 .shop-thumb-img img(width/
+   height: 100%, object-fit: cover)를 그대로 쓰고 위치만 보정한다.
+   위 모바일 규칙(max-width: 767px)과 겹치지 않도록 min-width: 768px 로 분리해
+   같은 뷰포트에서 두 규칙이 동시에 걸려 transform 값이 서로 덮어쓰는 일이
+   없게 했다. */
+@media (min-width: 768px) {
+  .labbershop-page .shop-thumb[data-item-code^="labber_cartridge_"] .shop-thumb-img img,
+  .labbershop-page .shop-thumb[data-item-code="labber_empty_cartridge"] .shop-thumb-img img {
+    transform: translateY(5px);
+  }
+}
+
 /* 아래는 hero(NPC) 관련 — _labber.scss 의 모바일 규칙과 같은 breakpoint(640px). */
 @media (max-width: 640px) {
   /* NPC C 이미지를 화면 오른쪽 끝까지 붙임 (labber-shop 페이지에만 — 수상한 연구실 영향 없음).
