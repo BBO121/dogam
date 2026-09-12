@@ -1047,6 +1047,14 @@
     border-radius: 0;
 }
 
+.profile-avatar-wrap.frame-sp-ppyo::after {
+    border: none;
+    inset: -13.0208%;
+    background-image: url('../images/shop/frame_sp_ppyo.png');
+    background-size: 100% 100%;
+    border-radius: 0;
+}
+
 .profile-avatar-wrap.frame-li-bbo::after {
     border: none;
     inset: -13.0208%;
@@ -7944,6 +7952,7 @@ body.page-index .species-card .sensitive-overlay-hint {
 .frame-preview.frame-sp-bexolotl     { border: none; background-image: url('../images/shop/frame_sp_Bexolotl.png');   background-size: cover; background-position: center; }
 .frame-preview.frame-sp-bubblere     { border: none; background-image: url('../images/shop/frame_sp_bubblere.png');  background-size: cover; background-position: center; }
 .frame-preview.frame-sp-molling      { border: none; background-image: url('../images/shop/frame_sp_molling.png');   background-size: cover; background-position: center; }
+.frame-preview.frame-sp-ppyo         { border: none; background-image: url('../images/shop/frame_sp_ppyo.png');      background-size: cover; background-position: center; }
 .frame-preview.frame-li-bbo          { border: none; background-image: url('../images/shop/frame_li_bbo.png');      background-size: cover; background-position: center; }
 
 /* 상품 상세 모달 */
@@ -8457,6 +8466,9 @@ body.page-index .species-card .sensitive-overlay-hint {
 .bag-ep-preview-wrap.frame-sp-molling            { overflow: visible; }
 .bag-ep-preview-wrap.frame-sp-molling .bag-ep-avatar { border-radius: 20px; overflow: hidden; }
 .bag-ep-preview-wrap.frame-sp-molling::after      { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_sp_molling.png');    background-size: 100% 100%; border-radius: 0; }
+.bag-ep-preview-wrap.frame-sp-ppyo               { overflow: visible; }
+.bag-ep-preview-wrap.frame-sp-ppyo .bag-ep-avatar { border-radius: 20px; overflow: hidden; }
+.bag-ep-preview-wrap.frame-sp-ppyo::after         { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_sp_ppyo.png');       background-size: 100% 100%; border-radius: 0; }
 .bag-ep-preview-wrap.frame-li-bbo                { overflow: visible; }
 .bag-ep-preview-wrap.frame-li-bbo .bag-ep-avatar  { border-radius: 20px; overflow: hidden; }
 .bag-ep-preview-wrap.frame-li-bbo::after          { border: none; inset: -13.0208%; background-image: url('../images/shop/frame_li_bbo.png');      background-size: 100% 100%; border-radius: 0; }
@@ -8554,6 +8566,7 @@ body.page-index .species-card .sensitive-overlay-hint {
 .bag-ep-frame-wrap.frame-sp-bexolotl::after     { border: none; background-image: url('../images/shop/frame_sp_Bexolotl.png');   background-size: cover; background-position: center; }
 .bag-ep-frame-wrap.frame-sp-bubblere::after     { border: none; background-image: url('../images/shop/frame_sp_bubblere.png');  background-size: cover; background-position: center; }
 .bag-ep-frame-wrap.frame-sp-molling::after      { border: none; background-image: url('../images/shop/frame_sp_molling.png');   background-size: cover; background-position: center; }
+.bag-ep-frame-wrap.frame-sp-ppyo::after         { border: none; background-image: url('../images/shop/frame_sp_ppyo.png');      background-size: cover; background-position: center; }
 .bag-ep-frame-wrap.frame-li-bbo::after          { border: none; background-image: url('../images/shop/frame_li_bbo.png');      background-size: cover; background-position: center; }
 
 .bag-ep-avatar {
@@ -8962,6 +8975,7 @@ body.page-index .species-card .sensitive-overlay-hint {
 .deco-modal-frame-preview.frame-sp-bexolotl     { border: none; background-image: url('../images/shop/frame_sp_Bexolotl.png');   background-size: cover; background-position: center; }
 .deco-modal-frame-preview.frame-sp-bubblere     { border: none; background-image: url('../images/shop/frame_sp_bubblere.png');  background-size: cover; background-position: center; }
 .deco-modal-frame-preview.frame-sp-molling      { border: none; background-image: url('../images/shop/frame_sp_molling.png');   background-size: cover; background-position: center; }
+.deco-modal-frame-preview.frame-sp-ppyo         { border: none; background-image: url('../images/shop/frame_sp_ppyo.png');      background-size: cover; background-position: center; }
 .deco-modal-frame-preview.frame-li-bbo          { border: none; background-image: url('../images/shop/frame_li_bbo.png');      background-size: cover; background-position: center; }
 
 .deco-modal-sticker-img {
