@@ -169,46 +169,92 @@
 @media (max-width: 767px) {
   .labbershop-page .shop-cat-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 4px;
+    gap: 3px;
   }
   /* 그리드/플렉스 아이템은 기본 min-width: auto 라 트랙 폭을 고정해도
      내용(텍스트)이 셀보다 커지려 하면 카드 자체가 넘칠 수 있다.
-     min-width: 0 으로 명시해 카드가 트랙 폭 안으로 정상적으로 줄어들게 한다. */
+     min-width: 0 으로 명시해 카드가 트랙 폭 안으로 정상적으로 줄어들게 한다.
+     padding/gap 은 아트웍 영역(.shop-thumb-img, width:100% 상속)이 열 폭을
+     최대한 그대로 쓸 수 있도록 좌우만 최소로 줄였다(세로는 카드 클릭 영역
+     확보를 위해 유지). */
   .labbershop-page .shop-thumb {
     min-width: 0;
     max-width: 100%;
-    padding: 4px 2px;
+    padding: 4px 1px;
+    gap: 3px;
   }
   /* 좌우 padding 도 줄여 4열 각 칸에 조금이라도 폭을 더 확보 */
   .labbershop-page .shop-tab-panel {
-    padding: 10px 8px;
+    padding: 8px 6px;
   }
 
-  /* ── 카드 내부 요소 축소 ──────────────────────────────────
-     .shop-thumb-img 는 원래 aspect-ratio: 1 + width: 100% 라 박스 자체는
-     (좁아진) 열 폭에 맞춰 정사각형을 유지한다. 그 안의 <img>가 object-fit:
-     cover(꽉 채워 크롭)면 원본 PNG마다 실제 그림 주변 투명 여백 비율이 달라
-     "그려진 아이콘"의 체감 크기가 카드마다 달라 보이므로, object-fit: contain
-     + %기반 max-width/max-height 로 원본 비율을 유지한 채(찌그러뜨리지 않고)
-     박스 크기에 비례한 동일한 기준 안에 표시한다. px 고정값이 아니라 %로
-     잡아서 4열(320~430px 전부에서 열 폭이 다름)에서도 항상 박스 안에 들어가
-     넘치지 않는다. */
+  /* ── 아트웍 표시 영역 확대 ──────────────────────────────────
+     .shop-thumb-img(아트웍을 담는 정사각형 박스)는 width: 100% + aspect-ratio: 1 로
+     이미 열 폭 전체를 정사각형으로 채우고 있어 "박스" 자체는 이 열 개수(4열)
+     안에서 낼 수 있는 최대치다. 문제는 그 안의 <img>가 max-width/height: 72%로
+     더 작게 눌려 있던 것 — 이걸 90%까지 끌어올려 박스 대비 아트웍 비중을
+     키운다(그래도 100% 미만으로 남겨 등급/보유 배지 오버레이와 여백 확보).
+     원본 PNG 안에 이미 내장된 투명 여백(예: 1000x1000 캔버스에 작게 그려진
+     아트웍)까지는 CSS로 크롭하지 않고 그대로 두되(object-fit: contain 유지 —
+     세로형 잉크 병 / 넓은 카트리지 / 큰 키트 등 비율이 다른 원본도 찌그러짐 없이
+     표시), 박스 자체를 카드 안에서 최대치로 키워 "그림이 차지하는 실제 면적"을
+     늘리는 방향으로 접근했다. */
   .labbershop-page .shop-thumb-img img {
     width: auto;
     height: auto;
-    max-width: 72%;
-    max-height: 72%;
+    max-width: 90%;
+    max-height: 90%;
     object-fit: contain;
+  }
+
+  /* 모듈 계열(빈 모듈 포함)만 이미지 자체를 추가로 10% 확대. wrapper
+     (.shop-thumb-img, width/height/aspect-ratio/grid)는 전혀 건드리지 않고
+     <img>에 transform: scale(1.1)만 얹는다 — object-fit: contain + %기반
+     크기(위 규칙)는 그대로 상속되므로 박스 대비 90% 크기로 레이아웃된 뒤
+     시각적으로만 1.1배 커진다(90%×1.1≈99% — 박스 폭을 넘지 않고, PNG
+     가장자리 투명 여백 덕에 실제 그림이 잘릴 가능성도 낮다). 혹시라도
+     넘치더라도 .shop-thumb-img 의 overflow: hidden 이 그대로 안전망 역할을
+     한다. 카드 크기/열 개수/gap/이름/가격/배지 위치는 전부 레이아웃 성질이라
+     transform(페인트 단계)의 영향을 받지 않는다.
+     "키트" 카테고리에는 빈 모듈 외에 일회용 배아키트도 섞여 있어 카테고리
+     단위로는 고를 수 없으므로, 상품 카드에 이미 있는 data-item-code 로
+     정확히 지정한다(잉크/MYO/일회용 배아키트는 대상 밖 — 미지정 상태 그대로
+     유지). 카트리지 계열은 세로 위치 보정이 추가로 필요해 아래 별도 규칙으로
+     분리했다. */
+  .labbershop-page .shop-thumb[data-item-code="labber_pod_circle"] .shop-thumb-img img,
+  .labbershop-page .shop-thumb[data-item-code="labber_pod_cylinder"] .shop-thumb-img img,
+  .labbershop-page .shop-thumb[data-item-code="labber_empty_module"] .shop-thumb-img img {
+    transform: scale(1.1);
+  }
+
+  /* 카트리지 계열(빈 카트리지 포함) — PNG 안의 투명 여백 때문에 같은 90%
+     박스 안에서도 실제 아트웍이 위로 떠 보여, 10% 확대는 유지한 채 살짝
+     아래로만 이동시킨다. translateY 가 scale 뒤(왼쪽)에 오므로 화면 기준
+     "그대로 5px 만큼 아래로" 효과이고(스케일에 곱해지지 않음), 이미 90%×1.1
+     로 박스를 거의 채운 상태라 바닥 쪽 여유가 몇 px 뿐이라 5px 이동분은
+     .shop-thumb-img 의 overflow: hidden 이 안전망으로 살짝 잘라줄 수 있는데,
+     PNG 가장자리가 투명 여백이라 실제로 잘리는 건 그 여백뿐이고 그림 자체는
+     거의 그대로 보인다.
+     개별 상품 코드를 하나씩 나열하지 않고 "labber_cartridge_" 접두사
+     (카트리지 계열의 기존 명명 규칙 — protrude/attach/open, 판매 제외된
+     split 도 동일 규칙) 하나로 잡아서, 앞으로 이 접두사로 추가되는 카트리지
+     상품에는 코드 수정 없이 자동 적용된다. 빈 카트리지(labber_empty_cartridge)
+     만 "키트" 카테고리에 들어있고 이름 규칙이 달라 별도로 명시했다. */
+  .labbershop-page .shop-thumb[data-item-code^="labber_cartridge_"] .shop-thumb-img img,
+  .labbershop-page .shop-thumb[data-item-code="labber_empty_cartridge"] .shop-thumb-img img {
+    transform: translateY(5px) scale(1.1);
   }
 
   /* 상품명 — 4열이라 칸이 좁아진 만큼 글자 크기를 줄여 "Ink-ORANGE" 같은
      이름도 한 줄 안에 들어오게 한다(트랙은 이미 minmax(0,1fr)로 보호되므로
-     이건 overflow 방지가 아니라 가독성/정렬용). min-height 로 이름 줄의
-     세로 공간을 통일해 그 아래 가격 위치가 카드마다 흔들리지 않게 한다. */
+     이건 overflow 방지가 아니라 가독성/정렬용). min-height 는 "가격 위치
+     고정"에 필요한 최소치(실제 한 줄 높이 + 약간의 여유)로만 줄여, 아트웍
+     박스가 카드에서 차지하는 세로 비중을 넓혔다(예전 2.2em은 한 줄 텍스트
+     치고 과도하게 넓어 아트웍 대비 빈 공간처럼 보이던 원인 중 하나였다). */
   .labbershop-page .shop-thumb-name {
     font-size: 8.5px;
-    line-height: 1.25;
-    min-height: 2.2em;
+    line-height: 1.2;
+    min-height: 1.3em;
     display: flex;
     align-items: center;
     justify-content: center;
