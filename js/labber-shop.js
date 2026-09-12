@@ -405,11 +405,16 @@ async function loadLabberShopInventory() {
     // (type='shop_purchase', source='labber_shop' 로그를 item_id 로 가져온 뒤,
     //  metadata.listing_id 로 "어느 상품 슬롯"의 구매인지 구분한다 — 같은 아이템을 지급하는
     //  다른 상품(예: 래버 배양 시약 500)의 구매 이력이 이 상품 카운트에 섞이지 않도록.)
+    // ※ user_id 를 반드시 명시 필터링한다 — item_logs RLS(item_logs_select_own)는
+    //   admin/staff 계정에 한해 "본인 것 OR 전체" 를 허용하므로, 이 필터가 없으면
+    //   admin/staff 로 로그인한 계정은 다른 유저의 구매 이력까지 섞여서 카운트된다
+    //   (본인은 0회 구매인데도 "구매 완료"로 잘못 표시되는 원인이었음).
     const ids = Object.keys(idToItemCode);
     if (ids.length) {
       const { data: logs, error: logErr } = await sb
         .from('item_logs')
         .select('item_id,metadata')
+        .eq('user_id', _labberShopUser.id)
         .eq('type', 'shop_purchase')
         .eq('source', LABBER_SHOP_CODE)
         .in('item_id', ids);
