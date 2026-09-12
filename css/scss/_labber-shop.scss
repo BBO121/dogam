@@ -148,10 +148,32 @@
 }
 
 /* ── 반응형 ────────────────────────────────────────────────
-   상품 영역(.shop-cat-grid 등)의 데스크탑/모바일 반응형은 연구소 상점 규칙
-   (@media 767px: .shop-cat-grid 8열→4열, .shop-tab-panel padding 축소 등)을
-   그대로 상속받으므로 여기서 새 breakpoint 를 만들지 않는다.
-   아래는 hero(NPC) 관련 — _labber.scss 의 모바일 규칙과 같은 breakpoint(640px). */
+   상품 영역(.shop-cat-grid 등)의 기본 모바일 반응형(@media 767px)은 연구소 상점
+   규칙을 그대로 상속받는다. 다만 그 공유 규칙은 767px 이하에서 무조건 4열
+   (grid-template-columns: repeat(4, 1fr))로 고정하는데, CSS Grid는 트랙 폭이
+   'fr'이어도 자동 최소폭(auto)이 각 그리드 아이템의 min-content 폭(=내용이
+   줄어들 수 없는 최소 크기)만큼은 확보하려 한다. LABBER 상점 상품명
+   (.shop-thumb-name)은 white-space: nowrap 이라 min-content 폭이 텍스트
+   전체 길이와 같아지므로, 좁은 화면(320~430px)에서 4열 트랙의 합이 뷰포트
+   폭을 넘어 오른쪽 상품(Ink-GREEN/Ink-PINK 등)이 잘리고 가로 스크롤이
+   생겼다. LABBER 상점(.labbershop-page)에서만 2열로 줄이고, 트랙 최소폭을
+   0으로 강제(minmax(0, 1fr))해 내용 길이와 무관하게 뷰포트 폭에 맞춰
+   균등 분할되도록 한다. 셀렉터 특이도가 공유 규칙(.shop-cat-grid)보다
+   높아 소스 순서와 무관하게 이 페이지에서만 적용되고, 연구소 상점(shop.html)
+   등 다른 페이지의 .shop-cat-grid 는 기존 4열 그대로 유지된다. */
+@media (max-width: 767px) {
+  .labbershop-page .shop-cat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  /* 그리드/플렉스 아이템은 기본 min-width: auto 라 위에서 트랙 폭을 고정해도
+     내용(텍스트)이 셀보다 커지려 하면 카드 자체가 넘칠 수 있다.
+     min-width: 0 으로 명시해 카드가 트랙 폭 안으로 정상적으로 줄어들게 한다. */
+  .labbershop-page .shop-thumb {
+    min-width: 0;
+  }
+}
+
+/* 아래는 hero(NPC) 관련 — _labber.scss 의 모바일 규칙과 같은 breakpoint(640px). */
 @media (max-width: 640px) {
   /* NPC C 이미지를 화면 오른쪽 끝까지 붙임 (labber-shop 페이지에만 — 수상한 연구실 영향 없음).
      labber_c_bg.png 는 좌우 여백이 거의 대칭(우측 투명 여백 ~23%)이라 공유값 right:5px 로는

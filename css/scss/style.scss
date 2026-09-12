@@ -5690,6 +5690,7 @@ body.page-index .species-card .sensitive-overlay-hint {
   #shopDetailModal,
   #decoModal,
   #bagDetailModal,
+  #bagItemInfoModal,
   #labberShopDetailModal {
     align-items: center;
   }
@@ -8660,10 +8661,12 @@ body.page-index .species-card .sensitive-overlay-hint {
   margin-top: 20px;
 }
 
-/* 아이템 그리드 — 상점과 동일 */
+/* 아이템 그리드 — 상점과 동일.
+   minmax(0, 1fr): 기본 1fr(= minmax(auto,1fr))은 이름이 긴 아이템이 있으면
+   그 열이 넓어져 열 너비가 불균등해진다. 0으로 고정해 모든 열을 동일 너비로. */
 .bag-grid {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
+  grid-template-columns: repeat(8, minmax(0, 1fr));
   gap: 8px;
 }
 
@@ -8673,6 +8676,7 @@ body.page-index .species-card .sensitive-overlay-hint {
   flex-direction: column;
   align-items: center;
   gap: 6px;
+  min-width: 0; /* 그리드 셀이 내용(이름 등) 때문에 늘어나지 않도록 */
   cursor: pointer;
   border-radius: 8px;
   padding: 6px 4px;
@@ -8687,11 +8691,16 @@ body.page-index .species-card .sensitive-overlay-hint {
   background: var(--sky-pale);
 }
 
-/* 미리보기 — 상점 shop-thumb-img와 동일 */
+/* 미리보기 — 상점 shop-thumb-img와 동일.
+   이미지 슬롯: 너비는 열 너비(균등), 높이는 aspect-ratio로만 결정.
+   flex/min-height 고정으로 내부 이미지의 실제 크기가 슬롯 높이를 밀어올리지 못하게 함
+   → 모든 카드에서 이름 시작 Y축이 동일해진다. */
 .bag-item-preview {
   position: relative;
   width: 100%;
-  aspect-ratio: 1;
+  aspect-ratio: 1 / 1;
+  flex: 0 0 auto;
+  min-height: 0;
   border-radius: 8px;
   display: flex;
   align-items: center;
@@ -8706,6 +8715,384 @@ body.page-index .species-card .sensitive-overlay-hint {
   width: 72%;
   height: 72%;
   object-fit: contain;
+}
+
+/* 아이템 탭 세로형 섹션의 정적 카드 (클릭/상세 없음, UI 확인용) */
+.bag-item-card--static {
+  cursor: default;
+}
+.bag-item-card--static:hover:not(.bag-item-card--equipped) {
+  background: transparent;
+}
+/* 실제 아트워크: 원본 비율 유지(찌그러짐 방지). 고정 슬롯 안에 max로만 제한해
+   이미지 크기/비율이 슬롯(및 그 아래 이름)의 레이아웃에 영향을 주지 않도록 함 */
+.bag-item-preview .bag-item-img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+.bag-item-preview .bag-item-ph {
+  font-size: 24px;
+  line-height: 1;
+  opacity: 0.4;
+}
+
+/* 일반 아이템 상세 모달 — 판매 가격 / 획득처 (한 줄 2열 가로 배치) */
+.bag-iteminfo-meta {
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin-top: 10px;
+  padding: 12px 4px;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+.bag-iteminfo-block {
+  flex: 1 1 0;
+  min-width: 0;             /* 긴 텍스트가 컬럼을 밀어내지 않도록 */
+}
+.bag-iteminfo-block + .bag-iteminfo-block {
+  padding-left: 14px;
+  border-left: 1px solid var(--border);   /* 가운데 옅은 구분선 */
+}
+.bag-iteminfo-label {
+  margin: 0 0 3px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-sub);
+}
+.bag-iteminfo-value {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-mute);
+  line-height: 1.45;
+  overflow-wrap: anywhere;   /* 긴 값은 셀 안에서 줄바꿈 (레이아웃 안 깨짐) */
+}
+.bag-iteminfo-value a {
+  color: var(--sky-dark);
+  font-weight: 600;
+  text-decoration: none;
+}
+.bag-iteminfo-value a:hover { text-decoration: underline; }
+/* 제목이 길어지면 Design by 를 밀지 않고 자연스럽게 줄바꿈 (이 모달에만 적용) */
+#bagItemInfoModal .shop-detail-name { min-width: 0; overflow-wrap: anywhere; }
+
+/* ── 아이템 상세 모달: 판매/전송 (아이템 탭 #bagItemInfoModal 전용) ────────────────
+   판매/전송 영역이 추가되어 모달이 길어질 수 있으므로 카드 자체를 세로 스크롤 허용.
+   (공용 .shop-detail-card 는 건드리지 않고 이 모달 스코프에서만) */
+#bagItemInfoModal .bag-iteminfo-card {
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 전송 영역 — 판매 footer 아래, 구분선으로 분리 */
+.bag-transfer {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.bag-transfer-title {
+  margin: 0 0 12px;                 /* 제목 ↔ 검색 input 간격 */
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-sub);
+}
+/* 전송 폼 — 요소 사이 세로 간격 (답답하지 않게, 그러나 과하지 않게) */
+#bagTransferForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+/* hidden 속성이 확실히 먹도록 — 아래 .bag-* display 규칙이 UA 의 [hidden]{display:none} 을 덮어쓰므로 명시 복원 */
+#bagTransferForm[hidden],
+.bag-transfer-blocked[hidden],
+.bag-transfer-picked[hidden],
+.bag-transfer-qty[hidden] {
+  display: none;
+}
+.bag-transfer-blocked {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-mute);
+  background: var(--sky-pale);
+  border-radius: 8px;
+  padding: 9px 11px;
+}
+
+/* 유저 검색 */
+.bag-usersearch { position: relative; }
+.bag-usersearch-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 9px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--text);
+  background: var(--white);
+}
+.bag-usersearch-input:focus {
+  outline: none;
+  border-color: var(--sky-dark);
+}
+.bag-usersearch-dropdown {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 4px);
+  z-index: 5;
+  background: var(--white);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-md);
+  max-height: 216px;
+  overflow-y: auto;
+  padding: 4px;
+}
+.bag-usersearch-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 8px;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+}
+.bag-usersearch-row:hover { background: var(--sky-pale); }
+.bag-usersearch-avatar {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--sky-light);
+}
+/* 프로필 이미지 없는 유저 — 단색 원형만 (배경색은 JS 가 user_id 기반으로 inline 지정). 이모지/문자 없음. */
+.bag-usersearch-avatar--ph {
+  display: block;
+}
+.bag-usersearch-nick {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bag-usersearch-sub {
+  font-size: 11px;
+  color: var(--text-mute);
+  flex-shrink: 0;
+}
+.bag-usersearch-empty {
+  margin: 0;
+  padding: 12px 8px;
+  font-size: 12px;
+  color: var(--text-mute);
+  text-align: center;
+}
+
+/* 선택된 받는 사람 — 위(검색 input) / 아래(수량·전송 행)와 여백 확보. X 버튼 오른쪽 정렬 유지. */
+.bag-transfer-picked {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 9px 10px;
+  background: var(--sky-pale);
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sky-deep);
+}
+.bag-transfer-picked-clear {
+  border: none;
+  background: transparent;
+  color: var(--text-mute);
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+  flex-shrink: 0;
+}
+
+/* 수량 그룹 + 전송하기 버튼을 한 행에 — 왼쪽 수량 / 오른쪽 버튼 */
+.bag-transfer-action-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;              /* 정말 좁을 때만 자연스럽게 줄바꿈 */
+}
+.bag-transfer-action-row .bag-transfer-btn {
+  margin-left: auto;           /* 수량 유무와 무관하게 버튼은 항상 오른쪽 */
+  flex-shrink: 0;
+}
+
+/* 수량 스텝퍼 — 수량 label ↔ − ↔ 숫자 ↔ + 사이 일정한 간격 */
+.bag-transfer-qty {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.bag-transfer-qty-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-sub);
+  margin-right: 1px;
+}
+.bag-qty-btn {
+  width: 28px;
+  height: 28px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--text-sub);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  font-family: inherit;
+  flex-shrink: 0;
+}
+.bag-qty-btn:hover { border-color: var(--sky-dark); color: var(--sky-dark); }
+.bag-qty-value {
+  min-width: 24px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.bag-transfer-btn[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── 가방 아이템 탭: "전송 내역" 진입 버튼 ─────────────────── */
+.bag-item-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 12px;
+}
+.bag-item-toolbar[hidden] { display: none; }   /* display:flex 가 UA [hidden] 를 덮어쓰므로 명시 */
+.bag-log-btn {
+  display: inline-block;
+  padding: 7px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 9px;
+  background: var(--white);
+  color: var(--text-sub);
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.bag-log-btn:hover { border-color: var(--sky-dark); color: var(--sky-dark); }
+
+/* ── 아이템 전송 내역 페이지 (pages/item-transfer-history.html) ──────────
+   내 지갑 > 거래 내역 테이블(.wallet-log-table)과 동일한 방식:
+   .transfer-table + .transfer-table-head/.transfer-table-row/.transfer-table-cell(그리드/보더/폰트)
+   + .wallet-log-type-badge(보냄/받음). 컬럼만 5개(일시/구분/아이템/수량/상대방)로 grid 재정의.
+   모바일도 내 지갑과 동일: 헤더·PC셀 숨김 + 컴팩트 라인(.itl-m-*). */
+.itl-log-table .transfer-table-head,
+.itl-log-table .transfer-table-row {
+  grid-template-columns: 1fr 0.55fr 1.5fr 0.45fr 1fr;   /* 일시 · 구분 · 아이템 · 수량 · 상대방 */
+}
+.itl-log-table .transfer-table-cell { min-width: 0; }   /* 긴 아이템명/닉네임이 그리드를 밀지 않게 */
+.itl-c-date { color: var(--text-sub); white-space: nowrap; }
+.itl-c-item,
+.itl-c-nick { overflow-wrap: anywhere; }
+.itl-c-qty  { text-align: center; }
+
+.itl-m-line { display: none; }   /* PC 에서는 컴팩트 라인 숨김 */
+
+/* 빈 상태 — 테이블 헤더 아래 한 줄 안내 */
+.itl-empty-row {
+  padding: 34px 16px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-mute);
+}
+.itl-loading {
+  margin: 0;
+  padding: 40px 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--text-mute);
+}
+
+/* 모바일 — 내 지갑 .wallet-log-table 모바일 규칙과 동일 패턴 */
+@media (max-width: 767px) {
+  .itl-log-table .transfer-table-head { display: none; }
+
+  .itl-log-table .transfer-table-row {
+    display: flex;
+    flex-direction: column;
+    padding: 9px 12px;
+    gap: 3px;
+  }
+
+  .itl-log-table .itl-c-date,
+  .itl-log-table .itl-c-type,
+  .itl-log-table .itl-c-item,
+  .itl-log-table .itl-c-qty,
+  .itl-log-table .itl-c-nick { display: none; }
+
+  .itl-m-line {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    width: 100%;
+  }
+  .itl-m-top {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    line-height: 1.3;
+  }
+  .itl-m-badge {
+    font-size: 10px;
+    padding: 1px 5px;
+    flex-shrink: 0;
+  }
+  .itl-m-item {
+    flex: 1;
+    min-width: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .itl-m-date {
+    flex-shrink: 0;
+    font-size: 11px;
+    color: var(--text-mute);
+    white-space: nowrap;
+  }
+  .itl-m-bot {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    font-size: 11px;
+    color: var(--text-mute);
+  }
+  .itl-m-nick {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .itl-m-qty { flex-shrink: 0; }
 }
 
 .bag-item-name {
@@ -8853,7 +9240,7 @@ body.page-index .species-card .sensitive-overlay-hint {
 
 /* 모바일 */
 @media (max-width: 767px) {
-  .bag-grid { grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .bag-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
   .bag-section { padding: 14px; }
   .bag-item-name { font-size: 10px; }
 }

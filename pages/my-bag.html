@@ -58,6 +58,10 @@
 
         <!-- 아이템 섹션 (JS 렌더) -->
         <div class="shop-tab-panel">
+          <!-- 아이템 탭에서만 노출 — 전송 내역 페이지로 이동 -->
+          <div class="bag-item-toolbar" id="bagItemToolbar" hidden>
+            <a href="item-transfer-history.html" class="bag-log-btn">전송 내역</a>
+          </div>
           <div id="bagSections"></div>
         </div>
 
@@ -90,12 +94,89 @@
     </div>
   </div>
 
+  <!-- 일반 아이템 상세 모달 (아이템 탭 — 티켓 모달과 동일 톤, 공통 노드 1개) -->
+  <div class="modal-overlay" id="bagItemInfoModal" style="display:none;" onclick="if(event.target===this)closeBagItemInfo()">
+    <div class="shop-detail-card bag-iteminfo-card">
+      <button class="shop-detail-close" onclick="closeBagItemInfo()">×</button>
+      <div class="shop-detail-preview" id="bagItemInfoPreview"></div>
+      <div class="shop-detail-info">
+        <div class="shop-detail-name-row">
+          <p class="shop-detail-name" id="bagItemInfoName"></p>
+          <span class="shop-detail-credit" id="bagItemInfoCredit"></span>
+        </div>
+        <p class="shop-detail-desc" id="bagItemInfoDesc"></p>
+
+        <div class="bag-iteminfo-meta">
+          <div class="bag-iteminfo-block">
+            <p class="bag-iteminfo-label">판매 가격</p>
+            <p class="bag-iteminfo-value" id="bagItemInfoPrice">-</p>
+          </div>
+          <div class="bag-iteminfo-block">
+            <p class="bag-iteminfo-label">획득처</p>
+            <p class="bag-iteminfo-value" id="bagItemInfoAcq">-</p>
+          </div>
+        </div>
+
+        <div class="shop-detail-footer">
+          <span class="shop-detail-price" id="bagItemInfoQty"></span>
+          <div id="bagItemInfoAction"></div>
+        </div>
+
+        <!-- ── 아이템 전송 ────────────────────────────── -->
+        <div class="bag-transfer" id="bagTransferSection">
+          <p class="bag-transfer-title">아이템 전송</p>
+
+          <!-- 전송 불가 아이템 -->
+          <p class="bag-transfer-blocked" id="bagTransferBlocked" hidden>전송 불가 아이템</p>
+
+          <!-- 전송 가능할 때만 -->
+          <div id="bagTransferForm" hidden>
+            <div class="bag-usersearch">
+              <input type="text" id="bagTransferUserInput" class="bag-usersearch-input"
+                     placeholder="유저 닉네임 검색" autocomplete="off" spellcheck="false">
+              <div class="bag-usersearch-dropdown" id="bagTransferUserDropdown" hidden></div>
+            </div>
+            <div class="bag-transfer-picked" id="bagTransferPicked" hidden>
+              <span id="bagTransferPickedName"></span>
+              <button type="button" class="bag-transfer-picked-clear" onclick="bagTransferClearUser()" aria-label="선택 해제">×</button>
+            </div>
+
+            <!-- 수량 + 전송하기 같은 행 (왼쪽: 수량 그룹 / 오른쪽: 전송 버튼) -->
+            <div class="bag-transfer-action-row">
+              <div class="bag-transfer-qty" id="bagTransferQtyRow" hidden>
+                <span class="bag-transfer-qty-label">수량</span>
+                <button type="button" class="bag-qty-btn" onclick="bagTransferQtyStep(-1)" aria-label="수량 감소">−</button>
+                <span class="bag-qty-value" id="bagTransferQtyValue">1</span>
+                <button type="button" class="bag-qty-btn" onclick="bagTransferQtyStep(1)" aria-label="수량 증가">+</button>
+              </div>
+              <button type="button" class="shop-buy-btn-lg bag-transfer-btn" id="bagTransferBtn"
+                      onclick="onBagItemTransfer()" disabled>전송하기</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 판매 / 전송 확인 모달 (재사용) -->
+  <div class="modal-overlay" id="bagConfirmModal" style="display:none;" onclick="if(event.target===this)bagCloseConfirm()">
+    <div class="modal-card">
+      <h3 class="modal-title" id="bagConfirmTitle"></h3>
+      <p class="modal-desc" id="bagConfirmDesc"></p>
+      <div class="modal-actions">
+        <button class="btn-ghost" onclick="bagCloseConfirm()">취소</button>
+        <button class="btn-secondary" id="bagConfirmOkBtn" onclick="bagConfirmProceed()">확인</button>
+      </div>
+    </div>
+  </div>
+
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/auth.js"></script>
   <script src="../js/sidebar.js"></script>
   <script src="../js/notifications.js"></script>
   <script src="../js/chat.js"></script>
   <script src="../js/utils.js"></script>
+  <script src="../js/search.js"></script>
   <script src="../js/main.js"></script>
   <script src="../js/my-bag.js"></script>
 </body>
