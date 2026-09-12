@@ -149,27 +149,92 @@
 
 /* ── 반응형 ────────────────────────────────────────────────
    상품 영역(.shop-cat-grid 등)의 기본 모바일 반응형(@media 767px)은 연구소 상점
-   규칙을 그대로 상속받는다. 다만 그 공유 규칙은 767px 이하에서 무조건 4열
-   (grid-template-columns: repeat(4, 1fr))로 고정하는데, CSS Grid는 트랙 폭이
-   'fr'이어도 자동 최소폭(auto)이 각 그리드 아이템의 min-content 폭(=내용이
-   줄어들 수 없는 최소 크기)만큼은 확보하려 한다. LABBER 상점 상품명
-   (.shop-thumb-name)은 white-space: nowrap 이라 min-content 폭이 텍스트
-   전체 길이와 같아지므로, 좁은 화면(320~430px)에서 4열 트랙의 합이 뷰포트
-   폭을 넘어 오른쪽 상품(Ink-GREEN/Ink-PINK 등)이 잘리고 가로 스크롤이
-   생겼다. LABBER 상점(.labbershop-page)에서만 2열로 줄이고, 트랙 최소폭을
-   0으로 강제(minmax(0, 1fr))해 내용 길이와 무관하게 뷰포트 폭에 맞춰
-   균등 분할되도록 한다. 셀렉터 특이도가 공유 규칙(.shop-cat-grid)보다
-   높아 소스 순서와 무관하게 이 페이지에서만 적용되고, 연구소 상점(shop.html)
-   등 다른 페이지의 .shop-cat-grid 는 기존 4열 그대로 유지된다. */
+   규칙을 그대로 상속받는다: grid-template-columns: repeat(4, 1fr). 열 개수(4열)
+   자체는 카테고리별 설계값이라 그대로 유지한다 — 좁은 화면에서도 줄이지 않는다.
+
+   문제였던 건 열 개수가 아니라 "트랙이 내용보다 좁아지지 못하는 것"이었다:
+   CSS Grid는 트랙이 'fr'이어도 자동 최소폭(auto)이 각 그리드 아이템의
+   min-content 폭(=내용이 줄어들 수 없는 최소 크기)만큼은 확보하려 한다.
+   상품명(.shop-thumb-name)이 white-space: nowrap 이라 "Ink-ORANGE" 같은 긴
+   텍스트의 min-content 폭이 텍스트 전체 길이와 같아지고, 이게 4열 트랙의
+   최소 폭 합을 뷰포트보다 넓게 밀어붙여 오른쪽 상품이 잘리는 원인이었다.
+
+   해결: 열 개수(4)는 그대로 두고 minmax(0, 1fr)로 트랙의 자동 최소폭만
+   0으로 강제 — 내용 길이와 무관하게 뷰포트 폭 안에서 4열이 균등 분할된다.
+   대신 좁아진 칸 안에서 내용이 밀려나지 않도록 카드 내부 요소(이미지/이름/
+   가격/배지)의 크기를 축소해 맞춘다(열을 줄이는 대신 카드 크기를 줄이는
+   방향). 셀렉터 특이도가 공유 규칙(.shop-cat-grid)보다 높아 소스 순서와
+   무관하게 이 페이지에서만 적용되고, 연구소 상점(shop.html) 등 다른 페이지의
+   .shop-cat-grid 는 기존 4열 그대로 유지된다. */
 @media (max-width: 767px) {
   .labbershop-page .shop-cat-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
   }
-  /* 그리드/플렉스 아이템은 기본 min-width: auto 라 위에서 트랙 폭을 고정해도
+  /* 그리드/플렉스 아이템은 기본 min-width: auto 라 트랙 폭을 고정해도
      내용(텍스트)이 셀보다 커지려 하면 카드 자체가 넘칠 수 있다.
      min-width: 0 으로 명시해 카드가 트랙 폭 안으로 정상적으로 줄어들게 한다. */
   .labbershop-page .shop-thumb {
     min-width: 0;
+    max-width: 100%;
+    padding: 4px 2px;
+  }
+  /* 좌우 padding 도 줄여 4열 각 칸에 조금이라도 폭을 더 확보 */
+  .labbershop-page .shop-tab-panel {
+    padding: 10px 8px;
+  }
+
+  /* ── 카드 내부 요소 축소 ──────────────────────────────────
+     .shop-thumb-img 는 원래 aspect-ratio: 1 + width: 100% 라 박스 자체는
+     (좁아진) 열 폭에 맞춰 정사각형을 유지한다. 그 안의 <img>가 object-fit:
+     cover(꽉 채워 크롭)면 원본 PNG마다 실제 그림 주변 투명 여백 비율이 달라
+     "그려진 아이콘"의 체감 크기가 카드마다 달라 보이므로, object-fit: contain
+     + %기반 max-width/max-height 로 원본 비율을 유지한 채(찌그러뜨리지 않고)
+     박스 크기에 비례한 동일한 기준 안에 표시한다. px 고정값이 아니라 %로
+     잡아서 4열(320~430px 전부에서 열 폭이 다름)에서도 항상 박스 안에 들어가
+     넘치지 않는다. */
+  .labbershop-page .shop-thumb-img img {
+    width: auto;
+    height: auto;
+    max-width: 72%;
+    max-height: 72%;
+    object-fit: contain;
+  }
+
+  /* 상품명 — 4열이라 칸이 좁아진 만큼 글자 크기를 줄여 "Ink-ORANGE" 같은
+     이름도 한 줄 안에 들어오게 한다(트랙은 이미 minmax(0,1fr)로 보호되므로
+     이건 overflow 방지가 아니라 가독성/정렬용). min-height 로 이름 줄의
+     세로 공간을 통일해 그 아래 가격 위치가 카드마다 흔들리지 않게 한다. */
+  .labbershop-page .shop-thumb-name {
+    font-size: 8.5px;
+    line-height: 1.25;
+    min-height: 2.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 가격(상태) 영역 — 폰트/아이콘을 축소하고, margin-top: auto 로 그리드
+     행 높이가 카드마다 달라져도 항상 카드 하단 기준에 붙도록 한다. */
+  .labbershop-page .shop-thumb-status {
+    font-size: 8px;
+    margin-top: auto;
+  }
+  .labbershop-page .shop-currency-icon {
+    width: 9px;
+    height: 9px;
+  }
+
+  /* 등급/보유 배지 — 좁아진 이미지 박스 위 오버레이라 패딩·폰트를 줄여
+     서로 겹치거나 박스 밖으로 밀려나지 않게 한다(위치는 top/left, top/right
+     absolute 로 기존과 동일 — 크기만 축소). */
+  .labbershop-page .shop-thumb-img .labber-trait-grade {
+    font-size: 7px;
+    padding: 1px 4px;
+  }
+  .labbershop-page .shop-thumb-badge {
+    font-size: 7px;
+    padding: 1px 4px;
   }
 }
 
