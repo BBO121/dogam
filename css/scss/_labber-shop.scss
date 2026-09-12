@@ -1,0 +1,163 @@
+/* ═══════════════════════════════════════════════════════════
+   LABBER 상점 (pages/labber-shop.html)
+   — 상단 hero(제목/로고/소개/NPC C/대화창/다크 배경)는 _labber.scss 의 .labber-* 를 그대로 재사용.
+   — 대화창 아래 "상품 영역"은 연구소 상점(shop.html)의 .shop-tab-panel / .shop-cat-* / .shop-thumb
+     구조를 그대로 사용한다. 그 클래스들은 전부 CSS 변수(--white/--border/--sky-* 등) 기반이고
+     body.labber-theme 가 그 변수를 다크·민트로 리스킨해 두어, 별도 색상 오버라이드 없이
+     "연구소 상점의 다크 버전"으로 렌더된다.
+   — 여기서는 (1) 상품 패널 등장 효과 (2) 탭바 없는 패널의 모서리 (3) 이미지 없는 상품의
+     LABBER 패턴 placeholder — 딱 이 3가지만 추가한다.
+═══════════════════════════════════════════════════════════ */
+
+/* (1) 대화창 아래 등장 패널 — 수상한 연구실 .labber-exchange-panel 과 동일 동작
+       (JS 가 NPC 타이핑 완료 후 .show 를 붙임) */
+.labbershop-panel {
+  margin-top: 20px;
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+}
+.labbershop-panel.show {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* (2) 연구소 상점 .shop-tab-panel 은 위 탭바와 이어지느라 좌상단만 각져 있다
+       (border-radius: 0 14px 14px 14px). LABBER 상점은 탭바가 없으므로 네 모서리 모두 둥글게. */
+.labbershop-page .shop-tab-panel {
+  border-radius: 14px;
+}
+
+/* (3) 이미지가 없는 상품(TEST 등) — .shop-thumb-img(정사각) 안에서만 LABBER 패턴 placeholder.
+       연구소 상점에서 이미지 없는 상품은 빈 칸으로 두지만, LABBER 상점은 톤에 맞는 패턴을 채운다. */
+.labbershop-thumb-ph {
+  width: 100%;
+  height: 100%;
+  background:
+    repeating-linear-gradient(45deg, rgba(125, 216, 200, .06) 0 8px, transparent 8px 16px),
+    var(--sky-pale);
+}
+
+/* (4) 등급 badge — LABBER 관리소 특성 페이지의 .labber-trait-grade 색상 체계(is-standard 민트 / is-special 앰버 /
+       is-restricted 레드)를 그대로 재사용하고, 상점 썸네일 overlay 크기로만 축소·재배치한다.
+       .shop-thumb-img 는 이미 position:relative + overflow:hidden 이라 카드 레이아웃/크기에는 영향 없음. */
+.labbershop-page .shop-thumb-img .labber-trait-grade {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  z-index: 1;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 20px;
+  line-height: 1.5;
+}
+
+/* (5) 상품 상세 모달 — 연구소 상점 .shop-detail-* 구조를 그대로 쓰되, 하드코딩된 라이트 색
+       (미리보기 배경 #f1f5f9, "준비중" pill 배경 #f1f5f9)만 LABBER 다크로 override.
+       #labberShopDetailModal 스코프라 연구소 상점 #shopDetailModal 에는 영향 없음. */
+#labberShopDetailModal .shop-detail-preview {
+  background: var(--sky-pale);
+}
+#labberShopDetailModal .shop-detail-status.shop-status--coming {
+  background: var(--sky-light);
+}
+/* 등급 라인 — 이름 아래, 설명 위. .shop-detail-info 의 flex gap(6px)으로 간격은 자동. */
+.labbershop-detail-grade .labber-trait-grade {
+  display: inline-block;
+}
+
+/* (6) 구매 제한 안내 문구 — 설명 아래, 가격 위. 경고가 아닌 보조 안내 톤(작게, 흐린 색).
+   .shop-detail-desc 와 같은 계열이되 한 단계 더 작고 옅게. */
+.labbershop-detail-limit-note {
+  margin: -2px 0 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--text-sub);
+}
+
+/* (8) 상품 전용 구매 주의 문구(#labberShopDetailNotice) — 래버 배양 시약처럼 "계정당 1회 + 전송 불가"
+   같은 되돌릴 수 없는 조건을 구매 전에 눈에 띄게 알린다. (6) 일반 제한 문구와 같은 슬롯(설명 아래·가격 위)
+   이며 둘 중 하나만 노출된다. 경고 톤이되 상점 민트 팔레트를 유지한다. */
+.labbershop-detail-notice {
+  margin: 2px 0 0;
+  padding: 9px 11px;
+  border: 1px solid var(--sky-dark);
+  border-radius: 8px;
+  background: var(--sky-light);
+  font-size: 11.5px;
+  line-height: 1.65;
+  color: var(--text-sub);
+
+  strong {
+    color: var(--sky);
+    font-weight: 700;
+  }
+
+  &::before {
+    content: '주의';
+    display: inline-block;
+    margin-right: 6px;
+    padding: 0 6px;
+    border-radius: 10px;
+    background: var(--sky-dark);
+    color: var(--white);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    vertical-align: 1px;
+  }
+}
+
+/* (9) 상세 모달 구매 영역 — 연구소 상점 .shop-buy-btn-lg(민트, CSS변수 기반이라 다크 자동) 재사용.
+   버튼 옆 "보유 N개" 텍스트만 추가 스타일. */
+#labberShopDetailAction {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+.labbershop-owned-count {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-sub);
+}
+
+/* (7) 상품 설명 내 "적용 특성" 링크 — 클릭 시 LABBER 관리소 > 특성 항목으로 이동.
+   일반 파란 링크 스타일 대신 LABBER 민트 포인트 + bold. 밑줄은 hover/focus 시에만. */
+.labbershop-trait-link {
+  color: var(--sky);
+  font-weight: 700;
+  text-decoration: none;
+  text-underline-offset: 2px;
+  border-radius: 2px;
+  transition: color 0.15s ease;
+
+  strong { font-weight: 700; }
+
+  &:hover {
+    color: var(--sky-dark);
+    text-decoration: underline;
+  }
+  &:focus-visible {
+    outline: 2px solid var(--sky);
+    outline-offset: 2px;
+    text-decoration: underline;
+  }
+}
+
+/* ── 반응형 ────────────────────────────────────────────────
+   상품 영역(.shop-cat-grid 등)의 데스크탑/모바일 반응형은 연구소 상점 규칙
+   (@media 767px: .shop-cat-grid 8열→4열, .shop-tab-panel padding 축소 등)을
+   그대로 상속받으므로 여기서 새 breakpoint 를 만들지 않는다.
+   아래는 hero(NPC) 관련 — _labber.scss 의 모바일 규칙과 같은 breakpoint(640px). */
+@media (max-width: 640px) {
+  /* NPC C 이미지를 화면 오른쪽 끝까지 붙임 (labber-shop 페이지에만 — 수상한 연구실 영향 없음).
+     labber_c_bg.png 는 좌우 여백이 거의 대칭(우측 투명 여백 ~23%)이라 공유값 right:5px 로는
+     그림이 화면에서 크게 떨어져 보인다. scale(1.12)/origin left bottom 까지 감안해
+     "가장 좁은 clamp 폭(210px)에서도 그림(들고 있는 서류)이 안 잘리는" 최대 음수값으로 당긴다. */
+  .labbershop-page .labber-npc-image-wrap {
+    right: -28px;
+  }
+}

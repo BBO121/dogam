@@ -85,8 +85,12 @@ async function initSidebar() {
         상점<svg class="sidebar-accordion-arrow" id="arrShop" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
       <div class="sidebar-accordion-body" id="bodyShop">
-        <a href="shop.html"   class="sidebar-subitem ${path === 'shop.html'   ? 'active' : ''}">연구소 상점</a>
-        <a href="labber.html" class="sidebar-subitem labber-menu-link ${path === 'labber.html' ? 'active' : ''}">
+        <a href="shop.html"        class="sidebar-subitem ${path === 'shop.html'        ? 'active' : ''}">연구소 상점</a>
+        <a href="labber-shop.html" class="sidebar-subitem labber-menu-link ${path === 'labber-shop.html' ? 'active' : ''}">
+          <span>LABBER 상점</span>
+          <img src="../images/labber/labber_logo.png" alt="LABBER" class="labber-menu-logo">
+        </a>
+        <a href="labber.html"      class="sidebar-subitem labber-menu-link ${path === 'labber.html'      ? 'active' : ''}">
           <span>수상한 연구실</span>
           <img src="../images/labber/labber_logo.png" alt="LABBER" class="labber-menu-logo">
         </a>
@@ -135,7 +139,7 @@ async function initSidebar() {
   const supportPages = ['inquiry.html','inquiry-write.html','inquiry-detail.html',
                         'bug-report.html','bug-report-write.html','bug-report-detail.html',
                         'species-apply.html','species-apply-write.html','species-apply-detail.html'];
-  const shopPages     = ['shop.html','labber.html'];
+  const shopPages     = ['shop.html','labber-shop.html','labber.html'];
   const labberPages   = ['labber-lab.html','labber-records.html'];
 
   const isUserProfile = path === 'profile.html' && new URLSearchParams(window.location.search).get('user');

@@ -8,6 +8,7 @@
 @import "_login";
 @import "_labber";
 @import "_labber-lab";
+@import "_labber-shop";
 @import "_labber-records";
 @import "_labber-individual";
 @import "_labber-traits";
@@ -5688,7 +5689,8 @@ body.page-index .species-card .sensitive-overlay-hint {
   #badgeModal,
   #shopDetailModal,
   #decoModal,
-  #bagDetailModal {
+  #bagDetailModal,
+  #labberShopDetailModal {
     align-items: center;
   }
   /* 공지사항 */
