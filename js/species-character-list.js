@@ -240,22 +240,16 @@
     renderChars();
   }
 
-  // ── 카드 목록 렌더 ─────────────────────────────────────
-  function renderChars() {
-    const sort = currentSortBy();
-    const dir = currentSortDir() === 'desc' ? -1 : 1;
-    const idToNick = (cfg && cfg.idToNick) || {};
-    let list = [...allChars];
+  // ── 정렬 로직(카드 목록 / character.html 이전·다음 이동이 공유) ─────
+  function sortCharacters(list, sortBy, dirStr) {
+    const dir = dirStr === 'desc' ? -1 : 1;
+    const out = [...list];
 
-    if (activeCategory !== null) {
-      list = list.filter(c => (c.char_categories || []).some(cat => cat.label === activeCategory));
-    }
-
-    if (sort === 'recent') {
-      list.sort((a, b) => dir * (new Date(a.created_at) - new Date(b.created_at)));
-    } else if (sort === 'name') {
-      list.sort((a, b) => dir * a.name.localeCompare(b.name, 'ko'));
-    } else if (sort === 'charNumber') {
+    if (sortBy === 'recent') {
+      out.sort((a, b) => dir * (new Date(a.created_at) - new Date(b.created_at)));
+    } else if (sortBy === 'name') {
+      out.sort((a, b) => dir * a.name.localeCompare(b.name, 'ko'));
+    } else if (sortBy === 'charNumber') {
       const getGroup = str => {
         if (!str) return 4;
         if (/\d/.test(str)) return 0;
@@ -264,7 +258,7 @@
         return 3;
       };
       const firstNum = str => { const m = str.match(/\d+/); return parseInt(m[0], 10); };
-      list.sort((a, b) => {
+      out.sort((a, b) => {
         const aStr = a.char_number || '';
         const bStr = b.char_number || '';
         const aG = getGroup(aStr);
@@ -279,6 +273,60 @@
         return dir * aStr.localeCompare(bStr, 'ko');
       });
     }
+
+    return out;
+  }
+
+  // 현재 저장된(localStorage) 정렬 기준/방향 — select 미탑재 페이지(character.html)에서도
+  // 카드 목록과 동일한 기준을 읽어올 수 있도록 DOM 의존 없이 별도로 제공.
+  function getSavedSort() {
+    let sortBy = 'recent';
+    const saved = localStorage.getItem(SORT_KEY);
+    if (['recent', 'name', 'charNumber'].includes(saved)) sortBy = saved;
+
+    let dirs = Object.assign({}, DEFAULT_SORT_DIR);
+    try {
+      const savedDir = JSON.parse(localStorage.getItem(SORT_DIR_KEY) || '{}');
+      dirs = Object.assign({}, DEFAULT_SORT_DIR, savedDir);
+    } catch (e) { /* ignore */ }
+
+    return { sortBy, dir: dirs[sortBy] || 'asc' };
+  }
+
+  // 같은 종족(species_name) 개체를 카드 목록과 동일한 조회(페이지네이션) + 정렬로 가져온다.
+  // character.html 이전/다음 이동 전용 — 카드 렌더에 불필요한 컬럼은 가져오지 않는다.
+  async function getOrderedList(speciesName) {
+    const rows = [];
+    const pageSize = 1000;
+    let from = 0;
+    while (true) {
+      const { data: page, error } = await sb
+        .from('characters')
+        .select('id, name, created_at, char_number')
+        .eq('species_name', speciesName)
+        .order('created_at', { ascending: false })
+        .range(from, from + pageSize - 1);
+      if (error || !page || !page.length) break;
+      rows.push(...page);
+      if (page.length < pageSize) break;
+      from += pageSize;
+    }
+    const { sortBy, dir } = getSavedSort();
+    return sortCharacters(rows, sortBy, dir);
+  }
+
+  // ── 카드 목록 렌더 ─────────────────────────────────────
+  function renderChars() {
+    const sort = currentSortBy();
+    const dir = currentSortDir();
+    const idToNick = (cfg && cfg.idToNick) || {};
+    let list = [...allChars];
+
+    if (activeCategory !== null) {
+      list = list.filter(c => (c.char_categories || []).some(cat => cat.label === activeCategory));
+    }
+
+    list = sortCharacters(list, sort, dir);
 
     if ($('charCount')) $('charCount').textContent = list.length;
 
@@ -398,6 +446,7 @@
   window.SpeciesCharList = {
     mount,
     getChars: () => allChars,
+    getOrderedList,
     SUPER_ADMIN_USER_ID,
   };
 })();

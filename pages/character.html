@@ -230,6 +230,7 @@
   <script src="../js/search.js"></script>
   <script src="../js/main.js"></script>
   <script src="../js/labber-traits.js"></script>
+  <script src="../js/species-character-list.js"></script>
   <script>
     // 정상 콘텐츠가 확인된 경우에만 AdSense Auto ads 스크립트를 로드한다.
     // (잘못된 접근/없는 id/네트워크 실패 상태에서 광고만 남는 문제 방지)
@@ -896,6 +897,51 @@
       window.location.href = afterDeleteHref;
     }
 
+    // 개체 상세 이전/다음 이동 — 같은 species_name 개체만 대상으로 하고,
+    // species-character-list.js(species.html "소속 개체" / LABBER 개체기록실이 공유하는
+    // 카드 목록 모듈)에 저장된 정렬 기준을 그대로 재사용해 목록에 보이는 순서와 동일하게 맞춘다.
+    // LABBER처럼 전체 개체리스트(character-list.html)에는 노출되지 않는 종족도
+    // species_name 필터만으로 그대로 동작한다(characters 테이블은 species_id가 아니라
+    // species_name으로 종족과 연결되는 구조).
+    async function loadCharNav(speciesName, currentId) {
+      const prevBtn = document.getElementById('charNavPrevBtn');
+      const nextBtn = document.getElementById('charNavNextBtn');
+      if (!prevBtn || !nextBtn) return;
+
+      const disable = (btn) => { btn.disabled = true; btn.onclick = null; };
+
+      if (!speciesName || speciesName === '(알 수 없음)' || !window.SpeciesCharList) {
+        disable(prevBtn); disable(nextBtn);
+        return;
+      }
+
+      try {
+        const ordered = await SpeciesCharList.getOrderedList(speciesName);
+        const idx = ordered.findIndex(x => String(x.id) === String(currentId));
+        if (idx === -1) { disable(prevBtn); disable(nextBtn); return; }
+
+        const prev = idx > 0 ? ordered[idx - 1] : null;
+        const next = idx < ordered.length - 1 ? ordered[idx + 1] : null;
+
+        if (prev) {
+          prevBtn.disabled = false;
+          prevBtn.onclick = () => { window.location.href = `character.html?id=${prev.id}`; };
+        } else {
+          disable(prevBtn);
+        }
+
+        if (next) {
+          nextBtn.disabled = false;
+          nextBtn.onclick = () => { window.location.href = `character.html?id=${next.id}`; };
+        } else {
+          disable(nextBtn);
+        }
+      } catch (e) {
+        console.warn('[character.html] 이전/다음 개체 조회 실패:', e);
+        disable(prevBtn); disable(nextBtn);
+      }
+    }
+
     if (!charId) {
       document.getElementById('charContent').innerHTML = '<p class="page-loading">잘못된 접근이에요.</p>';
     } else {
@@ -1115,7 +1161,17 @@
             <button type="button" class="char-name-tab ${_nameDisplayMode === 'registered' ? 'active' : ''}" data-mode="registered" onclick="setCharNameMode('registered')">등록명</button>
             <button type="button" class="char-name-tab ${_nameDisplayMode === 'owner' ? 'active' : ''}" data-mode="owner" onclick="setCharNameMode('owner')">소유주명</button>
           </div>` : ''}
-          <h1 class="char-page-name" id="charPageName">${displayedCharName}</h1>
+          <div class="char-page-name-row">
+            <h1 class="char-page-name" id="charPageName">${displayedCharName}</h1>
+            <div class="char-nav-buttons" id="charNavButtons">
+              <button type="button" class="char-nav-btn" id="charNavPrevBtn" disabled aria-label="이전 개체" title="이전 개체">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+              <button type="button" class="char-nav-btn" id="charNavNextBtn" disabled aria-label="다음 개체" title="다음 개체">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </button>
+            </div>
+          </div>
         </div>
 
         <div class="char-body">
@@ -1358,6 +1414,9 @@
           </div>
         </div>` : ''}
       `;
+
+      // 이전/다음 개체 이동 — 본문 렌더와 무관하게 처리(실패해도 상세 화면에는 영향 없음)
+      loadCharNav(c.species_name, charId);
 
       // 본인 소유/종족 개체는 원본 이미지를 기본으로 표시
       if (autoShowOriginal) {

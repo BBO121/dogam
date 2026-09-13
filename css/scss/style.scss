@@ -1535,6 +1535,50 @@ button.btn-more {
   gap: 12px;
 }
 
+.char-page-name-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.char-page-name-row .char-page-name {
+  min-width: 0;
+  flex: 1;
+}
+
+.char-nav-buttons {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.char-nav-btn {
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--text-sub);
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+
+.char-nav-btn:hover:not(:disabled) {
+  background: var(--sky-pale);
+  border-color: var(--sky-light);
+  color: var(--sky-deep);
+}
+
+.char-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
 .char-page-id {
   font-size: 14px;
   font-weight: 500;
@@ -5599,6 +5643,20 @@ body.page-index .species-card .sensitive-overlay-hint {
   }
   .char-info-panel {
     padding: 20px 4px;
+  }
+  .char-page-name-row {
+    gap: 8px;
+  }
+  .char-nav-buttons {
+    gap: 6px;
+  }
+  .char-nav-btn {
+    width: 32px;
+    height: 32px;
+  }
+  .char-nav-btn svg {
+    width: 15px;
+    height: 15px;
   }
   /* 종족 상세 */
   .species-detail-top {
